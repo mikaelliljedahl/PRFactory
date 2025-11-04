@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  api:
+    image: prfactory-api:latest
+    build:
+      context: .
+      dockerfile: src/PRFactory.Api/Dockerfile
+    container_name: prfactory-api
+    ports:
+      - "5000:8080"
+      - "5001:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Data Source=/data/prfactory.db
+      - OpenTelemetry__Jaeger__AgentHost=jaeger
+      - OpenTelemetry__Jaeger__AgentPort=6831
+      - Logging__LogLevel__Default=Information
+      - Logging__LogLevel__Microsoft.AspNetCore=Warning
+    volumes:
+      - ./data:/data
+    depends_on:
+      - jaeger
+    networks:
+      - prfactory-network
+    restart: unless-stopped
+
+  worker:
+    image: prfactory-worker:latest
+    build:
+      context: .
+      dockerfile: src/PRFactory.Worker/Dockerfile
+    container_name: prfactory-worker
+    environment:
+      - DOTNET_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Data Source=/data/prfactory.db
+      - OpenTelemetry__Jaeger__AgentHost=jaeger
+      - OpenTelemetry__Jaeger__AgentPort=6831
+      - Logging__LogLevel__Default=Information
+      - Logging__LogLevel__Microsoft=Warning
+    volumes:
+      - ./data:/data
+    depends_on:
+      - jaeger
+    networks:
+      - prfactory-network
+    restart: unless-stopped
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.51
+    container_name: prfactory-jaeger
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"  # Jaeger UI
+      - "14268:14268"
+      - "14250:14250"
+      - "9411:9411"
+    environment:
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - prfactory-network
+    restart: unless-stopped
+
+networks:
+  prfactory-network:
+    driver: bridge
+
+volumes:
+  data:
+    driver: local

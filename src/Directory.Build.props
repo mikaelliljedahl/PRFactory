@@ -10,7 +10,7 @@
 
   <PropertyGroup>
     <!-- Common package versions -->
-    <MicrosoftExtensionsVersion>8.0.0</MicrosoftExtensionsVersion>
+    <MicrosoftExtensionsVersion>9.0.0</MicrosoftExtensionsVersion>
     <EntityFrameworkCoreVersion>8.0.0</EntityFrameworkCoreVersion>
     <OpenTelemetryVersion>1.9.0</OpenTelemetryVersion>
     <MassTransitVersion>8.2.0</MassTransitVersion>

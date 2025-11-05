@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
+using PRFactory.Domain.Entities;
+using PRFactory.Domain.Interfaces;
 using PRFactory.Infrastructure.Agents.Messages;
 
 namespace PRFactory.Worker;
@@ -274,7 +276,7 @@ public class WorkflowResumeHandler : IWorkflowResumeHandler
     /// </summary>
     private AgentContext CreateAgentContextFromCheckpoint(
         CheckpointData checkpoint,
-        object ticket)
+        Ticket ticket)
     {
         // Extract context data from checkpoint
         var context = new AgentContext
@@ -467,15 +469,6 @@ public interface ICheckpointStore
         CancellationToken cancellationToken);
 }
 
-/// <summary>
-/// Interface for ticket repository.
-/// </summary>
-public interface ITicketRepository
-{
-    Task<object?> GetByIdAsync(
-        Guid ticketId,
-        CancellationToken cancellationToken);
-}
 
 /// <summary>
 /// Represents checkpoint data stored in the database.

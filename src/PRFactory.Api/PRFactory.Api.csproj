@@ -38,10 +38,6 @@
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.9.0" />
     <PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.0.0-beta.12" />
 
-    <!-- Microsoft Agent Framework -->
-    <PackageReference Include="Microsoft.Agents.AI" Version="1.0.0-preview.1" />
-    <PackageReference Include="Microsoft.Agents.AI.Abstractions" Version="1.0.0-preview.1" />
-
     <!-- Validation -->
     <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
 

@@ -6,7 +6,7 @@ An AI-powered Pull Request Factory that automates GitHub pull request creation a
 
 Before you begin, ensure you have the following installed:
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or later
+- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) or later
 - [Docker](https://www.docker.com/get-started) and Docker Compose (for local development)
 - [Git](https://git-scm.com/downloads)
 - A GitHub account with a Personal Access Token (PAT)
@@ -180,7 +180,7 @@ dotnet test --logger "console;verbosity=detailed"
 
 ### Code Style and Standards
 
-- Target Framework: .NET 8
+- Target Framework: .NET 9
 - Language Version: C# 12
 - Nullable Reference Types: Enabled
 - Implicit Usings: Enabled
@@ -247,7 +247,7 @@ Access Jaeger UI at http://localhost:16686 to view traces.
 ### Common Issues
 
 **Issue**: `dotnet: command not found`
-- **Solution**: Install .NET 8 SDK from https://dotnet.microsoft.com/download
+- **Solution**: Install .NET 9 SDK from https://dotnet.microsoft.com/download
 
 **Issue**: Database connection errors
 - **Solution**: Ensure the database file path is writable and migrations are applied

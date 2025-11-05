@@ -2,6 +2,8 @@ using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using PRFactory.Domain.Entities;
 using PRFactory.Domain.Interfaces;
+using PRFactory.Infrastructure.Agents;
+using PRFactory.Infrastructure.Agents.Base;
 using PRFactory.Infrastructure.Agents.Messages;
 
 namespace PRFactory.Worker;
@@ -432,76 +434,6 @@ public class WorkflowResumeHandler : IWorkflowResumeHandler
         }
 
         return defaultValue;
-    }
-}
-
-/// <summary>
-/// Interface for workflow resume handler.
-/// </summary>
-public interface IWorkflowResumeHandler
-{
-    Task<WorkflowExecutionResult> ResumeWorkflowAsync(
-        SuspendedWorkflow workflow,
-        CancellationToken cancellationToken);
-
-    Task<(bool IsValid, IAgentMessage? ResumeMessage)> ValidateAndCreateResumeMessageAsync(
-        Guid ticketId,
-        string eventType,
-        object eventData,
-        CancellationToken cancellationToken);
-}
-
-/// <summary>
-/// Interface for checkpoint storage.
-/// </summary>
-public interface ICheckpointStore
-{
-    Task<CheckpointData?> LoadCheckpointAsync(
-        Guid checkpointId,
-        CancellationToken cancellationToken);
-
-    Task<CheckpointData?> LoadLatestCheckpointAsync(
-        Guid ticketId,
-        CancellationToken cancellationToken);
-
-    Task SaveCheckpointAsync(
-        CheckpointData checkpoint,
-        CancellationToken cancellationToken);
-}
-
-
-/// <summary>
-/// Represents checkpoint data stored in the database.
-/// </summary>
-public class CheckpointData
-{
-    public Guid CheckpointId { get; set; }
-    public Guid TicketId { get; set; }
-    public Guid? TenantId { get; set; }
-    public string AgentName { get; set; } = string.Empty;
-    public string State { get; set; } = string.Empty;
-    public Dictionary<string, object>? StateData { get; set; }
-    public DateTime Timestamp { get; set; }
-}
-
-/// <summary>
-/// Agent execution context.
-/// </summary>
-public class AgentContext
-{
-    public string TicketId { get; set; } = string.Empty;
-    public string TenantId { get; set; } = string.Empty;
-    public Dictionary<string, object> State { get; set; } = new();
-
-    public void RestoreFromCheckpoint(CheckpointData checkpoint)
-    {
-        if (checkpoint.StateData != null)
-        {
-            foreach (var kvp in checkpoint.StateData)
-            {
-                State[kvp.Key] = kvp.Value;
-            }
-        }
     }
 }
 

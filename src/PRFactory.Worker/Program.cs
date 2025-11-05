@@ -6,6 +6,7 @@ using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
 using Serilog;
 using Serilog.Events;
+using PRFactory.Infrastructure.Agents;
 using PRFactory.Worker;
 
 // Create logger for startup

@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging;
-using PRFactory.Worker;
 
 namespace PRFactory.Infrastructure.Agents.Stubs;
 

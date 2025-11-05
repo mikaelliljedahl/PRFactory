@@ -3,11 +3,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PRFactory.Domain.Interfaces;
+using PRFactory.Infrastructure.Agents;
 using PRFactory.Infrastructure.Agents.Stubs;
 using PRFactory.Infrastructure.Persistence;
 using PRFactory.Infrastructure.Persistence.Encryption;
 using PRFactory.Infrastructure.Persistence.Repositories;
-using PRFactory.Worker;
 
 namespace PRFactory.Infrastructure;
 

@@ -125,17 +125,6 @@ public class CodebaseAnalysis
 }
 
 /// <summary>
-/// Agent execution status
-/// </summary>
-public enum AgentStatus
-{
-    Running,
-    Suspended,
-    Completed,
-    Failed
-}
-
-/// <summary>
 /// Checkpoint data for resuming workflows
 /// </summary>
 public class CheckpointData
@@ -144,28 +133,4 @@ public class CheckpointData
     public string NextAgentType { get; set; } = string.Empty;
     public DateTime SavedAt { get; set; } = DateTime.UtcNow;
     public Dictionary<string, object> State { get; set; } = new();
-}
-
-/// <summary>
-/// Agent checkpoint for saving and restoring execution state
-/// </summary>
-public class AgentCheckpoint
-{
-    public string CheckpointId { get; set; } = string.Empty;
-    public string TicketId { get; set; } = string.Empty;
-    public string AgentName { get; set; } = string.Empty;
-    public Dictionary<string, object> State { get; set; } = new();
-    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-
-    public Task SaveAsync(CancellationToken cancellationToken)
-    {
-        // TODO: Implement checkpoint persistence (file system or database)
-        return Task.CompletedTask;
-    }
-
-    public static Task<AgentCheckpoint?> LoadLatestAsync(string ticketId, string agentName, CancellationToken cancellationToken)
-    {
-        // TODO: Implement checkpoint loading from persistence
-        return Task.FromResult<AgentCheckpoint?>(null);
-    }
 }

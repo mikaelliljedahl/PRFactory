@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using PRFactory.Core.Application.Services;
 using PRFactory.Infrastructure.Claude.Models;
+using CoreModels = PRFactory.Core.Application.Services;
 
 namespace PRFactory.Infrastructure.Claude;
 
@@ -31,7 +32,7 @@ public class ClaudeService : IClaudeService
     }
 
     /// <inheritdoc/>
-    public async Task<CodebaseAnalysis> AnalyzeCodebaseAsync(
+    public async Task<CoreModels.CodebaseAnalysis> AnalyzeCodebaseAsync(
         dynamic ticket,
         string repositoryPath,
         CancellationToken ct = default)
@@ -88,9 +89,9 @@ public class ClaudeService : IClaudeService
     }
 
     /// <inheritdoc/>
-    public async Task<List<Question>> GenerateQuestionsAsync(
+    public async Task<List<CoreModels.Question>> GenerateQuestionsAsync(
         dynamic ticket,
-        CodebaseAnalysis analysis,
+        CoreModels.CodebaseAnalysis analysis,
         CancellationToken ct = default)
     {
         _logger.LogInformation("Generating questions for ticket {TicketId}", ticket.Id);
@@ -133,12 +134,12 @@ public class ClaudeService : IClaudeService
             questionsJson,
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-        var questions = questionDtos?.Select(q => new Question(
+        var questions = questionDtos?.Select(q => new CoreModels.Question(
             Id: Guid.NewGuid().ToString(),
             Category: q.Category ?? "General",
             Text: q.Text ?? string.Empty,
             CreatedAt: DateTime.UtcNow
-        )).ToList() ?? new List<Question>();
+        )).ToList() ?? new List<CoreModels.Question>();
 
         _logger.LogInformation("Generated {QuestionCount} questions", questions.Count);
 
@@ -146,7 +147,7 @@ public class ClaudeService : IClaudeService
     }
 
     /// <inheritdoc/>
-    public async Task<ImplementationPlan> GenerateImplementationPlanAsync(
+    public async Task<CoreModels.ImplementationPlan> GenerateImplementationPlanAsync(
         dynamic ticket,
         CancellationToken ct = default)
     {
@@ -160,7 +161,7 @@ public class ClaudeService : IClaudeService
             ticket.Id.ToString(),
             "analysis");
 
-        CodebaseAnalysis analysis;
+        CoreModels.CodebaseAnalysis analysis;
         if (analysisResponse != null)
         {
             analysis = ParseAnalysisResponse(analysisResponse);
@@ -168,7 +169,7 @@ public class ClaudeService : IClaudeService
         else
         {
             // Fallback to empty analysis
-            analysis = new CodebaseAnalysis(
+            analysis = new CoreModels.CodebaseAnalysis(
                 new List<string>(),
                 new Dictionary<string, string>(),
                 "Unknown",
@@ -201,7 +202,7 @@ public class ClaudeService : IClaudeService
         // Split response into sections
         var sections = SplitPlanSections(response);
 
-        var plan = new ImplementationPlan(
+        var plan = new CoreModels.ImplementationPlan(
             MainPlan: response,
             AffectedFiles: sections.GetValueOrDefault("Files to Modify", "")
                 + "\n" + sections.GetValueOrDefault("Files to Create", ""),
@@ -218,7 +219,7 @@ public class ClaudeService : IClaudeService
     }
 
     /// <inheritdoc/>
-    public async Task<CodeImplementation> ImplementCodeAsync(
+    public async Task<CoreModels.CodeImplementation> ImplementCodeAsync(
         dynamic ticket,
         string repositoryPath,
         CancellationToken ct = default)
@@ -265,7 +266,7 @@ public class ClaudeService : IClaudeService
             "Code implementation completed. Modified {ModifiedCount} files, created {CreatedCount} files",
             modifiedFiles.Count, createdFiles.Count);
 
-        return new CodeImplementation(
+        return new CoreModels.CodeImplementation(
             ModifiedFiles: modifiedFiles,
             CreatedFiles: createdFiles,
             Summary: $"Implementation completed: {modifiedFiles.Count} files modified, {createdFiles.Count} files created"
@@ -277,7 +278,7 @@ public class ClaudeService : IClaudeService
     /// <summary>
     /// Parse analysis response to extract relevant information
     /// </summary>
-    private CodebaseAnalysis ParseAnalysisResponse(string response)
+    private CoreModels.CodebaseAnalysis ParseAnalysisResponse(string response)
     {
         var relevantFiles = new List<string>();
         var patterns = new List<string>();
@@ -323,7 +324,7 @@ public class ClaudeService : IClaudeService
             patternKeywords.Where(p =>
                 response.Contains(p, StringComparison.OrdinalIgnoreCase)));
 
-        return new CodebaseAnalysis(
+        return new CoreModels.CodebaseAnalysis(
             RelevantFiles: relevantFiles,
             FileContents: new Dictionary<string, string>(),
             Architecture: architecture,

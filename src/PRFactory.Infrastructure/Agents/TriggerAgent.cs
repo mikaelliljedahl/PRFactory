@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Logging;
-using PRFactory.Core.Domain.Entities;
+using PRFactory.Domain.Entities;
 using PRFactory.Domain.Interfaces;
 using PRFactory.Domain.ValueObjects;
 using PRFactory.Infrastructure.Agents.Base;

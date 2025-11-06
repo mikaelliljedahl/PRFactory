@@ -19,8 +19,8 @@ namespace PRFactory.Infrastructure.Agents.Graphs
         private readonly string _graphId;
         private readonly IServiceProvider _serviceProvider;
         private readonly List<GraphNode> _nodes = new();
-        private GraphNode _entryNode;
-        private GraphNode _currentNode;
+        private GraphNode? _entryNode;
+        private GraphNode? _currentNode;
 
         public GraphBuilder(string graphId, IServiceProvider serviceProvider)
         {
@@ -31,7 +31,7 @@ namespace PRFactory.Infrastructure.Agents.Graphs
         /// <summary>
         /// Add an agent to the graph
         /// </summary>
-        public GraphBuilder AddAgent<TAgent>(string agentId = null)
+        public GraphBuilder AddAgent<TAgent>(string? agentId = null)
         {
             var nodeId = agentId ?? typeof(TAgent).Name;
             var node = new AgentNode<TAgent>
@@ -65,7 +65,7 @@ namespace PRFactory.Infrastructure.Agents.Graphs
         public GraphBuilder AddConditional(
             Func<GraphContext, IAgentMessage, bool> condition,
             Action<GraphBuilder> trueBranch,
-            Action<GraphBuilder> falseBranch = null)
+            Action<GraphBuilder>? falseBranch = null)
         {
             var conditionalNode = new ConditionalNode
             {
@@ -202,7 +202,7 @@ namespace PRFactory.Infrastructure.Agents.Graphs
         /// <summary>
         /// Build the nodes without creating a graph (used for branches)
         /// </summary>
-        private GraphNode BuildNodes()
+        private GraphNode? BuildNodes()
         {
             return _entryNode;
         }
@@ -233,13 +233,13 @@ namespace PRFactory.Infrastructure.Agents.Graphs
     /// </summary>
     public abstract class GraphNode
     {
-        public string NodeId { get; set; }
+        public string NodeId { get; set; } = string.Empty;
         public GraphNodeType NodeType { get; set; }
         public List<GraphNode> NextNodes { get; set; } = new();
-        public IServiceProvider ServiceProvider { get; set; }
+        public IServiceProvider? ServiceProvider { get; set; }
         public int MaxRetries { get; set; } = 1;
         public TimeSpan RetryDelay { get; set; } = TimeSpan.FromSeconds(1);
-        public Func<Exception, GraphContext, Task<bool>> ErrorHandler { get; set; }
+        public Func<Exception, GraphContext, Task<bool>>? ErrorHandler { get; set; }
 
         public abstract Task<IAgentMessage> ExecuteAsync(
             IAgentMessage inputMessage,

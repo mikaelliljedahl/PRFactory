@@ -1,4 +1,4 @@
-using PRFactory.Core.Domain.Entities;
+using PRFactory.Domain.Entities;
 using System;
 using System.Collections.Generic;
 

@@ -172,7 +172,7 @@ public class JiraChangelogItem
     /// Gets or sets the new value (as string).
     /// </summary>
     [JsonPropertyName("toString")]
-    public string? ToString { get; set; }
+    public new string? ToString { get; set; }
 
     /// <summary>
     /// Gets or sets the old value ID.

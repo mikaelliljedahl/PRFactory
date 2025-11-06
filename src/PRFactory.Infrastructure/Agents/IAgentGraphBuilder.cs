@@ -1,4 +1,5 @@
 using PRFactory.Infrastructure.Agents.Base;
+using PRFactory.Infrastructure.Agents.Messages;
 
 namespace PRFactory.Infrastructure.Agents;
 

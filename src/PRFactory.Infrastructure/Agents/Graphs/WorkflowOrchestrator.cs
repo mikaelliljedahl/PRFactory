@@ -366,12 +366,12 @@ namespace PRFactory.Infrastructure.Agents.Graphs
     {
         public Guid WorkflowId { get; set; }
         public Guid TicketId { get; set; }
-        public string CurrentGraph { get; set; }
-        public string CurrentState { get; set; }
+        public string CurrentGraph { get; set; } = string.Empty;
+        public string CurrentState { get; set; } = string.Empty;
         public WorkflowStatus Status { get; set; }
         public DateTime StartedAt { get; set; }
         public DateTime? CompletedAt { get; set; }
-        public string ErrorMessage { get; set; }
+        public string? ErrorMessage { get; set; }
     }
 
     /// <summary>
@@ -395,7 +395,7 @@ namespace PRFactory.Infrastructure.Agents.Graphs
         Task SaveStateAsync(WorkflowState state);
         Task<WorkflowState> GetByTicketIdAsync(Guid ticketId);
         Task<WorkflowState> GetByWorkflowIdAsync(Guid workflowId);
-        Task UpdateStatusAsync(Guid workflowId, WorkflowStatus status, string error = null);
+        Task UpdateStatusAsync(Guid workflowId, WorkflowStatus status, string? error = null);
     }
 
     /// <summary>
@@ -411,8 +411,8 @@ namespace PRFactory.Infrastructure.Agents.Graphs
     {
         public Guid TicketId { get; set; }
         public Guid WorkflowId { get; set; }
-        public string GraphId { get; set; }
-        public string State { get; set; }
+        public string GraphId { get; set; } = string.Empty;
+        public string State { get; set; } = string.Empty;
         public DateTime SuspendedAt { get; set; }
     }
 
@@ -428,8 +428,8 @@ namespace PRFactory.Infrastructure.Agents.Graphs
     {
         public Guid TicketId { get; set; }
         public Guid WorkflowId { get; set; }
-        public string GraphId { get; set; }
-        public string Error { get; set; }
+        public string GraphId { get; set; } = string.Empty;
+        public string? Error { get; set; }
         public DateTime FailedAt { get; set; }
     }
 

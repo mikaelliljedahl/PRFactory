@@ -8,7 +8,7 @@
 **Triggers:** Push to `main` or `claude/**` branches, PRs to `main`
 
 **Jobs:**
-- ✅ **Build & Test**: Restore, build, run tests with .NET 8
+- ✅ **Build & Test**: Restore, build, run tests with .NET 10
 - ✅ **Code Analysis**: Count LOC, analyze project structure
 - ✅ **Docker Build**: Build API Docker image with caching
 
@@ -38,7 +38,7 @@
 
 Once the workflows run on GitHub, they will:
 
-1. **Validate Build**: Confirm all 5 projects compile with .NET 8
+1. **Validate Build**: Confirm all 5 projects compile with .NET 10
 2. **Run Tests**: Execute xUnit tests (currently minimal)
 3. **Build Docker Image**: Create containerized API
 4. **Check Security**: Scan for vulnerable NuGet packages
@@ -62,7 +62,7 @@ Once the workflows run on GitHub, they will:
 - **139 files** created
 - **25,427+ lines** added
 - **100 C# files** (18,590 LOC)
-- **5 .NET 8 projects**
+- **5 .NET 10 projects**
 
 ## Next Steps
 

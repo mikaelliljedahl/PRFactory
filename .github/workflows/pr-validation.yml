@@ -6,7 +6,7 @@ on:
     types: [ opened, synchronize, reopened ]
 
 env:
-  DOTNET_VERSION: '9.0.x'
+  DOTNET_VERSION: '10.0.x'
 
 jobs:
   validate:
@@ -57,5 +57,5 @@ jobs:
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: '✅ Build validation passed! All projects compiled successfully with .NET 9.'
+            body: '✅ Build validation passed! All projects compiled successfully with .NET 10.'
           })

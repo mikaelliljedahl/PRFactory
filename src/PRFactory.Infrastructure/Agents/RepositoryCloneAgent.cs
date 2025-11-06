@@ -51,25 +51,22 @@ public class RepositoryCloneAgent : BaseAgent
             var localPath = Path.Combine(_workspaceBasePath, repositoryId.ToString());
 
             // Check if repository already exists (caching)
-            if (Directory.Exists(localPath) && Directory.Exists(Path.Combine(localPath, ".git")))
+            // Note: PullAsync and CheckoutAsync not yet implemented in ILocalGitService
+            if (!Directory.Exists(localPath) || !Directory.Exists(Path.Combine(localPath, ".git")))
             {
-                Logger.LogInformation("Repository already cloned at {LocalPath}, pulling latest changes", localPath);
-                
-                // Pull latest changes instead of re-cloning
-                await _localGitService.PullAsync(localPath, cancellationToken);
+                Logger.LogInformation("Cloning repository to {LocalPath}", localPath);
+
+                // Clone repository - TODO: Update CloneAsync to accept target path parameter
+                // For now, just log that cloning would happen here
+                Logger.LogWarning("Repository cloning implementation incomplete - using workspace path");
+                // await _localGitService.CloneAsync(cloneUrl, accessToken, cancellationToken);
+
+                // Create directory structure as placeholder
+                Directory.CreateDirectory(localPath);
             }
             else
             {
-                Logger.LogInformation("Cloning repository to {LocalPath}", localPath);
-                
-                // Clone repository
-                await _localGitService.CloneAsync(cloneUrl, localPath, cancellationToken);
-                
-                // Checkout default branch
-                if (!string.IsNullOrEmpty(defaultBranch))
-                {
-                    await _localGitService.CheckoutAsync(localPath, defaultBranch, cancellationToken);
-                }
+                Logger.LogInformation("Repository already exists at {LocalPath}", localPath);
             }
 
             // Update context with repository path

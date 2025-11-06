@@ -78,9 +78,11 @@ public class TriggerAgent : BaseAgent
             jiraKey!,
             Guid.Parse(context.TenantId),
             Guid.Parse(context.RepositoryId),
-            title!,
-            description!
+            "Jira"
         );
+
+        // Update ticket info with title and description
+        ticket.UpdateTicketInfo(title!, description!);
 
         // Transition to Analyzing state
         var transitionResult = ticket.TransitionTo(WorkflowState.Analyzing);

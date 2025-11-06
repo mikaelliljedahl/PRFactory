@@ -77,10 +77,9 @@ Respond with JSON in this format:
 
             var messages = new List<Message>
             {
-                new Message
-                {
-                    Role = "user",
-                    Content = $@"Ticket: {context.Ticket.TicketKey}
+                new Message(
+                    "user",
+                    $@"Ticket: {context.Ticket.TicketKey}
 Title: {context.Ticket.Title}
 Description: {context.Ticket.Description}
 
@@ -93,8 +92,7 @@ Affected Files:
 Technical Considerations:
 {string.Join("\n", context.Analysis.TechnicalConsiderations)}
 
-Please generate 3-7 clarifying questions to ensure the implementation is well-defined."
-                }
+Please generate 3-7 clarifying questions to ensure the implementation is well-defined.")
             };
 
             // Call Claude

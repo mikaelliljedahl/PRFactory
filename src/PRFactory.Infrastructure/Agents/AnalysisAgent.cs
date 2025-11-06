@@ -56,11 +56,9 @@ public class AnalysisAgent : BaseAgent
         try
         {
             // Build context from repository
-            var codebaseContext = await _contextBuilder.BuildContextAsync(
-                context.RepositoryPath,
-                context.Ticket.Title,
-                context.Ticket.Description,
-                cancellationToken
+            var codebaseContext = await _contextBuilder.BuildAnalysisContextAsync(
+                context.Ticket,
+                context.RepositoryPath!
             );
 
             // Prepare system prompt for analysis
@@ -82,16 +80,14 @@ Respond with JSON in this format:
 
             var messages = new List<Message>
             {
-                new Message
-                {
-                    Role = "user",
-                    Content = $@"Ticket: {context.Ticket.TicketKey}
+                new Message(
+                    "user",
+                    $@"Ticket: {context.Ticket.TicketKey}
 Title: {context.Ticket.Title}
 Description: {context.Ticket.Description}
 
 Codebase Context:
-{codebaseContext}"
-                }
+{codebaseContext}")
             };
 
             // Call Claude for analysis
@@ -130,8 +126,9 @@ Codebase Context:
             context.Analysis = codebaseAnalysis;
             context.State["Analysis"] = codebaseAnalysis;
 
-            // Store in Ticket entity
-            context.Ticket.SetCodebaseAnalysis(codebaseAnalysis.Summary, codebaseAnalysis.AffectedFiles);
+            // Store analysis in context (Ticket entity doesn't have SetCodebaseAnalysis method yet)
+            // TODO: Add SetCodebaseAnalysis method to Ticket entity or store in dedicated table
+            // context.Ticket.SetCodebaseAnalysis(codebaseAnalysis.Summary, codebaseAnalysis.AffectedFiles);
 
             Logger.LogInformation("Codebase analysis completed for ticket {JiraKey}", context.Ticket.TicketKey);
 

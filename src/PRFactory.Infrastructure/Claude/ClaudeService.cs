@@ -94,7 +94,8 @@ public class ClaudeService : IClaudeService
         CoreModels.CodebaseAnalysis analysis,
         CancellationToken ct = default)
     {
-        _logger.LogInformation("Generating questions for ticket {TicketId}", ticket.Id);
+        var ticketId = (string)ticket.Id;
+        _logger.LogInformation("Generating questions for ticket {TicketId}", ticketId);
 
         var context = new StringBuilder();
         context.AppendLine("## Ticket");

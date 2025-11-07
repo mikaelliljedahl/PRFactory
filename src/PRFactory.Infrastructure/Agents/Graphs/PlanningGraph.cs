@@ -25,7 +25,7 @@ namespace PRFactory.Infrastructure.Agents.Graphs
 
         public PlanningGraph(
             ILogger<PlanningGraph> logger,
-            ICheckpointStore checkpointStore,
+            Base.ICheckpointStore checkpointStore,
             IAgentExecutor agentExecutor)
             : base(logger, checkpointStore)
         {

@@ -257,18 +257,31 @@ public class ClaudeService : IClaudeService
             fileChangesJson,
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-        var modifiedFiles = fileChanges
-            ?.ToDictionary(fc => fc.Path ?? "", fc => fc.Content ?? "")
-            ?? new Dictionary<string, string>();
+        // Process file changes - avoid lambda with dynamic type
+        var modifiedFiles = new Dictionary<string, string>();
+        var createdFiles = new List<string>();
 
-        var createdFiles = fileChanges
-            ?.Where(fc => fc.Action?.ToLower() == "create")
-            .Select(fc => fc.Path ?? "")
-            .ToList() ?? new List<string>();
+        if (fileChanges != null)
+        {
+            foreach (var fc in fileChanges)
+            {
+                string path = fc.Path ?? "";
+                string content = fc.Content ?? "";
+                modifiedFiles[path] = content;
 
+                string action = fc.Action?.ToLower() ?? "";
+                if (action == "create")
+                {
+                    createdFiles.Add(path);
+                }
+            }
+        }
+
+        var modifiedCount = modifiedFiles.Count;
+        var createdCount = createdFiles.Count;
         _logger.LogInformation(
             "Code implementation completed. Modified {ModifiedCount} files, created {CreatedCount} files",
-            modifiedFiles.Count, createdFiles.Count);
+            modifiedCount, createdCount);
 
         return new CoreModels.CodeImplementation(
             ModifiedFiles: modifiedFiles,

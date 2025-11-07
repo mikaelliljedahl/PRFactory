@@ -67,10 +67,13 @@ public class LocalGitService : ILocalGitService
 
         var cloneOptions = new CloneOptions
         {
-            CredentialsProvider = (url, user, cred) => new UsernamePasswordCredentials
+            FetchOptions = new FetchOptions
             {
-                Username = "oauth2",
-                Password = accessToken
+                CredentialsProvider = (url, user, cred) => new UsernamePasswordCredentials
+                {
+                    Username = "oauth2",
+                    Password = accessToken
+                }
             },
             IsBare = false,
             Checkout = true

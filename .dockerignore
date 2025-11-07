@@ -1,0 +1,75 @@
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+.vscode/
+.vs/
+
+# Documentation
+*.md
+docs/
+presentation.pptx
+presentation-pr-factory.html
+
+# Build outputs
+**/bin/
+**/obj/
+**/out/
+build_output.txt
+
+# User-specific files
+**/*.user
+**/*.suo
+**/*.userosscache
+**/*.sln.docstates
+
+# Test results
+**/TestResults/
+**/*.trx
+**/*.coverage
+
+# NuGet packages
+**/packages/
+*.nupkg
+*.snupkg
+
+# Data files
+**/data/
+**/*.db
+**/*.db-shm
+**/*.db-wal
+
+# Logs
+**/logs/
+**/*.log
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile
+
+# Environment files (should use secrets management)
+**/.env
+**/.env.*
+**/appsettings.Development.json
+**/appsettings.Local.json
+
+# Claude Code
+.claude/
+
+# Temporary files
+**/tmp/
+**/temp/

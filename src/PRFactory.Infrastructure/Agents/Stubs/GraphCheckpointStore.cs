@@ -7,7 +7,7 @@ namespace PRFactory.Infrastructure.Agents.Stubs;
 /// Stub implementation of Base.ICheckpointStore for graph checkpointing.
 /// This should be replaced with a real implementation that persists to database.
 /// </summary>
-public class GraphCheckpointStore : ICheckpointStore
+public class GraphCheckpointStore : Base.ICheckpointStore
 {
     private readonly ILogger<GraphCheckpointStore> _logger;
     private readonly Dictionary<string, Checkpoint> _checkpoints = new();

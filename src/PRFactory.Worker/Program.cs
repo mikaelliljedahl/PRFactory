@@ -118,28 +118,29 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
     // });
 
     // Register HTTP Clients for external services
-    services.AddHttpClient("Jira", client =>
-    {
-        var jiraUrl = configuration["Jira:BaseUrl"];
-        if (!string.IsNullOrEmpty(jiraUrl))
-        {
-            client.BaseAddress = new Uri(jiraUrl);
-            client.DefaultRequestHeaders.Add("Accept", "application/json");
-        }
-    });
-
-    services.AddHttpClient("GitHub", client =>
-    {
-        client.BaseAddress = new Uri("https://api.github.com");
-        client.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
-        client.DefaultRequestHeaders.Add("User-Agent", "PRFactory");
-    });
-
-    services.AddHttpClient("Claude", client =>
-    {
-        client.BaseAddress = new Uri("https://api.anthropic.com");
-        client.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
-    });
+    // TODO: AddHttpClient requires Microsoft.Extensions.Http package
+    // services.AddHttpClient("Jira", client =>
+    // {
+    //     var jiraUrl = configuration["Jira:BaseUrl"];
+    //     if (!string.IsNullOrEmpty(jiraUrl))
+    //     {
+    //         client.BaseAddress = new Uri(jiraUrl);
+    //         client.DefaultRequestHeaders.Add("Accept", "application/json");
+    //     }
+    // });
+    //
+    // services.AddHttpClient("GitHub", client =>
+    // {
+    //     client.BaseAddress = new Uri("https://api.github.com");
+    //     client.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
+    //     client.DefaultRequestHeaders.Add("User-Agent", "PRFactory");
+    // });
+    //
+    // services.AddHttpClient("Claude", client =>
+    // {
+    //     client.BaseAddress = new Uri("https://api.anthropic.com");
+    //     client.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
+    // });
 
     // Register Polly resilience policies
     // services.AddResiliencePipeline("default", builder =>

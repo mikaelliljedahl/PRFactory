@@ -45,7 +45,9 @@ public class TelemetryMiddleware : IAgentMiddleware
         Func<AgentContext, CancellationToken, Task<AgentResult>> next,
         CancellationToken cancellationToken = default)
     {
-        var agentName = context.Metadata.CurrentPhase ?? "Unknown";
+        var agentName = context.Metadata.ContainsKey("CurrentPhase")
+            ? context.Metadata["CurrentPhase"]?.ToString() ?? "Unknown"
+            : "Unknown";
         var stopwatch = Stopwatch.StartNew();
 
         // Create OpenTelemetry activity (span)
@@ -58,13 +60,20 @@ public class TelemetryMiddleware : IAgentMiddleware
         activity?.SetTag("ticket.id", context.TicketId);
         activity?.SetTag("tenant.id", context.TenantId);
         activity?.SetTag("repository.id", context.RepositoryId);
-        activity?.SetTag("execution.id", context.Metadata.ExecutionId);
-        activity?.SetTag("phase", context.Metadata.CurrentPhase);
+
+        if (context.Metadata.ContainsKey("ExecutionId"))
+            activity?.SetTag("execution.id", context.Metadata["ExecutionId"]);
+
+        if (context.Metadata.ContainsKey("CurrentPhase"))
+            activity?.SetTag("phase", context.Metadata["CurrentPhase"]);
 
         // Add custom tags if available
-        foreach (var tag in context.Metadata.Tags)
+        if (context.Metadata.ContainsKey("Tags") && context.Metadata["Tags"] is Dictionary<string, object> tags)
         {
-            activity?.SetTag($"custom.{tag.Key}", tag.Value);
+            foreach (var tag in tags)
+            {
+                activity?.SetTag($"custom.{tag.Key}", tag.Value);
+            }
         }
 
         AgentResult? result = null;

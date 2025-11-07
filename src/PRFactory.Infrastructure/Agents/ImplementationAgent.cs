@@ -93,27 +93,23 @@ Respond with JSON in this format:
 }";
 
             // Build full context
-            var codebaseContext = await _contextBuilder.BuildContextAsync(
-                context.RepositoryPath!,
-                context.Ticket.Title,
-                context.Ticket.Description,
-                cancellationToken
+            var codebaseContext = await _contextBuilder.BuildImplementationContextAsync(
+                context.Ticket,
+                context.RepositoryPath!
             );
 
             var messages = new List<Message>
             {
-                new Message
-                {
-                    Role = "user",
-                    Content = $@"Please implement the following plan:
+                new Message(
+                    "user",
+                    $@"Please implement the following plan:
 
 {context.ImplementationPlan}
 
 Codebase Context:
 {codebaseContext}
 
-Generate complete, production-ready code for all files mentioned in the plan."
-                }
+Generate complete, production-ready code for all files mentioned in the plan.")
             };
 
             // Call Claude

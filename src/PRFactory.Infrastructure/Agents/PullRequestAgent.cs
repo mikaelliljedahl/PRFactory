@@ -77,7 +77,7 @@ public class PullRequestAgent : BaseAgent
 
             // Create PR using git platform provider
             var pullRequest = await _gitPlatformProvider.CreatePullRequestAsync(
-                context.Repository.Id.ToString(),
+                context.Repository.Id,
                 new CreatePullRequestRequest
                 {
                     Title = prTitle,

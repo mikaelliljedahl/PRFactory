@@ -35,7 +35,7 @@ public class CheckpointStore : ICheckpointStore
         CheckpointData checkpoint,
         CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Checkpoint saved for ticket {TicketId}", checkpoint.TicketId);
+        _logger.LogInformation("Checkpoint saved at {SavedAt}", checkpoint.SavedAt);
         return Task.CompletedTask;
     }
 }

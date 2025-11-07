@@ -90,11 +90,7 @@ Be specific and actionable. Reference actual file names and code patterns from t
 
             var messages = new List<Message>
             {
-                new Message
-                {
-                    Role = "user",
-                    Content = contextMessage
-                }
+                new Message("user", contextMessage)
             };
 
             // Call Claude

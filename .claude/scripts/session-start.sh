@@ -6,7 +6,7 @@ echo "🚀 PRFactory SessionStart Hook - Installing .NET SDK 10..."
 # Define SDK version
 DOTNET_VERSION="10.0"
 DOTNET_INSTALL_DIR="$HOME/.dotnet"
-DOTNET_INSTALL_SCRIPT="$HOME/dotnet-install.sh"
+DOTNET_INSTALL_SCRIPT="/tmp/dotnet-install.sh"
 
 # Check if .NET SDK 10 is already installed
 if command -v dotnet &> /dev/null; then

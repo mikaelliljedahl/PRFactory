@@ -42,7 +42,8 @@ public class ContextBuilder : IContextBuilder
     {
         var sb = new StringBuilder();
 
-        _logger.LogInformation("Building analysis context for ticket {TicketId}", ticket.Id);
+        var ticketId = (string)ticket.Id;
+        _logger.LogInformation("Building analysis context for ticket {TicketId}", ticketId);
 
         // Repository structure
         sb.AppendLine("## Repository Structure");
@@ -84,7 +85,8 @@ public class ContextBuilder : IContextBuilder
     {
         var sb = new StringBuilder();
 
-        _logger.LogInformation("Building planning context for ticket {TicketId}", ticket.Id);
+        var ticketId = (string)ticket.Id;
+        _logger.LogInformation("Building planning context for ticket {TicketId}", ticketId);
 
         // Ticket & answers
         sb.AppendLine("## Ticket Information");
@@ -98,7 +100,19 @@ public class ContextBuilder : IContextBuilder
             sb.AppendLine("## Clarifying Questions & Answers");
             foreach (var question in ticket.Questions)
             {
-                var answer = ticket.Answers?.FirstOrDefault((dynamic a) => a.QuestionId == question.Id);
+                // Find answer matching this question
+                dynamic? answer = null;
+                if (ticket.Answers != null)
+                {
+                    foreach (var a in ticket.Answers)
+                    {
+                        if (a.QuestionId == question.Id)
+                        {
+                            answer = a;
+                            break;
+                        }
+                    }
+                }
                 sb.AppendLine($"**Q**: {question.Text}");
                 sb.AppendLine($"**A**: {answer?.Text ?? "(No answer provided)"}");
                 sb.AppendLine();
@@ -152,7 +166,8 @@ public class ContextBuilder : IContextBuilder
     {
         var sb = new StringBuilder();
 
-        _logger.LogInformation("Building implementation context for ticket {TicketId}", ticket.Id);
+        var ticketId = (string)ticket.Id;
+        _logger.LogInformation("Building implementation context for ticket {TicketId}", ticketId);
 
         // Read the implementation plan from the branch
         var planPath = Path.Combine(repoPath, "IMPLEMENTATION_PLAN.md");

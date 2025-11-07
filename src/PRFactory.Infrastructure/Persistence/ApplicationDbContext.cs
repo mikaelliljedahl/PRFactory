@@ -2,9 +2,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PRFactory.Domain.Entities;
 using PRFactory.Domain.ValueObjects;
-using PRFactory.Infrastructure.Persistence.Configurations;
 using PRFactory.Infrastructure.Persistence.Encryption;
 using System.Text.Json;
+using TenantConfig = PRFactory.Infrastructure.Persistence.Configurations.TenantConfiguration;
+using RepositoryConfig = PRFactory.Infrastructure.Persistence.Configurations.RepositoryConfiguration;
+using TicketConfig = PRFactory.Infrastructure.Persistence.Configurations.TicketConfiguration;
+using WorkflowEventConfig = PRFactory.Infrastructure.Persistence.Configurations.WorkflowEventConfiguration;
 
 namespace PRFactory.Infrastructure.Persistence;
 
@@ -38,10 +41,10 @@ public class ApplicationDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         // Apply entity configurations
-        modelBuilder.ApplyConfiguration(new TenantConfiguration(_encryptionService));
-        modelBuilder.ApplyConfiguration(new RepositoryConfiguration(_encryptionService));
-        modelBuilder.ApplyConfiguration(new TicketConfiguration());
-        modelBuilder.ApplyConfiguration(new WorkflowEventConfiguration());
+        modelBuilder.ApplyConfiguration(new TenantConfig(_encryptionService));
+        modelBuilder.ApplyConfiguration(new RepositoryConfig(_encryptionService));
+        modelBuilder.ApplyConfiguration(new TicketConfig());
+        modelBuilder.ApplyConfiguration(new WorkflowEventConfig());
 
         // Add indexes for common queries
         AddIndexes(modelBuilder);

@@ -37,7 +37,8 @@ public class ClaudeService : IClaudeService
         string repositoryPath,
         CancellationToken ct = default)
     {
-        _logger.LogInformation("Starting codebase analysis for ticket {TicketId}", ticket.Id);
+        var ticketId = (string)ticket.Id;
+        _logger.LogInformation("Starting codebase analysis for ticket {TicketId}", ticketId);
 
         var context = await _contextBuilder.BuildAnalysisContextAsync(ticket, repositoryPath);
 
@@ -152,7 +153,8 @@ public class ClaudeService : IClaudeService
         dynamic ticket,
         CancellationToken ct = default)
     {
-        _logger.LogInformation("Generating implementation plan for ticket {TicketId}", ticket.Id);
+        var ticketId = (string)ticket.Id;
+        _logger.LogInformation("Generating implementation plan for ticket {TicketId}", ticketId);
 
         // Get conversation history
         var history = await _historyRepo.GetConversationAsync(ticket.Id.ToString());
@@ -190,7 +192,7 @@ public class ClaudeService : IClaudeService
         var response = await _client.SendMessageAsync(
             PromptTemplates.PLANNING_SYSTEM_PROMPT,
             messages,
-            maxTokens: 8000,
+            8000,
             ct
         );
 
@@ -225,7 +227,8 @@ public class ClaudeService : IClaudeService
         string repositoryPath,
         CancellationToken ct = default)
     {
-        _logger.LogInformation("Implementing code for ticket {TicketId}", ticket.Id);
+        var ticketId = (string)ticket.Id;
+        _logger.LogInformation("Implementing code for ticket {TicketId}", ticketId);
 
         var context = await _contextBuilder.BuildImplementationContextAsync(ticket, repositoryPath);
         var history = await _historyRepo.GetConversationAsync(ticket.Id.ToString());
@@ -238,7 +241,7 @@ public class ClaudeService : IClaudeService
         var response = await _client.SendMessageAsync(
             PromptTemplates.IMPLEMENTATION_SYSTEM_PROMPT,
             messages,
-            maxTokens: 16000,
+            16000,
             ct
         );
 

@@ -67,7 +67,7 @@ public class ErrorHandlingMiddleware : IAgentMiddleware
                 context.TicketId,
                 ex.Message);
 
-            context.SetState(StateKeys.ErrorMessage, ex.Message);
+            context.State["ErrorMessage"] = ex.Message;
 
             return new AgentResult
             {
@@ -108,7 +108,7 @@ public class ErrorHandlingMiddleware : IAgentMiddleware
                 context.TicketId,
                 ex.Message);
 
-            context.SetState(StateKeys.ErrorMessage, $"HTTP request failed: {ex.Message}");
+            context.State["ErrorMessage"] = $"HTTP request failed: {ex.Message}";
             IncrementRetryCount(context);
 
             // Determine if it's a transient HTTP error
@@ -131,7 +131,7 @@ public class ErrorHandlingMiddleware : IAgentMiddleware
                 agentName,
                 context.TicketId);
 
-            context.SetState(StateKeys.ErrorMessage, "Operation timed out");
+            context.State["ErrorMessage"] = "Operation timed out";
             IncrementRetryCount(context);
 
             return new AgentResult
@@ -153,7 +153,7 @@ public class ErrorHandlingMiddleware : IAgentMiddleware
                 ex.GetType().Name,
                 ex.Message);
 
-            context.SetState(StateKeys.ErrorMessage, ex.Message);
+            context.State["ErrorMessage"] = ex.Message;
             IncrementRetryCount(context);
 
             // Determine if we should rethrow based on configuration
@@ -174,8 +174,10 @@ public class ErrorHandlingMiddleware : IAgentMiddleware
 
     private void IncrementRetryCount(AgentContext context)
     {
-        var currentCount = context.GetState<int>(StateKeys.RetryCount);
-        context.SetState(StateKeys.RetryCount, currentCount + 1);
+        var currentCount = context.State.ContainsKey("RetryCount")
+            ? Convert.ToInt32(context.State["RetryCount"])
+            : 0;
+        context.State["RetryCount"] = currentCount + 1;
     }
 
     private bool IsTransientHttpError(HttpRequestException ex)

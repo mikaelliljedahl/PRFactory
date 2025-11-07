@@ -87,7 +87,7 @@ public class ErrorHandlingMiddleware : IAgentMiddleware
                 context.TicketId,
                 ex.Message);
 
-            context.SetState(StateKeys.ErrorMessage, ex.Message);
+            context.State["ErrorMessage"] = ex.Message;
             IncrementRetryCount(context);
 
             return new AgentResult

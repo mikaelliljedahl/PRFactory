@@ -1,10 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-// TODO: Uncomment when OpenTelemetry packages are added
-// using OpenTelemetry.Resources;
-// using OpenTelemetry.Trace;
-// using OpenTelemetry.Metrics;
 using Serilog;
 using Serilog.Events;
 using PRFactory.Infrastructure.Agents;
@@ -47,9 +43,6 @@ try
 
     // Configure services
     ConfigureServices(builder.Services, builder.Configuration);
-
-    // Configure OpenTelemetry
-    ConfigureOpenTelemetry(builder.Services, builder.Configuration);
 
     // Add Worker Service
     builder.Services.AddHostedService<AgentHostService>();
@@ -158,78 +151,4 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
     // });
 
     Log.Information("Services configured successfully");
-}
-
-static void ConfigureOpenTelemetry(IServiceCollection services, IConfiguration configuration)
-{
-    var otlpEndpoint = configuration["OpenTelemetry:OtlpEndpoint"];
-    var enableConsoleExporter = configuration.GetValue<bool>("OpenTelemetry:EnableConsoleExporter");
-
-    // TODO: AddOpenTelemetry requires OpenTelemetry NuGet package
-    // services.AddOpenTelemetry()
-    //     .ConfigureResource(resource => resource
-    //         .AddService(
-    //             serviceName: configuration["OpenTelemetry:ServiceName"] ?? "PRFactory.Worker",
-    //             serviceVersion: configuration["OpenTelemetry:ServiceVersion"] ?? "1.0.0")
-    //         .AddAttributes(new Dictionary<string, object>
-    //         {
-    //             ["deployment.environment"] = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production",
-    //             ["host.name"] = Environment.MachineName
-    //         }))
-    //     .WithTracing(tracing =>
-    //     {
-    //         tracing
-    //             .AddSource("PRFactory.*")
-    //             .AddHttpClientInstrumentation(options =>
-    //             {
-    //                 options.RecordException = true;
-    //                 options.EnrichWithHttpRequestMessage = (activity, request) =>
-    //                 {
-    //                     activity.SetTag("http.request.method", request.Method.ToString());
-    //                 };
-    //             })
-    //             .AddEntityFrameworkCoreInstrumentation(options =>
-    //             {
-    //                 options.SetDbStatementForText = true;
-    //                 options.EnrichWithIDbCommand = (activity, command) =>
-    //                 {
-    //                     activity.SetTag("db.query", command.CommandText);
-    //                 };
-    //             });
-    //
-    //         if (enableConsoleExporter)
-    //         {
-    //             tracing.AddConsoleExporter();
-    //         }
-    //
-    //         if (!string.IsNullOrEmpty(otlpEndpoint))
-    //         {
-    //             tracing.AddOtlpExporter(options =>
-    //             {
-    //                 options.Endpoint = new Uri(otlpEndpoint);
-    //             });
-    //         }
-    //     })
-    //     .WithMetrics(metrics =>
-    //     {
-    //         metrics
-    //             .AddMeter("PRFactory.*")
-    //             .AddHttpClientInstrumentation()
-    //             .AddRuntimeInstrumentation();
-    //
-    //         if (enableConsoleExporter)
-    //         {
-    //             metrics.AddConsoleExporter();
-    //         }
-    //
-    //         if (!string.IsNullOrEmpty(otlpEndpoint))
-    //         {
-    //             metrics.AddOtlpExporter(options =>
-    //             {
-    //                 options.Endpoint = new Uri(otlpEndpoint);
-    //             });
-    //         }
-    //     });
-
-    Log.Information("OpenTelemetry configured with OTLP endpoint: {Endpoint}", otlpEndpoint ?? "None");
 }

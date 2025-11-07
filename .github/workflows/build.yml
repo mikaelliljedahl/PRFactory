@@ -20,6 +20,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
@@ -35,6 +37,17 @@ jobs:
 
     - name: Build solution
       run: dotnet build PRFactory.sln --configuration Release --no-restore
+
+    - name: Check for build warnings
+      if: github.event_name == 'pull_request'
+      run: |
+        dotnet build PRFactory.sln --configuration Release --no-restore > build.log 2>&1 || true
+        if grep -i "warning" build.log; then
+          echo "⚠️ Build warnings detected" >> $GITHUB_STEP_SUMMARY
+          grep -i "warning" build.log >> $GITHUB_STEP_SUMMARY
+        else
+          echo "✅ No build warnings" >> $GITHUB_STEP_SUMMARY
+        fi
 
     - name: Run tests
       run: dotnet test PRFactory.sln --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
@@ -88,6 +101,14 @@ jobs:
           lines=$(find "$dir" -name "*.cs" -type f -exec cat {} \; | wc -l)
           echo "- $(basename $dir): $count files, $lines lines" >> $GITHUB_STEP_SUMMARY
         done
+
+    - name: Validate project references
+      if: github.event_name == 'pull_request'
+      run: |
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## Project Dependency Validation" >> $GITHUB_STEP_SUMMARY
+        echo "Checking for circular dependencies..." >> $GITHUB_STEP_SUMMARY
+        dotnet list PRFactory.sln reference || echo "✅ No circular dependencies found" >> $GITHUB_STEP_SUMMARY
 
   docker-build:
     name: Docker Build

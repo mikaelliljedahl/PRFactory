@@ -127,8 +127,6 @@ public abstract class BaseAgent
                 Name, context.TicketId);
 
             activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-            // TODO: RecordException requires OpenTelemetry package
-            // activity?.RecordException(ex);
 
             return new AgentResult
             {

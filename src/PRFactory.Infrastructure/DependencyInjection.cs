@@ -3,12 +3,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PRFactory.Domain.Interfaces;
-using PRFactory.Infrastructure.Agents;
-using PRFactory.Infrastructure.Agents.Stubs;
 using PRFactory.Infrastructure.Persistence;
 using PRFactory.Infrastructure.Persistence.Encryption;
 using PRFactory.Infrastructure.Persistence.Repositories;
-using GraphCheckpoint = PRFactory.Infrastructure.Agents.Base.ICheckpointStore;
 
 namespace PRFactory.Infrastructure;
 
@@ -62,12 +59,6 @@ public static class DependencyInjection
         services.AddScoped<ITenantRepository, TenantRepository>();
         services.AddScoped<IRepositoryRepository, RepositoryRepository>();
         services.AddScoped<ITicketRepository, TicketRepository>();
-
-        // Register stub implementations for agent framework (temporary)
-        services.AddScoped<IAgentExecutionQueue, AgentExecutionQueue>();
-        services.AddScoped<ICheckpointStore, CheckpointStore>();
-        services.AddScoped<GraphCheckpoint, GraphCheckpointStore>();
-        services.AddScoped<IAgentGraphExecutor, AgentGraphExecutor>();
 
         return services;
     }

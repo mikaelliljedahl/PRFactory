@@ -154,6 +154,7 @@ flowchart TB
    - Web UI: http://localhost:5000
    - API: http://localhost:5000/api
    - Swagger UI: http://localhost:5000/swagger
+   - Worker: Background job processing
 
 4. **Or run locally**
    ```bash
@@ -248,7 +249,6 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture docum
 - **Octokit** - GitHub API client
 - **Polly** - Resilience and retry policies
 - **Serilog** - Structured logging
-- **OpenTelemetry** - Distributed tracing
 
 ### Data Storage
 - **SQLite** - Default database (can use SQL Server or PostgreSQL)
@@ -257,7 +257,6 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture docum
 ### Infrastructure
 - **Docker** - Containerization
 - **GitHub Actions** - CI/CD pipelines
-- **Jaeger** - Distributed tracing (optional)
 
 ## Project Structure
 

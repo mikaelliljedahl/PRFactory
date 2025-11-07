@@ -24,9 +24,11 @@ try
     var builder = Host.CreateApplicationBuilder(args);
 
     // Configure Serilog from appsettings.json
+    // TODO: ReadFrom.Configuration requires Serilog.Settings.Configuration package
     builder.Services.AddSerilog((services, lc) => lc
-        .ReadFrom.Configuration(builder.Configuration)
+        // .ReadFrom.Configuration(builder.Configuration)
         .ReadFrom.Services(services)
+        .MinimumLevel.Information()
         .Enrich.FromLogContext()
         .Enrich.WithProperty("Application", "PRFactory.Worker")
         .WriteTo.Console(

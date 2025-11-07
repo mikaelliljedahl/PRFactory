@@ -25,8 +25,8 @@ echo "📥 Downloading .NET installation script..."
 curl -sSL https://dot.net/v1/dotnet-install.sh -o "$DOTNET_INSTALL_SCRIPT"
 chmod +x "$DOTNET_INSTALL_SCRIPT"
 
-echo "🔧 Installing .NET SDK $DOTNET_VERSION..."
-"$DOTNET_INSTALL_SCRIPT" --channel "$DOTNET_VERSION" --install-dir "$DOTNET_INSTALL_DIR" --verbose
+echo "🔧 Installing .NET SDK $DOTNET_VERSION (including preview/RC versions)..."
+"$DOTNET_INSTALL_SCRIPT" --channel "$DOTNET_VERSION" --quality preview --install-dir "$DOTNET_INSTALL_DIR" --verbose
 
 # Add to PATH for current session
 export DOTNET_ROOT="$DOTNET_INSTALL_DIR"

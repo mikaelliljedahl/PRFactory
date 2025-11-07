@@ -3,15 +3,43 @@ set -e
 
 echo "🚀 PRFactory SessionStart Hook - Installing .NET SDK 10..."
 
-# Define SDK version
-DOTNET_VERSION="10.0"
+# Define SDK version - read from global.json if available
 DOTNET_INSTALL_DIR="$HOME/.dotnet"
 DOTNET_INSTALL_SCRIPT="/tmp/dotnet-install.sh"
+
+# Try to extract specific version from global.json
+GLOBAL_JSON_PATH="${CLAUDE_PROJECT_DIR:-$(pwd)}/global.json"
+if [ -f "$GLOBAL_JSON_PATH" ]; then
+    # Use sed for better portability (works without Perl regex support)
+    SPECIFIC_VERSION=$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$GLOBAL_JSON_PATH" | head -1)
+    if [ -n "$SPECIFIC_VERSION" ]; then
+        echo "📋 Found specific .NET SDK version in global.json: $SPECIFIC_VERSION"
+        DOTNET_VERSION="$SPECIFIC_VERSION"
+        USE_SPECIFIC_VERSION=true
+    else
+        echo "⚠️  Could not extract version from global.json, using channel approach"
+        DOTNET_VERSION="10.0"
+        USE_SPECIFIC_VERSION=false
+    fi
+else
+    echo "ℹ️  No global.json found, using channel approach"
+    DOTNET_VERSION="10.0"
+    USE_SPECIFIC_VERSION=false
+fi
 
 # Check if .NET SDK 10 is already installed
 if command -v dotnet &> /dev/null; then
     CURRENT_VERSION=$(dotnet --version 2>/dev/null || echo "none")
-    if [[ "$CURRENT_VERSION" == 10.* ]]; then
+
+    # Check if the correct version is installed
+    VERSION_MATCH=false
+    if [ "$USE_SPECIFIC_VERSION" = true ] && [ "$CURRENT_VERSION" = "$DOTNET_VERSION" ]; then
+        VERSION_MATCH=true
+    elif [[ "$CURRENT_VERSION" == 10.* ]]; then
+        VERSION_MATCH=true
+    fi
+
+    if [ "$VERSION_MATCH" = true ]; then
         echo "✅ .NET SDK 10 is already installed (version: $CURRENT_VERSION)"
         echo "📍 .NET location: $(which dotnet)"
         dotnet --info
@@ -23,7 +51,11 @@ if command -v dotnet &> /dev/null; then
         fi
         exit 0
     else
-        echo "⚠️  Found .NET version $CURRENT_VERSION, but need version 10.x"
+        if [ "$USE_SPECIFIC_VERSION" = true ]; then
+            echo "⚠️  Found .NET version $CURRENT_VERSION, but need version $DOTNET_VERSION (from global.json)"
+        else
+            echo "⚠️  Found .NET version $CURRENT_VERSION, but need version 10.x"
+        fi
     fi
 fi
 
@@ -37,8 +69,13 @@ else
 fi
 chmod +x "$DOTNET_INSTALL_SCRIPT"
 
-echo "🔧 Installing .NET SDK $DOTNET_VERSION (including preview/RC versions)..."
-"$DOTNET_INSTALL_SCRIPT" --channel "$DOTNET_VERSION" --quality preview --install-dir "$DOTNET_INSTALL_DIR" --verbose
+if [ "$USE_SPECIFIC_VERSION" = true ]; then
+    echo "🔧 Installing .NET SDK version $DOTNET_VERSION (from global.json)..."
+    "$DOTNET_INSTALL_SCRIPT" --version "$DOTNET_VERSION" --install-dir "$DOTNET_INSTALL_DIR" --verbose
+else
+    echo "🔧 Installing .NET SDK $DOTNET_VERSION (including preview/RC versions)..."
+    "$DOTNET_INSTALL_SCRIPT" --channel "$DOTNET_VERSION" --quality preview --install-dir "$DOTNET_INSTALL_DIR" --verbose
+fi
 
 # Add to PATH for current session
 export DOTNET_ROOT="$DOTNET_INSTALL_DIR"

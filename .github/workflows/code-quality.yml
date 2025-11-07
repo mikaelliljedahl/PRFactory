@@ -2,7 +2,7 @@ name: Code Quality
 
 on:
   push:
-    branches: [ main, claude/** ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -28,13 +28,14 @@ jobs:
       run: dotnet restore PRFactory.sln
 
     - name: Check code formatting
-      run: dotnet format PRFactory.sln --verify-no-changes --verbosity diagnostic || true
+      run: dotnet format PRFactory.sln --verify-no-changes --verbosity diagnostic
 
     - name: Format summary
+      if: success()
       run: |
         echo "## Code Format Check" >> $GITHUB_STEP_SUMMARY
-        echo "ℹ️ Code formatting validation completed" >> $GITHUB_STEP_SUMMARY
-        echo "Note: Format check runs with --verify-no-changes flag" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Code formatting validation passed" >> $GITHUB_STEP_SUMMARY
+        echo "All files are properly formatted" >> $GITHUB_STEP_SUMMARY
 
   security-scan:
     name: Security Scan

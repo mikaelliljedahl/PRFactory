@@ -122,7 +122,7 @@ Generate complete, production-ready code for all files mentioned in the plan.")
 
             // Parse response
             var jsonResponse = ExtractJsonFromResponse(response);
-            
+
             // Store implementation in context
             context.State["Implementation"] = response;
             context.State["ImplementationJson"] = jsonResponse;

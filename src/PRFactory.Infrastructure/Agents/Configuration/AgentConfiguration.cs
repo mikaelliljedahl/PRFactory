@@ -54,11 +54,6 @@ public class AgentConfiguration
     public RetryConfiguration Retry { get; set; } = new();
 
     /// <summary>
-    /// Telemetry configuration.
-    /// </summary>
-    public TelemetryConfiguration Telemetry { get; set; } = new();
-
-    /// <summary>
     /// Error handling configuration.
     /// </summary>
     public ErrorHandlingConfiguration ErrorHandling { get; set; } = new();
@@ -152,56 +147,6 @@ public class RetryConfiguration
                 _ => Polly.DelayBackoffType.Exponential
             },
             UseJitter = UseJitter
-        };
-    }
-}
-
-/// <summary>
-/// Configuration for telemetry and observability.
-/// </summary>
-public class TelemetryConfiguration
-{
-    /// <summary>
-    /// Enable OpenTelemetry tracing.
-    /// Default: true
-    /// </summary>
-    public bool EnableTracing { get; set; } = true;
-
-    /// <summary>
-    /// Enable metrics collection.
-    /// Default: true
-    /// </summary>
-    public bool EnableMetrics { get; set; } = true;
-
-    /// <summary>
-    /// Sample rate for traces (0.0 to 1.0).
-    /// 1.0 means sample all traces.
-    /// Default: 1.0
-    /// </summary>
-    public double TraceSampleRate { get; set; } = 1.0;
-
-    /// <summary>
-    /// Enable detailed metrics (may increase overhead).
-    /// Default: false
-    /// </summary>
-    public bool EnableDetailedMetrics { get; set; } = false;
-
-    /// <summary>
-    /// Global tags to add to all telemetry.
-    /// </summary>
-    public Dictionary<string, string> GlobalTags { get; set; } = new();
-
-    /// <summary>
-    /// Converts to TelemetryOptions for middleware.
-    /// </summary>
-    public TelemetryOptions ToTelemetryOptions()
-    {
-        return new TelemetryOptions
-        {
-            Enabled = EnableTracing || EnableMetrics,
-            TraceSampleRate = TraceSampleRate,
-            EnableDetailedMetrics = EnableDetailedMetrics,
-            GlobalTags = GlobalTags
         };
     }
 }
@@ -314,7 +259,6 @@ public static class AgentConfigurationExtensions
         }
 
         config.Retry.Validate();
-        config.Telemetry.Validate();
     }
 
     private static void Validate(this RetryConfiguration config)
@@ -335,15 +279,6 @@ public static class AgentConfigurationExtensions
         {
             throw new InvalidOperationException(
                 "MaxDelayMs must be greater than or equal to InitialDelayMs");
-        }
-    }
-
-    private static void Validate(this TelemetryConfiguration config)
-    {
-        if (config.TraceSampleRate < 0.0 || config.TraceSampleRate > 1.0)
-        {
-            throw new InvalidOperationException(
-                "TraceSampleRate must be between 0.0 and 1.0");
         }
     }
 }

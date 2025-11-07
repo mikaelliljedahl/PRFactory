@@ -1,8 +1,4 @@
 using Microsoft.OpenApi.Models;
-// TODO: Uncomment when OpenTelemetry packages are added
-// using OpenTelemetry.Exporter;
-// using OpenTelemetry.Resources;
-// using OpenTelemetry.Trace;
 using PRFactory.Api.Middleware;
 using Serilog;
 using Serilog.Events;
@@ -132,56 +128,6 @@ builder.Services.AddCors(options =>
 //     options.UseCheckpointing = true;
 //     options.CheckpointDirectory = Path.Combine(builder.Configuration["Workspace:BasePath"]!, "checkpoints");
 // });
-
-// ============================================================================
-// Configure OpenTelemetry
-// ============================================================================
-var serviceName = "PRFactory.Api";
-var serviceVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0.0";
-
-// TODO: AddOpenTelemetry requires OpenTelemetry NuGet package
-// builder.Services.AddOpenTelemetry()
-//     .WithTracing(tracerProviderBuilder =>
-//     {
-//         tracerProviderBuilder
-//             .SetResourceBuilder(ResourceBuilder.CreateDefault()
-//                 .AddService(serviceName: serviceName, serviceVersion: serviceVersion))
-//             .AddAspNetCoreInstrumentation(options =>
-//             {
-//                 options.RecordException = true;
-//                 options.Filter = httpContext =>
-//                 {
-//                     // Don't trace health check endpoints
-//                     return !httpContext.Request.Path.StartsWithSegments("/health");
-//                 };
-//             })
-//             .AddHttpClientInstrumentation(options =>
-//             {
-//                 options.RecordException = true;
-//             })
-//             .AddEntityFrameworkCoreInstrumentation(options =>
-//             {
-//                 options.SetDbStatementForText = true;
-//             })
-//             .AddSource(serviceName);
-//
-//         // Configure exporters based on environment
-//         var jaegerEndpoint = builder.Configuration["OpenTelemetry:JaegerEndpoint"];
-//         if (!string.IsNullOrEmpty(jaegerEndpoint))
-//         {
-//             tracerProviderBuilder.AddJaegerExporter(options =>
-//             {
-//                 options.AgentHost = new Uri(jaegerEndpoint).Host;
-//                 options.AgentPort = new Uri(jaegerEndpoint).Port;
-//                 options.Protocol = JaegerExportProtocol.UdpCompactThrift;
-//             });
-//         }
-//
-//         if (builder.Environment.IsDevelopment())
-//         {
-//             tracerProviderBuilder.AddConsoleExporter();
-//         }
-//     });
 
 // ============================================================================
 // Configure Health Checks

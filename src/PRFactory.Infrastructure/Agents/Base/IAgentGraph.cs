@@ -37,9 +37,9 @@ namespace PRFactory.Infrastructure.Agents.Base
     public class GraphExecutionResult
     {
         public bool IsSuccess { get; set; }
-        public string State { get; set; }
-        public IAgentMessage OutputMessage { get; set; }
-        public Exception Error { get; set; }
+        public string State { get; set; } = string.Empty;
+        public IAgentMessage? OutputMessage { get; set; }
+        public Exception? Error { get; set; }
         public DateTime CompletedAt { get; set; }
         public TimeSpan Duration { get; set; }
 
@@ -84,9 +84,9 @@ namespace PRFactory.Infrastructure.Agents.Base
     public class GraphStatus
     {
         public Guid TicketId { get; set; }
-        public string GraphId { get; set; }
-        public string CurrentState { get; set; }
-        public string CurrentAgent { get; set; }
+        public string GraphId { get; set; } = string.Empty;
+        public string CurrentState { get; set; } = string.Empty;
+        public string CurrentAgent { get; set; } = string.Empty;
         public bool IsRunning { get; set; }
         public bool IsSuspended { get; set; }
         public bool IsCompleted { get; set; }
@@ -94,7 +94,7 @@ namespace PRFactory.Infrastructure.Agents.Base
         public DateTime StartedAt { get; set; }
         public DateTime? CompletedAt { get; set; }
         public int RetryCount { get; set; }
-        public string LastError { get; set; }
+        public string? LastError { get; set; }
     }
 
     /// <summary>
@@ -103,10 +103,10 @@ namespace PRFactory.Infrastructure.Agents.Base
     public class GraphContext
     {
         public Guid TicketId { get; set; }
-        public string GraphId { get; set; }
+        public string GraphId { get; set; } = string.Empty;
         public DateTime StartedAt { get; set; }
         public Dictionary<string, object> State { get; set; } = new();
         public int RetryCount { get; set; }
-        public string CurrentCheckpoint { get; set; }
+        public string? CurrentCheckpoint { get; set; }
     }
 }

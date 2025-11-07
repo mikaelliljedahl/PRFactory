@@ -51,7 +51,7 @@ public class GraphCheckpointStore : Base.ICheckpointStore
         {
             var key = GetKey(ticketId, graphId);
             _checkpoints.TryGetValue(key, out var checkpoint);
-            return Task.FromResult(checkpoint);
+            return Task.FromResult<Checkpoint?>(checkpoint);
         }
     }
 

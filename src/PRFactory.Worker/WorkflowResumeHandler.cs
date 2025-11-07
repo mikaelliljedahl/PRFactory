@@ -5,6 +5,7 @@ using PRFactory.Domain.Interfaces;
 using PRFactory.Infrastructure.Agents;
 using PRFactory.Infrastructure.Agents.Base;
 using PRFactory.Infrastructure.Agents.Messages;
+using AgentCheckpointStore = PRFactory.Infrastructure.Agents.ICheckpointStore;
 
 namespace PRFactory.Worker;
 
@@ -15,14 +16,14 @@ namespace PRFactory.Worker;
 public class WorkflowResumeHandler : IWorkflowResumeHandler
 {
     private readonly ILogger<WorkflowResumeHandler> _logger;
-    private readonly ICheckpointStore _checkpointStore;
+    private readonly AgentCheckpointStore _checkpointStore;
     private readonly IAgentGraphExecutor _graphExecutor;
     private readonly ITicketRepository _ticketRepository;
     private readonly ActivitySource _activitySource;
 
     public WorkflowResumeHandler(
         ILogger<WorkflowResumeHandler> logger,
-        ICheckpointStore checkpointStore,
+        AgentCheckpointStore checkpointStore,
         IAgentGraphExecutor graphExecutor,
         ITicketRepository ticketRepository)
     {

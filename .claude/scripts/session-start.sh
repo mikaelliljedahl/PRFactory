@@ -28,7 +28,7 @@ if command -v dotnet &> /dev/null; then
 fi
 
 echo "📥 Downloading .NET installation script..."
-curl -sSL https://dot.net/v1/dotnet-install.sh -o "$DOTNET_INSTALL_SCRIPT"
+curl -sSL https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh -o "$DOTNET_INSTALL_SCRIPT"
 chmod +x "$DOTNET_INSTALL_SCRIPT"
 
 echo "🔧 Installing .NET SDK $DOTNET_VERSION (including preview/RC versions)..."

@@ -126,7 +126,7 @@ public class TelemetryMiddleware : IAgentMiddleware
             activity?.SetTag("duration.ms", durationMs);
 
             // Record metrics with appropriate tags
-            var tags = new TagList
+            var metricTags = new TagList
             {
                 { "agent.name", agentName },
                 { "tenant.id", context.TenantId },
@@ -134,8 +134,8 @@ public class TelemetryMiddleware : IAgentMiddleware
                 { "success", success }
             };
 
-            _executionCounter.Add(1, tags);
-            _executionDuration.Record(durationMs, tags);
+            _executionCounter.Add(1, metricTags);
+            _executionDuration.Record(durationMs, metricTags);
 
             // Record error metrics if applicable
             if (!success || !string.IsNullOrEmpty(errorType))

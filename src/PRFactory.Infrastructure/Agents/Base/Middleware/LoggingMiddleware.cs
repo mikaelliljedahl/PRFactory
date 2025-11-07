@@ -22,7 +22,12 @@ public class LoggingMiddleware : IAgentMiddleware
         CancellationToken cancellationToken = default)
     {
         var stopwatch = Stopwatch.StartNew();
-        var agentName = context.Metadata.CurrentPhase ?? "Unknown";
+        var agentName = context.Metadata.ContainsKey("CurrentPhase")
+            ? context.Metadata["CurrentPhase"]?.ToString() ?? "Unknown"
+            : "Unknown";
+        var executionId = context.Metadata.ContainsKey("ExecutionId")
+            ? context.Metadata["ExecutionId"]
+            : "N/A";
 
         // Log entry with structured data
         _logger.LogInformation(
@@ -30,7 +35,7 @@ public class LoggingMiddleware : IAgentMiddleware
             agentName,
             context.TicketId,
             context.TenantId,
-            context.Metadata.ExecutionId);
+            executionId);
 
         // Log state keys for debugging
         if (_logger.IsEnabled(LogLevel.Debug))
@@ -59,7 +64,7 @@ public class LoggingMiddleware : IAgentMiddleware
                 context.TicketId,
                 result.Status,
                 stopwatch.ElapsedMilliseconds,
-                context.Metadata.ExecutionId);
+                executionId);
 
             // Log output keys if debug is enabled
             if (_logger.IsEnabled(LogLevel.Debug))
@@ -81,7 +86,7 @@ public class LoggingMiddleware : IAgentMiddleware
                 agentName,
                 context.TicketId,
                 stopwatch.ElapsedMilliseconds,
-                context.Metadata.ExecutionId);
+                executionId);
             throw;
         }
         catch (Exception ex)
@@ -97,7 +102,7 @@ public class LoggingMiddleware : IAgentMiddleware
                 context.TicketId,
                 ex.GetType().Name,
                 stopwatch.ElapsedMilliseconds,
-                context.Metadata.ExecutionId);
+                executionId);
 
             throw;
         }

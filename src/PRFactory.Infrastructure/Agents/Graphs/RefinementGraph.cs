@@ -25,7 +25,7 @@ namespace PRFactory.Infrastructure.Agents.Graphs
 
         public RefinementGraph(
             ILogger<RefinementGraph> logger,
-            ICheckpointStore checkpointStore,
+            Base.ICheckpointStore checkpointStore,
             IAgentExecutor agentExecutor)
             : base(logger, checkpointStore)
         {

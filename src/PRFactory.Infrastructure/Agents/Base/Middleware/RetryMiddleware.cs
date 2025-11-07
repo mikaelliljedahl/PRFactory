@@ -30,7 +30,9 @@ public class RetryMiddleware : IAgentMiddleware
         Func<AgentContext, CancellationToken, Task<AgentResult>> next,
         CancellationToken cancellationToken = default)
     {
-        var agentName = context.Metadata.CurrentPhase ?? "Unknown";
+        var agentName = context.Metadata.ContainsKey("CurrentPhase")
+            ? context.Metadata["CurrentPhase"]?.ToString() ?? "Unknown"
+            : "Unknown";
 
         // Execute with retry policy
         var result = await _retryPipeline.ExecuteAsync(

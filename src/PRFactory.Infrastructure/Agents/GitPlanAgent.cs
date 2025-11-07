@@ -96,17 +96,14 @@ public class GitPlanAgent : BaseAgent
             await _localGitService.CommitAsync(
                 context.RepositoryPath,
                 commitMessage,
-                cancellationToken
+                "PRFactory AI <ai@prfactory.dev>"  // author
             );
 
             Logger.LogInformation("Committed implementation plan");
 
-            // Push to remote
-            await _localGitService.PushAsync(
-                context.RepositoryPath,
-                branchName,
-                cancellationToken
-            );
+            // Push to remote (TODO: need access token)
+            // await _localGitService.PushAsync(context.RepositoryPath, branchName, accessToken);
+            Logger.LogWarning("Push to remote not yet implemented - missing access token");
 
             Logger.LogInformation("Pushed branch {BranchName} to remote", branchName);
 

@@ -31,6 +31,10 @@ RUN apt-get update && \
     apt-get install -y git && \
     rm -rf /var/lib/apt/lists/*
 
+# Create a non-root user to run the application
+RUN useradd -m -u 1000 -s /bin/bash appuser && \
+    chown -R appuser:appuser /app /var/prfactory
+
 COPY --from=publish /app/publish .
 
 # Configure ASP.NET Core
@@ -40,5 +44,8 @@ EXPOSE 80
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost/health || exit 1
+
+# Switch to non-root user
+USER appuser
 
 ENTRYPOINT ["dotnet", "PRFactory.Api.dll"]

@@ -227,4 +227,13 @@ namespace PRFactory.Infrastructure.Agents.Graphs
             CancellationToken cancellationToken);
     }
 
+    // Agent type markers for ExecuteAgentAsync<TAgent> generic resolution
+    public class TriggerAgent { }
+    public class RepositoryCloneAgent { }
+    public class AnalysisAgent { }
+    public class QuestionGenerationAgent { }
+    public class JiraPostAgent { }
+    public class HumanWaitAgent { }
+    public class AnswerProcessingAgent { }
+
 }

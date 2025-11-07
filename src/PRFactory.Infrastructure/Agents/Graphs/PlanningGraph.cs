@@ -272,4 +272,8 @@ namespace PRFactory.Infrastructure.Agents.Graphs
         }
     }
 
+    // Agent type markers for ExecuteAgentAsync<TAgent> generic resolution
+    public class PlanningAgent { }
+    public class GitPlanAgent { }
+
 }

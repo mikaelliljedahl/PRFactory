@@ -100,7 +100,7 @@ flowchart TB
 
 ### Prerequisites
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or later
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) or later
 - [Docker](https://www.docker.com/get-started) (optional, for containerized deployment)
 - GitHub account with Personal Access Token
 - Jira account with API access
@@ -227,10 +227,10 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture docum
 ## Technology Stack
 
 ### Core Framework
-- **.NET 8** - Core platform (LTS)
-- **C# 12** - Latest language features
+- **.NET 10** - Core platform
+- **C# 13** - Latest language features
 - **ASP.NET Core** - Web API hosting
-- **Entity Framework Core 8** - ORM
+- **Entity Framework Core 10** - ORM
 
 ### Key Libraries
 - **Anthropic SDK** - Claude AI integration
@@ -242,7 +242,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture docum
 
 ### Data Storage
 - **SQLite** - Default database (can use SQL Server or PostgreSQL)
-- **Entity Framework Core** - Database access
+- **Entity Framework Core 10** - Database access
 
 ### Infrastructure
 - **Docker** - Containerization
@@ -325,4 +325,4 @@ For issues, questions, or contributions:
 
 ---
 
-**Built with Claude AI** | **Powered by .NET 8**
+**Built with Claude AI** | **Powered by .NET 10**

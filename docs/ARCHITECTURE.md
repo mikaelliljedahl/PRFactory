@@ -17,10 +17,10 @@ Comprehensive architecture documentation for the PRFactory system.
 
 ## Executive Summary
 
-PRFactory is a .NET 8-based system that automates the journey from Jira tickets to GitHub pull requests using Claude AI. The system follows Clean Architecture principles with a domain-driven design approach.
+PRFactory is a .NET 10-based system that automates the journey from Jira tickets to GitHub pull requests using Claude AI. The system follows Clean Architecture principles with a domain-driven design approach.
 
 **Key Characteristics:**
-- **Language**: C# 12 with .NET 8 (LTS)
+- **Language**: C# 13 with .NET 10
 - **Architecture Style**: Clean Architecture (Onion Architecture)
 - **Design Pattern**: Domain-Driven Design (DDD)
 - **Processing Model**: Event-driven with background job processing
@@ -116,10 +116,10 @@ PRFactory is a .NET 8-based system that automates the journey from Jira tickets 
 
 | Layer | Technologies |
 |-------|-------------|
-| **Runtime** | .NET 8 (LTS), C# 12 |
-| **Web Framework** | ASP.NET Core 8.0 |
+| **Runtime** | .NET 10, C# 13 |
+| **Web Framework** | ASP.NET Core 10.0 |
 | **Database** | SQLite (dev), SQL Server / PostgreSQL (prod) |
-| **ORM** | Entity Framework Core 8 |
+| **ORM** | Entity Framework Core 10 |
 | **AI Integration** | Anthropic SDK (Claude Sonnet 4.5) |
 | **Git Operations** | LibGit2Sharp |
 | **Git Platform APIs** | Octokit (GitHub), Azure DevOps SDK |

@@ -16,8 +16,8 @@ Complete guide for installing, configuring, and running PRFactory.
 
 ### Required Software
 
-- **.NET 8 SDK** or later
-  - Download: https://dotnet.microsoft.com/download/dotnet/8.0
+- **.NET 10 SDK** or later
+  - Download: https://dotnet.microsoft.com/download/dotnet/10.0
   - Verify: `dotnet --version`
 
 - **Git** (version 2.x or later)
@@ -386,7 +386,7 @@ curl -X POST http://localhost:5000/api/repositories \
 ### Build Issues
 
 **Error: `dotnet: command not found`**
-- Solution: Install .NET 8 SDK from https://dotnet.microsoft.com/download
+- Solution: Install .NET 10 SDK from https://dotnet.microsoft.com/download
 
 **Error: Package restore failed**
 - Solution: Clear NuGet cache
@@ -395,8 +395,8 @@ curl -X POST http://localhost:5000/api/repositories \
   dotnet restore
   ```
 
-**Error: Project doesn't support framework .NET 8**
-- Solution: Update global.json or install .NET 8 SDK
+**Error: Project doesn't support framework .NET 10**
+- Solution: Update global.json or install .NET 10 SDK
 
 ### Database Issues
 
@@ -554,11 +554,11 @@ dotnet ef migrations remove
 ```bash
 # Create App Service
 az webapp create --resource-group MyResourceGroup \
-  --plan MyPlan --name prfactory-api --runtime "DOTNETCORE:8.0"
+  --plan MyPlan --name prfactory-api --runtime "DOTNETCORE:10.0"
 
 # Deploy
 dotnet publish -c Release
-cd src/PRFactory.Api/bin/Release/net8.0/publish
+cd src/PRFactory.Api/bin/Release/net10.0/publish
 zip -r deploy.zip .
 az webapp deployment source config-zip --resource-group MyResourceGroup \
   --name prfactory-api --src deploy.zip

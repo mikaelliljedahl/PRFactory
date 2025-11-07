@@ -21,13 +21,11 @@ RUN dotnet publish "PRFactory.Api.csproj" -c Release -o /app/publish /p:UseAppHo
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
-# Create directories for workspace
+# Create directories for workspace and install git
 RUN mkdir -p /var/prfactory/workspace/checkpoints && \
     mkdir -p /var/prfactory/workspace/repositories && \
-    mkdir -p /var/prfactory/data
-
-# Install git for repository operations
-RUN apt-get update && \
+    mkdir -p /var/prfactory/data && \
+    apt-get update && \
     apt-get install -y git && \
     rm -rf /var/lib/apt/lists/*
 

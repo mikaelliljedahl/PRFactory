@@ -125,7 +125,6 @@ PRFactory is a .NET 8-based system that automates the journey from Jira tickets 
 | **Git Platform APIs** | Octokit (GitHub), Azure DevOps SDK |
 | **Resilience** | Polly 8.x (retry, circuit breaker) |
 | **Logging** | Serilog 3.x (structured logging) |
-| **Tracing** | OpenTelemetry with Jaeger exporter |
 | **Containerization** | Docker, Docker Compose |
 | **CI/CD** | GitHub Actions |
 
@@ -606,11 +605,6 @@ services:
       - ConnectionStrings__DefaultConnection=Data Source=/data/prfactory.db
     volumes:
       - ./data:/data
-
-  jaeger:
-    image: jaegertracing/all-in-one:1.51
-    ports:
-      - "16686:16686"
 ```
 
 ### Option 2: Azure App Service
@@ -694,13 +688,6 @@ _logger.LogInformation(
     "Ticket {TicketKey} transitioned from {FromState} to {ToState}",
     ticket.JiraKey, oldState, newState);
 ```
-
-### Distributed Tracing
-
-OpenTelemetry with Jaeger exporter:
-- Trace webhook → service → agent → external API
-- Identify bottlenecks
-- Debug failures across systems
 
 ### Metrics
 

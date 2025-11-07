@@ -30,9 +30,6 @@ Complete guide for installing, configuring, and running PRFactory.
   - Download: https://www.docker.com/get-started
   - Verify: `docker --version` and `docker-compose --version`
 
-- **Jaeger** (for distributed tracing)
-  - Can be run via Docker (see below)
-
 ### External Services
 
 You'll need accounts and API credentials for:
@@ -119,13 +116,6 @@ Create or modify `src/PRFactory.Api/appsettings.json`:
     "LogLevel": {
       "Default": "Information",
       "Microsoft.EntityFrameworkCore": "Warning"
-    }
-  },
-  "OpenTelemetry": {
-    "ServiceName": "PRFactory",
-    "Jaeger": {
-      "AgentHost": "localhost",
-      "AgentPort": 6831
     }
   }
 }
@@ -244,7 +234,7 @@ curl -X POST http://localhost:5000/api/tenants \
 
 ### Option 1: Docker Compose (Recommended)
 
-This runs the API, Worker, and Jaeger in containers.
+This runs the API and Worker in containers.
 
 ```bash
 # Build and start all services
@@ -263,7 +253,7 @@ docker-compose down
 **Services:**
 - API: http://localhost:5000
 - Swagger UI: http://localhost:5000/swagger
-- Jaeger UI: http://localhost:16686
+- Worker: Background job processing
 
 ### Option 2: Run Locally
 
@@ -287,23 +277,6 @@ dotnet run
 ```
 
 The worker will continuously poll for tickets to process.
-
-#### Start Jaeger (Optional, for tracing)
-
-```bash
-docker run -d --name jaeger \
-  -p 5775:5775/udp \
-  -p 6831:6831/udp \
-  -p 6832:6832/udp \
-  -p 5778:5778 \
-  -p 16686:16686 \
-  -p 14268:14268 \
-  -p 14250:14250 \
-  -p 9411:9411 \
-  jaegertracing/all-in-one:1.51
-```
-
-Access Jaeger UI at http://localhost:16686
 
 ### Option 3: Visual Studio / Rider
 
@@ -438,11 +411,6 @@ curl -X POST http://localhost:5000/api/repositories \
 - Check Worker service is running
 - Check database connection
 - View logs for errors: `docker-compose logs worker` or check console output
-
-**Jaeger traces not appearing**
-- Ensure Jaeger is running: `docker ps | grep jaeger`
-- Check `OpenTelemetry:Jaeger:AgentHost` is correct (localhost for local, jaeger for Docker)
-- Verify port 6831 is not blocked
 
 ### Docker Issues
 

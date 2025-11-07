@@ -31,11 +31,10 @@ RUN apt-get update && \
     apt-get install -y git && \
     rm -rf /var/lib/apt/lists/*
 
-# Create a non-root user to run the application
-RUN useradd -m -u 1000 -s /bin/bash appuser && \
-    chown -R appuser:appuser /app /var/prfactory
-
 COPY --from=publish /app/publish .
+
+# Change ownership of application and workspace directories to the built-in 'app' user (UID 1654)
+RUN chown -R app:app /app /var/prfactory
 
 # Configure ASP.NET Core
 ENV ASPNETCORE_URLS=http://+:80
@@ -45,7 +44,7 @@ EXPOSE 80
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost/health || exit 1
 
-# Switch to non-root user
-USER appuser
+# Switch to non-root user (Microsoft's built-in 'app' user)
+USER app
 
 ENTRYPOINT ["dotnet", "PRFactory.Api.dll"]

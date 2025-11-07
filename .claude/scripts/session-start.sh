@@ -15,6 +15,12 @@ if command -v dotnet &> /dev/null; then
         echo "✅ .NET SDK 10 is already installed (version: $CURRENT_VERSION)"
         echo "📍 .NET location: $(which dotnet)"
         dotnet --info
+
+        # Ensure environment variables are persisted for Claude Code
+        if [ -n "$CLAUDE_ENV_FILE" ]; then
+            echo "export DOTNET_ROOT=\"$DOTNET_INSTALL_DIR\"" >> "$CLAUDE_ENV_FILE"
+            echo "export PATH=\"$DOTNET_INSTALL_DIR:\$PATH\"" >> "$CLAUDE_ENV_FILE"
+        fi
         exit 0
     else
         echo "⚠️  Found .NET version $CURRENT_VERSION, but need version 10.x"
@@ -32,17 +38,26 @@ echo "🔧 Installing .NET SDK $DOTNET_VERSION (including preview/RC versions)..
 export DOTNET_ROOT="$DOTNET_INSTALL_DIR"
 export PATH="$DOTNET_INSTALL_DIR:$PATH"
 
-# Persist PATH to profile files
-echo "" >> "$HOME/.bashrc"
-echo "# .NET SDK configuration (added by PRFactory SessionStart hook)" >> "$HOME/.bashrc"
-echo "export DOTNET_ROOT=\"$DOTNET_INSTALL_DIR\"" >> "$HOME/.bashrc"
-echo "export PATH=\"\$DOTNET_ROOT:\$PATH\"" >> "$HOME/.bashrc"
+# Persist environment variables
+# For Claude Code on the web, use CLAUDE_ENV_FILE
+if [ -n "$CLAUDE_ENV_FILE" ]; then
+    echo "📝 Persisting environment variables to Claude Code session..."
+    echo "export DOTNET_ROOT=\"$DOTNET_INSTALL_DIR\"" >> "$CLAUDE_ENV_FILE"
+    echo "export PATH=\"$DOTNET_INSTALL_DIR:\$PATH\"" >> "$CLAUDE_ENV_FILE"
+else
+    # For local development, persist to shell profile files
+    echo "📝 Persisting environment variables to shell profiles..."
+    echo "" >> "$HOME/.bashrc"
+    echo "# .NET SDK configuration (added by PRFactory SessionStart hook)" >> "$HOME/.bashrc"
+    echo "export DOTNET_ROOT=\"$DOTNET_INSTALL_DIR\"" >> "$HOME/.bashrc"
+    echo "export PATH=\"\$DOTNET_ROOT:\$PATH\"" >> "$HOME/.bashrc"
 
-if [ -f "$HOME/.zshrc" ]; then
-    echo "" >> "$HOME/.zshrc"
-    echo "# .NET SDK configuration (added by PRFactory SessionStart hook)" >> "$HOME/.zshrc"
-    echo "export DOTNET_ROOT=\"$DOTNET_INSTALL_DIR\"" >> "$HOME/.zshrc"
-    echo "export PATH=\"\$DOTNET_ROOT:\$PATH\"" >> "$HOME/.zshrc"
+    if [ -f "$HOME/.zshrc" ]; then
+        echo "" >> "$HOME/.zshrc"
+        echo "# .NET SDK configuration (added by PRFactory SessionStart hook)" >> "$HOME/.zshrc"
+        echo "export DOTNET_ROOT=\"$DOTNET_INSTALL_DIR\"" >> "$HOME/.zshrc"
+        echo "export PATH=\"\$DOTNET_ROOT:\$PATH\"" >> "$HOME/.zshrc"
+    fi
 fi
 
 # Verify installation

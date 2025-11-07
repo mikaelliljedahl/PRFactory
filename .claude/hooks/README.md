@@ -1,17 +1,41 @@
-# Claude Code SessionStart Hook
+# Claude Code Hooks
 
-This directory contains hooks for Claude Code on the web sessions.
+This directory contains hook documentation for Claude Code.
 
 ## SessionStart Hook
 
 The `SessionStart` hook automatically installs .NET SDK 10 when you start a Claude Code session in the cloud environment.
+
+### Configuration
+
+The hook is configured in `.claude/settings.json` and points to the script at `.claude/scripts/session-start.sh`.
+
+For Claude Code on the web, hooks are registered in `.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/scripts/session-start.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
 
 ### What it does:
 
 1. **Checks** if .NET SDK 10 is already installed
 2. **Downloads** the official dotnet-install.sh script from Microsoft
 3. **Installs** .NET SDK 10.0 to `$HOME/.dotnet`
-4. **Configures** PATH in `.bashrc` and `.zshrc`
+4. **Configures** environment variables using `CLAUDE_ENV_FILE` (for Claude Code) or shell profiles (local)
 5. **Verifies** the installation was successful
 
 ### Usage:
@@ -21,7 +45,7 @@ The hook runs automatically when you start a Claude Code session. No manual inte
 You can also run it manually:
 
 ```bash
-./.claude/hooks/SessionStart
+./.claude/scripts/session-start.sh
 ```
 
 ### After installation:
@@ -52,6 +76,8 @@ dotnet run --project src/PRFactory.Worker
 
 - `DOTNET_ROOT=$HOME/.dotnet`
 - `PATH=$DOTNET_ROOT:$PATH`
+
+The script automatically uses `CLAUDE_ENV_FILE` when running in Claude Code on the web to persist these variables for subsequent bash commands.
 
 ### Troubleshooting:
 

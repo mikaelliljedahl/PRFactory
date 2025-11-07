@@ -306,7 +306,8 @@ public class ClaudeService : IClaudeService
         var fileMatches = Regex.Matches(
             response,
             @"[a-zA-Z0-9_\-/\.]+\.(cs|js|ts|tsx|jsx|py|java|go|rs|cpp|h|yml|yaml|json|xml)",
-            RegexOptions.IgnoreCase);
+            RegexOptions.IgnoreCase,
+            TimeSpan.FromSeconds(1));
 
         relevantFiles.AddRange(
             fileMatches.Select(m => m.Value)
@@ -359,7 +360,8 @@ public class ClaudeService : IClaudeService
         var match = Regex.Match(
             response,
             @"```json\s*([\s\S]*?)\s*```",
-            RegexOptions.Singleline);
+            RegexOptions.Singleline,
+            TimeSpan.FromSeconds(1));
 
         if (match.Success)
         {
@@ -370,7 +372,8 @@ public class ClaudeService : IClaudeService
         match = Regex.Match(
             response,
             @"(\[[\s\S]*\]|\{[\s\S]*\})",
-            RegexOptions.Singleline);
+            RegexOptions.Singleline,
+            TimeSpan.FromSeconds(1));
 
         if (match.Success)
         {
@@ -390,7 +393,8 @@ public class ClaudeService : IClaudeService
         var matches = Regex.Matches(
             plan,
             @"##\s*(\d+\.\s*)?(.+?)\s*\n(.*?)(?=##|\z)",
-            RegexOptions.Singleline);
+            RegexOptions.Singleline,
+            TimeSpan.FromSeconds(1));
 
         foreach (Match match in matches)
         {
@@ -407,7 +411,7 @@ public class ClaudeService : IClaudeService
     /// </summary>
     private int ExtractComplexity(string complexitySection)
     {
-        var match = Regex.Match(complexitySection, @"(\d)");
+        var match = Regex.Match(complexitySection, @"(\d)", RegexOptions.None, TimeSpan.FromSeconds(1));
         if (match.Success && int.TryParse(match.Groups[1].Value, out var complexity))
         {
             return Math.Clamp(complexity, 1, 5);

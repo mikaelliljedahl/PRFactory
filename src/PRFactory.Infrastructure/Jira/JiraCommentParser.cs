@@ -183,7 +183,7 @@ public class JiraCommentParser : IJiraCommentParser
         // Pattern matches: "1. " or "1) " followed by answer text
         var numberPattern = @"^\s*(\d+)[\.\)]\s*(.+?)(?=^\s*\d+[\.\)]|$)";
         var matches = Regex.Matches(commentBody, numberPattern,
-            RegexOptions.Multiline | RegexOptions.Singleline);
+            RegexOptions.Multiline | RegexOptions.Singleline, TimeSpan.FromSeconds(2));
 
         if (matches.Count == 0)
             return null;
@@ -219,7 +219,7 @@ public class JiraCommentParser : IJiraCommentParser
         // Pattern matches Q: question text A: answer text
         var qaPattern = @"Q:\s*(.+?)\s*A:\s*(.+?)(?=Q:|$)";
         var matches = Regex.Matches(commentBody, qaPattern,
-            RegexOptions.Singleline | RegexOptions.IgnoreCase);
+            RegexOptions.Singleline | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(2));
 
         if (matches.Count == 0)
             return null;
@@ -276,7 +276,7 @@ public class JiraCommentParser : IJiraCommentParser
                     trimmedSentence.Contains(keyword, StringComparison.OrdinalIgnoreCase)))
                 {
                     // Extract the answer part (typically after a colon or "is")
-                    var answerMatch = Regex.Match(trimmedSentence, @"(?:is|:|are)\s*(.+)$", RegexOptions.IgnoreCase);
+                    var answerMatch = Regex.Match(trimmedSentence, @"(?:is|:|are)\s*(.+)$", RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
 
                     if (answerMatch.Success)
                     {
@@ -337,7 +337,7 @@ public class JiraCommentParser : IJiraCommentParser
             "why", "how", "your", "my", "our", "this", "that", "these", "those"
         };
 
-        return Regex.Matches(text, @"\b\w+\b")
+        return Regex.Matches(text, @"\b\w+\b", RegexOptions.None, TimeSpan.FromSeconds(1))
             .Cast<Match>()
             .Select(m => m.Value.ToLowerInvariant())
             .Where(word => word.Length > 2 && !stopWords.Contains(word))

@@ -151,7 +151,7 @@ public class AnswerProcessingAgent : BaseAgent
         // or 1: answer text
         // or 1. answer text
         var pattern = @"Q?(\d+)[\.\:]\s*(.+?)(?=Q?\d+[\.\:]|$)";
-        var matches = Regex.Matches(answerText, pattern, RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        var matches = Regex.Matches(answerText, pattern, RegexOptions.Singleline | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(2));
 
         foreach (Match match in matches)
         {
@@ -179,7 +179,7 @@ public class AnswerProcessingAgent : BaseAgent
                 var trimmedLine = line.Trim();
 
                 // Check if line starts with Q1:, Q2:, etc.
-                var questionMatch = Regex.Match(trimmedLine, @"^Q?(\d+)[\.\:](.*)");
+                var questionMatch = Regex.Match(trimmedLine, @"^Q?(\d+)[\.\:](.*)", RegexOptions.None, TimeSpan.FromSeconds(1));
                 if (questionMatch.Success)
                 {
                     // Save previous answer if exists

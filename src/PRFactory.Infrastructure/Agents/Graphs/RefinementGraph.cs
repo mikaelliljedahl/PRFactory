@@ -227,7 +227,7 @@ namespace PRFactory.Infrastructure.Agents.Graphs
             CancellationToken cancellationToken);
     }
 
-    // Placeholder agent types (these would be implemented in separate files)
+    // Agent type markers for ExecuteAgentAsync<TAgent> generic resolution
     public class TriggerAgent { }
     public class RepositoryCloneAgent { }
     public class AnalysisAgent { }
@@ -235,4 +235,5 @@ namespace PRFactory.Infrastructure.Agents.Graphs
     public class JiraPostAgent { }
     public class HumanWaitAgent { }
     public class AnswerProcessingAgent { }
+
 }

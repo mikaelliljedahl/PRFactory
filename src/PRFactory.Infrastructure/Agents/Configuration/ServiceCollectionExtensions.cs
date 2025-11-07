@@ -2,8 +2,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OpenTelemetry.Trace;
-using OpenTelemetry.Metrics;
 using PRFactory.Infrastructure.Agents.Base;
 using PRFactory.Infrastructure.Agents.Base.Middleware;
 
@@ -38,17 +36,11 @@ public static class ServiceCollectionExtensions
 
         // Register core services
         services.AddAgentRegistry();
-        services.AddSingleton<IAgentGraphBuilder, AgentGraphBuilder>();
 
         // Register middleware
         if (agentConfig.Middleware.EnableLogging)
         {
             services.AddSingleton<LoggingMiddleware>();
-        }
-
-        if (agentConfig.Middleware.EnableTelemetry)
-        {
-            services.AddSingleton<TelemetryMiddleware>();
         }
 
         if (agentConfig.Middleware.EnableErrorHandling)
@@ -91,7 +83,6 @@ public static class ServiceCollectionExtensions
             opts.CheckpointRetentionDays = config.CheckpointRetentionDays;
             opts.Middleware = config.Middleware;
             opts.Retry = config.Retry;
-            opts.Telemetry = config.Telemetry;
             opts.ErrorHandling = config.ErrorHandling;
         });
 
@@ -104,17 +95,11 @@ public static class ServiceCollectionExtensions
     {
         // Register core services
         services.AddAgentRegistry();
-        services.AddSingleton<IAgentGraphBuilder, AgentGraphBuilder>();
 
         // Register middleware
         if (config.Middleware.EnableLogging)
         {
             services.AddSingleton<LoggingMiddleware>();
-        }
-
-        if (config.Middleware.EnableTelemetry)
-        {
-            services.AddSingleton<TelemetryMiddleware>();
         }
 
         if (config.Middleware.EnableErrorHandling)
@@ -133,23 +118,6 @@ public static class ServiceCollectionExtensions
 
         // Register checkpoint repository
         services.AddSingleton<ICheckpointRepository, InMemoryCheckpointRepository>();
-
-        return services;
-    }
-
-    /// <summary>
-    /// Adds OpenTelemetry for agent framework tracing and metrics.
-    /// </summary>
-    public static IServiceCollection AddAgentFrameworkTelemetry(
-        this IServiceCollection services,
-        Action<object>? configureTracing = null,
-        Action<object>? configureMetrics = null)
-    {
-        // TODO: Add OpenTelemetry when package is available
-        // This requires OpenTelemetry.Extensions.Hosting NuGet package
-        // services.AddOpenTelemetry()
-        //     .WithTracing(builder => { ... })
-        //     .WithMetrics(builder => { ... });
 
         return services;
     }
@@ -316,15 +284,6 @@ public class AgentFrameworkBuilder
     public AgentFrameworkBuilder WithRetry(Action<RetryConfiguration> configure)
     {
         configure(_configuration.Retry);
-        return this;
-    }
-
-    /// <summary>
-    /// Configures telemetry.
-    /// </summary>
-    public AgentFrameworkBuilder WithTelemetry(Action<TelemetryConfiguration> configure)
-    {
-        configure(_configuration.Telemetry);
         return this;
     }
 

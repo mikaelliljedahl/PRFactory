@@ -135,28 +135,16 @@ public class WorkflowResumeHandler : IWorkflowResumeHandler
             var agentContext = CreateAgentContextFromCheckpoint(checkpoint, ticket);
 
             // 6. Resume graph execution from the next agent
-            var result = await _graphExecutor.ResumeFromCheckpointAsync(
-                checkpoint,
-                workflow.ResumeMessage!,
-                nextAgentName,
-                agentContext,
-                cancellationToken);
+            // TODO: Implement ResumeFromCheckpoint functionality in IAgentGraphExecutor
+            _logger.LogWarning(
+                "Resume from checkpoint not yet implemented for ticket {TicketId}",
+                workflow.TicketId);
 
-            if (result.IsSuccess)
+            return new WorkflowExecutionResult
             {
-                _logger.LogInformation(
-                    "Workflow resumed successfully for ticket {TicketId}",
-                    workflow.TicketId);
-            }
-            else
-            {
-                _logger.LogWarning(
-                    "Workflow resume completed with issues for ticket {TicketId}: {Message}",
-                    workflow.TicketId,
-                    result.Message);
-            }
-
-            return result;
+                IsSuccess = false,
+                Message = "ResumeFromCheckpoint functionality not yet implemented"
+            };
         }
         catch (Exception ex)
         {
@@ -438,22 +426,3 @@ public class WorkflowResumeHandler : IWorkflowResumeHandler
     }
 }
 
-/// <summary>
-/// Extension methods for IAgentGraphExecutor.
-/// </summary>
-public static class AgentGraphExecutorExtensions
-{
-    public static Task<WorkflowExecutionResult> ResumeFromCheckpointAsync(
-        this IAgentGraphExecutor executor,
-        CheckpointData checkpoint,
-        IAgentMessage resumeMessage,
-        string nextAgentName,
-        AgentContext context,
-        CancellationToken cancellationToken)
-    {
-        // This would be implemented by the actual graph executor
-        // The executor would load the graph state and continue from the specified agent
-        throw new NotImplementedException(
-            "ResumeFromCheckpointAsync must be implemented by the agent framework integration");
-    }
-}

@@ -123,7 +123,7 @@ public class CompletionAgent : BaseAgent
             if (Directory.Exists(workspacePath))
             {
                 Logger.LogInformation("Cleaning up workspace at {Path}", workspacePath);
-                
+
                 // Delete directory recursively
                 await Task.Run(() =>
                 {

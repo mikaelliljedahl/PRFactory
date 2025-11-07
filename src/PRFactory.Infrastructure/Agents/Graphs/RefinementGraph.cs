@@ -227,12 +227,4 @@ namespace PRFactory.Infrastructure.Agents.Graphs
             CancellationToken cancellationToken);
     }
 
-    // Placeholder agent types (these would be implemented in separate files)
-    public class TriggerAgent { }
-    public class RepositoryCloneAgent { }
-    public class AnalysisAgent { }
-    public class QuestionGenerationAgent { }
-    public class JiraPostAgent { }
-    public class HumanWaitAgent { }
-    public class AnswerProcessingAgent { }
 }

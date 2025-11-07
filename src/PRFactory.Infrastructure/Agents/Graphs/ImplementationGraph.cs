@@ -223,9 +223,4 @@ namespace PRFactory.Infrastructure.Agents.Graphs
         public string[] AllowedRepositories { get; set; }
     }
 
-    // Placeholder agent types
-    public class ImplementationAgent { }
-    public class GitCommitAgent { }
-    public class PullRequestAgent { }
-    public class CompletionAgent { }
 }

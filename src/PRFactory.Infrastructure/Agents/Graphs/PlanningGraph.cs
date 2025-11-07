@@ -272,7 +272,4 @@ namespace PRFactory.Infrastructure.Agents.Graphs
         }
     }
 
-    // Placeholder agent types
-    public class PlanningAgent { }
-    public class GitPlanAgent { }
 }

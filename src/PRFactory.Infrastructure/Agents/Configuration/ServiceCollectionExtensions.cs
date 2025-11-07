@@ -142,25 +142,14 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddAgentFrameworkTelemetry(
         this IServiceCollection services,
-        Action<TracerProviderBuilder>? configureTracing = null,
-        Action<MeterProviderBuilder>? configureMetrics = null)
+        Action<object>? configureTracing = null,
+        Action<object>? configureMetrics = null)
     {
-        // Add OpenTelemetry tracing
-        services.AddOpenTelemetry()
-            .WithTracing(builder =>
-            {
-                builder
-                    .AddSource("PRFactory.Agents")
-                    .AddSource("PRFactory.Agent.*");
-
-                configureTracing?.Invoke(builder);
-            })
-            .WithMetrics(builder =>
-            {
-                builder.AddMeter("PRFactory.Agents");
-
-                configureMetrics?.Invoke(builder);
-            });
+        // TODO: Add OpenTelemetry when package is available
+        // This requires OpenTelemetry.Extensions.Hosting NuGet package
+        // services.AddOpenTelemetry()
+        //     .WithTracing(builder => { ... })
+        //     .WithMetrics(builder => { ... });
 
         return services;
     }

@@ -25,7 +25,9 @@ public class ErrorHandlingMiddleware : IAgentMiddleware
         Func<AgentContext, CancellationToken, Task<AgentResult>> next,
         CancellationToken cancellationToken = default)
     {
-        var agentName = context.Metadata.CurrentPhase ?? "Unknown";
+        var agentName = context.Metadata.ContainsKey("CurrentPhase")
+            ? context.Metadata["CurrentPhase"]?.ToString() ?? "Unknown"
+            : "Unknown";
 
         try
         {
@@ -41,7 +43,7 @@ public class ErrorHandlingMiddleware : IAgentMiddleware
                 context.TicketId);
 
             // Store error in context for potential retry
-            context.SetState(StateKeys.ErrorMessage, "Operation was cancelled");
+            context.State["ErrorMessage"] = "Operation was cancelled";
 
             if (_options.RethrowCancellation)
             {

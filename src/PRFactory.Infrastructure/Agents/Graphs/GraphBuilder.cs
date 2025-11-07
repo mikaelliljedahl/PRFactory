@@ -352,11 +352,12 @@ namespace PRFactory.Infrastructure.Agents.Graphs
             context.State["checkpoint_name"] = CheckpointName;
             context.State["checkpoint_time"] = DateTime.UtcNow;
 
-            await checkpointStore.SaveCheckpointAsync(
-                context.TicketId,
-                context.GraphId,
-                CheckpointName,
-                context.State);
+            var checkpoint = new CheckpointData
+            {
+                NextAgentType = CheckpointName,
+                State = context.State
+            };
+            await checkpointStore.SaveCheckpointAsync(checkpoint, cancellationToken);
 
             return inputMessage;
         }

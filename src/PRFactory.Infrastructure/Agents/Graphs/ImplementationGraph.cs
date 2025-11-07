@@ -25,7 +25,7 @@ namespace PRFactory.Infrastructure.Agents.Graphs
 
         public ImplementationGraph(
             ILogger<ImplementationGraph> logger,
-            ICheckpointStore checkpointStore,
+            Base.ICheckpointStore checkpointStore,
             IAgentExecutor agentExecutor,
             ITenantConfigurationService tenantConfigService)
             : base(logger, checkpointStore)

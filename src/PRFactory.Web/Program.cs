@@ -21,6 +21,10 @@ builder.Services.AddServerSideBlazor();
 // Add SignalR
 builder.Services.AddSignalR();
 
+// Register SignalR event broadcaster
+builder.Services.AddScoped<PRFactory.Infrastructure.Events.IEventBroadcaster,
+    SignalREventBroadcaster>();
+
 // Configure HttpClient for PRFactory.Api
 var apiBaseUrl = builder.Configuration.GetValue<string>("ApiSettings:BaseUrl") ?? "http://localhost:5000";
 builder.Services.AddHttpClient("PRFactoryApi", client =>

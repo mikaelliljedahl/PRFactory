@@ -170,6 +170,16 @@ public class TenantConfiguration
     public bool EnableVerboseLogging { get; set; } = false;
 
     /// <summary>
+    /// Whether to enable code review workflow for this tenant
+    /// </summary>
+    public bool EnableCodeReview { get; set; } = false;
+
+    /// <summary>
+    /// List of allowed repository names for this tenant (empty means all allowed)
+    /// </summary>
+    public string[] AllowedRepositories { get; set; } = Array.Empty<string>();
+
+    /// <summary>
     /// Custom prompt templates for this tenant (optional)
     /// </summary>
     public Dictionary<string, string> CustomPromptTemplates { get; set; } = new();

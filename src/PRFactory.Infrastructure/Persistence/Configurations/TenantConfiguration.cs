@@ -69,6 +69,8 @@ public class TenantConfiguration : IEntityTypeConfiguration<Tenant>
             config.Property(c => c.MaxTokensPerRequest);
             config.Property(c => c.ApiTimeoutSeconds);
             config.Property(c => c.EnableVerboseLogging);
+            config.Property(c => c.EnableCodeReview);
+            config.Property(c => c.AllowedRepositories);
             config.OwnsOne(c => c.CustomPromptTemplates);
         });
 

@@ -3,6 +3,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PRFactory.Domain.Interfaces;
+using PRFactory.Infrastructure.Agents.Adapters;
+using PRFactory.Infrastructure.Agents.Base;
+using PRFactory.Infrastructure.Configuration;
 using PRFactory.Infrastructure.Persistence;
 using PRFactory.Infrastructure.Persistence.Encryption;
 using PRFactory.Infrastructure.Persistence.Repositories;
@@ -59,6 +62,42 @@ public static class DependencyInjection
         services.AddScoped<ITenantRepository, TenantRepository>();
         services.AddScoped<IRepositoryRepository, RepositoryRepository>();
         services.AddScoped<ITicketRepository, TicketRepository>();
+        services.AddScoped<ICheckpointRepository, CheckpointRepository>();
+
+        // Register checkpoint store adapter
+        services.AddScoped<ICheckpointStore, GraphCheckpointStoreAdapter>();
+
+        // Register workflow state store
+        services.AddScoped<Agents.Graphs.IWorkflowStateStore, Repositories.WorkflowStateStore>();
+
+        // Register event publisher
+        services.AddScoped<Agents.Graphs.IEventPublisher, Events.EventPublisher>();
+
+        // Register caching
+        services.AddMemoryCache();
+
+        // Register configuration services
+        services.AddScoped<ITenantConfigurationService, TenantConfigurationService>();
+
+        // Register agents
+        services.AddTransient<Agents.TriggerAgent>();
+        services.AddTransient<Agents.RepositoryCloneAgent>();
+        services.AddTransient<Agents.AnalysisAgent>();
+        services.AddTransient<Agents.QuestionGenerationAgent>();
+        services.AddTransient<Agents.JiraPostAgent>();
+        services.AddTransient<Agents.HumanWaitAgent>();
+        services.AddTransient<Agents.AnswerProcessingAgent>();
+        services.AddTransient<Agents.PlanningAgent>();
+        services.AddTransient<Agents.GitPlanAgent>();
+        services.AddTransient<Agents.ImplementationAgent>();
+        services.AddTransient<Agents.GitCommitAgent>();
+        services.AddTransient<Agents.PullRequestAgent>();
+        services.AddTransient<Agents.CompletionAgent>();
+        services.AddTransient<Agents.ApprovalCheckAgent>();
+        services.AddTransient<Agents.ErrorHandlingAgent>();
+
+        // Register agent executor
+        services.AddScoped<Agents.Graphs.IAgentExecutor, Agents.Graphs.AgentExecutor>();
 
         return services;
     }

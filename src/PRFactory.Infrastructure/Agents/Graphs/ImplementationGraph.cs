@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PRFactory.Infrastructure.Agents.Base;
 using PRFactory.Infrastructure.Agents.Messages;
+using PRFactory.Infrastructure.Configuration;
 
 namespace PRFactory.Infrastructure.Agents.Graphs
 {
@@ -203,30 +204,9 @@ namespace PRFactory.Infrastructure.Agents.Graphs
         }
     }
 
-    /// <summary>
-    /// Interface for tenant configuration service
-    /// </summary>
-    public interface ITenantConfigurationService
-    {
-        Task<TenantConfiguration> GetConfigurationForTicketAsync(Guid ticketId, CancellationToken cancellationToken);
-    }
-
-    /// <summary>
-    /// Tenant configuration model
-    /// </summary>
-    public class TenantConfiguration
-    {
-        public Guid TenantId { get; set; }
-        public bool AutoImplementAfterPlanApproval { get; set; }
-        public int MaxTokensPerRequest { get; set; }
-        public bool EnableCodeReview { get; set; }
-        public string[] AllowedRepositories { get; set; }
-    }
-
     // Agent type markers for ExecuteAgentAsync<TAgent> generic resolution
     public class ImplementationAgent { }
     public class GitCommitAgent { }
     public class PullRequestAgent { }
     public class CompletionAgent { }
-
 }

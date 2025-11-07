@@ -116,3 +116,32 @@ echo "📦 .NET SDK info:"
 dotnet --info
 echo ""
 echo "🎯 Ready to build PRFactory with .NET 10!"
+echo ""
+
+# Start NuGet proxy for .NET restore/build (works around Claude Code proxy auth issues)
+echo "🔧 Starting NuGet proxy..."
+NUGET_PROXY_SCRIPT="${CLAUDE_PROJECT_DIR:-$(pwd)}/.claude/scripts/nuget-proxy.py"
+if [ -f "$NUGET_PROXY_SCRIPT" ]; then
+    # Kill any existing proxy
+    pkill -f nuget-proxy.py 2>/dev/null || true
+
+    # Start proxy in background
+    nohup python3 "$NUGET_PROXY_SCRIPT" > /tmp/nuget-proxy.log 2>&1 &
+    sleep 2
+
+    # Check if proxy started
+    if pgrep -f nuget-proxy.py > /dev/null; then
+        echo "✅ NuGet proxy started on http://127.0.0.1:8888"
+        echo ""
+        echo "💡 For dotnet restore/build, run:"
+        echo "   unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY GLOBAL_AGENT_HTTP_PROXY GLOBAL_AGENT_HTTPS_PROXY"
+        echo "   export HTTP_PROXY=http://127.0.0.1:8888"
+        echo "   export HTTPS_PROXY=http://127.0.0.1:8888"
+        echo "   dotnet restore"
+        echo "   dotnet build"
+    else
+        echo "⚠️  NuGet proxy failed to start (check /tmp/nuget-proxy.log)"
+    fi
+else
+    echo "⚠️  NuGet proxy script not found at $NUGET_PROXY_SCRIPT"
+fi

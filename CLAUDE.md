@@ -767,7 +767,7 @@ var repo = new Repository
 
 **PRESERVE These Core Decisions:**
 1. ✅ Multi-graph architecture (4 graph types + orchestrator)
-2. ✅ Multi-platform provider support (GitHub, Bitbucket, Azure DevOps, GitLab)
+2. ✅ Multi-platform provider support (GitHub, Bitbucket, Azure DevOps; GitLab planned)
 3. ✅ LibGit2Sharp for git operations
 4. ✅ Multi-tenant architecture with configuration flexibility
 5. ✅ State machine pattern with checkpointing

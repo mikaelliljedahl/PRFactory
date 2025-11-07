@@ -381,7 +381,7 @@ namespace PRFactory.Infrastructure.Agents.Graphs
             IServiceProvider serviceProvider)
             : base(
                 serviceProvider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<BuiltGraph>>(),
-                serviceProvider.GetRequiredService<ICheckpointStore>())
+                serviceProvider.GetRequiredService<Base.ICheckpointStore>())
         {
             _graphId = graphId;
             _entryNode = entryNode;

@@ -186,10 +186,13 @@ public class AzureDevOpsProvider : IGitPlatformProvider
     private bool IsTransientError(VssServiceException ex)
     {
         // Retry on server errors and timeouts
-        return ex.HttpStatusCode == System.Net.HttpStatusCode.ServiceUnavailable ||
-               ex.HttpStatusCode == System.Net.HttpStatusCode.GatewayTimeout ||
-               ex.HttpStatusCode == System.Net.HttpStatusCode.RequestTimeout ||
-               ex.HttpStatusCode == System.Net.HttpStatusCode.TooManyRequests;
+        // Note: VssServiceException doesn't expose HttpStatusCode directly
+        // Check exception message or InnerException for specific status codes
+        var message = ex.Message.ToLowerInvariant();
+        return message.Contains("503") || message.Contains("service unavailable") ||
+               message.Contains("504") || message.Contains("gateway timeout") ||
+               message.Contains("408") || message.Contains("request timeout") ||
+               message.Contains("429") || message.Contains("too many requests");
     }
 
     private async Task<RepositoryEntity> GetRepositoryAsync(Guid repositoryId, CancellationToken ct)

@@ -254,6 +254,11 @@ public class AgentResult
 public enum AgentStatus
 {
     /// <summary>
+    /// Agent is currently running.
+    /// </summary>
+    Running,
+
+    /// <summary>
     /// Agent execution completed successfully.
     /// </summary>
     Completed,

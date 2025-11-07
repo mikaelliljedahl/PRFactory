@@ -67,16 +67,14 @@ public class LocalGitService : ILocalGitService
 
         var cloneOptions = new CloneOptions
         {
-            FetchOptions = new FetchOptions
-            {
-                CredentialsProvider = (url, user, cred) => new UsernamePasswordCredentials
-                {
-                    Username = "oauth2",
-                    Password = accessToken
-                }
-            },
             IsBare = false,
             Checkout = true
+        };
+
+        cloneOptions.FetchOptions.CredentialsProvider = (url, user, cred) => new UsernamePasswordCredentials
+        {
+            Username = "oauth2",
+            Password = accessToken
         };
 
         await Task.Run(() => Repository.Clone(repoUrl, localPath, cloneOptions), ct);

@@ -29,10 +29,12 @@ public static class GitServiceCollectionExtensions
         services.AddScoped<IGitPlatformProvider, AzureDevOpsProvider>();
 
         // Register Bitbucket provider with HttpClient and retry policy
-        services.AddHttpClient<BitbucketProvider>()
-            .AddPolicyHandler(GetHttpRetryPolicy());
+        // TODO: AddHttpClient requires Microsoft.Extensions.Http package
+        // services.AddHttpClient<BitbucketProvider>()
+        //     .AddPolicyHandler(GetHttpRetryPolicy());
 
         // Register BitbucketProvider as IGitPlatformProvider
+        services.AddScoped<BitbucketProvider>();
         services.AddScoped<IGitPlatformProvider>(sp => sp.GetRequiredService<BitbucketProvider>());
 
         // Register facade service

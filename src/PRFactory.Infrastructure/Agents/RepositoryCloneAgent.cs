@@ -23,7 +23,7 @@ public class RepositoryCloneAgent : BaseAgent
         : base(logger)
     {
         _localGitService = localGitService ?? throw new ArgumentNullException(nameof(localGitService));
-        _workspaceBasePath = configuration["Workspace:BasePath"] 
+        _workspaceBasePath = configuration["Workspace:BasePath"]
             ?? throw new InvalidOperationException("Workspace:BasePath not configured");
     }
 

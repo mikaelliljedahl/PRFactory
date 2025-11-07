@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using PRFactory.Infrastructure.Agents.Base;
 using PRFactory.Infrastructure.Agents.Messages;
 

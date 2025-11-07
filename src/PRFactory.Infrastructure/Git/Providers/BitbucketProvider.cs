@@ -100,9 +100,10 @@ public class BitbucketProvider : IGitPlatformProvider
 
         var response = await _retryPolicy.ExecuteAsync(async () =>
         {
-            return await _httpClient.PostAsJsonAsync(
+            var content = JsonContent.Create(prRequest);
+            return await _httpClient.PostAsync(
                 $"https://api.bitbucket.org/2.0/repositories/{workspace}/{repoSlug}/pullrequests",
-                prRequest,
+                content,
                 ct
             );
         });
@@ -143,9 +144,10 @@ public class BitbucketProvider : IGitPlatformProvider
 
         var response = await _retryPolicy.ExecuteAsync(async () =>
         {
-            return await _httpClient.PostAsJsonAsync(
+            var content = JsonContent.Create(commentRequest);
+            return await _httpClient.PostAsync(
                 $"https://api.bitbucket.org/2.0/repositories/{workspace}/{repoSlug}/pullrequests/{pullRequestNumber}/comments",
-                commentRequest,
+                content,
                 ct
             );
         });

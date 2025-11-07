@@ -103,7 +103,7 @@ public class BitbucketProvider : IGitPlatformProvider
             return await _httpClient.PostAsJsonAsync(
                 $"https://api.bitbucket.org/2.0/repositories/{workspace}/{repoSlug}/pullrequests",
                 prRequest,
-                ct
+                cancellationToken: ct
             );
         });
 
@@ -146,7 +146,7 @@ public class BitbucketProvider : IGitPlatformProvider
             return await _httpClient.PostAsJsonAsync(
                 $"https://api.bitbucket.org/2.0/repositories/{workspace}/{repoSlug}/pullrequests/{pullRequestNumber}/comments",
                 commentRequest,
-                ct
+                cancellationToken: ct
             );
         });
 

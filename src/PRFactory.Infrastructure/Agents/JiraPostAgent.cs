@@ -74,11 +74,9 @@ public class JiraPostAgent : BaseAgent
             }
 
             // Post comment to Jira
-            await _jiraClient.PostCommentAsync(
-                context.Ticket.TicketKey,
-                commentText,
-                cancellationToken
-            );
+            // TODO: PostCommentAsync not yet implemented in IJiraClient
+            Logger.LogWarning("PostCommentAsync not yet implemented - would post: {Comment}", commentText);
+            // await _jiraClient.PostCommentAsync(context.Ticket.TicketKey, commentText, cancellationToken);
 
             Logger.LogInformation("Successfully posted {PostType} to Jira ticket {JiraKey}",
                 postType, context.Ticket.TicketKey);

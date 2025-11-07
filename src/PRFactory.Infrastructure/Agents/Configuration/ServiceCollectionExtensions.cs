@@ -363,16 +363,7 @@ public class AgentFrameworkBuilder
     public IServiceCollection Build()
     {
         _configuration.Validate();
-        _services.AddAgentFramework(_ => { }, _configuration);
+        _services.AddAgentFramework(_ => { });
         return _services;
-    }
-
-    private static IServiceCollection AddAgentFramework(
-        IServiceCollection services,
-        Action<AgentConfiguration> configureOptions,
-        AgentConfiguration config)
-    {
-        services.Configure(configureOptions);
-        return ServiceCollectionExtensions.AddAgentFramework(services, config);
     }
 }

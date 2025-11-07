@@ -78,14 +78,12 @@ public class PullRequestAgent : BaseAgent
             // Create PR using git platform provider
             var pullRequest = await _gitPlatformProvider.CreatePullRequestAsync(
                 context.Repository.Id,
-                new CreatePullRequestRequest
-                {
-                    Title = prTitle,
-                    Description = prDescription,
-                    SourceBranch = sourceBranch,
-                    TargetBranch = targetBranch,
-                    Labels = new List<string> { "prfactory", "ai-generated" }
-                },
+                new Git.CreatePullRequestRequest(
+                    sourceBranch,
+                    targetBranch,
+                    prTitle,
+                    prDescription
+                ),
                 cancellationToken
             );
 
@@ -176,18 +174,6 @@ public class PullRequestAgent : BaseAgent
 
         return sb.ToString();
     }
-}
-
-/// <summary>
-/// Request to create a pull request
-/// </summary>
-public class CreatePullRequestRequest
-{
-    public string Title { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public string SourceBranch { get; set; } = string.Empty;
-    public string TargetBranch { get; set; } = string.Empty;
-    public List<string> Labels { get; set; } = new();
 }
 
 /// <summary>

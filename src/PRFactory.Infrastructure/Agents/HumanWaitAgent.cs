@@ -98,8 +98,8 @@ public class HumanWaitAgent : BaseAgent
             context.Checkpoint = checkpoint;
             context.State["Checkpoint"] = checkpoint;
 
-            // Update status
-            context.Status = AgentStatus.Suspended;
+            // Update status (AgentStatus.Suspended doesn't exist - using Pending)
+            context.Status = AgentStatus.Pending;
 
             Logger.LogInformation("Workflow suspended for ticket {JiraKey}, checkpoint {CheckpointId} saved",
                 context.Ticket.TicketKey, checkpoint.CheckpointId);

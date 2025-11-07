@@ -1,262 +1,308 @@
 # PRFactory
 
-An AI-powered Pull Request Factory that automates GitHub pull request creation and management using Microsoft Agent Framework.
+> AI-powered automation that transforms Jira tickets into GitHub pull requests using Claude AI
 
-## Prerequisites
+PRFactory is an intelligent automation system that streamlines the development workflow by:
+- **Analyzing** vague Jira tickets and your codebase
+- **Clarifying** requirements through AI-generated questions
+- **Planning** detailed implementations for developer review
+- **Creating** pull requests with implemented code (optional)
 
-Before you begin, ensure you have the following installed:
+**Key Principle:** AI assists, humans decide. Every step requires human approval - no automatic deployments.
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) or later
-- [Docker](https://www.docker.com/get-started) and Docker Compose (for local development)
-- [Git](https://git-scm.com/downloads)
-- A GitHub account with a Personal Access Token (PAT)
+## Table of Contents
+
+- [How It Works](#how-it-works)
+- [Workflow Overview](#workflow-overview)
+- [Quick Start](#quick-start)
+- [Documentation](#documentation)
+- [Architecture](#architecture)
+- [Technology Stack](#technology-stack)
+- [Contributing](#contributing)
+
+## How It Works
+
+PRFactory integrates into your existing Jira workflow with three phases:
+
+### Phase 1: Requirements Clarification
+
+When you mention `@claude` in a Jira ticket or add the "Claude" label:
+1. The system clones your repository and analyzes the codebase
+2. Claude AI generates clarifying questions based on context
+3. Questions are posted as Jira comments
+4. You respond with answers, mentioning `@claude` to continue
+
+### Phase 2: Implementation Planning
+
+After receiving your answers:
+1. Claude generates a detailed implementation plan
+2. The plan is committed to a feature branch as markdown files
+3. A summary with branch link is posted to Jira
+4. You review and approve the plan (or request changes)
+
+### Phase 3: Code Implementation (Optional)
+
+Once the plan is approved:
+1. Claude implements the code following the approved plan (or you can implement manually)
+2. Changes are committed and pushed to the feature branch
+3. A pull request is created and linked to the Jira ticket
+4. **Mandatory code review** by your team before merging
+
+## Workflow Overview
+
+```mermaid
+flowchart TB
+    Start([Developer creates<br/>Jira ticket]) --> Trigger{Mentions @claude<br/>or adds label?}
+    Trigger -- No --> Manual[Standard workflow]
+    Trigger -- Yes --> Queue[Message sent to<br/>secure queue]
+
+    Queue --> Phase1[Phase 1: Analysis]
+    Phase1 --> Clone[Clone repository]
+    Clone --> Analyze[AI analyzes codebase<br/>and requirements]
+    Analyze --> Questions[Posts clarifying<br/>questions to Jira]
+    Questions --> Wait1{User responds<br/>with @claude}
+
+    Wait1 --> Phase2[Phase 2: Planning]
+    Phase2 --> Plan[AI creates detailed<br/>implementation plan]
+    Plan --> Branch[Create feature branch<br/>& commit plan files]
+    Branch --> PostPlan[Posts plan summary<br/>to Jira]
+    PostPlan --> Wait2{Developer<br/>approves plan?}
+    Wait2 -- Needs changes --> Questions
+
+    Wait2 -- Approved --> Phase3[Phase 3: Implementation]
+    Phase3 --> Code[AI implements changes<br/>OR developer does manually]
+    Code --> Test[Run tests]
+    Test --> Commit[Commit and push]
+    Commit --> PR[Create Pull Request]
+
+    PR --> Review[Mandatory human<br/>code review]
+    Review --> Approve{Approved?}
+    Approve -- Changes needed --> Code
+    Approve -- Approved --> Merge[Human merges PR]
+    Merge --> Done([Complete])
+
+    style Phase1 fill:#e1f5ff
+    style Phase2 fill:#fff4e1
+    style Phase3 fill:#e8f5e9
+    style Review fill:#ffebee
+    style Merge fill:#f3e5f5
+```
+
+### Human Control Points
+
+| Phase | Human Control | Can AI Proceed Alone? |
+|-------|--------------|----------------------|
+| Analysis | User must answer clarifying questions | No |
+| Planning | Developer must approve implementation plan | No |
+| Implementation | Developer must review and merge PR | No |
+
+## Quick Start
+
+### Prerequisites
+
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or later
+- [Docker](https://www.docker.com/get-started) (optional, for containerized deployment)
+- GitHub account with Personal Access Token
+- Jira account with API access
+- Anthropic API key for Claude
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd PRFactory
+   ```
+
+2. **Configure the application**
+
+   Create `appsettings.json` or use environment variables:
+   ```json
+   {
+     "ConnectionStrings": {
+       "DefaultConnection": "Data Source=prfactory.db"
+     },
+     "Jira": {
+       "BaseUrl": "https://yourcompany.atlassian.net",
+       "WebhookSecret": "your-webhook-secret"
+     },
+     "Claude": {
+       "ApiKey": "sk-ant-...",
+       "Model": "claude-sonnet-4-5-20250929"
+     },
+     "GitHub": {
+       "Token": "ghp_..."
+     }
+   }
+   ```
+
+3. **Run with Docker Compose** (recommended)
+   ```bash
+   docker-compose up --build
+   ```
+
+   Services will be available at:
+   - API: http://localhost:5000
+   - Swagger UI: http://localhost:5000/swagger
+
+4. **Or run locally**
+   ```bash
+   # Apply database migrations
+   cd src/PRFactory.Api
+   dotnet ef database update
+
+   # Start the API
+   dotnet run --project src/PRFactory.Api
+
+   # In another terminal, start the Worker
+   dotnet run --project src/PRFactory.Worker
+   ```
+
+For detailed setup instructions, see [docs/SETUP.md](docs/SETUP.md).
+
+## Documentation
+
+- **[Setup Guide](docs/SETUP.md)** - Detailed installation and configuration
+- **[Architecture](docs/ARCHITECTURE.md)** - System design and components
+- **[Workflow Details](docs/WORKFLOW.md)** - In-depth workflow explanation
+- **[Database Schema](docs/database-schema.md)** - Database structure and entities
+- **[API Reference](docs/api/)** - REST API documentation
+
+### Component Documentation
+
+- [Domain Layer](src/PRFactory.Domain/README.md) - Business entities and logic
+- [Infrastructure Layer](src/PRFactory.Infrastructure/README.md) - External integrations
+- [API Layer](src/PRFactory.Api/README.md) - REST endpoints
+- [Worker Service](src/PRFactory.Worker/README.md) - Background job processing
+
+## Architecture
+
+PRFactory follows **Clean Architecture** principles with clear separation of concerns:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    External Systems                     │
+│         Jira Cloud  │  GitHub/GitLab  │  Claude AI      │
+└────────────────────────┬────────────────────────────────┘
+                         │
+┌────────────────────────┴────────────────────────────────┐
+│                  PRFactory System                       │
+│                                                          │
+│  ┌────────────────────────────────────────────────┐     │
+│  │         API Layer (ASP.NET Core)               │     │
+│  │  WebhookController │ TicketController          │     │
+│  └──────────────────┬─────────────────────────────┘     │
+│                     │                                   │
+│  ┌──────────────────┴─────────────────────────────┐     │
+│  │         Application Services                   │     │
+│  │  TicketService │ WorkflowService │ ...         │     │
+│  └──────────────────┬─────────────────────────────┘     │
+│                     │                                   │
+│  ┌──────────────────┴─────────────────────────────┐     │
+│  │         Domain Layer                           │     │
+│  │  Entities │ State Machine │ Value Objects      │     │
+│  └──────────────────┬─────────────────────────────┘     │
+│                     │                                   │
+│  ┌──────────────────┴─────────────────────────────┐     │
+│  │         Infrastructure Layer                   │     │
+│  │  JiraClient │ GitService │ ClaudeClient │ DB   │     │
+│  └────────────────────────────────────────────────┘     │
+│                                                          │
+│  ┌────────────────────────────────────────────────┐     │
+│  │         Worker Service (Background Jobs)       │     │
+│  │  14 Specialized Agents for Workflow Steps      │     │
+│  └────────────────────────────────────────────────┘     │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Key Components:**
+
+- **14 Specialized Agents** - Each handles a specific workflow step (TriggerAgent, AnalysisAgent, QuestionGenerationAgent, etc.)
+- **Workflow State Machine** - 12 states with validated transitions
+- **Multi-tenancy Support** - Isolated environments per customer
+- **Security First** - HMAC webhook validation, encrypted credentials, read-only repo access
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture documentation.
+
+## Technology Stack
+
+### Core Framework
+- **.NET 8** - Core platform (LTS)
+- **C# 12** - Latest language features
+- **ASP.NET Core** - Web API hosting
+- **Entity Framework Core 8** - ORM
+
+### Key Libraries
+- **Anthropic SDK** - Claude AI integration
+- **LibGit2Sharp** - Git operations
+- **Octokit** - GitHub API client
+- **Polly** - Resilience and retry policies
+- **Serilog** - Structured logging
+- **OpenTelemetry** - Distributed tracing
+
+### Data Storage
+- **SQLite** - Default database (can use SQL Server or PostgreSQL)
+- **Entity Framework Core** - Database access
+
+### Infrastructure
+- **Docker** - Containerization
+- **GitHub Actions** - CI/CD pipelines
+- **Jaeger** - Distributed tracing (optional)
 
 ## Project Structure
 
 ```
 PRFactory/
 ├── src/
-│   ├── PRFactory.Domain/          # Domain entities and interfaces
-│   ├── PRFactory.Infrastructure/  # Data access, repositories, external services
-│   ├── PRFactory.Api/              # REST API web service
-│   └── PRFactory.Worker/           # Background worker service
+│   ├── PRFactory.Api/              # REST API (webhooks, controllers)
+│   ├── PRFactory.Domain/           # Domain entities and business logic
+│   ├── PRFactory.Infrastructure/   # External integrations (Jira, Git, Claude)
+│   └── PRFactory.Worker/           # Background job processor
 ├── tests/
 │   └── PRFactory.Tests/           # Unit and integration tests
-├── PRFactory.sln                   # Solution file
-├── docker-compose.yml              # Docker compose configuration
-└── global.json                     # .NET SDK version specification
+├── docs/                          # Documentation
+├── docker-compose.yml             # Docker configuration
+└── PRFactory.sln                  # Solution file
 ```
 
-## Getting Started
+## Quality & Security
 
-### 1. Clone the Repository
+### Quality Guarantees
 
-```bash
-git clone <repository-url>
-cd PRFactory
-```
+- All code changes go through **mandatory pull request review**
+- **CI/CD pipelines** run automated tests and security scans
+- **No automatic deployments** - humans control all merges
+- Complete **audit trail** in Jira comments and git history
 
-### 2. Configure Application Settings
+### Security Controls
 
-The application requires configuration for GitHub integration and other services. Configuration can be provided via:
+- No direct production access
+- Read-only repository access during analysis
+- Write access limited to feature branches only
+- Cannot merge PRs (human-only operation)
+- HMAC validation for webhooks
+- Encrypted credentials at rest
+- Multi-tenant data isolation
 
-- `appsettings.json` / `appsettings.Development.json` files
-- Environment variables
-- User secrets (recommended for local development)
+## Benefits
 
-#### Required Configuration
+### For Developers
+- **60-80% faster** routine implementations
+- Focus on complex, high-value work
+- Consistent code patterns and documentation
+- Automated test generation
 
-**GitHub Settings:**
-```json
-{
-  "GitHub": {
-    "Token": "your-github-personal-access-token",
-    "BaseUrl": "https://api.github.com"
-  }
-}
-```
+### For Teams
+- Faster feature delivery
+- Better requirement clarity upfront
+- Clear visibility into implementation plans
+- Reduced technical debt
 
-**Database Connection:**
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Data Source=prfactory.db"
-  }
-}
-```
-
-**OpenTelemetry (Optional):**
-```json
-{
-  "OpenTelemetry": {
-    "ServiceName": "PRFactory",
-    "Jaeger": {
-      "AgentHost": "localhost",
-      "AgentPort": 6831
-    }
-  }
-}
-```
-
-#### Using User Secrets (Recommended for Local Development)
-
-```bash
-# For the API project
-cd src/PRFactory.Api
-dotnet user-secrets set "GitHub:Token" "your-github-token"
-
-# For the Worker project
-cd ../PRFactory.Worker
-dotnet user-secrets set "GitHub:Token" "your-github-token"
-```
-
-### 3. Build the Solution
-
-```bash
-# Restore dependencies and build all projects
-dotnet restore
-dotnet build
-
-# Or build in Release mode
-dotnet build -c Release
-```
-
-### 4. Run Database Migrations
-
-```bash
-# From the solution root
-cd src/PRFactory.Api
-dotnet ef database update
-```
-
-### 5. Run the Application
-
-#### Option A: Run with Docker Compose (Recommended)
-
-```bash
-# Build and start all services
-docker-compose up --build
-
-# Run in detached mode
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop services
-docker-compose down
-```
-
-Services will be available at:
-- **API**: http://localhost:5000
-- **Swagger UI**: http://localhost:5000/swagger
-- **Jaeger UI**: http://localhost:16686
-
-#### Option B: Run Locally Without Docker
-
-Start the API:
-```bash
-cd src/PRFactory.Api
-dotnet run
-```
-
-In a separate terminal, start the Worker:
-```bash
-cd src/PRFactory.Worker
-dotnet run
-```
-
-(Optional) Start Jaeger for tracing:
-```bash
-docker run -d --name jaeger \
-  -p 5775:5775/udp \
-  -p 6831:6831/udp \
-  -p 6832:6832/udp \
-  -p 5778:5778 \
-  -p 16686:16686 \
-  -p 14268:14268 \
-  -p 14250:14250 \
-  -p 9411:9411 \
-  jaegertracing/all-in-one:1.51
-```
-
-## Running Tests
-
-```bash
-# Run all tests
-dotnet test
-
-# Run tests with coverage
-dotnet test /p:CollectCoverage=true
-
-# Run tests in a specific project
-dotnet test tests/PRFactory.Tests/PRFactory.Tests.csproj
-
-# Run tests with detailed output
-dotnet test --logger "console;verbosity=detailed"
-```
-
-## Development
-
-### Code Style and Standards
-
-- Target Framework: .NET 10
-- Language Version: C# 12
-- Nullable Reference Types: Enabled
-- Implicit Usings: Enabled
-
-### Adding New Packages
-
-Shared package versions are defined in `src/Directory.Build.props`. To add a new package:
-
-1. Add the version property in `Directory.Build.props`
-2. Reference the package in your project using the version property
-
-Example:
-```xml
-<!-- In Directory.Build.props -->
-<PropertyGroup>
-  <MyPackageVersion>1.0.0</MyPackageVersion>
-</PropertyGroup>
-
-<!-- In your .csproj -->
-<PackageReference Include="MyPackage" Version="$(MyPackageVersion)" />
-```
-
-### Database Migrations
-
-Create a new migration:
-```bash
-cd src/PRFactory.Api
-dotnet ef migrations add MigrationName
-```
-
-Apply migrations:
-```bash
-dotnet ef database update
-```
-
-Remove last migration:
-```bash
-dotnet ef migrations remove
-```
-
-## Architecture Overview
-
-PRFactory follows Clean Architecture principles with clear separation of concerns:
-
-- **Domain Layer**: Core business entities, value objects, and domain interfaces
-- **Infrastructure Layer**: Data access, external service integrations, and implementations
-- **API Layer**: REST endpoints, controllers, and API-specific logic
-- **Worker Layer**: Background job processing and scheduled tasks
-
-For detailed architecture documentation, see [docs/architecture.md](docs/architecture.md) (if available).
-
-## Observability
-
-The application includes built-in observability features:
-
-- **Structured Logging**: Using Serilog with console and file sinks
-- **Distributed Tracing**: OpenTelemetry with Jaeger exporter
-- **Metrics**: Built-in ASP.NET Core metrics
-
-Access Jaeger UI at http://localhost:16686 to view traces.
-
-## Troubleshooting
-
-### Common Issues
-
-**Issue**: `dotnet: command not found`
-- **Solution**: Install .NET 10 SDK from https://dotnet.microsoft.com/download
-
-**Issue**: Database connection errors
-- **Solution**: Ensure the database file path is writable and migrations are applied
-
-**Issue**: GitHub API rate limiting
-- **Solution**: Verify your GitHub token has appropriate permissions and hasn't exceeded rate limits
-
-**Issue**: Docker containers fail to start
-- **Solution**: Check Docker logs with `docker-compose logs` and ensure ports aren't already in use
+### For Business
+- Reduced development costs
+- Shorter time-to-market
+- Faster developer onboarding
+- More predictable timelines
 
 ## Contributing
 
@@ -272,4 +318,11 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Support
 
-For issues, questions, or contributions, please open an issue on the GitHub repository.
+For issues, questions, or contributions:
+- Open an issue on GitHub
+- Check the [documentation](docs/)
+- Review the [troubleshooting guide](docs/SETUP.md#troubleshooting)
+
+---
+
+**Built with Claude AI** | **Powered by .NET 8**

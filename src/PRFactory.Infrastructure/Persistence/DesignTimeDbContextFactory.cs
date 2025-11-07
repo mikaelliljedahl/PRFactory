@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using PRFactory.Infrastructure.Persistence.Encryption;
+using System.Security.Cryptography;
 
 namespace PRFactory.Infrastructure.Persistence;
 
@@ -14,9 +15,13 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<Applicatio
 {
     public ApplicationDbContext CreateDbContext(string[] args)
     {
-        // For design-time, use a dummy encryption key
-        // In production, this should come from configuration
-        var dummyEncryptionKey = Convert.ToBase64String(new byte[32]); // 256-bit key
+        // For design-time, generate a random encryption key
+        // This is only used by EF Core tools for migrations and is never used in production
+        // In production, the encryption key comes from secure configuration
+        byte[] keyBytes = new byte[32]; // 256-bit key
+        RandomNumberGenerator.Fill(keyBytes);
+        var dummyEncryptionKey = Convert.ToBase64String(keyBytes);
+
         var encryptionService = new AesEncryptionService(
             dummyEncryptionKey,
             NullLogger<AesEncryptionService>.Instance);

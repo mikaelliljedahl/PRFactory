@@ -72,8 +72,8 @@ public class WorkflowResumeHandler : IWorkflowResumeHandler
                 };
             }
 
-            activity?.SetTag("checkpoint.agent", checkpoint.AgentName);
-            activity?.SetTag("checkpoint.state", checkpoint.State);
+            activity?.SetTag("checkpoint.agent", checkpoint.NextAgentType);
+            activity?.SetTag("checkpoint.saved_at", checkpoint.SavedAt);
 
             // 2. Validate checkpoint is for HumanWaitAgent
             if (!IsHumanWaitCheckpoint(checkpoint))
@@ -81,12 +81,12 @@ public class WorkflowResumeHandler : IWorkflowResumeHandler
                 _logger.LogWarning(
                     "Checkpoint {CheckpointId} is not a HumanWait checkpoint (agent: {AgentName})",
                     workflow.CheckpointId,
-                    checkpoint.AgentName);
+                    checkpoint.NextAgentType);
 
                 return new WorkflowExecutionResult
                 {
                     IsSuccess = false,
-                    Message = $"Checkpoint is not a valid resume point (agent: {checkpoint.AgentName})"
+                    Message = $"Checkpoint is not a valid resume point (agent: {checkpoint.NextAgentType})"
                 };
             }
 
@@ -251,10 +251,19 @@ public class WorkflowResumeHandler : IWorkflowResumeHandler
     /// </summary>
     private bool IsHumanWaitCheckpoint(CheckpointData checkpoint)
     {
-        return checkpoint.AgentName.Equals("HumanWaitAgent", StringComparison.OrdinalIgnoreCase)
-            || checkpoint.State.Equals("Suspended", StringComparison.OrdinalIgnoreCase)
-            || checkpoint.State.Equals("AwaitingAnswers", StringComparison.OrdinalIgnoreCase)
-            || checkpoint.State.Equals("PlanUnderReview", StringComparison.OrdinalIgnoreCase);
+        if (checkpoint.NextAgentType.Equals("HumanWaitAgent", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        // Check state dictionary for suspend states
+        if (checkpoint.State.TryGetValue("current_state", out var state))
+        {
+            var stateStr = state?.ToString() ?? "";
+            return stateStr.Equals("Suspended", StringComparison.OrdinalIgnoreCase)
+                || stateStr.Equals("AwaitingAnswers", StringComparison.OrdinalIgnoreCase)
+                || stateStr.Equals("PlanUnderReview", StringComparison.OrdinalIgnoreCase);
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -284,19 +293,10 @@ public class WorkflowResumeHandler : IWorkflowResumeHandler
         // Extract context data from checkpoint
         var context = new AgentContext
         {
-            TicketId = checkpoint.TicketId.ToString(),
-            TenantId = checkpoint.TenantId?.ToString() ?? string.Empty,
-            State = checkpoint.StateData ?? new Dictionary<string, object>()
+            TicketId = ticket.Id.ToString(),
+            TenantId = ticket.TenantId.ToString(),
+            State = checkpoint.State
         };
-
-        // Restore any saved state from the checkpoint
-        if (checkpoint.StateData != null)
-        {
-            foreach (var kvp in checkpoint.StateData)
-            {
-                context.State[kvp.Key] = kvp.Value;
-            }
-        }
 
         return context;
     }

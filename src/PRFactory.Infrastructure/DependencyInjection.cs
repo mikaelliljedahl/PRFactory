@@ -8,6 +8,7 @@ using PRFactory.Infrastructure.Agents.Stubs;
 using PRFactory.Infrastructure.Persistence;
 using PRFactory.Infrastructure.Persistence.Encryption;
 using PRFactory.Infrastructure.Persistence.Repositories;
+using GraphCheckpoint = PRFactory.Infrastructure.Agents.Base.ICheckpointStore;
 
 namespace PRFactory.Infrastructure;
 
@@ -65,6 +66,7 @@ public static class DependencyInjection
         // Register stub implementations for agent framework (temporary)
         services.AddScoped<IAgentExecutionQueue, AgentExecutionQueue>();
         services.AddScoped<ICheckpointStore, CheckpointStore>();
+        services.AddScoped<GraphCheckpoint, GraphCheckpointStore>();
         services.AddScoped<IAgentGraphExecutor, AgentGraphExecutor>();
 
         return services;

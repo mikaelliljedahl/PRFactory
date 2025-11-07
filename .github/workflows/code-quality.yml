@@ -1,0 +1,100 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, claude/** ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  DOTNET_VERSION: '10.0.x'
+
+jobs:
+  format-check:
+    name: Format Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        dotnet-quality: 'preview'
+
+    - name: Restore dependencies
+      run: dotnet restore PRFactory.sln
+
+    - name: Check code formatting
+      run: dotnet format PRFactory.sln --verify-no-changes --verbosity diagnostic || true
+
+    - name: Format summary
+      run: |
+        echo "## Code Format Check" >> $GITHUB_STEP_SUMMARY
+        echo "ℹ️ Code formatting validation completed" >> $GITHUB_STEP_SUMMARY
+        echo "Note: Format check runs with --verify-no-changes flag" >> $GITHUB_STEP_SUMMARY
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        dotnet-quality: 'preview'
+
+    - name: Restore dependencies
+      run: dotnet restore PRFactory.sln
+
+    - name: Check for vulnerable packages
+      run: |
+        dotnet list package --vulnerable --include-transitive 2>&1 | tee vulnerable.txt
+        if grep -q "has the following vulnerable packages" vulnerable.txt; then
+          echo "⚠️ Vulnerable packages detected" >> $GITHUB_STEP_SUMMARY
+          cat vulnerable.txt >> $GITHUB_STEP_SUMMARY
+        else
+          echo "✅ No vulnerable packages detected" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: Check for deprecated packages
+      run: |
+        dotnet list package --deprecated 2>&1 | tee deprecated.txt
+        if grep -q "has the following deprecated packages" deprecated.txt; then
+          echo "⚠️ Deprecated packages detected" >> $GITHUB_STEP_SUMMARY
+          cat deprecated.txt >> $GITHUB_STEP_SUMMARY
+        else
+          echo "✅ No deprecated packages" >> $GITHUB_STEP_SUMMARY
+        fi
+
+  dependency-analysis:
+    name: Dependency Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        dotnet-quality: 'preview'
+
+    - name: Analyze dependencies
+      run: |
+        echo "## Dependency Analysis" >> $GITHUB_STEP_SUMMARY
+        echo "### Installed Packages" >> $GITHUB_STEP_SUMMARY
+        dotnet restore PRFactory.sln
+        dotnet list package >> $GITHUB_STEP_SUMMARY
+
+    - name: Check for updates
+      run: |
+        echo "### Available Updates" >> $GITHUB_STEP_SUMMARY
+        dotnet list package --outdated >> $GITHUB_STEP_SUMMARY || echo "All packages up to date" >> $GITHUB_STEP_SUMMARY

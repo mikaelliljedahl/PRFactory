@@ -1,0 +1,228 @@
+@using PRFactory.Web.Models
+@inject ITicketService TicketService
+
+<div class="card mb-3">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">
+            <i class="bi bi-file-earmark-text"></i> Implementation Plan Ready for Review
+        </h4>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            <strong>Plan Generated</strong> - An implementation plan has been created and is ready for your review.
+        </div>
+
+        @if (!string.IsNullOrEmpty(Ticket.PlanBranchName))
+        {
+            <div class="mb-3">
+                <h5>Plan Details</h5>
+                <dl class="row">
+                    <dt class="col-sm-3">Branch:</dt>
+                    <dd class="col-sm-9">
+                        <code>@Ticket.PlanBranchName</code>
+                    </dd>
+
+                    @if (!string.IsNullOrEmpty(Ticket.PlanMarkdownPath))
+                    {
+                        <dt class="col-sm-3">Plan File:</dt>
+                        <dd class="col-sm-9">
+                            <code>@Ticket.PlanMarkdownPath</code>
+                        </dd>
+                    }
+                </dl>
+
+                <p class="text-muted">
+                    <small>
+                        <i class="bi bi-lightbulb"></i>
+                        Check out the plan branch to review the implementation details in your repository.
+                    </small>
+                </p>
+            </div>
+
+            <div class="plan-actions-container">
+                <h5 class="mb-3">Review Actions</h5>
+
+                @if (showRejectForm)
+                {
+                    <div class="reject-form-container">
+                        <div class="mb-3">
+                            <label for="rejectionReason" class="form-label">
+                                <strong>Rejection Reason</strong> <span class="text-danger">*</span>
+                            </label>
+                            <textarea id="rejectionReason"
+                                    class="form-control @(showRejectError ? "is-invalid" : "")"
+                                    rows="4"
+                                    @bind="rejectionReason"
+                                    placeholder="Please explain why you're rejecting this plan. Be specific about what needs to be changed..."
+                                    disabled="@isSubmitting"></textarea>
+                            @if (showRejectError)
+                            {
+                                <div class="invalid-feedback d-block">
+                                    Please provide a reason for rejecting the plan.
+                                </div>
+                            }
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-danger" @onclick="ConfirmReject" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                }
+                                <i class="bi bi-x-circle me-2"></i> Confirm Rejection
+                            </button>
+                            <button class="btn btn-outline-secondary" @onclick="CancelReject" disabled="@isSubmitting">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success btn-lg" @onclick="HandleApprove" disabled="@isSubmitting">
+                            @if (isSubmitting)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            }
+                            <i class="bi bi-check-circle me-2"></i> Approve Plan
+                        </button>
+                        <button class="btn btn-outline-danger btn-lg" @onclick="ShowRejectForm" disabled="@isSubmitting">
+                            <i class="bi bi-x-circle me-2"></i> Reject Plan
+                        </button>
+                    </div>
+
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <strong>Approve</strong> to proceed with implementation, or <strong>Reject</strong> to request changes to the plan.
+                        </small>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i>
+                Plan details are not yet available. Please wait for the plan to be generated.
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="alert alert-danger mt-3">
+                <i class="bi bi-exclamation-triangle"></i> @errorMessage
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public TicketDto Ticket { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback OnPlanApproved { get; set; }
+
+    [Parameter]
+    public EventCallback OnPlanRejected { get; set; }
+
+    private bool showRejectForm;
+    private bool isSubmitting;
+    private bool showRejectError;
+    private string rejectionReason = string.Empty;
+    private string? errorMessage;
+
+    private async Task HandleApprove()
+    {
+        try
+        {
+            errorMessage = null;
+            isSubmitting = true;
+            StateHasChanged();
+
+            await TicketService.ApprovePlanAsync(Ticket.Id);
+
+            // Notify parent component
+            await OnPlanApproved.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error approving plan: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ShowRejectForm()
+    {
+        showRejectForm = true;
+        showRejectError = false;
+        rejectionReason = string.Empty;
+        errorMessage = null;
+    }
+
+    private void CancelReject()
+    {
+        showRejectForm = false;
+        showRejectError = false;
+        rejectionReason = string.Empty;
+        errorMessage = null;
+    }
+
+    private async Task ConfirmReject()
+    {
+        if (string.IsNullOrWhiteSpace(rejectionReason))
+        {
+            showRejectError = true;
+            StateHasChanged();
+            return;
+        }
+
+        try
+        {
+            errorMessage = null;
+            showRejectError = false;
+            isSubmitting = true;
+            StateHasChanged();
+
+            await TicketService.RejectPlanAsync(Ticket.Id, rejectionReason);
+
+            // Notify parent component
+            await OnPlanRejected.InvokeAsync();
+
+            // Reset form
+            showRejectForm = false;
+            rejectionReason = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error rejecting plan: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+}
+
+<style>
+    .plan-actions-container {
+        border-top: 1px solid #dee2e6;
+        padding-top: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .reject-form-container {
+        padding: 1rem;
+        background-color: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 0.375rem;
+        margin-bottom: 1rem;
+    }
+</style>

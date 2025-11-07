@@ -1,0 +1,119 @@
+@using PRFactory.Web.Models
+
+<div class="card mb-3">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h2 class="mb-1">
+                    <span class="badge bg-secondary me-2">@Ticket.TicketKey</span>
+                    @Ticket.Title
+                </h2>
+                <div class="mt-2">
+                    <span class="@Ticket.StateBadgeClass">
+                        @Ticket.StateDisplay
+                    </span>
+                    <span class="badge bg-light text-dark ms-2">
+                        <i class="bi bi-box"></i> @Ticket.SourceDisplay
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-8">
+                <h5>Description</h5>
+                @if (!string.IsNullOrWhiteSpace(Ticket.Description))
+                {
+                    <div class="description-content">
+                        @((MarkupString)FormatDescription(Ticket.Description))
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted"><em>No description provided</em></p>
+                }
+            </div>
+            <div class="col-md-4">
+                <div class="ticket-metadata">
+                    <h6>Details</h6>
+                    <dl class="row">
+                        <dt class="col-sm-5">Repository:</dt>
+                        <dd class="col-sm-7">
+                            @if (!string.IsNullOrEmpty(Ticket.RepositoryName))
+                            {
+                                <span>@Ticket.RepositoryName</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">N/A</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-5">Created:</dt>
+                        <dd class="col-sm-7">
+                            <span title="@Ticket.CreatedAt.ToString("F")">
+                                @Ticket.CreatedAt.ToString("g")
+                            </span>
+                        </dd>
+
+                        @if (Ticket.UpdatedAt.HasValue)
+                        {
+                            <dt class="col-sm-5">Updated:</dt>
+                            <dd class="col-sm-7">
+                                <span title="@Ticket.UpdatedAt.Value.ToString("F")">
+                                    @Ticket.UpdatedAt.Value.ToString("g")
+                                </span>
+                            </dd>
+                        }
+
+                        @if (Ticket.CompletedAt.HasValue)
+                        {
+                            <dt class="col-sm-5">Completed:</dt>
+                            <dd class="col-sm-7">
+                                <span title="@Ticket.CompletedAt.Value.ToString("F")">
+                                    @Ticket.CompletedAt.Value.ToString("g")
+                                </span>
+                            </dd>
+                        }
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public TicketDto Ticket { get; set; } = null!;
+
+    private string FormatDescription(string description)
+    {
+        // Simple markdown-like formatting
+        // Convert newlines to <br> and preserve paragraphs
+        var formatted = System.Net.WebUtility.HtmlEncode(description);
+        formatted = formatted.Replace("\n\n", "</p><p>");
+        formatted = formatted.Replace("\n", "<br>");
+        return $"<p>{formatted}</p>";
+    }
+}
+
+<style>
+    .description-content {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    .ticket-metadata dl {
+        font-size: 0.9rem;
+    }
+
+    .ticket-metadata dt {
+        font-weight: 600;
+        color: #6c757d;
+    }
+
+    .ticket-metadata dd {
+        margin-bottom: 0.5rem;
+    }
+</style>

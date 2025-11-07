@@ -1,0 +1,112 @@
+@using PRFactory.Web.Models
+
+<div class="card h-100 shadow-sm ticket-card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <h5 class="card-title mb-0">
+                <a href="/tickets/@Ticket.Id" class="text-decoration-none">
+                    @Ticket.TicketKey
+                </a>
+            </h5>
+            <span class="@Ticket.StateBadgeClass">@Ticket.StateDisplay</span>
+        </div>
+
+        <h6 class="card-subtitle text-muted mb-3">@Ticket.Title</h6>
+
+        <p class="card-text small text-truncate-3">
+            @if (!string.IsNullOrWhiteSpace(Ticket.Description))
+            {
+                @Ticket.Description
+            }
+            else
+            {
+                <em class="text-muted">No description</em>
+            }
+        </p>
+
+        <div class="mt-3">
+            <div class="d-flex justify-content-between align-items-center text-muted small">
+                <div>
+                    <i class="bi bi-box-seam"></i> @Ticket.SourceDisplay
+                </div>
+                <div>
+                    <i class="bi bi-clock"></i>
+                    <span title="@Ticket.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")">
+                        @FormatRelativeTime(Ticket.CreatedAt)
+                    </span>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Ticket.RepositoryName))
+            {
+                <div class="mt-2 text-muted small">
+                    <i class="bi bi-git"></i> @Ticket.RepositoryName
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Ticket.PullRequestUrl))
+            {
+                <div class="mt-2">
+                    <a href="@Ticket.PullRequestUrl" target="_blank" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-git"></i> PR #@Ticket.PullRequestNumber
+                    </a>
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Ticket.LastError))
+            {
+                <div class="mt-2 alert alert-danger py-1 px-2 mb-0 small">
+                    <i class="bi bi-exclamation-triangle"></i> @Ticket.LastError
+                </div>
+            }
+        </div>
+    </div>
+    <div class="card-footer bg-transparent border-top-0">
+        <a href="/tickets/@Ticket.Id" class="btn btn-sm btn-primary w-100">
+            View Details
+        </a>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public TicketDto Ticket { get; set; } = null!;
+
+    private string FormatRelativeTime(DateTime dateTime)
+    {
+        var timeSpan = DateTime.UtcNow - dateTime;
+
+        if (timeSpan.TotalMinutes < 1)
+            return "just now";
+        if (timeSpan.TotalMinutes < 60)
+            return $"{(int)timeSpan.TotalMinutes}m ago";
+        if (timeSpan.TotalHours < 24)
+            return $"{(int)timeSpan.TotalHours}h ago";
+        if (timeSpan.TotalDays < 7)
+            return $"{(int)timeSpan.TotalDays}d ago";
+        if (timeSpan.TotalDays < 30)
+            return $"{(int)(timeSpan.TotalDays / 7)}w ago";
+        if (timeSpan.TotalDays < 365)
+            return $"{(int)(timeSpan.TotalDays / 30)}mo ago";
+        return $"{(int)(timeSpan.TotalDays / 365)}y ago";
+    }
+}
+
+<style>
+    .ticket-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+    .ticket-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .text-truncate-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>

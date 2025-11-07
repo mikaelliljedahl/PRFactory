@@ -23,6 +23,84 @@ public class TicketController : ControllerBase
     }
 
     /// <summary>
+    /// Creates a new ticket via Web UI
+    /// </summary>
+    /// <param name="request">Ticket creation request</param>
+    /// <returns>Created ticket information</returns>
+    /// <response code="201">Ticket created successfully</response>
+    /// <response code="400">Invalid request data</response>
+    [HttpPost]
+    [ProducesResponseType(typeof(CreateTicketResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CreateTicket([FromBody] CreateTicketRequest request)
+    {
+        var activityId = Activity.Current?.Id ?? Guid.NewGuid().ToString();
+
+        _logger.LogInformation(
+            "Creating ticket: Title={Title}, RepositoryId={RepositoryId}, EnableExternalSync={EnableExternalSync}, ExternalSystem={ExternalSystem}, ActivityId={ActivityId}",
+            request.Title,
+            request.RepositoryId,
+            request.EnableExternalSync,
+            request.ExternalSystem,
+            activityId);
+
+        try
+        {
+            // TODO: Implement ticket creation
+            // 1. Validate repository exists
+            // var repository = await _repositoryService.GetByIdAsync(request.RepositoryId);
+            // if (repository == null)
+            // {
+            //     return BadRequest(new { error = "Repository not found" });
+            // }
+
+            // 2. Create ticket entity
+            // var ticket = new Ticket
+            // {
+            //     Id = Guid.NewGuid(),
+            //     Title = request.Title,
+            //     Description = request.Description,
+            //     RepositoryId = request.RepositoryId,
+            //     CurrentState = WorkflowState.Pending,
+            //     CreatedAt = DateTime.UtcNow
+            // };
+
+            // 3. If external sync enabled, create ticket in external system (e.g., Jira)
+            // if (request.EnableExternalSync && !string.IsNullOrEmpty(request.ExternalSystem))
+            // {
+            //     var externalKey = await _externalTicketService.CreateTicketAsync(ticket, request.ExternalSystem);
+            //     ticket.ExternalTicketKey = externalKey;
+            // }
+
+            // 4. Save ticket to database
+            // await _ticketRepository.AddAsync(ticket);
+
+            // 5. Trigger workflow orchestrator
+            // await _agentService.StartWorkflowAsync(ticket.Id);
+
+            // Mock response for now
+            var ticketId = Guid.NewGuid();
+            var response = new CreateTicketResponse
+            {
+                TicketId = ticketId,
+                TicketKey = request.EnableExternalSync ? "MOCK-001" : $"WEB-{ticketId.ToString()[..8].ToUpper()}",
+                CurrentState = "pending",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            return CreatedAtAction(
+                nameof(GetTicketStatus),
+                new { id = response.TicketKey },
+                response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating ticket");
+            throw;
+        }
+    }
+
+    /// <summary>
     /// Gets the current status of a ticket
     /// </summary>
     /// <param name="id">The ticket ID (Jira issue key)</param>
@@ -289,6 +367,177 @@ public class TicketController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error rejecting plan for ticket {TicketId}", id);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Gets the clarifying questions for a ticket
+    /// </summary>
+    /// <param name="id">The ticket ID (Jira issue key or Web UI ticket key)</param>
+    /// <returns>List of questions with their answer status</returns>
+    /// <response code="200">Questions retrieved successfully</response>
+    /// <response code="404">Ticket not found</response>
+    [HttpGet("{id}/questions")]
+    [ProducesResponseType(typeof(QuestionsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetTicketQuestions(string id)
+    {
+        var activityId = Activity.Current?.Id ?? Guid.NewGuid().ToString();
+
+        _logger.LogInformation(
+            "Getting questions for ticket {TicketId}, ActivityId={ActivityId}",
+            id,
+            activityId);
+
+        try
+        {
+            // TODO: Implement questions retrieval
+            // 1. Look up ticket
+            // var ticket = await _ticketRepository.GetByIdAsync(id);
+            // if (ticket == null)
+            // {
+            //     return NotFound(new { error = $"Ticket {id} not found" });
+            // }
+
+            // 2. Get questions from ticket state/checkpoint
+            // var questions = await _ticketRepository.GetQuestionsAsync(ticket.Id);
+
+            // 3. Build response with question DTOs
+            // var response = new QuestionsResponse
+            // {
+            //     TicketId = ticket.Id,
+            //     Questions = questions.Select(q => new QuestionDto
+            //     {
+            //         Id = q.Id,
+            //         Text = q.Text,
+            //         IsAnswered = q.Answer != null,
+            //         AnswerText = q.Answer
+            //     }).ToList(),
+            //     AllAnswered = questions.All(q => q.Answer != null)
+            // };
+
+            // Mock response for now
+            var response = new QuestionsResponse
+            {
+                TicketId = Guid.NewGuid(),
+                Questions = new List<QuestionDto>
+                {
+                    new QuestionDto
+                    {
+                        Id = "q1",
+                        Text = "What is the expected behavior when the user is not authenticated?",
+                        IsAnswered = false,
+                        AnswerText = null
+                    },
+                    new QuestionDto
+                    {
+                        Id = "q2",
+                        Text = "Should the feature support mobile devices?",
+                        IsAnswered = false,
+                        AnswerText = null
+                    }
+                },
+                AllAnswered = false
+            };
+
+            return Ok(response);
+        }
+        catch (KeyNotFoundException)
+        {
+            _logger.LogWarning("Ticket {TicketId} not found", id);
+            return NotFound(new { error = $"Ticket {id} not found" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving questions for ticket {TicketId}", id);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Submits answers to clarifying questions for a ticket
+    /// </summary>
+    /// <param name="id">The ticket ID (Jira issue key or Web UI ticket key)</param>
+    /// <param name="request">Answers to the questions</param>
+    /// <returns>Result of the submission</returns>
+    /// <response code="200">Answers submitted successfully</response>
+    /// <response code="400">Invalid request or ticket not in question state</response>
+    /// <response code="404">Ticket not found</response>
+    [HttpPost("{id}/answers")]
+    [ProducesResponseType(typeof(TicketStatusResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SubmitAnswers(string id, [FromBody] SubmitAnswersRequest request)
+    {
+        var activityId = Activity.Current?.Id ?? Guid.NewGuid().ToString();
+
+        _logger.LogInformation(
+            "Submitting answers for ticket {TicketId}, AnswerCount={AnswerCount}, ActivityId={ActivityId}",
+            id,
+            request.Answers.Count,
+            activityId);
+
+        try
+        {
+            // TODO: Implement answer submission
+            // 1. Look up ticket
+            // var ticket = await _ticketRepository.GetByIdAsync(id);
+            // if (ticket == null)
+            // {
+            //     return NotFound(new { error = $"Ticket {id} not found" });
+            // }
+
+            // 2. Validate ticket is in awaiting_questions state
+            // if (ticket.CurrentState != WorkflowState.AwaitingQuestions)
+            // {
+            //     return BadRequest(new { error = "Ticket is not awaiting answers" });
+            // }
+
+            // 3. Validate all required questions are answered
+            // var questions = await _ticketRepository.GetQuestionsAsync(ticket.Id);
+            // var answeredQuestionIds = request.Answers.Select(a => a.QuestionId).ToHashSet();
+            // var missingQuestions = questions.Where(q => !answeredQuestionIds.Contains(q.Id)).ToList();
+            // if (missingQuestions.Any())
+            // {
+            //     return BadRequest(new { error = "Not all questions have been answered", missingQuestions });
+            // }
+
+            // 4. Save answers to database
+            // foreach (var answer in request.Answers)
+            // {
+            //     await _ticketRepository.SaveAnswerAsync(ticket.Id, answer.QuestionId, answer.AnswerText);
+            // }
+
+            // 5. Resume workflow with answers
+            // await _agentService.ResumeWorkflowWithAnswersAsync(ticket.Id, request.Answers);
+
+            // Mock response for now
+            var response = new TicketStatusResponse
+            {
+                TicketId = id,
+                CurrentState = "planning",
+                TenantId = "default",
+                LastUpdated = DateTime.UtcNow,
+                Created = DateTime.UtcNow.AddHours(-1),
+                AwaitingHumanInput = false
+            };
+
+            return Ok(response);
+        }
+        catch (KeyNotFoundException)
+        {
+            _logger.LogWarning("Ticket {TicketId} not found", id);
+            return NotFound(new { error = $"Ticket {id} not found" });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Invalid operation for ticket {TicketId}", id);
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error submitting answers for ticket {TicketId}", id);
             throw;
         }
     }

@@ -1,0 +1,276 @@
+@using PRFactory.Web.Models
+@using PRFactory.Domain.ValueObjects
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="bi bi-clock-history"></i> Workflow Timeline
+        </h5>
+    </div>
+    <div class="card-body">
+        @if (Events == null || !Events.Any())
+        {
+            <div class="timeline">
+                <!-- Show current state as the only timeline item if no events -->
+                <div class="timeline-item">
+                    <div class="timeline-marker @GetStateMarkerClass(Ticket.State)">
+                        <i class="@GetStateIcon(Ticket.State)"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">@Ticket.StateDisplay</div>
+                        <div class="timeline-time">@FormatTimestamp(Ticket.CreatedAt)</div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="timeline">
+                @foreach (var evt in Events.OrderByDescending(e => e.OccurredAt))
+                {
+                    <div class="timeline-item">
+                        <div class="timeline-marker @GetEventMarkerClass(evt)">
+                            <i class="@GetEventIcon(evt)"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">@evt.Description</div>
+                            <div class="timeline-time">@FormatTimestamp(evt.OccurredAt)</div>
+
+                            @if (evt.EventType == "WorkflowStateChanged")
+                            {
+                                @if (evt.FromState.HasValue && evt.ToState.HasValue)
+                                {
+                                    <div class="timeline-details">
+                                        <span class="badge bg-secondary">@GetStateDisplay(evt.FromState.Value)</span>
+                                        <i class="bi bi-arrow-right mx-2"></i>
+                                        <span class="badge @GetStateBadgeClass(evt.ToState.Value)">@GetStateDisplay(evt.ToState.Value)</span>
+                                    </div>
+                                }
+
+                                @if (!string.IsNullOrEmpty(evt.Reason))
+                                {
+                                    <div class="timeline-reason">
+                                        <small class="text-muted">@evt.Reason</small>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public TicketDto Ticket { get; set; } = null!;
+
+    [Parameter]
+    public List<WorkflowEventDto>? Events { get; set; }
+
+    private string FormatTimestamp(DateTime timestamp)
+    {
+        var now = DateTime.UtcNow;
+        var diff = now - timestamp;
+
+        if (diff.TotalMinutes < 1)
+            return "Just now";
+        if (diff.TotalMinutes < 60)
+            return $"{(int)diff.TotalMinutes} minutes ago";
+        if (diff.TotalHours < 24)
+            return $"{(int)diff.TotalHours} hours ago";
+        if (diff.TotalDays < 7)
+            return $"{(int)diff.TotalDays} days ago";
+
+        return timestamp.ToString("MMM dd, yyyy 'at' h:mm tt");
+    }
+
+    private string GetEventMarkerClass(WorkflowEventDto evt)
+    {
+        if (evt.EventType == "WorkflowStateChanged" && evt.ToState.HasValue)
+        {
+            return GetStateMarkerClass(evt.ToState.Value);
+        }
+
+        return "timeline-marker-info";
+    }
+
+    private string GetStateMarkerClass(WorkflowState state)
+    {
+        return state switch
+        {
+            WorkflowState.Completed => "timeline-marker-success",
+            WorkflowState.Failed => "timeline-marker-danger",
+            WorkflowState.Cancelled => "timeline-marker-secondary",
+            WorkflowState.PlanApproved => "timeline-marker-success",
+            WorkflowState.PlanRejected => "timeline-marker-danger",
+            WorkflowState.ImplementationFailed => "timeline-marker-danger",
+            WorkflowState.AwaitingAnswers => "timeline-marker-warning",
+            WorkflowState.PlanUnderReview => "timeline-marker-warning",
+            _ => "timeline-marker-info"
+        };
+    }
+
+    private string GetEventIcon(WorkflowEventDto evt)
+    {
+        return evt.EventType switch
+        {
+            "WorkflowStateChanged" => "bi bi-arrow-right-circle",
+            "QuestionAdded" => "bi bi-question-circle",
+            "AnswerAdded" => "bi bi-chat-left-text",
+            "PlanCreated" => "bi bi-file-earmark-text",
+            "PullRequestCreated" => "bi bi-git",
+            _ => "bi bi-circle"
+        };
+    }
+
+    private string GetStateIcon(WorkflowState state)
+    {
+        return state switch
+        {
+            WorkflowState.Triggered => "bi bi-play-circle",
+            WorkflowState.Analyzing => "bi bi-search",
+            WorkflowState.QuestionsPosted => "bi bi-question-circle",
+            WorkflowState.AwaitingAnswers => "bi bi-hourglass-split",
+            WorkflowState.AnswersReceived => "bi bi-check-circle",
+            WorkflowState.Planning => "bi bi-pencil-square",
+            WorkflowState.PlanPosted => "bi bi-file-earmark-text",
+            WorkflowState.PlanUnderReview => "bi bi-eye",
+            WorkflowState.PlanApproved => "bi bi-check-circle",
+            WorkflowState.PlanRejected => "bi bi-x-circle",
+            WorkflowState.Implementing => "bi bi-gear",
+            WorkflowState.ImplementationFailed => "bi bi-exclamation-triangle",
+            WorkflowState.PRCreated => "bi bi-git",
+            WorkflowState.InReview => "bi bi-eye",
+            WorkflowState.Completed => "bi bi-check-circle",
+            WorkflowState.Cancelled => "bi bi-x-circle",
+            WorkflowState.Failed => "bi bi-exclamation-triangle",
+            _ => "bi bi-circle"
+        };
+    }
+
+    private string GetStateDisplay(WorkflowState state)
+    {
+        return state switch
+        {
+            WorkflowState.Triggered => "Triggered",
+            WorkflowState.Analyzing => "Analyzing",
+            WorkflowState.QuestionsPosted => "Questions Posted",
+            WorkflowState.AwaitingAnswers => "Awaiting Answers",
+            WorkflowState.AnswersReceived => "Answers Received",
+            WorkflowState.Planning => "Planning",
+            WorkflowState.PlanPosted => "Plan Posted",
+            WorkflowState.PlanUnderReview => "Plan Under Review",
+            WorkflowState.PlanApproved => "Plan Approved",
+            WorkflowState.PlanRejected => "Plan Rejected",
+            WorkflowState.Implementing => "Implementing",
+            WorkflowState.ImplementationFailed => "Implementation Failed",
+            WorkflowState.PRCreated => "PR Created",
+            WorkflowState.InReview => "In Review",
+            WorkflowState.Completed => "Completed",
+            WorkflowState.Cancelled => "Cancelled",
+            WorkflowState.Failed => "Failed",
+            _ => state.ToString()
+        };
+    }
+
+    private string GetStateBadgeClass(WorkflowState state)
+    {
+        return state switch
+        {
+            WorkflowState.Completed => "bg-success",
+            WorkflowState.Failed => "bg-danger",
+            WorkflowState.Cancelled => "bg-secondary",
+            WorkflowState.PlanApproved => "bg-success",
+            WorkflowState.PlanRejected => "bg-danger",
+            WorkflowState.ImplementationFailed => "bg-danger",
+            WorkflowState.AwaitingAnswers => "bg-warning",
+            WorkflowState.PlanUnderReview => "bg-warning",
+            _ => "bg-info"
+        };
+    }
+}
+
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 0;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 1.5rem;
+        padding-left: 3rem;
+        border-left: 2px solid #dee2e6;
+        margin-left: 1rem;
+    }
+
+    .timeline-item:last-child {
+        border-left: 2px solid transparent;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: -1.125rem;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1rem;
+    }
+
+    .timeline-marker-success {
+        background-color: #198754;
+    }
+
+    .timeline-marker-danger {
+        background-color: #dc3545;
+    }
+
+    .timeline-marker-warning {
+        background-color: #ffc107;
+        color: #000;
+    }
+
+    .timeline-marker-info {
+        background-color: #0dcaf0;
+        color: #000;
+    }
+
+    .timeline-marker-secondary {
+        background-color: #6c757d;
+    }
+
+    .timeline-content {
+        padding-top: 0.25rem;
+    }
+
+    .timeline-title {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        color: #212529;
+    }
+
+    .timeline-time {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+    }
+
+    .timeline-details {
+        margin-top: 0.5rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .timeline-reason {
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        background-color: #f8f9fa;
+        border-radius: 0.25rem;
+    }
+</style>

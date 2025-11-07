@@ -24,6 +24,23 @@ public class Ticket
     public string TicketSystem { get; private set; } = "Jira";
 
     /// <summary>
+    /// Indicates where the ticket originated (WebUI, Jira, etc.)
+    /// </summary>
+    public TicketSource Source { get; private set; }
+
+    /// <summary>
+    /// The ID of the ticket in the external system (e.g., Jira issue key)
+    /// Null for tickets created directly in the Web UI
+    /// </summary>
+    public string? ExternalTicketId { get; private set; }
+
+    /// <summary>
+    /// When the ticket was last synchronized with the external system
+    /// Null for tickets created in the Web UI or not yet synced
+    /// </summary>
+    public DateTime? LastSyncedAt { get; private set; }
+
+    /// <summary>
     /// The tenant this ticket belongs to
     /// </summary>
     public Guid TenantId { get; private set; }
@@ -142,7 +159,8 @@ public class Ticket
         string ticketKey,
         Guid tenantId,
         Guid repositoryId,
-        string ticketSystem = "Jira")
+        string ticketSystem = "Jira",
+        TicketSource source = TicketSource.WebUI)
     {
         if (string.IsNullOrWhiteSpace(ticketKey))
             throw new ArgumentException("Ticket key cannot be empty", nameof(ticketKey));
@@ -158,6 +176,7 @@ public class Ticket
             Id = Guid.NewGuid(),
             TicketKey = ticketKey,
             TicketSystem = ticketSystem,
+            Source = source,
             TenantId = tenantId,
             RepositoryId = repositoryId,
             State = WorkflowState.Triggered,
@@ -347,6 +366,31 @@ public class Ticket
     public void ClearError()
     {
         LastError = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Sets the external ticket ID and source for tickets synced from external systems
+    /// </summary>
+    public void SetExternalTicketId(string externalTicketId, TicketSource source)
+    {
+        if (string.IsNullOrWhiteSpace(externalTicketId))
+            throw new ArgumentException("External ticket ID cannot be empty", nameof(externalTicketId));
+
+        if (source == TicketSource.WebUI)
+            throw new ArgumentException("Cannot set external ticket ID for Web UI created tickets", nameof(source));
+
+        ExternalTicketId = externalTicketId;
+        Source = source;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Marks the ticket as synchronized with the external system
+    /// </summary>
+    public void MarkAsSynced()
+    {
+        LastSyncedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
 

@@ -6,7 +6,7 @@ echo "🚀 PRFactory SessionStart Hook - Installing .NET SDK 10..."
 # Define SDK version
 DOTNET_VERSION="10.0"
 DOTNET_INSTALL_DIR="$HOME/.dotnet"
-DOTNET_INSTALL_SCRIPT="$HOME/dotnet-install.sh"
+DOTNET_INSTALL_SCRIPT="/tmp/dotnet-install.sh"
 
 # Check if .NET SDK 10 is already installed
 if command -v dotnet &> /dev/null; then
@@ -28,7 +28,13 @@ if command -v dotnet &> /dev/null; then
 fi
 
 echo "📥 Downloading .NET installation script..."
-curl -sSL https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh -o "$DOTNET_INSTALL_SCRIPT"
+# Try GitHub first (dotnet.microsoft.com redirects to blocked builds.dotnet.microsoft.com)
+if curl -sSL https://raw.githubusercontent.com/dotnet/install-scripts/main/src/dotnet-install.sh -o "$DOTNET_INSTALL_SCRIPT" 2>/dev/null; then
+    echo "✅ Downloaded from GitHub"
+else
+    echo "⚠️ GitHub download failed, trying dotnet.microsoft.com..."
+    curl -sSL https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh -o "$DOTNET_INSTALL_SCRIPT"
+fi
 chmod +x "$DOTNET_INSTALL_SCRIPT"
 
 echo "🔧 Installing .NET SDK $DOTNET_VERSION (including preview/RC versions)..."

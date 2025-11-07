@@ -1,0 +1,87 @@
+@if (TotalPages > 1)
+{
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            <!-- Previous Button -->
+            <li class="page-item @(CurrentPage <= 1 ? "disabled" : "")">
+                <button class="page-link" @onclick="() => ChangePage(CurrentPage - 1)" disabled="@(CurrentPage <= 1)">
+                    <i class="bi bi-chevron-left"></i> Previous
+                </button>
+            </li>
+
+            <!-- First Page -->
+            @if (CurrentPage > 3)
+            {
+                <li class="page-item">
+                    <button class="page-link" @onclick="() => ChangePage(1)">1</button>
+                </li>
+                @if (CurrentPage > 4)
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                }
+            }
+
+            <!-- Page Numbers -->
+            @for (int i = Math.Max(1, CurrentPage - 2); i <= Math.Min(TotalPages, CurrentPage + 2); i++)
+            {
+                var pageNum = i;
+                <li class="page-item @(pageNum == CurrentPage ? "active" : "")">
+                    <button class="page-link" @onclick="() => ChangePage(pageNum)">@pageNum</button>
+                </li>
+            }
+
+            <!-- Last Page -->
+            @if (CurrentPage < TotalPages - 2)
+            {
+                @if (CurrentPage < TotalPages - 3)
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                }
+                <li class="page-item">
+                    <button class="page-link" @onclick="() => ChangePage(TotalPages)">@TotalPages</button>
+                </li>
+            }
+
+            <!-- Next Button -->
+            <li class="page-item @(CurrentPage >= TotalPages ? "disabled" : "")">
+                <button class="page-link" @onclick="() => ChangePage(CurrentPage + 1)" disabled="@(CurrentPage >= TotalPages)">
+                    Next <i class="bi bi-chevron-right"></i>
+                </button>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="text-center text-muted small mt-2">
+        Page @CurrentPage of @TotalPages
+        @if (TotalItems.HasValue)
+        {
+            <span>(@TotalItems.Value total items)</span>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int CurrentPage { get; set; } = 1;
+
+    [Parameter]
+    public int TotalPages { get; set; } = 1;
+
+    [Parameter]
+    public int? TotalItems { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnPageChanged { get; set; }
+
+    private async Task ChangePage(int page)
+    {
+        if (page < 1 || page > TotalPages || page == CurrentPage)
+            return;
+
+        await OnPageChanged.InvokeAsync(page);
+    }
+}

@@ -1,0 +1,187 @@
+@using PRFactory.Api.Models
+@inject ITicketService TicketService
+
+<div class="card mb-3">
+    <div class="card-header bg-warning text-dark">
+        <h4 class="mb-0">
+            <i class="bi bi-question-circle"></i> Questions Awaiting Answers
+        </h4>
+    </div>
+    <div class="card-body">
+        @if (Questions == null || !Questions.Any())
+        {
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> No questions available yet. The AI is generating clarifying questions.
+            </div>
+        }
+        else
+        {
+            <p class="mb-3">
+                Please answer the following questions to help the AI better understand your requirements:
+            </p>
+
+            <EditForm Model="@answerModel" OnValidSubmit="HandleSubmit">
+                <DataAnnotationsValidator />
+
+                @for (int i = 0; i < Questions.Count; i++)
+                {
+                    var question = Questions[i];
+                    var index = i;
+
+                    <div class="mb-4">
+                        <div class="question-header mb-2">
+                            <strong>Question @(index + 1):</strong>
+                            @if (!string.IsNullOrEmpty(question.Category))
+                            {
+                                <span class="badge bg-info ms-2">@question.Category</span>
+                            }
+                        </div>
+                        <p class="question-text">@question.Text</p>
+
+                        <div class="answer-input">
+                            <label for="answer-@question.Id" class="form-label">Your Answer:</label>
+                            <textarea id="answer-@question.Id"
+                                    class="form-control @(GetValidationClass(question.Id))"
+                                    rows="3"
+                                    @bind="answerModel.Answers[question.Id]"
+                                    placeholder="Enter your answer here..."
+                                    required></textarea>
+                            <ValidationMessage For="@(() => answerModel.Answers[question.Id])" />
+                        </div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i> @errorMessage
+                    </div>
+                }
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="text-muted">
+                        <small>All questions must be answered before submitting</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                        @if (isSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            <span>Submitting...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-check-circle me-2"></i>
+                            <span>Submit Answers</span>
+                        }
+                    </button>
+                </div>
+            </EditForm>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Guid TicketId { get; set; }
+
+    [Parameter]
+    public List<QuestionDto>? Questions { get; set; }
+
+    [Parameter]
+    public EventCallback OnAnswersSubmitted { get; set; }
+
+    private AnswerFormModel answerModel = new();
+    private bool isSubmitting;
+    private string? errorMessage;
+    private HashSet<string> validationErrors = new();
+
+    protected override void OnParametersSet()
+    {
+        // Initialize answer dictionary when questions are loaded
+        if (Questions != null && answerModel.Answers.Count == 0)
+        {
+            foreach (var question in Questions)
+            {
+                if (!answerModel.Answers.ContainsKey(question.Id))
+                {
+                    answerModel.Answers[question.Id] = string.Empty;
+                }
+            }
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        errorMessage = null;
+        validationErrors.Clear();
+
+        // Validate all questions are answered
+        if (Questions != null)
+        {
+            foreach (var question in Questions)
+            {
+                if (!answerModel.Answers.ContainsKey(question.Id) ||
+                    string.IsNullOrWhiteSpace(answerModel.Answers[question.Id]))
+                {
+                    validationErrors.Add(question.Id);
+                }
+            }
+        }
+
+        if (validationErrors.Any())
+        {
+            errorMessage = "Please answer all questions before submitting.";
+            StateHasChanged();
+            return;
+        }
+
+        try
+        {
+            isSubmitting = true;
+            StateHasChanged();
+
+            // Submit answers via the service
+            await TicketService.SubmitAnswersAsync(TicketId, answerModel.Answers);
+
+            // Notify parent component
+            await OnAnswersSubmitted.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error submitting answers: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private string GetValidationClass(string questionId)
+    {
+        return validationErrors.Contains(questionId) ? "is-invalid" : string.Empty;
+    }
+
+    private class AnswerFormModel
+    {
+        public Dictionary<string, string> Answers { get; set; } = new();
+    }
+}
+
+<style>
+    .question-header {
+        font-size: 1.1rem;
+        color: #495057;
+    }
+
+    .question-text {
+        padding: 0.75rem;
+        background-color: #f8f9fa;
+        border-left: 4px solid #ffc107;
+        margin-bottom: 1rem;
+    }
+
+    .answer-input {
+        padding-left: 1rem;
+    }
+</style>

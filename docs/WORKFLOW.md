@@ -15,19 +15,22 @@ Comprehensive guide to the PRFactory workflow from Jira ticket to pull request.
 
 ## Overview
 
-PRFactory transforms Jira tickets into pull requests through a three-phase workflow with mandatory human checkpoints:
+PRFactory transforms requirements into pull requests through a three-phase workflow with mandatory human checkpoints. Requirements can be created directly in PRFactory's Web UI or synced from external systems (Jira, Azure DevOps, GitHub Issues).
 
 ```
+Ticket Creation (PRFactory UI or external sync)
+  ↓
 Phase 1: Trigger & Analysis
-  ↓ (human responds with answers)
+  ↓ (human responds with answers in UI)
 Phase 2: Planning
-  ↓ (human approves plan)
+  ↓ (human approves plan in UI)
 Phase 3: Implementation
-  ↓ (human reviews PR)
+  ↓ (human reviews PR in Git platform)
 Merge & Complete
+  ↓ (sync to external systems)
 ```
 
-**Key Principle:** The AI cannot proceed to the next phase without explicit human approval.
+**Key Principle:** The AI cannot proceed to the next phase without explicit human approval. PRFactory UI is the primary interface for ongoing work, while external systems serve as final storage.
 
 ## Workflow Phases
 
@@ -35,12 +38,15 @@ Merge & Complete
 
 ```mermaid
 flowchart TB
-    Start([Developer creates<br/>Jira ticket]) --> Trigger{Mentions @claude<br/>or adds label?}
-    Trigger -- No --> Manual[Standard workflow]
-    Trigger -- Yes --> Webhook[Jira webhook<br/>triggered]
+    Start([Developer creates ticket]) --> Source{Ticket<br/>source?}
+    Source -- PRFactory UI --> DirectCreate[Create ticket<br/>directly in UI]
+    Source -- External Sync --> SyncIn[Sync from Jira/<br/>Azure DevOps/GitHub]
 
+    DirectCreate --> CreateTicket[Create Ticket<br/>entity in DB]
+    SyncIn --> Webhook[Webhook received<br/>from external system]
     Webhook --> Validate[Validate HMAC<br/>signature]
-    Validate --> CreateTicket[Create Ticket<br/>entity in DB]
+    Validate --> CreateTicket
+
     CreateTicket --> State1[State: Triggered]
 
     State1 --> Agent1[TriggerAgent]
@@ -53,12 +59,13 @@ flowchart TB
 
     Agent3 --> GenQuestions[Generate clarifying<br/>questions]
     GenQuestions --> Agent4[QuestionPostingAgent]
-    Agent4 --> PostQ[Post questions<br/>to Jira]
-    PostQ --> State3[State: QuestionsPosted]
+    Agent4 --> PostQ[Display questions<br/>in PRFactory UI]
+    PostQ --> OptionalJira1[Optionally sync<br/>to external system]
+    OptionalJira1 --> State3[State: QuestionsPosted]
 
-    State3 --> Wait1[Wait for user<br/>response]
-    Wait1 --> UserReply1[User responds<br/>with @claude]
-    UserReply1 --> Webhook2[Jira webhook<br/>triggered]
+    State3 --> Wait1[Wait for user<br/>response in UI]
+    Wait1 --> UserReply1[User responds<br/>in PRFactory UI]
+    UserReply1 --> Webhook2[UI triggers<br/>state transition]
 
     Webhook2 --> Agent5[AnswerRetrievalAgent]
     Agent5 --> GetAnswers[Extract answers<br/>from comments]
@@ -80,12 +87,13 @@ flowchart TB
     CommitPlan --> PushPlan[Push branch<br/>to remote]
     PushPlan --> Agent9[PlanPostingAgent]
 
-    Agent9 --> PostPlan[Post plan summary<br/>+ branch link to Jira]
-    PostPlan --> State6[State: PlanPosted]
+    Agent9 --> PostPlan[Display plan in<br/>PRFactory UI]
+    PostPlan --> OptionalJira2[Optionally sync<br/>to external system]
+    OptionalJira2 --> State6[State: PlanPosted]
 
-    State6 --> Wait2[Wait for<br/>approval]
-    Wait2 --> UserReply2[User responds with<br/>approval or rejection]
-    UserReply2 --> Webhook3[Jira webhook<br/>triggered]
+    State6 --> Wait2[Wait for approval<br/>in UI]
+    Wait2 --> UserReply2[User approves/rejects<br/>in PRFactory UI]
+    UserReply2 --> Webhook3[UI triggers<br/>state transition]
 
     Webhook3 --> Agent10[ApprovalCheckAgent]
     Agent10 --> CheckApproval{Plan<br/>approved?}
@@ -106,17 +114,18 @@ flowchart TB
     Manual2 --> Agent12
 
     Agent12 --> CreatePR[Create pull<br/>request]
-    CreatePR --> LinkPR[Link PR<br/>to Jira ticket]
+    CreatePR --> LinkPR[Link PR in<br/>PRFactory UI]
     LinkPR --> State9[State: PRCreated]
 
-    State9 --> Review[Mandatory human<br/>code review]
+    State9 --> Review[Mandatory human<br/>code review in Git platform]
     Review --> ReviewDecision{PR<br/>approved?}
     ReviewDecision -- Changes needed --> Feedback[Developer provides<br/>feedback in PR]
     Feedback --> ImplCode
 
     ReviewDecision -- Approved --> HumanMerge[Human merges PR]
     HumanMerge --> Agent13[CompletionAgent]
-    Agent13 --> State10[State: Completed]
+    Agent13 --> SyncOut[Sync completed work<br/>to external systems]
+    SyncOut --> State10[State: Completed]
     State10 --> Done([Workflow complete])
 
     style State1 fill:#e1f5ff
@@ -141,20 +150,23 @@ flowchart TB
 ```mermaid
 sequenceDiagram
     participant Dev as Developer
-    participant Jira as Jira Cloud
+    participant UI as PRFactory Web UI
     participant API as PRFactory API
     participant DB as Database
     participant Worker as Worker Service
     participant Git as Git Repository
     participant Claude as Claude AI
+    participant External as External System<br/>(Optional: Jira/Azure DevOps)
 
-    Dev->>Jira: Creates ticket PROJ-123<br/>"Add email validation"
-    Dev->>Jira: Mentions @claude in description
-    Jira->>API: POST /api/webhooks/jira<br/>(HMAC-signed payload)
-
-    API->>API: Validate HMAC signature
+    Dev->>UI: Creates ticket<br/>"Add email validation"
+    UI->>API: POST /api/tickets
     API->>DB: Create Ticket entity<br/>State: Triggered
-    API-->>Jira: 200 OK
+    API-->>UI: 200 OK (Ticket created)
+
+    alt Optional: Sync to external system
+        API->>External: POST ticket to Jira/Azure DevOps
+        External-->>API: 200 OK
+    end
 
     Note over Worker: Poll loop detects new ticket
 
@@ -177,34 +189,33 @@ sequenceDiagram
 
     Worker->>DB: Save checkpoint with questions
     Worker->>Worker: Execute QuestionPostingAgent
-    Worker->>Jira: POST /rest/api/3/issue/PROJ-123/comment<br/>Questions as formatted comment
-    Jira-->>Worker: 201 Created
+    Worker->>DB: Store questions in ticket<br/>Update State: QuestionsPosted
 
-    Worker->>DB: Update State: QuestionsPosted
-    Jira->>Dev: Notification: Claude asked questions
+    alt Optional: Sync to external system
+        Worker->>External: POST questions as comment
+        External-->>Worker: 201 Created
+    end
 
-    Dev->>Jira: Reads questions
-    Dev->>Jira: Responds in comment<br/>mentioning @claude
-    Jira->>API: POST /api/webhooks/jira<br/>(comment.created event)
-
-    API->>DB: Update Ticket: New comment available
-    API-->>Jira: 200 OK
+    UI->>Dev: Notification: Questions ready in UI
+    Dev->>UI: Views questions in ticket detail
+    Dev->>UI: Answers questions in form
+    UI->>API: POST /api/tickets/{id}/answers
+    API->>DB: Store answers in ticket
 
     Worker->>DB: Fetch tickets in QuestionsPosted state
     Worker->>Worker: Execute AnswerRetrievalAgent
-    Worker->>Jira: GET /rest/api/3/issue/PROJ-123/comment
-    Jira-->>Worker: Comments
-
-    Worker->>Worker: Parse answers from comments
+    Worker->>DB: Retrieve answers from ticket
+    Worker->>Worker: Validate all questions answered
     Worker->>DB: Save checkpoint with answers<br/>Update State: AnswersReceived
 ```
 
 ### Key Steps
 
-1. **Trigger Detection**
-   - Jira webhook fires when ticket created/updated with `@claude` mention
-   - API validates HMAC signature
+1. **Ticket Creation**
+   - Developer creates ticket directly in PRFactory Web UI
+   - OR webhook receives ticket from external system (Jira, Azure DevOps, GitHub Issues)
    - Ticket entity created in database with `Triggered` state
+   - Optionally sync new ticket to external systems for tracking
 
 2. **Repository Analysis**
    - Worker clones repository to temporary workspace
@@ -216,41 +227,38 @@ sequenceDiagram
      - Ticket description
      - Codebase analysis
      - Missing requirements
-   - Questions formatted as Jira comment
+   - Questions stored in database and displayed in PRFactory UI
+   - Optionally sync questions to external systems as comments
 
 4. **Await Developer Response**
    - System transitions to `QuestionsPosted` state
-   - Waits for developer to respond
-   - Developer must mention `@claude` to trigger next phase
+   - Questions displayed in PRFactory UI
+   - Developer answers questions in UI form
+   - Answers stored in database and validated
 
 ### Example Questions
 
 For ticket: "Add email validation to user registration"
 
-Claude might ask:
-```markdown
-## Clarifying Questions
+Claude might ask (displayed in PRFactory UI as a form):
 
-Before I create an implementation plan, I need some clarifications:
+**Question 1: Validation Scope**
+- Should we validate email format only, or also check if domain exists (MX record)?
+- Should we prevent disposable email addresses (e.g., from temp-mail.org)?
 
-1. **Validation Scope**
-   - Should we validate email format only, or also check if domain exists (MX record)?
-   - Should we prevent disposable email addresses (e.g., from temp-mail.org)?
+**Question 2: Existing Users**
+- Should we validate emails for existing users retroactively?
+- What should happen if an existing user has an invalid email?
 
-2. **Existing Users**
-   - Should we validate emails for existing users retroactively?
-   - What should happen if an existing user has an invalid email?
+**Question 3: Error Handling**
+- Should we show an error immediately on form submission, or during typing?
+- What error message should we display?
 
-3. **Error Handling**
-   - Should we show an error immediately on form submission, or during typing?
-   - What error message should we display?
+**Question 4: Testing**
+- Should I add unit tests for the validation logic?
+- Should I add integration tests for the API endpoint?
 
-4. **Testing**
-   - Should I add unit tests for the validation logic?
-   - Should I add integration tests for the API endpoint?
-
-Please answer by replying to this comment with @claude.
-```
+Developer answers these in the UI, and the workflow continues automatically.
 
 ## Phase 2: Planning
 
@@ -261,11 +269,13 @@ Please answer by replying to this comment with @claude.
 ```mermaid
 sequenceDiagram
     participant Dev as Developer
-    participant Jira as Jira Cloud
+    participant UI as PRFactory Web UI
+    participant API as PRFactory API
     participant Worker as Worker Service
     participant Claude as Claude AI
     participant Git as Git Repository
     participant DB as Database
+    participant External as External System<br/>(Optional)
 
     Note over Worker: Ticket in AnswersReceived state
 
@@ -287,25 +297,26 @@ sequenceDiagram
     Worker->>Git: Push branch to remote
     Git-->>Worker: Branch URL
 
-    Worker->>DB: Save checkpoint with branch info
+    Worker->>DB: Save checkpoint with branch info<br/>Store plan summary
     Worker->>Worker: Execute PlanPostingAgent
-
-    Worker->>Jira: POST comment with plan summary<br/>+ link to branch
-    Jira-->>Worker: 201 Created
-
     Worker->>DB: Update State: PlanPosted
-    Jira->>Dev: Notification: Plan ready for review
 
-    Dev->>Git: Reviews plan files in branch
+    alt Optional: Sync to external system
+        Worker->>External: POST plan summary as comment
+        External-->>Worker: 201 Created
+    end
+
+    UI->>Dev: Notification: Plan ready for review
+    Dev->>UI: Reviews plan in PRFactory UI
+    Dev->>Git: Reviews detailed plan files in branch
     Dev->>Git: Optionally edits/refines plan
-    Dev->>Jira: Approves with comment<br/>"@claude plan approved"
-    Jira->>Worker: Webhook: comment.created
+    Dev->>UI: Approves or rejects plan
+    UI->>API: POST /api/tickets/{id}/approve-plan
+    API->>DB: Update approval status
 
+    Worker->>DB: Fetch tickets awaiting approval
     Worker->>Worker: Execute ApprovalCheckAgent
-    Worker->>Jira: Fetch latest comment
-    Jira-->>Worker: Comment text
-
-    Worker->>Worker: Parse approval/rejection
+    Worker->>DB: Check approval status
     Worker->>DB: Update State: PlanApproved
 ```
 
@@ -329,10 +340,11 @@ sequenceDiagram
    - Push to remote repository
 
 3. **Plan Review**
-   - Post summary to Jira with branch link
-   - Developer reviews plan in git
-   - Developer can edit plan directly
-   - Developer approves via Jira comment
+   - Plan summary displayed in PRFactory UI
+   - Developer reviews plan in UI and detailed files in git branch
+   - Developer can edit plan files directly in git
+   - Developer approves or rejects via PRFactory UI
+   - Optionally sync plan summary to external systems
 
 ### Example Plan
 
@@ -414,8 +426,8 @@ Add comprehensive email validation to user registration flow.
 5. Monitor for validation errors
 
 ## Approval
-Please review and approve this plan by commenting "@claude plan approved"
-or request changes by commenting "@claude" with your feedback.
+Please review and approve this plan in the PRFactory UI.
+You can also edit the plan files directly in the git branch before approving.
 ```
 
 ## Phase 3: Implementation

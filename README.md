@@ -1,12 +1,14 @@
 # PRFactory
 
-> AI-powered automation that transforms Jira tickets into GitHub pull requests using Claude AI
+> AI-powered automation that transforms ideas into GitHub pull requests using Claude AI
 
 PRFactory is an intelligent automation system that streamlines the development workflow by:
-- **Analyzing** vague Jira tickets and your codebase
+- **Capturing** requirements directly in its Web UI or syncing from external systems (Jira, Azure DevOps, GitHub Issues)
+- **Analyzing** requirements and your codebase
 - **Clarifying** requirements through AI-generated questions
 - **Planning** detailed implementations for developer review
 - **Creating** pull requests with implemented code (optional)
+- **Syncing** completed work back to external systems (Jira, Azure DevOps, etc.) for final storage
 
 **Key Principle:** AI assists, humans decide. Every step requires human approval - no automatic deployments.
 
@@ -22,51 +24,56 @@ PRFactory is an intelligent automation system that streamlines the development w
 
 ## How It Works
 
-PRFactory integrates into your existing Jira workflow with three phases:
+PRFactory provides a Web UI for managing your development workflow with three phases:
 
 ### Phase 1: Requirements Clarification
 
-When you mention `@claude` in a Jira ticket or add the "Claude" label:
+When you create a ticket in PRFactory's Web UI (or sync from Jira/Azure DevOps):
 1. The system clones your repository and analyzes the codebase
 2. Claude AI generates clarifying questions based on context
-3. Questions are posted as Jira comments
-4. You respond with answers, mentioning `@claude` to continue
+3. Questions are displayed in the PRFactory UI for you to answer
+4. You respond with answers directly in the UI
+5. Optionally sync Q&A to external systems (Jira, Azure DevOps) for tracking
 
 ### Phase 2: Implementation Planning
 
 After receiving your answers:
 1. Claude generates a detailed implementation plan
 2. The plan is committed to a feature branch as markdown files
-3. A summary with branch link is posted to Jira
-4. You review and approve the plan (or request changes)
+3. The plan is displayed in the PRFactory UI for review
+4. You review and approve the plan in the UI (or request changes)
+5. Plan summary can be synced to external systems (Jira, Azure DevOps)
 
 ### Phase 3: Code Implementation (Optional)
 
 Once the plan is approved:
 1. Claude implements the code following the approved plan (or you can implement manually)
 2. Changes are committed and pushed to the feature branch
-3. A pull request is created and linked to the Jira ticket
+3. A pull request is created and linked in the PRFactory UI
 4. **Mandatory code review** by your team before merging
+5. Completed work syncs to external systems (Jira, Azure DevOps) for final storage
 
 ## Workflow Overview
 
 ```mermaid
 flowchart TB
-    Start([Developer creates<br/>Jira ticket]) --> Trigger{Mentions @claude<br/>or adds label?}
-    Trigger -- No --> Manual[Standard workflow]
-    Trigger -- Yes --> Queue[Message sent to<br/>secure queue]
+    Start([Developer creates ticket<br/>in PRFactory UI]) --> OptionalSync{Sync from<br/>external system?}
+    OptionalSync -- Yes --> SyncIn[Import from Jira/<br/>Azure DevOps/GitHub]
+    OptionalSync -- No --> Direct[Direct creation<br/>in UI]
+    SyncIn --> Queue[Ticket queued<br/>for processing]
+    Direct --> Queue
 
     Queue --> Phase1[Phase 1: Analysis]
     Phase1 --> Clone[Clone repository]
     Clone --> Analyze[AI analyzes codebase<br/>and requirements]
-    Analyze --> Questions[Posts clarifying<br/>questions to Jira]
-    Questions --> Wait1{User responds<br/>with @claude}
+    Analyze --> Questions[Display clarifying<br/>questions in UI]
+    Questions --> Wait1{User responds<br/>in UI}
 
     Wait1 --> Phase2[Phase 2: Planning]
     Phase2 --> Plan[AI creates detailed<br/>implementation plan]
     Plan --> Branch[Create feature branch<br/>& commit plan files]
-    Branch --> PostPlan[Posts plan summary<br/>to Jira]
-    PostPlan --> Wait2{Developer<br/>approves plan?}
+    Branch --> DisplayPlan[Display plan in UI<br/>for review]
+    DisplayPlan --> Wait2{Developer<br/>approves plan?}
     Wait2 -- Needs changes --> Questions
 
     Wait2 -- Approved --> Phase3[Phase 3: Implementation]
@@ -79,7 +86,8 @@ flowchart TB
     Review --> Approve{Approved?}
     Approve -- Changes needed --> Code
     Approve -- Approved --> Merge[Human merges PR]
-    Merge --> Done([Complete])
+    Merge --> SyncOut[Sync completed work<br/>to external systems]
+    SyncOut --> Done([Complete])
 
     style Phase1 fill:#e1f5ff
     style Phase2 fill:#fff4e1
@@ -92,9 +100,10 @@ flowchart TB
 
 | Phase | Human Control | Can AI Proceed Alone? |
 |-------|--------------|----------------------|
-| Analysis | User must answer clarifying questions | No |
-| Planning | Developer must approve implementation plan | No |
-| Implementation | Developer must review and merge PR | No |
+| Ticket Creation | Create and describe requirements in PRFactory UI | No |
+| Analysis | Answer clarifying questions in PRFactory UI | No |
+| Planning | Review and approve implementation plan in PRFactory UI | No |
+| Implementation | Review and merge PR in GitHub/GitLab/Azure DevOps | No |
 
 ## Quick Start
 
@@ -102,9 +111,9 @@ flowchart TB
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) or later
 - [Docker](https://www.docker.com/get-started) (optional, for containerized deployment)
-- GitHub account with Personal Access Token
-- Jira account with API access
+- GitHub/GitLab/Azure DevOps account with Personal Access Token
 - Anthropic API key for Claude
+- (Optional) Jira/Azure DevOps account for syncing completed work
 
 ### Installation
 
@@ -142,7 +151,8 @@ flowchart TB
    ```
 
    Services will be available at:
-   - API: http://localhost:5000
+   - Web UI: http://localhost:5000
+   - API: http://localhost:5000/api
    - Swagger UI: http://localhost:5000/swagger
    - Worker: Background job processing
 

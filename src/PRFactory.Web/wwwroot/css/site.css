@@ -1,0 +1,48 @@
+/* Site-specific styles for PRFactory Web UI */
+
+/* Import app.css for core styles */
+@import url('app.css');
+
+/* Additional site-specific overrides */
+.navbar-brand {
+    font-weight: bold;
+    color: var(--primary-color) !important;
+}
+
+.main-content {
+    padding: 2rem 0;
+    min-height: calc(100vh - 56px);
+}
+
+/* Footer */
+.footer {
+    background-color: var(--light-color);
+    padding: 1rem 0;
+    margin-top: 2rem;
+    border-top: 1px solid #dee2e6;
+}
+
+/* Sidebar navigation */
+.sidebar {
+    background-color: white;
+    border-right: 1px solid #dee2e6;
+    height: calc(100vh - 56px);
+    position: sticky;
+    top: 56px;
+}
+
+.sidebar .nav-link {
+    color: var(--dark-color);
+    padding: 0.75rem 1rem;
+    border-radius: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.sidebar .nav-link:hover {
+    background-color: var(--light-color);
+}
+
+.sidebar .nav-link.active {
+    background-color: var(--primary-color);
+    color: white;
+}

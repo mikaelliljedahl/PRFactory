@@ -17,7 +17,7 @@ Comprehensive architecture documentation for the PRFactory system.
 
 ## Executive Summary
 
-PRFactory is a .NET 10-based system that automates the journey from Jira tickets to GitHub pull requests using Claude AI. The system follows Clean Architecture principles with a domain-driven design approach.
+PRFactory is a .NET 10-based system that automates the journey from requirements to GitHub pull requests using Claude AI. The system provides a Web UI for ticket creation and management, with optional syncing to external systems (Jira, Azure DevOps, GitHub Issues) for final storage. The system follows Clean Architecture principles with a domain-driven design approach.
 
 **Key Characteristics:**
 - **Language**: C# 13 with .NET 10
@@ -34,15 +34,16 @@ PRFactory is a .NET 10-based system that automates the journey from Jira tickets
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                         External Systems                            │
+│                      (Optional Final Storage)                       │
 │                                                                     │
 │   ┌───────────┐        ┌───────────┐        ┌───────────┐          │
-│   │   Jira    │        │  GitHub/  │        │  Claude   │          │
-│   │   Cloud   │        │  GitLab   │        │    AI     │          │
+│   │Jira/Azure │        │  GitHub/  │        │  Claude   │          │
+│   │  DevOps   │        │  GitLab   │        │    AI     │          │
 │   └─────┬─────┘        └─────┬─────┘        └─────┬─────┘          │
 │         │                    │                    │                │
 └─────────┼────────────────────┼────────────────────┼────────────────┘
           │                    │                    │
-          │ Webhooks           │ Git API            │ AI API
+          │ Sync (optional)    │ Git API            │ AI API
           │                    │                    │
 ┌─────────┴────────────────────┴────────────────────┴────────────────┐
 │                      PRFactory System                              │
@@ -50,8 +51,8 @@ PRFactory is a .NET 10-based system that automates the journey from Jira tickets
 │  ┌─────────────────────────────────────────────────────────────┐   │
 │  │                    API Layer (ASP.NET Core)                 │   │
 │  │  ┌──────────────────┐  ┌──────────────────┐                 │   │
-│  │  │ WebhookController│  │TicketController  │                 │   │
-│  │  │  (Jira events)   │  │  (CRUD ops)      │                 │   │
+│  │  │   Web UI         │  │TicketController  │                 │   │
+│  │  │  (Primary UX)    │  │  (CRUD ops)      │                 │   │
 │  │  └────────┬─────────┘  └────────┬─────────┘                 │   │
 │  └───────────┼────────────────────────┼──────────────────────────┘   │
 │              │                        │                            │
@@ -237,10 +238,12 @@ public enum WorkflowState
 - Serialize/deserialize requests
 
 **Key Components:**
-- `WebhookController` - Receives Jira webhooks
+- `Web UI` - Primary user interface for ticket management (Blazor or React)
 - `TicketController` - CRUD operations for tickets
+- `WebhookController` - Receives webhooks from external systems (optional)
 - `TenantController` - Tenant management
 - `RepositoryController` - Repository configuration
+- `SyncController` - Sync tickets to/from external systems
 
 ### 2. Domain Layer (`PRFactory.Domain`)
 
@@ -265,10 +268,13 @@ public enum WorkflowState
 
 **Key Subsystems:**
 
-#### 3.1 Jira Integration
-- `JiraClient` - HTTP client for Jira API (using Refit)
-- `JiraWebhookValidator` - HMAC signature validation
-- `JiraCommentService` - Post comments/questions/plans
+#### 3.1 External System Integration
+- `IExternalSystemProvider` - Abstraction for external issue tracking systems
+- `JiraProvider` - Jira Cloud/Server implementation
+- `AzureDevOpsProvider` - Azure DevOps Boards implementation
+- `GitHubIssuesProvider` - GitHub Issues implementation
+- `ExternalSyncService` - Bidirectional sync with external systems
+- `WebhookValidator` - HMAC signature validation for incoming webhooks
 
 #### 3.2 Git Integration
 - `IGitPlatformProvider` - Abstraction for Git platforms
@@ -454,10 +460,13 @@ Encryption key stored in secure configuration (Azure Key Vault, AWS Secrets Mana
 
 ## Integration Architecture
 
-### Jira Integration
+### External System Integration (Optional)
 
+PRFactory provides a Web UI as the primary interface for ticket management. External systems (Jira, Azure DevOps, GitHub Issues) can optionally sync for final storage and audit trails.
+
+**Inbound (External → PRFactory):**
 ```
-Jira Cloud
+External System (Jira/Azure DevOps/GitHub Issues)
     │
     │ Webhook (HTTP POST)
     │ HMAC-signed payload
@@ -476,10 +485,17 @@ TicketService
 Database (Ticket persisted)
 ```
 
-**Outbound (PRFactory → Jira):**
-- Post comments (questions, plans)
-- Update ticket status
+**Outbound (PRFactory → External Systems):**
+- Sync ticket creation (optional)
+- Sync questions as comments (optional)
+- Sync plan summaries (optional)
+- Update issue status on completion (optional)
 - Link pull requests
+
+**Primary Workflow:**
+```
+Developer → PRFactory Web UI → Database (primary storage) → Optional Sync → External System (final storage)
+```
 
 ### Git Integration
 

@@ -1,0 +1,118 @@
+@using PRFactory.Domain.ValueObjects
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3">
+            <i class="bi bi-funnel"></i> Filters
+        </h5>
+
+        <div class="row g-3">
+            <!-- State Filter -->
+            <div class="col-md-4">
+                <label for="stateFilter" class="form-label">State</label>
+                <select id="stateFilter" class="form-select" @bind="SelectedState" @bind:after="OnFilterChanged">
+                    <option value="">All States</option>
+                    <option value="@WorkflowState.Triggered">Triggered</option>
+                    <option value="@WorkflowState.Analyzing">Analyzing</option>
+                    <option value="@WorkflowState.QuestionsPosted">Questions Posted</option>
+                    <option value="@WorkflowState.AwaitingAnswers">Awaiting Answers</option>
+                    <option value="@WorkflowState.AnswersReceived">Answers Received</option>
+                    <option value="@WorkflowState.Planning">Planning</option>
+                    <option value="@WorkflowState.PlanPosted">Plan Posted</option>
+                    <option value="@WorkflowState.PlanUnderReview">Plan Under Review</option>
+                    <option value="@WorkflowState.PlanApproved">Plan Approved</option>
+                    <option value="@WorkflowState.PlanRejected">Plan Rejected</option>
+                    <option value="@WorkflowState.Implementing">Implementing</option>
+                    <option value="@WorkflowState.ImplementationFailed">Implementation Failed</option>
+                    <option value="@WorkflowState.PRCreated">PR Created</option>
+                    <option value="@WorkflowState.InReview">In Review</option>
+                    <option value="@WorkflowState.Completed">Completed</option>
+                    <option value="@WorkflowState.Cancelled">Cancelled</option>
+                    <option value="@WorkflowState.Failed">Failed</option>
+                </select>
+            </div>
+
+            <!-- Source Filter -->
+            <div class="col-md-4">
+                <label for="sourceFilter" class="form-label">Source</label>
+                <select id="sourceFilter" class="form-select" @bind="SelectedSource" @bind:after="OnFilterChanged">
+                    <option value="">All Sources</option>
+                    <option value="@TicketSource.WebUI">Web UI</option>
+                    <option value="@TicketSource.Jira">Jira</option>
+                    <option value="@TicketSource.AzureDevOps">Azure DevOps</option>
+                    <option value="@TicketSource.GitHubIssues">GitHub Issues</option>
+                </select>
+            </div>
+
+            <!-- Repository Filter -->
+            <div class="col-md-4">
+                <label for="repositoryFilter" class="form-label">Repository</label>
+                <select id="repositoryFilter" class="form-select" @bind="SelectedRepositoryId" @bind:after="OnFilterChanged">
+                    <option value="">All Repositories</option>
+                    @if (Repositories != null)
+                    {
+                        @foreach (var repo in Repositories)
+                        {
+                            <option value="@repo.Id">@repo.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col">
+                <button class="btn btn-secondary btn-sm" @onclick="ClearFilters">
+                    <i class="bi bi-x-circle"></i> Clear Filters
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string? SelectedState { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> SelectedStateChanged { get; set; }
+
+    [Parameter]
+    public string? SelectedSource { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> SelectedSourceChanged { get; set; }
+
+    [Parameter]
+    public string? SelectedRepositoryId { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> SelectedRepositoryIdChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnFilterChanged { get; set; }
+
+    [Parameter]
+    public List<RepositoryInfo>? Repositories { get; set; }
+
+    private async Task ClearFilters()
+    {
+        SelectedState = null;
+        SelectedSource = null;
+        SelectedRepositoryId = null;
+
+        await SelectedStateChanged.InvokeAsync(null);
+        await SelectedSourceChanged.InvokeAsync(null);
+        await SelectedRepositoryIdChanged.InvokeAsync(null);
+        await OnFilterChanged.InvokeAsync();
+    }
+
+    /// <summary>
+    /// Simple DTO for repository dropdown
+    /// </summary>
+    public class RepositoryInfo
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+    }
+}

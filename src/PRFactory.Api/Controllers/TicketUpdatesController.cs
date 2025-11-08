@@ -197,7 +197,7 @@ public class TicketUpdatesController : ControllerBase
                 Success = true,
                 Message = "Ticket update approved successfully. The update will be posted to the ticket system.",
                 TicketUpdate = MapToResponse(ticketUpdate, ticket.TicketKey),
-                TicketState = ticket.CurrentState.ToString()
+                TicketState = ticket.State.ToString()
             };
 
             return Ok(response);
@@ -270,7 +270,7 @@ public class TicketUpdatesController : ControllerBase
                 Success = true,
                 Message = message,
                 TicketUpdate = MapToResponse(ticketUpdate, ticket.TicketKey),
-                TicketState = ticket.CurrentState.ToString()
+                TicketState = ticket.State.ToString()
             };
 
             return Ok(response);

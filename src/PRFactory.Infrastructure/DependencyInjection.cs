@@ -84,6 +84,9 @@ public static class DependencyInjection
         // Register configuration services
         services.AddScoped<ITenantConfigurationService, TenantConfigurationService>();
 
+        // Register application services
+        services.AddScoped<ITicketUpdateService, Application.TicketUpdateService>();
+
         // Register agents
         services.AddTransient<Agents.TriggerAgent>();
         services.AddTransient<Agents.RepositoryCloneAgent>();

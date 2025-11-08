@@ -1,0 +1,38 @@
+<div class="@ContainerClass">
+    @if (!string.IsNullOrEmpty(Icon))
+    {
+        <i class="bi bi-@Icon" style="font-size: 4rem; color: #ccc;"></i>
+    }
+    @if (!string.IsNullOrEmpty(Title))
+    {
+        <h3 class="mt-3 text-muted">@Title</h3>
+    }
+    @if (!string.IsNullOrEmpty(Message))
+    {
+        <p class="text-muted">@Message</p>
+    }
+    @if (!string.IsNullOrEmpty(ActionUrl) && !string.IsNullOrEmpty(ActionText))
+    {
+        <a href="@ActionUrl" class="btn btn-primary mt-3">
+            @if (!string.IsNullOrEmpty(ActionIcon))
+            {
+                <i class="bi bi-@ActionIcon me-2"></i>
+            }
+            @ActionText
+        </a>
+    }
+    @ChildContent
+</div>
+
+@code {
+    [Parameter] public string? Icon { get; set; } = "inbox";
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Message { get; set; }
+    [Parameter] public string? ActionUrl { get; set; }
+    [Parameter] public string? ActionText { get; set; }
+    [Parameter] public string? ActionIcon { get; set; }
+    [Parameter] public bool Centered { get; set; } = true;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string ContainerClass => Centered ? "text-center py-5" : "py-3";
+}

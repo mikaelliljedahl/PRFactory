@@ -1,0 +1,48 @@
+@using PRFactory.Domain.ValueObjects
+
+<span class="@BadgeClass">
+    @if (!string.IsNullOrEmpty(Icon))
+    {
+        <i class="bi bi-@Icon me-1"></i>
+    }
+    @DisplayText
+</span>
+
+@code {
+    [Parameter] public WorkflowState State { get; set; }
+    [Parameter] public string? CustomText { get; set; }
+    [Parameter] public string? Icon { get; set; }
+
+    private string DisplayText => CustomText ?? State switch
+    {
+        WorkflowState.Pending => "Pending",
+        WorkflowState.Triggered => "Triggered",
+        WorkflowState.AnalyzingRepository => "Analyzing Repository",
+        WorkflowState.GeneratingQuestions => "Generating Questions",
+        WorkflowState.QuestionsPosted => "Questions Posted",
+        WorkflowState.AwaitingAnswers => "Awaiting Answers",
+        WorkflowState.Planning => "Planning",
+        WorkflowState.PlanPosted => "Plan Posted",
+        WorkflowState.PlanUnderReview => "Plan Under Review",
+        WorkflowState.Implementing => "Implementing",
+        WorkflowState.PRCreated => "PR Created",
+        WorkflowState.InReview => "In Review",
+        WorkflowState.Completed => "Completed",
+        WorkflowState.Failed => "Failed",
+        WorkflowState.Cancelled => "Cancelled",
+        _ => State.ToString()
+    };
+
+    private string BadgeClass => $"badge {GetBadgeColor()}";
+
+    private string GetBadgeColor() => State switch
+    {
+        WorkflowState.Completed => "bg-success",
+        WorkflowState.Failed => "bg-danger",
+        WorkflowState.Cancelled => "bg-secondary",
+        WorkflowState.AwaitingAnswers or WorkflowState.PlanUnderReview or WorkflowState.InReview => "bg-warning",
+        WorkflowState.PRCreated => "bg-info",
+        WorkflowState.Pending or WorkflowState.Triggered => "bg-secondary",
+        _ => "bg-primary"
+    };
+}

@@ -7,6 +7,10 @@
 ## Table of Contents
 
 - [Core Vision & Principles](#core-vision--principles)
+  - [Flexible Agent Graph Architecture](#1-flexible-agent-graph-architecture)
+  - [Multi-Platform Support](#2-multi-platform-support-is-core)
+  - [LibGit2Sharp for Git Flexibility](#3-libgit2sharp-for-git-flexibility)
+  - [Blazor UI Component Architecture](#4-blazor-ui-component-architecture)
 - [What NOT to Simplify](#what-not-to-simplify)
 - [What IS Overengineered](#what-is-overengineered)
 - [Architecture Overview](#architecture-overview)
@@ -161,6 +165,520 @@ public interface IGitPlatformProvider
 
 ---
 
+### 4. Blazor UI Component Architecture
+
+**This is INTENTIONAL, NOT bootstrap spaghetti code.**
+
+The Blazor UI is organized into a **clean component library** to eliminate repetitive markup and ensure consistent styling.
+
+#### UI Library Structure
+
+```
+/PRFactory.Web/
+├── Pages/                          # Routable pages (business logic)
+│   ├── Tickets/
+│   │   ├── Index.razor            # Ticket list page
+│   │   ├── Index.razor.cs         # Code-behind for Index page
+│   │   ├── Detail.razor           # Ticket detail page
+│   │   └── Detail.razor.cs        # Code-behind for Detail page
+│
+├── Components/                     # Business/domain components
+│   ├── Tickets/
+│   │   ├── TicketHeader.razor
+│   │   ├── TicketHeader.razor.cs  # Always separate code-behind
+│   │   ├── QuestionAnswerForm.razor
+│   │   └── QuestionAnswerForm.razor.cs
+│
+└── UI/                             # PURE UI component library
+    ├── Alerts/                     # Alert and message components
+    │   ├── AlertMessage.razor
+    │   └── InfoBox.razor
+    ├── Buttons/                    # Button components
+    │   ├── LoadingButton.razor
+    │   ├── IconButton.razor
+    │   └── ConfirmButton.razor
+    ├── Cards/                      # Card components
+    │   ├── Card.razor
+    │   └── CardHeader.razor
+    ├── Forms/                      # Form components
+    │   ├── FormField.razor
+    │   └── FormFieldGroup.razor
+    ├── Layout/                     # Layout and structure components
+    │   ├── PageContainer.razor
+    │   ├── PageHeader.razor
+    │   ├── GridLayout.razor
+    │   └── Section.razor
+    ├── Display/                    # Display and presentation components
+    │   ├── StatusBadge.razor
+    │   ├── LoadingSpinner.razor
+    │   ├── EmptyState.razor
+    │   ├── RelativeTime.razor
+    │   └── Timeline.razor
+    └── Navigation/                 # Navigation components
+        └── Pagination.razor
+```
+
+#### Why This Matters
+
+**Problem We're Solving:**
+```razor
+<!-- BAD: Bootstrap spaghetti code repeated 50+ times -->
+<div class="mb-3">
+    <label class="form-label">Field Name</label>
+    <InputText @bind-Value="model.Property" class="form-control" placeholder="..." />
+    <ValidationMessage For="@(() => model.Property)" />
+</div>
+
+<!-- GOOD: Reusable component -->
+<FormField Label="Field Name" @bind-Value="model.Property" Placeholder="..." />
+```
+
+**Benefits:**
+- **DRY Principle**: UI patterns defined once, reused everywhere
+- **Consistency**: Impossible to have inconsistent styling
+- **Maintainability**: Change once, update everywhere
+- **Type Safety**: Component parameters enforce contracts
+- **Testability**: Pure UI components easy to test in isolation
+- **Accessibility**: ARIA attributes and semantic HTML in one place
+
+#### Code-Behind Pattern (MANDATORY for Business Components)
+
+**ALWAYS separate .razor and .razor.cs files for business/domain components:**
+
+```csharp
+// TicketHeader.razor (markup only)
+<div class="card-header bg-primary text-white">
+    <h4 class="mb-0">
+        <StatusBadge State="@Ticket.State" />
+        @Ticket.Title
+    </h4>
+</div>
+
+// TicketHeader.razor.cs (logic)
+namespace PRFactory.Web.Components.Tickets;
+
+public partial class TicketHeader
+{
+    [Parameter, EditorRequired]
+    public TicketDto Ticket { get; set; } = null!;
+
+    [Inject]
+    private ITicketService TicketService { get; set; } = null!;
+
+    private async Task OnStatusChanged(WorkflowState newState)
+    {
+        await TicketService.UpdateStateAsync(Ticket.Id, newState);
+    }
+}
+```
+
+**When to use code-behind:**
+- ✅ All Pages (Index.razor.cs, Detail.razor.cs, etc.)
+- ✅ All business/domain components in `/Components/*`
+- ✅ Any component with dependency injection
+- ✅ Any component with complex logic (>10 lines)
+- ✅ Any component with multiple methods/properties
+
+**When inline code is OK:**
+- ✅ Pure UI components in `/UI/*` with minimal logic
+- ✅ Simple display components with only `@code { [Parameter] ... }`
+- ✅ Layout components with no business logic
+
+#### Approved UI Libraries
+
+**ONLY use these UI libraries:**
+
+1. **Blazor (built-in)** - Standard components
+   - `<InputText>`, `<InputNumber>`, `<InputDate>`, etc.
+   - `<EditForm>`, `<ValidationSummary>`, `<ValidationMessage>`
+   - `<AuthorizeView>`, `<CascadingValue>`, etc.
+
+2. **Radzen Blazor Components** - Rich UI components
+   - NuGet: `Radzen.Blazor`
+   - Use for: Data grids, charts, advanced inputs, dialogs
+   - Documentation: https://blazor.radzen.com/
+
+3. **Bootstrap 5** (CSS framework only)
+   - No Bootstrap JS (conflicts with Blazor)
+   - Use CSS classes for layout, utilities, colors
+
+**NEVER add these libraries:**
+- ❌ **MudBlazor** - Not approved
+- ❌ **Ant Design Blazor** - Not approved
+- ❌ **Telerik Blazor** - Not approved (expensive, unnecessary)
+- ❌ **Syncfusion Blazor** - Not approved
+- ❌ **MatBlazor** - Not approved
+- ❌ **Any other UI library** - Ask first!
+
+**Why this restriction matters:**
+- **Bundle Size**: Multiple UI libraries bloat client downloads
+- **Consistency**: Mixing libraries creates inconsistent UX
+- **Maintenance**: Fewer dependencies = fewer breaking changes
+- **Licensing**: Some libraries have restrictive licenses
+- **Performance**: Component libraries can conflict and slow rendering
+
+#### Component Design Principles
+
+**Pure UI Components (`/UI/*`):**
+1. **No business logic** - Only presentation
+2. **No service injection** - Accept data via parameters
+3. **Emit events** - Don't mutate parent state
+4. **Fully parameterized** - All styling/behavior configurable
+5. **Self-contained** - No external dependencies
+
+**Example Pure UI Component:**
+```razor
+<!-- /UI/Alerts/AlertMessage.razor -->
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert alert-@AlertClass alert-dismissible fade show" role="alert">
+        @if (!string.IsNullOrEmpty(Icon))
+        {
+            <i class="bi bi-@Icon me-2"></i>
+        }
+        @Message
+        @if (Dismissible)
+        {
+            <button type="button" class="btn-close" @onclick="OnDismiss"></button>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public string? Message { get; set; }
+    [Parameter] public AlertType Type { get; set; } = AlertType.Info;
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public bool Dismissible { get; set; } = true;
+    [Parameter] public EventCallback OnDismiss { get; set; }
+
+    private string AlertClass => Type switch
+    {
+        AlertType.Success => "success",
+        AlertType.Warning => "warning",
+        AlertType.Danger => "danger",
+        AlertType.Info => "info",
+        _ => "info"
+    };
+}
+
+public enum AlertType { Success, Warning, Danger, Info }
+```
+
+**Business Components (`/Components/*`):**
+1. **Encapsulate domain logic** - Ticket workflows, validation, etc.
+2. **Inject services** - Use DI for data access
+3. **Compose UI components** - Build from pure UI components
+4. **Code-behind required** - Separate .razor.cs file
+5. **Stateful** - Manage component state, handle events
+
+**Example Business Component:**
+```razor
+<!-- /Components/Tickets/TicketStatusSelector.razor -->
+<Card Title="Change Status" Icon="arrow-repeat">
+    <FormField Label="New Status">
+        <InputSelect @bind-Value="selectedState" class="form-control">
+            @foreach (var state in availableStates)
+            {
+                <option value="@state">@state</option>
+            }
+        </InputSelect>
+    </FormField>
+
+    <LoadingButton OnClick="HandleSubmit" IsLoading="@isSubmitting" Icon="check-circle">
+        Update Status
+    </LoadingButton>
+</Card>
+
+<!-- TicketStatusSelector.razor.cs -->
+public partial class TicketStatusSelector
+{
+    [Parameter, EditorRequired]
+    public Guid TicketId { get; set; }
+
+    [Inject]
+    private ITicketService TicketService { get; set; } = null!;
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = null!;
+
+    private WorkflowState selectedState;
+    private List<WorkflowState> availableStates = new();
+    private bool isSubmitting;
+
+    protected override async Task OnInitializedAsync()
+    {
+        availableStates = await TicketService.GetAvailableStatesAsync(TicketId);
+    }
+
+    private async Task HandleSubmit()
+    {
+        isSubmitting = true;
+        try
+        {
+            await TicketService.UpdateStateAsync(TicketId, selectedState);
+            Navigation.NavigateTo($"/tickets/{TicketId}");
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}
+```
+
+#### Blazor Server Service Architecture (CRITICAL)
+
+**This is BLAZOR SERVER, NOT Blazor WebAssembly.**
+
+PRFactory uses **Blazor Server**, which means the application runs on the server and maintains a SignalR connection to the browser. This has **critical architectural implications**:
+
+##### NEVER Use HTTP Calls Within Blazor Server
+
+**❌ WRONG PATTERN** (makes unnecessary HTTP calls within the same process):
+```csharp
+// TicketService.cs - BAD!
+public class TicketService
+{
+    private readonly HttpClient _httpClient;
+
+    public async Task<TicketUpdate> GetLatestUpdateAsync(Guid ticketId)
+    {
+        // WRONG: Making HTTP call to API controller in the same process!
+        return await _httpClient.GetFromJsonAsync<TicketUpdate>($"/api/tickets/{ticketId}/updates/latest");
+    }
+}
+
+// Component.razor.cs
+public partial class MyComponent
+{
+    [Inject] private ITicketService TicketService { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // This actually makes HTTP call -> serialization -> API controller -> deserialization
+        // All within the same process! Massive overhead.
+        var update = await TicketService.GetLatestUpdateAsync(ticketId);
+    }
+}
+```
+
+**✅ CORRECT PATTERN** (uses dependency injection directly):
+```csharp
+// Core/Application/Services/ITicketUpdateService.cs
+public interface ITicketUpdateService
+{
+    Task<TicketUpdate?> GetLatestUpdateAsync(Guid ticketId);
+    Task ApproveUpdateAsync(Guid ticketUpdateId, string? approvedBy);
+    Task RejectUpdateAsync(Guid ticketUpdateId, string reason, bool regenerate);
+}
+
+// Infrastructure/Application/TicketUpdateService.cs
+public class TicketUpdateService : ITicketUpdateService
+{
+    private readonly ITicketUpdateRepository _ticketUpdateRepo;
+    private readonly IWorkflowOrchestrator _orchestrator;
+
+    public TicketUpdateService(
+        ITicketUpdateRepository ticketUpdateRepo,
+        IWorkflowOrchestrator orchestrator)
+    {
+        _ticketUpdateRepo = ticketUpdateRepo;
+        _orchestrator = orchestrator;
+    }
+
+    public async Task<TicketUpdate?> GetLatestUpdateAsync(Guid ticketId)
+    {
+        // Direct repository access - no HTTP overhead!
+        return await _ticketUpdateRepo.GetLatestDraftByTicketIdAsync(ticketId);
+    }
+
+    public async Task ApproveUpdateAsync(Guid ticketUpdateId, string? approvedBy)
+    {
+        var update = await _ticketUpdateRepo.GetByIdAsync(ticketUpdateId);
+        update.Approve();
+        await _ticketUpdateRepo.UpdateAsync(update);
+
+        // Trigger workflow
+        await _orchestrator.ResumeAsync(
+            update.TicketId,
+            new TicketUpdateApprovedMessage(ticketUpdateId, DateTime.UtcNow, approvedBy));
+    }
+}
+
+// Web/Services/TicketService.cs (Facade for Blazor components)
+public class TicketService : ITicketService
+{
+    private readonly ITicketUpdateService _ticketUpdateService;
+
+    public async Task<TicketUpdateDto?> GetLatestTicketUpdateAsync(Guid ticketId)
+    {
+        var entity = await _ticketUpdateService.GetLatestUpdateAsync(ticketId);
+        return entity != null ? MapToDto(entity) : null;
+    }
+}
+
+// Component.razor.cs
+public partial class MyComponent
+{
+    [Inject] private ITicketService TicketService { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Direct service call - no HTTP serialization!
+        var update = await TicketService.GetLatestTicketUpdateAsync(ticketId);
+    }
+}
+```
+
+##### Service Layer Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                 Blazor Server Components                     │
+│           (TicketUpdatePreview.razor.cs)                     │
+└────────────────────────┬────────────────────────────────────┘
+                         │ @inject ITicketService
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│          Web Layer Service (Facade Pattern)                  │
+│              PRFactory.Web/Services/                         │
+│               TicketService.cs                               │
+│                                                               │
+│   - Converts between DTOs and domain entities                │
+│   - Facade for multiple application services                 │
+│   - Injected into Blazor components                          │
+└────────────────────────┬────────────────────────────────────┘
+                         │ Injects application services
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│        Application Service Layer (Business Logic)            │
+│         PRFactory.Infrastructure/Application/                │
+│            TicketUpdateService.cs                            │
+│                                                               │
+│   - Encapsulates business logic                              │
+│   - Coordinates multiple repositories                        │
+│   - Triggers workflow orchestration                          │
+│   - Shared by Blazor AND API controllers                     │
+└────────────────────────┬────────────────────────────────────┘
+                         │ Injects repositories & orchestrator
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│              Infrastructure Layer                            │
+│       TicketUpdateRepository, WorkflowOrchestrator          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+##### When to Use API Controllers
+
+**API Controllers (`PRFactory.Api/Controllers/*`) are ONLY for external clients:**
+
+```csharp
+/// <summary>
+/// API Controller for ticket updates.
+///
+/// ⚠️ IMPORTANT: This controller is for EXTERNAL clients only:
+///   - Jira webhooks (@claude mentions)
+///   - Mobile apps
+///   - Third-party integrations
+///   - Future public API
+///
+/// ❌ DO NOT use from Blazor components - inject ITicketUpdateService directly!
+/// </summary>
+[ApiController]
+[Route("api/ticket-updates")]
+public class TicketUpdatesController : ControllerBase
+{
+    private readonly ITicketUpdateService _ticketUpdateService;
+
+    // Controller delegates to same service Blazor uses
+    [HttpPost("{id}/approve")]
+    public async Task<IActionResult> Approve(Guid id)
+    {
+        await _ticketUpdateService.ApproveUpdateAsync(id, User.Identity?.Name);
+        return Ok();
+    }
+}
+```
+
+**External clients flow:**
+```
+External Client (Jira webhook)
+  → HTTP POST
+    → API Controller
+      → ITicketUpdateService (same service Blazor uses)
+        → Repository
+```
+
+**Blazor Server flow:**
+```
+Blazor Component
+  → ITicketService (Web facade)
+    → ITicketUpdateService (same service API uses)
+      → Repository
+```
+
+##### Benefits of This Architecture
+
+1. **Performance**: No HTTP serialization/deserialization overhead within Blazor Server
+2. **Shared Logic**: Both Blazor and API use same `ITicketUpdateService` implementation
+3. **Testability**: Application services can be unit tested in isolation
+4. **Consistency**: Business logic in one place, consumed by multiple clients
+5. **Type Safety**: No need to convert to/from JSON within the same process
+6. **Debugging**: Easier to debug direct method calls vs HTTP requests
+7. **Transactions**: Can use database transactions across repository calls
+
+##### Rules for PRFactory
+
+**✅ DO:**
+- Inject application services (e.g., `ITicketUpdateService`) from `PRFactory.Infrastructure/Application/`
+- Use Web services (`PRFactory.Web/Services/`) as facades for Blazor components
+- Have API controllers delegate to application services
+- Keep business logic in application service layer
+- Convert entities to DTOs in Web layer service facades
+
+**❌ DO NOT:**
+- Make HTTP calls from Blazor components to API controllers in same process
+- Use `HttpClient` to call `/api/*` endpoints from Blazor Server
+- Put business logic in API controllers (they should delegate to services)
+- Put business logic in Web service facades (they should delegate to application services)
+- Skip the application service layer and inject repositories directly into Web services
+
+**File Locations:**
+- Application Services: `/PRFactory.Infrastructure/Application/` (e.g., `TicketUpdateService.cs`)
+- Application Service Interfaces: `/PRFactory.Core/Application/Services/` (e.g., `ITicketUpdateService.cs`)
+- Web Service Facades: `/PRFactory.Web/Services/` (e.g., `TicketService.cs`)
+- API Controllers: `/PRFactory.Api/Controllers/` (for external clients only)
+
+---
+
+#### Key Files
+
+**UI Component Library:**
+- `/home/user/PRFactory/src/PRFactory.Web/UI/` - Pure UI components
+
+**Business Components:**
+- `/home/user/PRFactory/src/PRFactory.Web/Components/` - Domain components
+- `/home/user/PRFactory/src/PRFactory.Web/Pages/` - Routable pages
+
+**Configuration:**
+- `/home/user/PRFactory/src/PRFactory.Web/PRFactory.Web.csproj` - Package references
+
+**DO NOT:**
+- Create inline `<div class="card">` spaghetti code
+- Add new UI component libraries without approval
+- Mix business logic into pure UI components
+- Skip code-behind for business components
+- Duplicate UI patterns (alerts, cards, forms, etc.)
+
+**DO:**
+- Extract repetitive markup into `/UI/*` components
+- Use Radzen for complex controls (grids, charts, dialogs)
+- Keep pure UI components in `/UI/*`, business components in `/Components/*`
+- Always use code-behind (.razor.cs) for Pages and business Components
+- Compose complex UIs from simple, reusable components
+
+---
+
 ## What NOT to Simplify
 
 These architectural decisions should be **PRESERVED**:
@@ -207,6 +725,15 @@ These architectural decisions should be **PRESERVED**:
 - **Keep repository pattern**: Abstracts data access
 
 **Rationale**: Standard architectural pattern for maintainable systems.
+
+### 6. UI Component Library Architecture
+
+- **Keep /UI/* component library**: Pure, reusable UI components
+- **Keep code-behind pattern**: Separate .razor and .razor.cs for business components
+- **Keep component organization**: /UI/ for pure components, /Components/ for business logic
+- **Keep approved libraries only**: Blazor + Radzen only (NO MudBlazor, Telerik, etc.)
+
+**Rationale**: Eliminates bootstrap spaghetti code, ensures UI consistency, maintains clean separation of concerns.
 
 ---
 
@@ -688,12 +1215,16 @@ var repo = new Repository
 - ❌ "LibGit2Sharp is overkill, let's use git CLI"
 - ❌ "We don't need checkpointing, workflows will finish fast"
 - ❌ "Let's merge all agents into one big workflow class"
+- ❌ "Let's add MudBlazor/Telerik for this one feature"
+- ❌ "This inline Bootstrap markup is fine, no need for components"
 
 **GREEN FLAGS** (Safe to simplify):
 - ✅ "OpenTelemetry isn't adding value for human-reviewed workflows"
 - ✅ "These stub implementations should be completed or removed"
 - ✅ "This middleware duplicates logging from another layer"
 - ✅ "These configuration keys are unused"
+- ✅ "This Bootstrap markup is repeated, let's extract a component"
+- ✅ "This page needs code-behind separation"
 
 #### When Adding Features
 
@@ -703,6 +1234,9 @@ var repo = new Repository
 - Complete stub implementations
 - Add configuration options for tenant customization
 - Extend existing patterns (don't reinvent)
+- Extract repetitive UI markup into /UI/* components
+- Use code-behind (.razor.cs) for Pages and business Components
+- Use Radzen for complex UI controls (grids, charts, dialogs)
 
 **DON'T**:
 - Bypass the graph system for "quick" workflows
@@ -710,6 +1244,9 @@ var repo = new Repository
 - Use shell commands for git operations
 - Store credentials unencrypted
 - Skip state machine transitions
+- Add new UI component libraries (MudBlazor, Telerik, etc.)
+- Mix business logic into pure UI components in /UI/*
+- Skip code-behind separation for business components
 
 #### When Refactoring
 
@@ -742,6 +1279,7 @@ var repo = new Repository
 | **Multi-Tenancy** | SaaS isolation | ✅ YES |
 | **Checkpoint-Based Resume** | Fault tolerance | ✅ YES |
 | **LibGit2Sharp** | Cross-platform git | ✅ YES |
+| **UI Component Library** | Reusable, consistent UI | ✅ YES |
 | **OpenTelemetry** | Distributed tracing | ❌ REMOVE |
 | **Stub Implementations** | Incomplete code | ⚠️ COMPLETE OR REMOVE |
 
@@ -751,6 +1289,8 @@ var repo = new Repository
 - Graphs: `/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Graphs/`
 - Providers: `/home/user/PRFactory/src/PRFactory.Infrastructure/Git/Providers/`
 - Domain: `/home/user/PRFactory/src/PRFactory.Domain/`
+- UI Components: `/home/user/PRFactory/src/PRFactory.Web/UI/`
+- Business Components: `/home/user/PRFactory/src/PRFactory.Web/Components/`
 
 **Documentation**:
 - Architecture: `/home/user/PRFactory/docs/ARCHITECTURE.md`
@@ -772,6 +1312,7 @@ var repo = new Repository
 4. ✅ Multi-tenant architecture with configuration flexibility
 5. ✅ State machine pattern with checkpointing
 6. ✅ Clean Architecture separation
+7. ✅ UI Component Library structure (/UI/* for pure components, code-behind pattern)
 
 **SIMPLIFY OR REMOVE:**
 1. ❌ OpenTelemetry / Jaeger tracing (keep structured logging)

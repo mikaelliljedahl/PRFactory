@@ -1,15 +1,27 @@
 using Microsoft.AspNetCore.Mvc;
 using PRFactory.Api.Models;
+using PRFactory.Core.Application.Services;
 using PRFactory.Domain.Interfaces;
 using PRFactory.Domain.ValueObjects;
-using PRFactory.Infrastructure.Agents.Graphs;
-using PRFactory.Infrastructure.Agents.Messages;
 using System.Diagnostics;
 
 namespace PRFactory.Api.Controllers;
 
 /// <summary>
-/// Manages ticket update operations including approval, rejection, and retrieval
+/// Manages ticket update operations including approval, rejection, and retrieval.
+///
+/// IMPORTANT: This controller is designed for EXTERNAL clients only:
+/// - Jira webhooks (e.g., @claude mentions)
+/// - Future mobile apps
+/// - Third-party integrations
+/// - External API consumers
+///
+/// ARCHITECTURE NOTE:
+/// - Internal Blazor Server components should NOT call this controller via HTTP.
+/// - Internal components should inject ITicketUpdateService directly (same service this controller uses).
+/// - This avoids unnecessary HTTP overhead within the same process.
+///
+/// This controller acts as an HTTP facade over the application service layer.
 /// </summary>
 [ApiController]
 [Route("api")]
@@ -17,20 +29,17 @@ namespace PRFactory.Api.Controllers;
 public class TicketUpdatesController : ControllerBase
 {
     private readonly ILogger<TicketUpdatesController> _logger;
-    private readonly ITicketUpdateRepository _ticketUpdateRepository;
+    private readonly ITicketUpdateService _ticketUpdateService;
     private readonly ITicketRepository _ticketRepository;
-    private readonly IWorkflowOrchestrator _workflowOrchestrator;
 
     public TicketUpdatesController(
         ILogger<TicketUpdatesController> logger,
-        ITicketUpdateRepository ticketUpdateRepository,
-        ITicketRepository ticketRepository,
-        IWorkflowOrchestrator workflowOrchestrator)
+        ITicketUpdateService ticketUpdateService,
+        ITicketRepository ticketRepository)
     {
         _logger = logger;
-        _ticketUpdateRepository = ticketUpdateRepository;
+        _ticketUpdateService = ticketUpdateService;
         _ticketRepository = ticketRepository;
-        _workflowOrchestrator = workflowOrchestrator;
     }
 
     /// <summary>
@@ -62,8 +71,8 @@ public class TicketUpdatesController : ControllerBase
                 return NotFound(new { error = $"Ticket {ticketId} not found" });
             }
 
-            // Get latest draft (most recent update regardless of status)
-            var ticketUpdate = await _ticketUpdateRepository.GetLatestDraftByTicketIdAsync(ticketId);
+            // Use application service
+            var ticketUpdate = await _ticketUpdateService.GetLatestTicketUpdateAsync(ticketId);
             if (ticketUpdate == null)
             {
                 _logger.LogWarning("No ticket updates found for ticket {TicketId}", ticketId);
@@ -107,18 +116,12 @@ public class TicketUpdatesController : ControllerBase
 
         try
         {
-            var ticketUpdate = await _ticketUpdateRepository.GetByIdAsync(ticketUpdateId);
-            if (ticketUpdate == null)
-            {
-                _logger.LogWarning("TicketUpdate {TicketUpdateId} not found", ticketUpdateId);
-                return NotFound(new { error = $"TicketUpdate {ticketUpdateId} not found" });
-            }
-
-            // Verify it's a draft (can only edit drafts)
-            if (!ticketUpdate.IsDraft)
-            {
-                return BadRequest(new { error = "Can only edit draft ticket updates" });
-            }
+            // Use application service
+            var ticketUpdate = await _ticketUpdateService.UpdateTicketUpdateAsync(
+                ticketUpdateId,
+                request.UpdatedTitle ?? string.Empty,
+                request.UpdatedDescription ?? string.Empty,
+                request.AcceptanceCriteria ?? string.Empty);
 
             // Get ticket for ticket key
             var ticket = await _ticketRepository.GetByIdAsync(ticketUpdate.TicketId);
@@ -126,39 +129,6 @@ public class TicketUpdatesController : ControllerBase
             {
                 return NotFound(new { error = "Associated ticket not found" });
             }
-
-            // Apply updates (only update fields that are provided)
-            var hasChanges = false;
-
-            if (!string.IsNullOrWhiteSpace(request.UpdatedTitle) && request.UpdatedTitle != ticketUpdate.UpdatedTitle)
-            {
-                hasChanges = true;
-            }
-
-            if (!string.IsNullOrWhiteSpace(request.UpdatedDescription) && request.UpdatedDescription != ticketUpdate.UpdatedDescription)
-            {
-                hasChanges = true;
-            }
-
-            if (!string.IsNullOrWhiteSpace(request.AcceptanceCriteria) && request.AcceptanceCriteria != ticketUpdate.AcceptanceCriteria)
-            {
-                hasChanges = true;
-            }
-
-            if (!hasChanges)
-            {
-                return BadRequest(new { error = "No changes provided" });
-            }
-
-            // Update the entity
-            ticketUpdate.Update(
-                updatedTitle: request.UpdatedTitle ?? ticketUpdate.UpdatedTitle,
-                updatedDescription: request.UpdatedDescription ?? ticketUpdate.UpdatedDescription,
-                successCriteria: ticketUpdate.SuccessCriteria, // Keep existing success criteria
-                acceptanceCriteria: request.AcceptanceCriteria ?? ticketUpdate.AcceptanceCriteria
-            );
-
-            await _ticketUpdateRepository.UpdateAsync(ticketUpdate);
 
             _logger.LogInformation(
                 "Updated ticket update {TicketUpdateId} for ticket {TicketKey}",
@@ -206,12 +176,10 @@ public class TicketUpdatesController : ControllerBase
 
         try
         {
-            var ticketUpdate = await _ticketUpdateRepository.GetByIdAsync(ticketUpdateId);
-            if (ticketUpdate == null)
-            {
-                _logger.LogWarning("TicketUpdate {TicketUpdateId} not found", ticketUpdateId);
-                return NotFound(new { error = $"TicketUpdate {ticketUpdateId} not found" });
-            }
+            // Use application service
+            var ticketUpdate = await _ticketUpdateService.ApproveTicketUpdateAsync(
+                ticketUpdateId,
+                approvedBy: request.ApprovedBy);
 
             // Get ticket
             var ticket = await _ticketRepository.GetByIdAsync(ticketUpdate.TicketId);
@@ -220,33 +188,9 @@ public class TicketUpdatesController : ControllerBase
                 return NotFound(new { error = "Associated ticket not found" });
             }
 
-            // Verify it's in a draft state
-            if (!ticketUpdate.IsDraft || ticketUpdate.IsApproved)
-            {
-                return BadRequest(new { error = "Ticket update is not in a state that can be approved" });
-            }
-
-            // Approve the ticket update
-            ticketUpdate.Approve();
-            await _ticketUpdateRepository.UpdateAsync(ticketUpdate);
-
-            // Update ticket workflow state
-            ticket.UpdateWorkflowState(WorkflowState.TicketUpdateApproved);
-            await _ticketRepository.UpdateAsync(ticket);
-
             _logger.LogInformation(
                 "Approved ticket update {TicketUpdateId} for ticket {TicketKey}",
                 ticketUpdateId, ticket.TicketKey);
-
-            // Resume workflow with approval message
-            var approvalMessage = new TicketUpdateApprovedMessage(
-                TicketId: ticket.Id,
-                TicketUpdateId: ticketUpdateId,
-                ApprovedAt: ticketUpdate.ApprovedAt!.Value,
-                ApprovedBy: request.ApprovedBy ?? "Unknown"
-            );
-
-            await _workflowOrchestrator.ResumeWorkflowAsync(ticket.Id, approvalMessage);
 
             var response = new TicketUpdateOperationResponse
             {
@@ -299,12 +243,12 @@ public class TicketUpdatesController : ControllerBase
 
         try
         {
-            var ticketUpdate = await _ticketUpdateRepository.GetByIdAsync(ticketUpdateId);
-            if (ticketUpdate == null)
-            {
-                _logger.LogWarning("TicketUpdate {TicketUpdateId} not found", ticketUpdateId);
-                return NotFound(new { error = $"TicketUpdate {ticketUpdateId} not found" });
-            }
+            // Use application service
+            var ticketUpdate = await _ticketUpdateService.RejectTicketUpdateAsync(
+                ticketUpdateId,
+                request.Reason,
+                rejectedBy: request.RejectedBy,
+                regenerate: request.Regenerate);
 
             // Get ticket
             var ticket = await _ticketRepository.GetByIdAsync(ticketUpdate.TicketId);
@@ -313,47 +257,13 @@ public class TicketUpdatesController : ControllerBase
                 return NotFound(new { error = "Associated ticket not found" });
             }
 
-            // Verify it's in a draft state
-            if (!ticketUpdate.IsDraft)
-            {
-                return BadRequest(new { error = "Can only reject draft ticket updates" });
-            }
-
-            if (ticketUpdate.IsApproved)
-            {
-                return BadRequest(new { error = "Cannot reject an approved ticket update" });
-            }
-
-            // Reject the ticket update
-            ticketUpdate.Reject(request.Reason);
-            await _ticketUpdateRepository.UpdateAsync(ticketUpdate);
-
-            // Update ticket workflow state
-            ticket.UpdateWorkflowState(WorkflowState.TicketUpdateRejected);
-            await _ticketRepository.UpdateAsync(ticket);
-
             _logger.LogInformation(
                 "Rejected ticket update {TicketUpdateId} for ticket {TicketKey}, Regenerate={Regenerate}",
                 ticketUpdateId, ticket.TicketKey, request.Regenerate);
 
-            // Resume workflow with rejection message if regeneration is requested
-            string message;
-            if (request.Regenerate)
-            {
-                var rejectionMessage = new TicketUpdateRejectedMessage(
-                    TicketId: ticket.Id,
-                    TicketUpdateId: ticketUpdateId,
-                    Reason: request.Reason
-                );
-
-                await _workflowOrchestrator.ResumeWorkflowAsync(ticket.Id, rejectionMessage);
-
-                message = "Ticket update rejected. A new version will be generated based on your feedback.";
-            }
-            else
-            {
-                message = "Ticket update rejected. No regeneration will occur.";
-            }
+            string message = request.Regenerate
+                ? "Ticket update rejected. A new version will be generated based on your feedback."
+                : "Ticket update rejected. No regeneration will occur.";
 
             var response = new TicketUpdateOperationResponse
             {

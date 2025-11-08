@@ -81,41 +81,6 @@
     }
 </div>
 
-@code {
-    [Parameter]
-    public List<SuccessCriterionDto> SuccessCriteria { get; set; } = new();
-
-    [Parameter]
-    public EventCallback<List<SuccessCriterionDto>> SuccessCriteriaChanged { get; set; }
-
-    private void AddCriterion()
-    {
-        SuccessCriteria.Add(new SuccessCriterionDto
-        {
-            Category = SuccessCriterionCategory.Functional,
-            Priority = 0,
-            IsTestable = true,
-            Description = string.Empty
-        });
-        NotifyChanged();
-    }
-
-    private void RemoveCriterion(int index)
-    {
-        if (index >= 0 && index < SuccessCriteria.Count)
-        {
-            SuccessCriteria.RemoveAt(index);
-            NotifyChanged();
-        }
-    }
-
-    private async Task NotifyChanged()
-    {
-        await SuccessCriteriaChanged.InvokeAsync(SuccessCriteria);
-        StateHasChanged();
-    }
-}
-
 <style>
     .success-criteria-editor {
         border: 1px solid #dee2e6;

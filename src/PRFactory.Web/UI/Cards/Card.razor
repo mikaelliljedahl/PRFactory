@@ -1,0 +1,57 @@
+@using PRFactory.Web.UI.Cards
+
+<div class="card @AdditionalClass">
+    @if (!string.IsNullOrEmpty(Title) || HeaderContent != null)
+    {
+        <div class="card-header @HeaderClass">
+            @if (HeaderContent != null)
+            {
+                @HeaderContent
+            }
+            else
+            {
+                <h4 class="mb-0">
+                    @if (!string.IsNullOrEmpty(Icon))
+                    {
+                        <i class="bi bi-@Icon me-2"></i>
+                    }
+                    @Title
+                </h4>
+            }
+        </div>
+    }
+    @if (ChildContent != null)
+    {
+        <div class="card-body">
+            @ChildContent
+        </div>
+    }
+    @if (FooterContent != null)
+    {
+        <div class="card-footer">
+            @FooterContent
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public CardVariant Variant { get; set; } = CardVariant.Default;
+    [Parameter] public RenderFragment? HeaderContent { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? FooterContent { get; set; }
+    [Parameter] public string AdditionalClass { get; set; } = "mb-3";
+
+    private string HeaderClass => Variant switch
+    {
+        CardVariant.Primary => "bg-primary text-white",
+        CardVariant.Secondary => "bg-secondary text-white",
+        CardVariant.Success => "bg-success text-white",
+        CardVariant.Danger => "bg-danger text-white",
+        CardVariant.Warning => "bg-warning text-dark",
+        CardVariant.Info => "bg-info text-white",
+        CardVariant.Default => "",
+        _ => ""
+    };
+}

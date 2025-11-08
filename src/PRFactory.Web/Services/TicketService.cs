@@ -1,21 +1,30 @@
+using PRFactory.Core.Application.Services;
 using PRFactory.Domain.Entities;
+using PRFactory.Domain.ValueObjects;
 using PRFactory.Web.Models;
 using System.Net.Http.Json;
 
 namespace PRFactory.Web.Services;
 
 /// <summary>
-/// Implementation of ticket service using HttpClient to call PRFactory.Api
+/// Implementation of ticket service.
+/// Uses direct application service injection for ticket update operations (Blazor Server architecture).
+/// Uses HttpClient for other operations (legacy - should be refactored to use application services).
 /// </summary>
 public class TicketService : ITicketService
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<TicketService> _logger;
+    private readonly ITicketUpdateService _ticketUpdateService;
 
-    public TicketService(IHttpClientFactory httpClientFactory, ILogger<TicketService> logger)
+    public TicketService(
+        IHttpClientFactory httpClientFactory,
+        ILogger<TicketService> logger,
+        ITicketUpdateService ticketUpdateService)
     {
         _httpClientFactory = httpClientFactory;
         _logger = logger;
+        _ticketUpdateService = ticketUpdateService;
     }
 
     private HttpClient CreateClient()
@@ -142,13 +151,16 @@ public class TicketService : ITicketService
     {
         try
         {
-            var client = CreateClient();
-            return await client.GetFromJsonAsync<TicketUpdateDto>($"/api/tickets/{ticketId}/updates/latest", ct);
-        }
-        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-        {
-            _logger.LogWarning("No ticket update found for ticket {TicketId}", ticketId);
-            return null;
+            // Use application service directly (Blazor Server architecture)
+            var ticketUpdate = await _ticketUpdateService.GetLatestTicketUpdateAsync(ticketId, ct);
+            if (ticketUpdate == null)
+            {
+                _logger.LogWarning("No ticket update found for ticket {TicketId}", ticketId);
+                return null;
+            }
+
+            // Map entity to DTO
+            return MapToDto(ticketUpdate);
         }
         catch (Exception ex)
         {
@@ -161,9 +173,14 @@ public class TicketService : ITicketService
     {
         try
         {
-            var client = CreateClient();
-            var response = await client.PutAsJsonAsync($"/api/ticket-updates/{ticketUpdateId}", ticketUpdate, ct);
-            response.EnsureSuccessStatusCode();
+            // Use application service directly (Blazor Server architecture)
+            await _ticketUpdateService.UpdateTicketUpdateAsync(
+                ticketUpdateId,
+                ticketUpdate.UpdatedTitle,
+                ticketUpdate.UpdatedDescription,
+                ticketUpdate.AcceptanceCriteria,
+                ct);
+
             _logger.LogInformation("Updated ticket update {TicketUpdateId}", ticketUpdateId);
         }
         catch (Exception ex)
@@ -177,9 +194,8 @@ public class TicketService : ITicketService
     {
         try
         {
-            var client = CreateClient();
-            var response = await client.PostAsync($"/api/ticket-updates/{ticketUpdateId}/approve", null, ct);
-            response.EnsureSuccessStatusCode();
+            // Use application service directly (Blazor Server architecture)
+            await _ticketUpdateService.ApproveTicketUpdateAsync(ticketUpdateId, approvedBy: null, ct);
             _logger.LogInformation("Approved ticket update {TicketUpdateId}", ticketUpdateId);
         }
         catch (Exception ex)
@@ -193,10 +209,14 @@ public class TicketService : ITicketService
     {
         try
         {
-            var client = CreateClient();
-            var request = new { RejectionReason = rejectionReason };
-            var response = await client.PostAsJsonAsync($"/api/ticket-updates/{ticketUpdateId}/reject", request, ct);
-            response.EnsureSuccessStatusCode();
+            // Use application service directly (Blazor Server architecture)
+            await _ticketUpdateService.RejectTicketUpdateAsync(
+                ticketUpdateId,
+                rejectionReason,
+                rejectedBy: null,
+                regenerate: true,
+                ct);
+
             _logger.LogInformation("Rejected ticket update {TicketUpdateId}", ticketUpdateId);
         }
         catch (Exception ex)
@@ -204,5 +224,34 @@ public class TicketService : ITicketService
             _logger.LogError(ex, "Error rejecting ticket update {TicketUpdateId}", ticketUpdateId);
             throw;
         }
+    }
+
+    /// <summary>
+    /// Maps a TicketUpdate entity to a TicketUpdateDto
+    /// </summary>
+    private TicketUpdateDto MapToDto(TicketUpdate ticketUpdate)
+    {
+        return new TicketUpdateDto
+        {
+            Id = ticketUpdate.Id,
+            TicketId = ticketUpdate.TicketId,
+            UpdatedTitle = ticketUpdate.UpdatedTitle,
+            UpdatedDescription = ticketUpdate.UpdatedDescription,
+            AcceptanceCriteria = ticketUpdate.AcceptanceCriteria,
+            Version = ticketUpdate.Version,
+            IsDraft = ticketUpdate.IsDraft,
+            IsApproved = ticketUpdate.IsApproved,
+            RejectionReason = ticketUpdate.RejectionReason,
+            GeneratedAt = ticketUpdate.GeneratedAt,
+            ApprovedAt = ticketUpdate.ApprovedAt,
+            PostedAt = ticketUpdate.PostedAt,
+            SuccessCriteria = ticketUpdate.SuccessCriteria.Select(sc => new SuccessCriterionDto
+            {
+                Category = sc.Category,
+                Description = sc.Description,
+                Priority = sc.Priority,
+                IsTestable = sc.IsTestable
+            }).ToList()
+        };
     }
 }

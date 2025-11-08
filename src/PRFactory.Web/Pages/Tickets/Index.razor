@@ -2,6 +2,9 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using PRFactory.Web.Models
 @using PRFactory.Web.Components
+@using PRFactory.Web.UI.Alerts
+@using PRFactory.Web.UI.Buttons
+@using PRFactory.Web.UI.Display
 @using PRFactory.Domain.ValueObjects
 @using static PRFactory.Web.Components.TicketFilters
 @inject ITicketService TicketService
@@ -41,35 +44,24 @@
     <!-- Loading State -->
     @if (isLoading)
     {
-        <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <p class="mt-3 text-muted">Loading tickets...</p>
-        </div>
+        <LoadingSpinner IsLoading="true" Message="Loading tickets..." />
     }
     else if (errorMessage != null)
     {
         <!-- Error State -->
-        <div class="alert alert-danger" role="alert">
-            <i class="bi bi-exclamation-triangle-fill"></i>
-            <strong>Error:</strong> @errorMessage
-            <button class="btn btn-sm btn-outline-danger ms-3" @onclick="LoadTicketsAsync">
-                <i class="bi bi-arrow-clockwise"></i> Retry
-            </button>
-        </div>
+        <AlertMessage Type="AlertType.Danger" Title="Error" Message="@errorMessage" Icon="exclamation-triangle-fill">
+            <IconButton Icon="arrow-clockwise" Text="Retry" Variant="ButtonVariant.OutlineDanger" Size="ButtonSize.Small" AdditionalClass="ms-3" OnClick="@(async _ => await LoadTicketsAsync())" />
+        </AlertMessage>
     }
     else if (tickets == null || !tickets.Any())
     {
         <!-- Empty State -->
-        <div class="text-center py-5">
-            <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
-            <h3 class="mt-3 text-muted">No tickets found</h3>
-            <p class="text-muted">Create your first ticket to get started</p>
-            <a href="/tickets/create" class="btn btn-primary mt-3">
-                <i class="bi bi-plus-circle"></i> Create New Ticket
-            </a>
-        </div>
+        <EmptyState Icon="inbox"
+                    Title="No tickets found"
+                    Message="Create your first ticket to get started"
+                    ActionUrl="/tickets/create"
+                    ActionText="Create New Ticket"
+                    ActionIcon="plus-circle" />
     }
     else
     {

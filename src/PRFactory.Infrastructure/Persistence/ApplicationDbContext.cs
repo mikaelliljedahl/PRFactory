@@ -12,6 +12,7 @@ using TicketUpdateConfig = PRFactory.Infrastructure.Persistence.Configurations.T
 using WorkflowEventConfig = PRFactory.Infrastructure.Persistence.Configurations.WorkflowEventConfiguration;
 using WorkflowStateConfig = PRFactory.Infrastructure.Persistence.Configurations.WorkflowStateConfiguration;
 using CheckpointConfig = PRFactory.Infrastructure.Persistence.Configurations.CheckpointConfiguration;
+using AgentPromptTemplateConfig = PRFactory.Infrastructure.Persistence.Configurations.AgentPromptTemplateConfiguration;
 
 namespace PRFactory.Infrastructure.Persistence;
 
@@ -42,6 +43,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<WorkflowEvent> WorkflowEvents => Set<WorkflowEvent>();
     public DbSet<WorkflowStateEntity> WorkflowStates => Set<WorkflowStateEntity>();
     public DbSet<Checkpoint> Checkpoints => Set<Checkpoint>();
+    public DbSet<AgentPromptTemplate> AgentPromptTemplates => Set<AgentPromptTemplate>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -55,6 +57,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new WorkflowEventConfig());
         modelBuilder.ApplyConfiguration(new WorkflowStateConfig());
         modelBuilder.ApplyConfiguration(new CheckpointConfig());
+        modelBuilder.ApplyConfiguration(new AgentPromptTemplateConfig());
 
         // Add indexes for common queries
         AddIndexes(modelBuilder);

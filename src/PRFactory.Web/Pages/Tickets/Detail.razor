@@ -3,6 +3,9 @@
 @using PRFactory.Api.Models
 @using PRFactory.Web.Models
 @using PRFactory.Web.Components.Tickets
+@using PRFactory.Web.UI.Alerts
+@using PRFactory.Web.UI.Cards
+@using PRFactory.Web.UI.Display
 @using PRFactory.Domain.ValueObjects
 @inject ITicketService TicketService
 @inject IHttpClientFactory HttpClientFactory
@@ -13,27 +16,18 @@
 
 @if (isLoading)
 {
-    <div class="text-center p-5">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-        <p class="mt-2">Loading ticket details...</p>
-    </div>
+    <LoadingSpinner IsLoading="true" Message="Loading ticket details..." />
 }
 else if (errorMessage != null)
 {
-    <div class="alert alert-danger">
-        <i class="bi bi-exclamation-triangle"></i> @errorMessage
-    </div>
+    <AlertMessage Type="AlertType.Danger" Message="@errorMessage" Icon="exclamation-triangle" />
     <button class="btn btn-primary" @onclick="@(() => NavigationManager.NavigateTo("/"))">
         <i class="bi bi-arrow-left"></i> Back to Dashboard
     </button>
 }
 else if (ticket == null)
 {
-    <div class="alert alert-warning">
-        <i class="bi bi-info-circle"></i> Ticket not found
-    </div>
+    <AlertMessage Type="AlertType.Warning" Message="Ticket not found" Icon="info-circle" />
     <button class="btn btn-primary" @onclick="@(() => NavigationManager.NavigateTo("/"))">
         <i class="bi bi-arrow-left"></i> Back to Dashboard
     </button>
@@ -74,93 +68,56 @@ else
                 }
                 else if (ticket.State == WorkflowState.PRCreated || ticket.State == WorkflowState.InReview)
                 {
-                    <div class="card mb-3">
-                        <div class="card-header bg-success text-white">
-                            <h4 class="mb-0">
-                                <i class="bi bi-git"></i> Pull Request Created
-                            </h4>
-                        </div>
-                        <div class="card-body">
-                            <p>A pull request has been created for this ticket.</p>
-                            @if (!string.IsNullOrEmpty(ticket.PullRequestUrl))
-                            {
-                                <a href="@ticket.PullRequestUrl" target="_blank" class="btn btn-primary">
-                                    <i class="bi bi-box-arrow-up-right"></i> View Pull Request
-                                </a>
-                            }
-                        </div>
-                    </div>
+                    <Card Title="Pull Request Created" Icon="git" Variant="CardVariant.Success">
+                        <p>A pull request has been created for this ticket.</p>
+                        @if (!string.IsNullOrEmpty(ticket.PullRequestUrl))
+                        {
+                            <a href="@ticket.PullRequestUrl" target="_blank" class="btn btn-primary">
+                                <i class="bi bi-box-arrow-up-right"></i> View Pull Request
+                            </a>
+                        }
+                    </Card>
                 }
                 else if (ticket.State == WorkflowState.Completed)
                 {
-                    <div class="card mb-3">
-                        <div class="card-header bg-success text-white">
-                            <h4 class="mb-0">
-                                <i class="bi bi-check-circle"></i> Ticket Completed
-                            </h4>
-                        </div>
-                        <div class="card-body">
-                            <p>This ticket has been successfully completed and merged.</p>
-                            @if (ticket.CompletedAt.HasValue)
-                            {
-                                <p class="text-muted">
-                                    <small>Completed on @ticket.CompletedAt.Value.ToString("g")</small>
-                                </p>
-                            }
-                            @if (!string.IsNullOrEmpty(ticket.PullRequestUrl))
-                            {
-                                <a href="@ticket.PullRequestUrl" target="_blank" class="btn btn-outline-primary">
-                                    <i class="bi bi-box-arrow-up-right"></i> View Pull Request
-                                </a>
-                            }
-                        </div>
-                    </div>
+                    <Card Title="Ticket Completed" Icon="check-circle" Variant="CardVariant.Success">
+                        <p>This ticket has been successfully completed and merged.</p>
+                        @if (ticket.CompletedAt.HasValue)
+                        {
+                            <p class="text-muted">
+                                <small>Completed on @ticket.CompletedAt.Value.ToString("g")</small>
+                            </p>
+                        }
+                        @if (!string.IsNullOrEmpty(ticket.PullRequestUrl))
+                        {
+                            <a href="@ticket.PullRequestUrl" target="_blank" class="btn btn-outline-primary">
+                                <i class="bi bi-box-arrow-up-right"></i> View Pull Request
+                            </a>
+                        }
+                    </Card>
                 }
                 else if (ticket.State == WorkflowState.Failed)
                 {
-                    <div class="card mb-3">
-                        <div class="card-header bg-danger text-white">
-                            <h4 class="mb-0">
-                                <i class="bi bi-exclamation-triangle"></i> Workflow Failed
-                            </h4>
-                        </div>
-                        <div class="card-body">
-                            <p>The workflow encountered an error and could not complete.</p>
-                            @if (!string.IsNullOrEmpty(ticket.LastError))
-                            {
-                                <div class="alert alert-danger">
-                                    <strong>Error:</strong> @ticket.LastError
-                                </div>
-                            }
-                        </div>
-                    </div>
+                    <Card Title="Workflow Failed" Icon="exclamation-triangle" Variant="CardVariant.Danger">
+                        <p>The workflow encountered an error and could not complete.</p>
+                        @if (!string.IsNullOrEmpty(ticket.LastError))
+                        {
+                            <AlertMessage Type="AlertType.Danger" Title="Error" Message="@ticket.LastError" />
+                        }
+                    </Card>
                 }
                 else if (ticket.State == WorkflowState.Cancelled)
                 {
-                    <div class="card mb-3">
-                        <div class="card-header bg-secondary text-white">
-                            <h4 class="mb-0">
-                                <i class="bi bi-x-circle"></i> Ticket Cancelled
-                            </h4>
-                        </div>
-                        <div class="card-body">
-                            <p>This ticket has been cancelled and will not be processed.</p>
-                        </div>
-                    </div>
+                    <Card Title="Ticket Cancelled" Icon="x-circle" Variant="CardVariant.Secondary">
+                        <p>This ticket has been cancelled and will not be processed.</p>
+                    </Card>
                 }
                 else
                 {
-                    <div class="card mb-3">
-                        <div class="card-header">
-                            <h4 class="mb-0">
-                                <i class="bi bi-hourglass-split"></i> In Progress
-                            </h4>
-                        </div>
-                        <div class="card-body">
-                            <p>The workflow is currently processing this ticket.</p>
-                            <p class="text-muted">Current state: <strong>@ticket.StateDisplay</strong></p>
-                        </div>
-                    </div>
+                    <Card Title="In Progress" Icon="hourglass-split">
+                        <p>The workflow is currently processing this ticket.</p>
+                        <p class="text-muted">Current state: <strong>@ticket.StateDisplay</strong></p>
+                    </Card>
                 }
             </div>
 

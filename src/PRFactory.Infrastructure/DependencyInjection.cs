@@ -9,6 +9,8 @@ using PRFactory.Infrastructure.Configuration;
 using PRFactory.Infrastructure.Persistence;
 using PRFactory.Infrastructure.Persistence.Encryption;
 using PRFactory.Infrastructure.Persistence.Repositories;
+using DomainCheckpointRepository = PRFactory.Domain.Interfaces.ICheckpointRepository;
+using WorkflowCheckpointStore = PRFactory.Infrastructure.Agents.ICheckpointStore;
 
 namespace PRFactory.Infrastructure;
 
@@ -62,13 +64,13 @@ public static class DependencyInjection
         services.AddScoped<ITenantRepository, TenantRepository>();
         services.AddScoped<IRepositoryRepository, RepositoryRepository>();
         services.AddScoped<ITicketRepository, TicketRepository>();
-        services.AddScoped<ICheckpointRepository, CheckpointRepository>();
+        services.AddScoped<DomainCheckpointRepository, CheckpointRepository>();
 
         // Register checkpoint store adapter
-        services.AddScoped<ICheckpointStore, GraphCheckpointStoreAdapter>();
+        services.AddScoped<WorkflowCheckpointStore, GraphCheckpointStoreAdapter>();
 
         // Register workflow state store
-        services.AddScoped<Agents.Graphs.IWorkflowStateStore, Repositories.WorkflowStateStore>();
+        services.AddScoped<Agents.Graphs.IWorkflowStateStore, WorkflowStateStore>();
 
         // Register event publisher
         services.AddScoped<Agents.Graphs.IEventPublisher, Events.EventPublisher>();

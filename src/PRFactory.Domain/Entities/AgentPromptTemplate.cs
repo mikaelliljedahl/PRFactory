@@ -9,12 +9,12 @@ public class AgentPromptTemplate
     /// <summary>
     /// Unique identifier for the template
     /// </summary>
-    public Guid Id { get; private set; }
+    public Guid Id { get; private init; }
 
     /// <summary>
     /// Name/identifier of the agent (e.g., "code-implementation-specialist")
     /// </summary>
-    public string Name { get; private set; } = string.Empty;
+    public string Name { get; private init; } = string.Empty;
 
     /// <summary>
     /// Human-readable description of what this agent does
@@ -44,17 +44,17 @@ public class AgentPromptTemplate
     /// <summary>
     /// Whether this is a system-provided template (read-only) or user-created
     /// </summary>
-    public bool IsSystemTemplate { get; private set; }
+    public bool IsSystemTemplate { get; private init; }
 
     /// <summary>
     /// The tenant this template belongs to (null for system templates available to all)
     /// </summary>
-    public Guid? TenantId { get; private set; }
+    public Guid? TenantId { get; private init; }
 
     /// <summary>
     /// When the template was created
     /// </summary>
-    public DateTime CreatedAt { get; private set; }
+    public DateTime CreatedAt { get; private init; }
 
     /// <summary>
     /// When the template was last updated
@@ -64,7 +64,7 @@ public class AgentPromptTemplate
     /// <summary>
     /// Navigation property to tenant
     /// </summary>
-    public Tenant? Tenant { get; private set; }
+    public Tenant? Tenant { get; private init; }
 
     private AgentPromptTemplate() { }
 

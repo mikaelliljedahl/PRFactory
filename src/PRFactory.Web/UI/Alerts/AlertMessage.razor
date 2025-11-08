@@ -1,0 +1,60 @@
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert alert-@AlertClass @(Dismissible ? "alert-dismissible fade show" : "")" role="alert">
+        @if (!string.IsNullOrEmpty(Icon))
+        {
+            <i class="bi bi-@Icon me-2"></i>
+        }
+        @if (!string.IsNullOrEmpty(Title))
+        {
+            <strong>@Title:</strong>
+            <text> </text>
+        }
+        @Message
+        @ChildContent
+        @if (Dismissible)
+        {
+            <button type="button" class="btn-close" @onclick="HandleDismiss" aria-label="Close"></button>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public string? Message { get; set; }
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public AlertType Type { get; set; } = AlertType.Info;
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public bool Dismissible { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public EventCallback OnDismiss { get; set; }
+
+    private string AlertClass => Type switch
+    {
+        AlertType.Success => "success",
+        AlertType.Warning => "warning",
+        AlertType.Danger => "danger",
+        AlertType.Info => "info",
+        AlertType.Primary => "primary",
+        AlertType.Secondary => "secondary",
+        _ => "info"
+    };
+
+    private async Task HandleDismiss()
+    {
+        Message = null;
+        if (OnDismiss.HasDelegate)
+        {
+            await OnDismiss.InvokeAsync();
+        }
+    }
+}
+
+public enum AlertType
+{
+    Success,
+    Warning,
+    Danger,
+    Info,
+    Primary,
+    Secondary
+}

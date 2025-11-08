@@ -17,8 +17,36 @@ public static class WorkflowStateTransitions
 
         [WorkflowState.Analyzing] = new()
         {
-            WorkflowState.QuestionsPosted,
+            WorkflowState.TicketUpdateGenerated,
             WorkflowState.Failed
+        },
+
+        [WorkflowState.TicketUpdateGenerated] = new()
+        {
+            WorkflowState.TicketUpdateUnderReview
+        },
+
+        [WorkflowState.TicketUpdateUnderReview] = new()
+        {
+            WorkflowState.TicketUpdateApproved,
+            WorkflowState.TicketUpdateRejected,
+            WorkflowState.Cancelled
+        },
+
+        [WorkflowState.TicketUpdateRejected] = new()
+        {
+            WorkflowState.Analyzing  // Regenerate with rejection feedback
+        },
+
+        [WorkflowState.TicketUpdateApproved] = new()
+        {
+            WorkflowState.TicketUpdatePosted
+        },
+
+        [WorkflowState.TicketUpdatePosted] = new()
+        {
+            WorkflowState.QuestionsPosted,  // If questions needed
+            WorkflowState.Planning  // Skip questions if not needed
         },
 
         [WorkflowState.QuestionsPosted] = new()

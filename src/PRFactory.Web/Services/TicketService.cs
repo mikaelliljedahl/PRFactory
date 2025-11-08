@@ -1,4 +1,5 @@
 using PRFactory.Domain.Entities;
+using PRFactory.Web.Models;
 using System.Net.Http.Json;
 
 namespace PRFactory.Web.Services;
@@ -133,6 +134,74 @@ public class TicketService : ITicketService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error submitting answers for ticket {TicketId}", ticketId);
+            throw;
+        }
+    }
+
+    public async Task<TicketUpdateDto?> GetLatestTicketUpdateAsync(Guid ticketId, CancellationToken ct = default)
+    {
+        try
+        {
+            var client = CreateClient();
+            return await client.GetFromJsonAsync<TicketUpdateDto>($"/api/tickets/{ticketId}/updates/latest", ct);
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            _logger.LogWarning("No ticket update found for ticket {TicketId}", ticketId);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching ticket update for ticket {TicketId}", ticketId);
+            throw;
+        }
+    }
+
+    public async Task UpdateTicketUpdateAsync(Guid ticketUpdateId, TicketUpdateDto ticketUpdate, CancellationToken ct = default)
+    {
+        try
+        {
+            var client = CreateClient();
+            var response = await client.PutAsJsonAsync($"/api/ticket-updates/{ticketUpdateId}", ticketUpdate, ct);
+            response.EnsureSuccessStatusCode();
+            _logger.LogInformation("Updated ticket update {TicketUpdateId}", ticketUpdateId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating ticket update {TicketUpdateId}", ticketUpdateId);
+            throw;
+        }
+    }
+
+    public async Task ApproveTicketUpdateAsync(Guid ticketUpdateId, CancellationToken ct = default)
+    {
+        try
+        {
+            var client = CreateClient();
+            var response = await client.PostAsync($"/api/ticket-updates/{ticketUpdateId}/approve", null, ct);
+            response.EnsureSuccessStatusCode();
+            _logger.LogInformation("Approved ticket update {TicketUpdateId}", ticketUpdateId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error approving ticket update {TicketUpdateId}", ticketUpdateId);
+            throw;
+        }
+    }
+
+    public async Task RejectTicketUpdateAsync(Guid ticketUpdateId, string rejectionReason, CancellationToken ct = default)
+    {
+        try
+        {
+            var client = CreateClient();
+            var request = new { RejectionReason = rejectionReason };
+            var response = await client.PostAsJsonAsync($"/api/ticket-updates/{ticketUpdateId}/reject", request, ct);
+            response.EnsureSuccessStatusCode();
+            _logger.LogInformation("Rejected ticket update {TicketUpdateId}", ticketUpdateId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error rejecting ticket update {TicketUpdateId}", ticketUpdateId);
             throw;
         }
     }

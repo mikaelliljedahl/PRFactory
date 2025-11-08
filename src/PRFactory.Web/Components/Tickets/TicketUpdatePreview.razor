@@ -1,0 +1,465 @@
+@using PRFactory.Web.Models
+@inject ITicketService TicketService
+
+<div class="card mb-3">
+    <div class="card-header bg-info text-white">
+        <h4 class="mb-0">
+            <i class="bi bi-file-earmark-check"></i> Ticket Update Ready for Review
+        </h4>
+    </div>
+    <div class="card-body">
+        @if (isLoading)
+        {
+            <div class="text-center p-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading ticket update...</p>
+            </div>
+        }
+        else if (TicketUpdate == null)
+        {
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i> No ticket update available.
+            </div>
+        }
+        else
+        {
+            <!-- Version Badge -->
+            <div class="mb-3">
+                <span class="badge bg-secondary">Version @TicketUpdate.Version</span>
+                <small class="text-muted ms-2">
+                    Generated on @TicketUpdate.GeneratedAt.ToString("g")
+                </small>
+            </div>
+
+            <!-- Tabs -->
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link @(activeTab == "preview" ? "active" : "")"
+                            type="button"
+                            @onclick='() => activeTab = "preview"'>
+                        <i class="bi bi-eye"></i> Preview
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link @(activeTab == "edit" ? "active" : "")"
+                            type="button"
+                            @onclick='() => activeTab = "edit"'>
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link @(activeTab == "compare" ? "active" : "")"
+                            type="button"
+                            @onclick='() => activeTab = "compare"'>
+                        <i class="bi bi-arrows-angle-contract"></i> Compare
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Preview Tab -->
+                @if (activeTab == "preview")
+                {
+                    <div class="tab-pane-content">
+                        <div class="mb-4">
+                            <h5>Updated Title</h5>
+                            <div class="preview-box">
+                                <strong>@TicketUpdate.UpdatedTitle</strong>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h5>Updated Description</h5>
+                            <div class="preview-box markdown-content">
+                                @((MarkupString)RenderMarkdown(TicketUpdate.UpdatedDescription))
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h5>Success Criteria</h5>
+                            @if (TicketUpdate.SuccessCriteria != null && TicketUpdate.SuccessCriteria.Any())
+                            {
+                                <div class="success-criteria-preview">
+                                    @foreach (var priority in new[] { 0, 1, 2 })
+                                    {
+                                        var criteriaByPriority = TicketUpdate.SuccessCriteria.Where(sc => sc.Priority == priority).ToList();
+                                        @if (criteriaByPriority.Any())
+                                        {
+                                            <div class="priority-group mb-3">
+                                                <h6 class="priority-heading">
+                                                    @(priority == 0 ? "Must-Have" : priority == 1 ? "Should-Have" : "Nice-to-Have")
+                                                </h6>
+                                                @foreach (var criterion in criteriaByPriority)
+                                                {
+                                                    <div class="criterion-card mb-2">
+                                                        <div class="criterion-badges">
+                                                            <span class="@criterion.PriorityBadgeClass">@criterion.PriorityLabel</span>
+                                                            <span class="badge bg-secondary">@criterion.CategoryDisplay</span>
+                                                            @if (criterion.IsTestable)
+                                                            {
+                                                                <span class="badge bg-info">Testable</span>
+                                                            }
+                                                        </div>
+                                                        <div class="criterion-description">
+                                                            @criterion.Description
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-warning">
+                                    No success criteria defined.
+                                </div>
+                            }
+                        </div>
+
+                        <div class="mb-4">
+                            <h5>Acceptance Criteria</h5>
+                            <div class="preview-box markdown-content">
+                                @((MarkupString)RenderMarkdown(TicketUpdate.AcceptanceCriteria))
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- Edit Tab -->
+                @if (activeTab == "edit")
+                {
+                    <div class="tab-pane-content">
+                        <TicketUpdateEditor TicketUpdate="@TicketUpdate"
+                                          OnSaved="HandleSaved" />
+                    </div>
+                }
+
+                <!-- Compare Tab -->
+                @if (activeTab == "compare")
+                {
+                    <div class="tab-pane-content">
+                        <TicketDiffViewer OriginalTicket="@OriginalTicket"
+                                        TicketUpdate="@TicketUpdate" />
+                    </div>
+                }
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="alert alert-danger mt-3">
+                    <i class="bi bi-exclamation-triangle"></i> @errorMessage
+                </div>
+            }
+
+            <!-- Approve/Reject Actions -->
+            @if (!showRejectForm)
+            {
+                <div class="action-buttons mt-4 pt-4 border-top">
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success btn-lg" @onclick="HandleApprove" disabled="@isSubmitting">
+                            @if (isSubmitting)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            }
+                            <i class="bi bi-check-circle me-2"></i> Approve Update
+                        </button>
+                        <button class="btn btn-outline-danger btn-lg" @onclick="ShowRejectForm" disabled="@isSubmitting">
+                            <i class="bi bi-x-circle me-2"></i> Reject Update
+                        </button>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <strong>Approve</strong> to post the update to the ticket system, or <strong>Reject</strong> to request changes.
+                        </small>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="reject-form-container mt-4">
+                    <div class="mb-3">
+                        <label for="rejectionReason" class="form-label">
+                            <strong>Rejection Reason</strong> <span class="text-danger">*</span>
+                        </label>
+                        <textarea id="rejectionReason"
+                                  class="form-control @(showRejectError ? "is-invalid" : "")"
+                                  rows="4"
+                                  @bind="rejectionReason"
+                                  placeholder="Please explain why you're rejecting this update. Be specific about what needs to be changed..."
+                                  disabled="@isSubmitting"></textarea>
+                        @if (showRejectError)
+                        {
+                            <div class="invalid-feedback d-block">
+                                Please provide a reason for rejecting the update.
+                            </div>
+                        }
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-danger" @onclick="ConfirmReject" disabled="@isSubmitting">
+                            @if (isSubmitting)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            }
+                            <i class="bi bi-x-circle me-2"></i> Confirm Rejection
+                        </button>
+                        <button class="btn btn-outline-secondary" @onclick="CancelReject" disabled="@isSubmitting">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Guid TicketId { get; set; }
+
+    [Parameter]
+    public TicketDto OriginalTicket { get; set; } = new();
+
+    [Parameter]
+    public EventCallback OnUpdateApproved { get; set; }
+
+    [Parameter]
+    public EventCallback OnUpdateRejected { get; set; }
+
+    private TicketUpdateDto? TicketUpdate;
+    private string activeTab = "preview";
+    private bool isLoading = true;
+    private bool isSubmitting;
+    private bool showRejectForm;
+    private bool showRejectError;
+    private string rejectionReason = string.Empty;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTicketUpdate();
+    }
+
+    private async Task LoadTicketUpdate()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+
+            TicketUpdate = await TicketService.GetLatestTicketUpdateAsync(TicketId);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading ticket update: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleApprove()
+    {
+        try
+        {
+            errorMessage = null;
+            isSubmitting = true;
+            StateHasChanged();
+
+            if (TicketUpdate != null)
+            {
+                await TicketService.ApproveTicketUpdateAsync(TicketUpdate.Id);
+                await OnUpdateApproved.InvokeAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error approving update: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ShowRejectForm()
+    {
+        showRejectForm = true;
+        showRejectError = false;
+        rejectionReason = string.Empty;
+        errorMessage = null;
+    }
+
+    private void CancelReject()
+    {
+        showRejectForm = false;
+        showRejectError = false;
+        rejectionReason = string.Empty;
+        errorMessage = null;
+    }
+
+    private async Task ConfirmReject()
+    {
+        if (string.IsNullOrWhiteSpace(rejectionReason))
+        {
+            showRejectError = true;
+            StateHasChanged();
+            return;
+        }
+
+        try
+        {
+            errorMessage = null;
+            showRejectError = false;
+            isSubmitting = true;
+            StateHasChanged();
+
+            if (TicketUpdate != null)
+            {
+                await TicketService.RejectTicketUpdateAsync(TicketUpdate.Id, rejectionReason);
+                await OnUpdateRejected.InvokeAsync();
+            }
+
+            // Reset form
+            showRejectForm = false;
+            rejectionReason = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error rejecting update: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleSaved()
+    {
+        // Reload the ticket update after save
+        await LoadTicketUpdate();
+        activeTab = "preview"; // Switch back to preview
+    }
+
+    private string RenderMarkdown(string markdown)
+    {
+        if (string.IsNullOrWhiteSpace(markdown))
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            var pipeline = new Markdig.MarkdownPipelineBuilder()
+                .UseAdvancedExtensions()
+                .Build();
+            return Markdig.Markdown.ToHtml(markdown, pipeline);
+        }
+        catch
+        {
+            // If markdown parsing fails, return the raw text
+            return System.Web.HttpUtility.HtmlEncode(markdown);
+        }
+    }
+}
+
+<style>
+    .preview-box {
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+    }
+
+    .success-criteria-preview {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        background-color: #ffffff;
+    }
+
+    .priority-group {
+        border-left: 3px solid #0d6efd;
+        padding-left: 1rem;
+    }
+
+    .priority-heading {
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: #495057;
+    }
+
+    .criterion-card {
+        padding: 0.75rem;
+        background-color: #f8f9fa;
+        border-radius: 0.25rem;
+    }
+
+    .criterion-badges {
+        margin-bottom: 0.5rem;
+    }
+
+    .criterion-description {
+        color: #212529;
+    }
+
+    .markdown-content {
+        font-size: 0.95rem;
+    }
+
+    .markdown-content h1,
+    .markdown-content h2,
+    .markdown-content h3,
+    .markdown-content h4 {
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .markdown-content ul,
+    .markdown-content ol {
+        margin-bottom: 1rem;
+        padding-left: 2rem;
+    }
+
+    .markdown-content code {
+        background-color: #f5f5f5;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.2rem;
+        font-size: 0.9em;
+    }
+
+    .markdown-content pre {
+        background-color: #f5f5f5;
+        padding: 1rem;
+        border-radius: 0.375rem;
+        overflow-x: auto;
+    }
+
+    .markdown-content pre code {
+        background-color: transparent;
+        padding: 0;
+    }
+
+    .action-buttons {
+        margin-top: 2rem;
+    }
+
+    .reject-form-container {
+        padding: 1rem;
+        background-color: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 0.375rem;
+    }
+
+    .tab-pane-content {
+        min-height: 300px;
+    }
+</style>

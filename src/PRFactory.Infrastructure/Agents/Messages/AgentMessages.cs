@@ -162,6 +162,45 @@ namespace PRFactory.Infrastructure.Agents.Messages
         public DateTime Timestamp { get; init; } = DateTime.UtcNow;
     }
 
+    // Ticket update messages
+    public record TicketUpdateGeneratedMessage(
+        Guid TicketId,
+        Guid TicketUpdateId,
+        int Version,
+        string UpdatedTitle
+    ) : IAgentMessage
+    {
+        public DateTime Timestamp { get; init; } = DateTime.UtcNow;
+    }
+
+    public record TicketUpdateApprovedMessage(
+        Guid TicketId,
+        Guid TicketUpdateId,
+        DateTime ApprovedAt,
+        string ApprovedBy
+    ) : IAgentMessage
+    {
+        public DateTime Timestamp { get; init; } = DateTime.UtcNow;
+    }
+
+    public record TicketUpdateRejectedMessage(
+        Guid TicketId,
+        Guid TicketUpdateId,
+        string Reason
+    ) : IAgentMessage
+    {
+        public DateTime Timestamp { get; init; } = DateTime.UtcNow;
+    }
+
+    public record TicketUpdatePostedMessage(
+        Guid TicketId,
+        Guid TicketUpdateId,
+        DateTime PostedAt
+    ) : IAgentMessage
+    {
+        public DateTime Timestamp { get; init; } = DateTime.UtcNow;
+    }
+
     // Event messages for graph transitions
     public record RefinementCompleteEvent(
         Guid TicketId,

@@ -1,0 +1,234 @@
+@using PRFactory.Web.Models
+
+<div class="ticket-diff-viewer">
+    <div class="row">
+        <!-- Original Ticket -->
+        <div class="col-md-6">
+            <div class="diff-panel original-panel">
+                <div class="diff-header">
+                    <h5><i class="bi bi-file-earmark"></i> Original Ticket</h5>
+                </div>
+                <div class="diff-content">
+                    <div class="mb-3">
+                        <label class="text-muted">Title</label>
+                        <div class="content-box">
+                            @OriginalTicket.Title
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="text-muted">Description</label>
+                        <div class="content-box markdown-content">
+                            @((MarkupString)RenderMarkdown(OriginalTicket.Description))
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="text-muted">Success Criteria</label>
+                        <div class="content-box">
+                            <em class="text-muted">Not defined in original ticket</em>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="text-muted">Acceptance Criteria</label>
+                        <div class="content-box">
+                            <em class="text-muted">Not defined in original ticket</em>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Updated Ticket -->
+        <div class="col-md-6">
+            <div class="diff-panel updated-panel">
+                <div class="diff-header">
+                    <h5><i class="bi bi-file-earmark-check"></i> Updated Ticket</h5>
+                </div>
+                <div class="diff-content">
+                    <div class="mb-3">
+                        <label class="text-muted">Title</label>
+                        <div class="content-box @(HasTitleChanged() ? "changed" : "")">
+                            @TicketUpdate.UpdatedTitle
+                            @if (HasTitleChanged())
+                            {
+                                <span class="badge bg-warning text-dark ms-2">Changed</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="text-muted">Description</label>
+                        <div class="content-box markdown-content @(HasDescriptionChanged() ? "changed" : "")">
+                            @((MarkupString)RenderMarkdown(TicketUpdate.UpdatedDescription))
+                            @if (HasDescriptionChanged())
+                            {
+                                <span class="badge bg-warning text-dark ms-2">Changed</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="text-muted">Success Criteria</label>
+                        <div class="content-box changed">
+                            @if (TicketUpdate.SuccessCriteria != null && TicketUpdate.SuccessCriteria.Any())
+                            {
+                                <span class="badge bg-success text-white mb-2">Added</span>
+                                @foreach (var criterion in TicketUpdate.SuccessCriteria.OrderBy(sc => sc.Priority))
+                                {
+                                    <div class="criterion-item mb-2">
+                                        <span class="@criterion.PriorityBadgeClass me-1">@criterion.PriorityLabel</span>
+                                        <span class="badge bg-secondary me-1">@criterion.CategoryDisplay</span>
+                                        @if (criterion.IsTestable)
+                                        {
+                                            <span class="badge bg-info me-1">Testable</span>
+                                        }
+                                        <div class="mt-1">@criterion.Description</div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <em class="text-muted">No success criteria</em>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="text-muted">Acceptance Criteria</label>
+                        <div class="content-box markdown-content changed">
+                            <span class="badge bg-success text-white mb-2">Added</span>
+                            @((MarkupString)RenderMarkdown(TicketUpdate.AcceptanceCriteria))
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public TicketDto OriginalTicket { get; set; } = new();
+
+    [Parameter]
+    public TicketUpdateDto TicketUpdate { get; set; } = new();
+
+    private bool HasTitleChanged()
+    {
+        return !string.Equals(OriginalTicket.Title, TicketUpdate.UpdatedTitle, StringComparison.Ordinal);
+    }
+
+    private bool HasDescriptionChanged()
+    {
+        return !string.Equals(OriginalTicket.Description, TicketUpdate.UpdatedDescription, StringComparison.Ordinal);
+    }
+
+    private string RenderMarkdown(string markdown)
+    {
+        if (string.IsNullOrWhiteSpace(markdown))
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            var pipeline = new Markdig.MarkdownPipelineBuilder()
+                .UseAdvancedExtensions()
+                .Build();
+            return Markdig.Markdown.ToHtml(markdown, pipeline);
+        }
+        catch
+        {
+            // If markdown parsing fails, return the raw text
+            return System.Web.HttpUtility.HtmlEncode(markdown);
+        }
+    }
+}
+
+<style>
+    .ticket-diff-viewer {
+        padding: 1rem;
+    }
+
+    .diff-panel {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        height: 100%;
+    }
+
+    .original-panel {
+        background-color: #fff8f0;
+    }
+
+    .updated-panel {
+        background-color: #f0f8ff;
+    }
+
+    .diff-header {
+        padding: 1rem;
+        border-bottom: 2px solid #dee2e6;
+        background-color: white;
+        border-radius: 0.375rem 0.375rem 0 0;
+    }
+
+    .diff-header h5 {
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .diff-content {
+        padding: 1rem;
+    }
+
+    .content-box {
+        padding: 0.75rem;
+        background-color: white;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        min-height: 50px;
+    }
+
+    .content-box.changed {
+        border-left: 4px solid #ffc107;
+        background-color: #fffbf0;
+    }
+
+    .criterion-item {
+        padding: 0.5rem;
+        background-color: #f8f9fa;
+        border-radius: 0.25rem;
+    }
+
+    .markdown-content {
+        font-size: 0.95rem;
+    }
+
+    .markdown-content h1,
+    .markdown-content h2,
+    .markdown-content h3,
+    .markdown-content h4 {
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .markdown-content ul,
+    .markdown-content ol {
+        margin-bottom: 0.5rem;
+        padding-left: 1.5rem;
+    }
+
+    .markdown-content code {
+        background-color: #f5f5f5;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.2rem;
+    }
+
+    .markdown-content pre {
+        background-color: #f5f5f5;
+        padding: 0.75rem;
+        border-radius: 0.25rem;
+        overflow-x: auto;
+    }
+</style>

@@ -8,6 +8,7 @@ using System.Text.Json;
 using TenantConfig = PRFactory.Infrastructure.Persistence.Configurations.TenantConfiguration;
 using RepositoryConfig = PRFactory.Infrastructure.Persistence.Configurations.RepositoryConfiguration;
 using TicketConfig = PRFactory.Infrastructure.Persistence.Configurations.TicketConfiguration;
+using TicketUpdateConfig = PRFactory.Infrastructure.Persistence.Configurations.TicketUpdateConfiguration;
 using WorkflowEventConfig = PRFactory.Infrastructure.Persistence.Configurations.WorkflowEventConfiguration;
 using WorkflowStateConfig = PRFactory.Infrastructure.Persistence.Configurations.WorkflowStateConfiguration;
 using CheckpointConfig = PRFactory.Infrastructure.Persistence.Configurations.CheckpointConfiguration;
@@ -37,6 +38,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Repository> Repositories => Set<Repository>();
     public DbSet<Ticket> Tickets => Set<Ticket>();
+    public DbSet<TicketUpdate> TicketUpdates => Set<TicketUpdate>();
     public DbSet<WorkflowEvent> WorkflowEvents => Set<WorkflowEvent>();
     public DbSet<WorkflowStateEntity> WorkflowStates => Set<WorkflowStateEntity>();
     public DbSet<Checkpoint> Checkpoints => Set<Checkpoint>();
@@ -49,6 +51,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new TenantConfig(_encryptionService));
         modelBuilder.ApplyConfiguration(new RepositoryConfig(_encryptionService));
         modelBuilder.ApplyConfiguration(new TicketConfig());
+        modelBuilder.ApplyConfiguration(new TicketUpdateConfig());
         modelBuilder.ApplyConfiguration(new WorkflowEventConfig());
         modelBuilder.ApplyConfiguration(new WorkflowStateConfig());
         modelBuilder.ApplyConfiguration(new CheckpointConfig());

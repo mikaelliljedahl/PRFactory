@@ -53,7 +53,14 @@ else
             <div class="col-md-8">
                 <TicketHeader Ticket="@ticket" />
 
-                @if (ticket.State == WorkflowState.QuestionsPosted || ticket.State == WorkflowState.AwaitingAnswers)
+                @if (ticket.State == WorkflowState.TicketUpdateUnderReview || ticket.State == WorkflowState.TicketUpdateGenerated)
+                {
+                    <TicketUpdatePreview TicketId="@ticket.Id"
+                                        OriginalTicket="@ticket"
+                                        OnUpdateApproved="HandleTicketUpdateApproved"
+                                        OnUpdateRejected="HandleTicketUpdateRejected" />
+                }
+                else if (ticket.State == WorkflowState.QuestionsPosted || ticket.State == WorkflowState.AwaitingAnswers)
                 {
                     <QuestionAnswerForm TicketId="@ticket.Id"
                                       Questions="@questions"
@@ -299,6 +306,18 @@ else
             // Log but don't fail the page load
             Console.WriteLine($"Error initializing SignalR: {ex.Message}");
         }
+    }
+
+    private async Task HandleTicketUpdateApproved()
+    {
+        await LoadTicket();
+        await LoadEvents();
+    }
+
+    private async Task HandleTicketUpdateRejected()
+    {
+        await LoadTicket();
+        await LoadEvents();
     }
 
     private async Task HandleAnswersSubmitted()

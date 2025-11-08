@@ -147,7 +147,7 @@ public class TicketUpdateService : ITicketUpdateService
         await _ticketUpdateRepository.UpdateAsync(ticketUpdate, cancellationToken);
 
         // Update ticket workflow state
-        ticket.UpdateWorkflowState(WorkflowState.TicketUpdateApproved);
+        ticket.TransitionTo(PRFactory.Domain.ValueObjects.WorkflowState.TicketUpdateApproved);
         await _ticketRepository.UpdateAsync(ticket, cancellationToken);
 
         _logger.LogInformation(
@@ -211,7 +211,7 @@ public class TicketUpdateService : ITicketUpdateService
         await _ticketUpdateRepository.UpdateAsync(ticketUpdate, cancellationToken);
 
         // Update ticket workflow state
-        ticket.UpdateWorkflowState(WorkflowState.TicketUpdateRejected);
+        ticket.TransitionTo(PRFactory.Domain.ValueObjects.WorkflowState.TicketUpdateRejected);
         await _ticketRepository.UpdateAsync(ticket, cancellationToken);
 
         _logger.LogInformation(

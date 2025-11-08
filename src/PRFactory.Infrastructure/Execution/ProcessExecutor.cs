@@ -161,7 +161,7 @@ public class ProcessExecutor : IProcessExecutor
                     {
                         _logger.LogWarning(
                             "Process {FileName} timed out after {TimeoutSeconds} seconds",
-                            fileName,
+                            startInfo.FileName,
                             timeoutSeconds.Value);
 
                         KillProcessTree(process);
@@ -191,7 +191,7 @@ public class ProcessExecutor : IProcessExecutor
 
             _logger.LogDebug(
                 "Process {FileName} completed with exit code {ExitCode} in {Duration}ms",
-                fileName,
+                startInfo.FileName,
                 process.ExitCode,
                 duration.TotalMilliseconds);
 
@@ -206,7 +206,7 @@ public class ProcessExecutor : IProcessExecutor
         }
         catch (OperationCanceledException)
         {
-            _logger.LogWarning("Process {FileName} was cancelled", fileName);
+            _logger.LogWarning("Process {FileName} was cancelled", startInfo.FileName);
 
             KillProcessTree(process);
 
@@ -221,7 +221,7 @@ public class ProcessExecutor : IProcessExecutor
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error executing process {FileName}", fileName);
+            _logger.LogError(ex, "Error executing process {FileName}", startInfo.FileName);
 
             return new ProcessExecutionResult
             {

@@ -117,7 +117,7 @@ public class TicketUpdatePostAgent : BaseAgent
             await _ticketUpdateRepository.UpdateAsync(ticketUpdate, cancellationToken);
 
             // Update ticket workflow state
-            context.Ticket.UpdateWorkflowState(WorkflowState.TicketUpdatePosted);
+            context.Ticket.TransitionTo(WorkflowState.TicketUpdatePosted);
             await _ticketRepository.UpdateAsync(context.Ticket, cancellationToken);
 
             // Store posted info in context

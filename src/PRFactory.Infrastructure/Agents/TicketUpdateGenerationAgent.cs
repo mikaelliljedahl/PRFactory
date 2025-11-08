@@ -173,7 +173,7 @@ Please address the rejection feedback in this updated version.";
             await _ticketUpdateRepository.CreateAsync(ticketUpdate, cancellationToken);
 
             // Update ticket workflow state
-            context.Ticket.UpdateWorkflowState(WorkflowState.TicketUpdateGenerated);
+            context.Ticket.TransitionTo(WorkflowState.TicketUpdateGenerated);
             await _ticketRepository.UpdateAsync(context.Ticket, cancellationToken);
 
             // Store in context

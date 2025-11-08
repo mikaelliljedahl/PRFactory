@@ -150,6 +150,11 @@ public class Ticket
     /// </summary>
     public List<WorkflowEvent> Events { get; private set; } = new();
 
+    /// <summary>
+    /// Ticket updates generated during the refinement workflow
+    /// </summary>
+    public List<TicketUpdate> TicketUpdates { get; private set; } = new();
+
     private Ticket() { }
 
     /// <summary>
@@ -242,8 +247,13 @@ public class Ticket
     {
         return State switch
         {
-            WorkflowState.Triggered => new() { WorkflowState.Analyzing, WorkflowState.Failed },
-            WorkflowState.Analyzing => new() { WorkflowState.QuestionsPosted, WorkflowState.Failed },
+            WorkflowState.Triggered => new() { WorkflowState.Analyzing, WorkflowState.Failed, WorkflowState.Cancelled },
+            WorkflowState.Analyzing => new() { WorkflowState.TicketUpdateGenerated, WorkflowState.Failed },
+            WorkflowState.TicketUpdateGenerated => new() { WorkflowState.TicketUpdateUnderReview },
+            WorkflowState.TicketUpdateUnderReview => new() { WorkflowState.TicketUpdateApproved, WorkflowState.TicketUpdateRejected, WorkflowState.Cancelled },
+            WorkflowState.TicketUpdateRejected => new() { WorkflowState.Analyzing },
+            WorkflowState.TicketUpdateApproved => new() { WorkflowState.TicketUpdatePosted },
+            WorkflowState.TicketUpdatePosted => new() { WorkflowState.QuestionsPosted, WorkflowState.Planning },
             WorkflowState.QuestionsPosted => new() { WorkflowState.AwaitingAnswers },
             WorkflowState.AwaitingAnswers => new() { WorkflowState.AnswersReceived, WorkflowState.Cancelled },
             WorkflowState.AnswersReceived => new() { WorkflowState.Planning },

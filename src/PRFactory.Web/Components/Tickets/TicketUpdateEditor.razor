@@ -1,0 +1,88 @@
+@using PRFactory.Web.Models
+
+<div class="ticket-update-editor">
+    <EditForm Model="@TicketUpdate" OnValidSubmit="HandleSave">
+        <DataAnnotationsValidator />
+
+        <div class="mb-3">
+            <label for="updatedTitle" class="form-label">
+                <strong>Updated Title</strong> <span class="text-danger">*</span>
+            </label>
+            <input id="updatedTitle"
+                   type="text"
+                   class="form-control"
+                   @bind="TicketUpdate.UpdatedTitle"
+                   placeholder="Enter the refined ticket title..."
+                   required />
+            <ValidationMessage For="@(() => TicketUpdate.UpdatedTitle)" />
+        </div>
+
+        <div class="mb-3">
+            <label for="updatedDescription" class="form-label">
+                <strong>Updated Description</strong> <span class="text-danger">*</span>
+                <small class="text-muted">(Markdown supported)</small>
+            </label>
+            <textarea id="updatedDescription"
+                      class="form-control"
+                      rows="8"
+                      @bind="TicketUpdate.UpdatedDescription"
+                      placeholder="Enter the refined ticket description (supports markdown)..."
+                      required></textarea>
+            <ValidationMessage For="@(() => TicketUpdate.UpdatedDescription)" />
+        </div>
+
+        <div class="mb-3">
+            <SuccessCriteriaEditor SuccessCriteria="@TicketUpdate.SuccessCriteria"
+                                   SuccessCriteriaChanged="HandleSuccessCriteriaChanged" />
+        </div>
+
+        <div class="mb-3">
+            <label for="acceptanceCriteria" class="form-label">
+                <strong>Acceptance Criteria</strong> <span class="text-danger">*</span>
+                <small class="text-muted">(Markdown supported)</small>
+            </label>
+            <textarea id="acceptanceCriteria"
+                      class="form-control"
+                      rows="6"
+                      @bind="TicketUpdate.AcceptanceCriteria"
+                      placeholder="Enter acceptance criteria (supports markdown)..."
+                      required></textarea>
+            <ValidationMessage For="@(() => TicketUpdate.AcceptanceCriteria)" />
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle"></i> @errorMessage
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(successMessage))
+        {
+            <div class="alert alert-success">
+                <i class="bi bi-check-circle"></i> @successMessage
+            </div>
+        }
+
+        <div class="d-flex justify-content-end gap-2">
+            <button type="submit" class="btn btn-primary" disabled="@isSaving">
+                @if (isSaving)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    <span>Saving...</span>
+                }
+                else
+                {
+                    <i class="bi bi-save me-2"></i>
+                    <span>Save Draft</span>
+                }
+            </button>
+        </div>
+    </EditForm>
+</div>
+
+<style>
+    .ticket-update-editor {
+        padding: 1rem;
+    }
+</style>

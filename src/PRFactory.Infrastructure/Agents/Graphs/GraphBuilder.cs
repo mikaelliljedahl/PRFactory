@@ -293,9 +293,9 @@ namespace PRFactory.Infrastructure.Agents.Graphs
     /// </summary>
     public class ConditionalNode : GraphNode
     {
-        public Func<GraphContext, IAgentMessage, bool> Condition { get; set; }
-        public GraphNode TrueBranch { get; set; }
-        public GraphNode FalseBranch { get; set; }
+        public Func<GraphContext, IAgentMessage, bool> Condition { get; set; } = null!;
+        public GraphNode TrueBranch { get; set; } = null!;
+        public GraphNode? FalseBranch { get; set; }
 
         public override async Task<IAgentMessage> ExecuteAsync(
             IAgentMessage inputMessage,
@@ -341,7 +341,7 @@ namespace PRFactory.Infrastructure.Agents.Graphs
     /// </summary>
     public class CheckpointNode : GraphNode
     {
-        public string CheckpointName { get; set; }
+        public string CheckpointName { get; set; } = string.Empty;
 
         public override async Task<IAgentMessage> ExecuteAsync(
             IAgentMessage inputMessage,

@@ -94,6 +94,11 @@ public class TicketDto
     {
         WorkflowState.Triggered => "badge bg-secondary",
         WorkflowState.Analyzing => "badge bg-info",
+        WorkflowState.TicketUpdateGenerated => "badge bg-info",
+        WorkflowState.TicketUpdateUnderReview => "badge bg-primary",
+        WorkflowState.TicketUpdateRejected => "badge bg-danger",
+        WorkflowState.TicketUpdateApproved => "badge bg-success",
+        WorkflowState.TicketUpdatePosted => "badge bg-success",
         WorkflowState.QuestionsPosted => "badge bg-warning",
         WorkflowState.AwaitingAnswers => "badge bg-warning",
         WorkflowState.AnswersReceived => "badge bg-info",
@@ -119,6 +124,11 @@ public class TicketDto
     {
         WorkflowState.Triggered => "Triggered",
         WorkflowState.Analyzing => "Analyzing",
+        WorkflowState.TicketUpdateGenerated => "Ticket Update Generated",
+        WorkflowState.TicketUpdateUnderReview => "Ticket Update Under Review",
+        WorkflowState.TicketUpdateRejected => "Ticket Update Rejected",
+        WorkflowState.TicketUpdateApproved => "Ticket Update Approved",
+        WorkflowState.TicketUpdatePosted => "Ticket Update Posted",
         WorkflowState.QuestionsPosted => "Questions Posted",
         WorkflowState.AwaitingAnswers => "Awaiting Answers",
         WorkflowState.AnswersReceived => "Answers Received",

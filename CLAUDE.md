@@ -426,6 +426,231 @@ public partial class TicketStatusSelector
 }
 ```
 
+#### Blazor Server Service Architecture (CRITICAL)
+
+**This is BLAZOR SERVER, NOT Blazor WebAssembly.**
+
+PRFactory uses **Blazor Server**, which means the application runs on the server and maintains a SignalR connection to the browser. This has **critical architectural implications**:
+
+##### NEVER Use HTTP Calls Within Blazor Server
+
+**❌ WRONG PATTERN** (makes unnecessary HTTP calls within the same process):
+```csharp
+// TicketService.cs - BAD!
+public class TicketService
+{
+    private readonly HttpClient _httpClient;
+
+    public async Task<TicketUpdate> GetLatestUpdateAsync(Guid ticketId)
+    {
+        // WRONG: Making HTTP call to API controller in the same process!
+        return await _httpClient.GetFromJsonAsync<TicketUpdate>($"/api/tickets/{ticketId}/updates/latest");
+    }
+}
+
+// Component.razor.cs
+public partial class MyComponent
+{
+    [Inject] private ITicketService TicketService { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // This actually makes HTTP call -> serialization -> API controller -> deserialization
+        // All within the same process! Massive overhead.
+        var update = await TicketService.GetLatestUpdateAsync(ticketId);
+    }
+}
+```
+
+**✅ CORRECT PATTERN** (uses dependency injection directly):
+```csharp
+// Core/Application/Services/ITicketUpdateService.cs
+public interface ITicketUpdateService
+{
+    Task<TicketUpdate?> GetLatestUpdateAsync(Guid ticketId);
+    Task ApproveUpdateAsync(Guid ticketUpdateId, string? approvedBy);
+    Task RejectUpdateAsync(Guid ticketUpdateId, string reason, bool regenerate);
+}
+
+// Infrastructure/Application/TicketUpdateService.cs
+public class TicketUpdateService : ITicketUpdateService
+{
+    private readonly ITicketUpdateRepository _ticketUpdateRepo;
+    private readonly IWorkflowOrchestrator _orchestrator;
+
+    public TicketUpdateService(
+        ITicketUpdateRepository ticketUpdateRepo,
+        IWorkflowOrchestrator orchestrator)
+    {
+        _ticketUpdateRepo = ticketUpdateRepo;
+        _orchestrator = orchestrator;
+    }
+
+    public async Task<TicketUpdate?> GetLatestUpdateAsync(Guid ticketId)
+    {
+        // Direct repository access - no HTTP overhead!
+        return await _ticketUpdateRepo.GetLatestDraftByTicketIdAsync(ticketId);
+    }
+
+    public async Task ApproveUpdateAsync(Guid ticketUpdateId, string? approvedBy)
+    {
+        var update = await _ticketUpdateRepo.GetByIdAsync(ticketUpdateId);
+        update.Approve();
+        await _ticketUpdateRepo.UpdateAsync(update);
+
+        // Trigger workflow
+        await _orchestrator.ResumeAsync(
+            update.TicketId,
+            new TicketUpdateApprovedMessage(ticketUpdateId, DateTime.UtcNow, approvedBy));
+    }
+}
+
+// Web/Services/TicketService.cs (Facade for Blazor components)
+public class TicketService : ITicketService
+{
+    private readonly ITicketUpdateService _ticketUpdateService;
+
+    public async Task<TicketUpdateDto?> GetLatestTicketUpdateAsync(Guid ticketId)
+    {
+        var entity = await _ticketUpdateService.GetLatestUpdateAsync(ticketId);
+        return entity != null ? MapToDto(entity) : null;
+    }
+}
+
+// Component.razor.cs
+public partial class MyComponent
+{
+    [Inject] private ITicketService TicketService { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Direct service call - no HTTP serialization!
+        var update = await TicketService.GetLatestTicketUpdateAsync(ticketId);
+    }
+}
+```
+
+##### Service Layer Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                 Blazor Server Components                     │
+│           (TicketUpdatePreview.razor.cs)                     │
+└────────────────────────┬────────────────────────────────────┘
+                         │ @inject ITicketService
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│          Web Layer Service (Facade Pattern)                  │
+│              PRFactory.Web/Services/                         │
+│               TicketService.cs                               │
+│                                                               │
+│   - Converts between DTOs and domain entities                │
+│   - Facade for multiple application services                 │
+│   - Injected into Blazor components                          │
+└────────────────────────┬────────────────────────────────────┘
+                         │ Injects application services
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│        Application Service Layer (Business Logic)            │
+│         PRFactory.Infrastructure/Application/                │
+│            TicketUpdateService.cs                            │
+│                                                               │
+│   - Encapsulates business logic                              │
+│   - Coordinates multiple repositories                        │
+│   - Triggers workflow orchestration                          │
+│   - Shared by Blazor AND API controllers                     │
+└────────────────────────┬────────────────────────────────────┘
+                         │ Injects repositories & orchestrator
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│              Infrastructure Layer                            │
+│       TicketUpdateRepository, WorkflowOrchestrator          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+##### When to Use API Controllers
+
+**API Controllers (`PRFactory.Api/Controllers/*`) are ONLY for external clients:**
+
+```csharp
+/// <summary>
+/// API Controller for ticket updates.
+///
+/// ⚠️ IMPORTANT: This controller is for EXTERNAL clients only:
+///   - Jira webhooks (@claude mentions)
+///   - Mobile apps
+///   - Third-party integrations
+///   - Future public API
+///
+/// ❌ DO NOT use from Blazor components - inject ITicketUpdateService directly!
+/// </summary>
+[ApiController]
+[Route("api/ticket-updates")]
+public class TicketUpdatesController : ControllerBase
+{
+    private readonly ITicketUpdateService _ticketUpdateService;
+
+    // Controller delegates to same service Blazor uses
+    [HttpPost("{id}/approve")]
+    public async Task<IActionResult> Approve(Guid id)
+    {
+        await _ticketUpdateService.ApproveUpdateAsync(id, User.Identity?.Name);
+        return Ok();
+    }
+}
+```
+
+**External clients flow:**
+```
+External Client (Jira webhook)
+  → HTTP POST
+    → API Controller
+      → ITicketUpdateService (same service Blazor uses)
+        → Repository
+```
+
+**Blazor Server flow:**
+```
+Blazor Component
+  → ITicketService (Web facade)
+    → ITicketUpdateService (same service API uses)
+      → Repository
+```
+
+##### Benefits of This Architecture
+
+1. **Performance**: No HTTP serialization/deserialization overhead within Blazor Server
+2. **Shared Logic**: Both Blazor and API use same `ITicketUpdateService` implementation
+3. **Testability**: Application services can be unit tested in isolation
+4. **Consistency**: Business logic in one place, consumed by multiple clients
+5. **Type Safety**: No need to convert to/from JSON within the same process
+6. **Debugging**: Easier to debug direct method calls vs HTTP requests
+7. **Transactions**: Can use database transactions across repository calls
+
+##### Rules for PRFactory
+
+**✅ DO:**
+- Inject application services (e.g., `ITicketUpdateService`) from `PRFactory.Infrastructure/Application/`
+- Use Web services (`PRFactory.Web/Services/`) as facades for Blazor components
+- Have API controllers delegate to application services
+- Keep business logic in application service layer
+- Convert entities to DTOs in Web layer service facades
+
+**❌ DO NOT:**
+- Make HTTP calls from Blazor components to API controllers in same process
+- Use `HttpClient` to call `/api/*` endpoints from Blazor Server
+- Put business logic in API controllers (they should delegate to services)
+- Put business logic in Web service facades (they should delegate to application services)
+- Skip the application service layer and inject repositories directly into Web services
+
+**File Locations:**
+- Application Services: `/PRFactory.Infrastructure/Application/` (e.g., `TicketUpdateService.cs`)
+- Application Service Interfaces: `/PRFactory.Core/Application/Services/` (e.g., `ITicketUpdateService.cs`)
+- Web Service Facades: `/PRFactory.Web/Services/` (e.g., `TicketService.cs`)
+- API Controllers: `/PRFactory.Api/Controllers/` (for external clients only)
+
+---
+
 #### Key Files
 
 **UI Component Library:**

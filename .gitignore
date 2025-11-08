@@ -423,3 +423,10 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Build verification script output files
+build_output.txt
+restore.log
+build.log
+global.json
+NuGet.config

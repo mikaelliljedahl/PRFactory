@@ -3,21 +3,22 @@ using Microsoft.Extensions.Logging;
 using PRFactory.Domain.Interfaces;
 using PRFactory.Infrastructure.Agents.Base;
 using DomainCheckpoint = PRFactory.Domain.Entities.Checkpoint;
+using DomainCheckpointRepository = PRFactory.Domain.Interfaces.ICheckpointRepository;
 
 namespace PRFactory.Infrastructure.Agents.Adapters;
 
 /// <summary>
-/// Adapter that bridges ICheckpointStore (used by AgentGraphBase) and ICheckpointRepository (domain layer).
-/// This adapter converts between the DTO Checkpoint class (in AgentGraphBase) and the domain Checkpoint entity.
+/// Adapter that bridges ICheckpointStore (used by IAgentWorkflowInterfaces) and ICheckpointRepository (domain layer).
+/// This adapter converts between CheckpointData and the domain Checkpoint entity.
 /// </summary>
 public class GraphCheckpointStoreAdapter : ICheckpointStore
 {
-    private readonly ICheckpointRepository _checkpointRepository;
+    private readonly DomainCheckpointRepository _checkpointRepository;
     private readonly ILogger<GraphCheckpointStoreAdapter> _logger;
     private Guid? _currentTenantId;
 
     public GraphCheckpointStoreAdapter(
-        ICheckpointRepository checkpointRepository,
+        DomainCheckpointRepository checkpointRepository,
         ILogger<GraphCheckpointStoreAdapter> logger)
     {
         _checkpointRepository = checkpointRepository ?? throw new ArgumentNullException(nameof(checkpointRepository));
@@ -33,11 +34,61 @@ public class GraphCheckpointStoreAdapter : ICheckpointStore
         _currentTenantId = tenantId;
     }
 
-    public async Task SaveCheckpointAsync(
+    public async Task<CheckpointData?> LoadCheckpointAsync(
+        Guid checkpointId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var domainCheckpoint = await _checkpointRepository.GetCheckpointByIdAsync(checkpointId, cancellationToken);
+
+            if (domainCheckpoint == null)
+            {
+                _logger.LogDebug("No checkpoint found with ID {CheckpointId}", checkpointId);
+                return null;
+            }
+
+            return MapToCheckpointData(domainCheckpoint);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load checkpoint {CheckpointId}", checkpointId);
+            throw;
+        }
+    }
+
+    public async Task<CheckpointData?> LoadLatestCheckpointAsync(
         Guid ticketId,
-        string graphId,
-        string checkpointId,
-        Dictionary<string, object> state)
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Get all checkpoints for the ticket, ordered by creation date
+            var checkpoints = await _checkpointRepository.GetCheckpointsByTicketIdAsync(ticketId, cancellationToken);
+
+            var latestCheckpoint = checkpoints
+                .Where(c => c.Status == PRFactory.Domain.ValueObjects.CheckpointStatus.Active)
+                .OrderByDescending(c => c.CreatedAt)
+                .FirstOrDefault();
+
+            if (latestCheckpoint == null)
+            {
+                _logger.LogDebug("No active checkpoint found for ticket {TicketId}", ticketId);
+                return null;
+            }
+
+            return MapToCheckpointData(latestCheckpoint);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load latest checkpoint for ticket {TicketId}", ticketId);
+            throw;
+        }
+    }
+
+    public async Task SaveCheckpointAsync(
+        CheckpointData checkpoint,
+        CancellationToken cancellationToken)
     {
         if (_currentTenantId == null)
         {
@@ -48,132 +99,46 @@ public class GraphCheckpointStoreAdapter : ICheckpointStore
         try
         {
             // Serialize state to JSON
-            var stateJson = JsonSerializer.Serialize(state);
-
-            // Extract optional fields from state if available
-            string? agentName = null;
-            string? nextAgentType = null;
-
-            if (state.TryGetValue("current_agent", out var currentAgent))
-            {
-                agentName = currentAgent?.ToString();
-            }
-
-            if (state.TryGetValue("next_agent_type", out var nextAgent))
-            {
-                nextAgentType = nextAgent?.ToString();
-            }
+            var stateJson = JsonSerializer.Serialize(checkpoint.State);
 
             // Create domain checkpoint entity
-            var checkpoint = DomainCheckpoint.Create(
+            var domainCheckpoint = DomainCheckpoint.Create(
                 tenantId: _currentTenantId.Value,
-                ticketId: ticketId,
-                graphId: graphId,
-                checkpointId: checkpointId,
+                ticketId: checkpoint.CheckpointId, // Using CheckpointId as TicketId for now
+                graphId: "WorkflowGraph", // Default graph ID
+                checkpointId: checkpoint.CheckpointId.ToString(),
                 stateJson: stateJson,
-                agentName: agentName,
-                nextAgentType: nextAgentType);
+                agentName: checkpoint.NextAgentType,
+                nextAgentType: checkpoint.NextAgentType);
 
             // Save to repository
-            await _checkpointRepository.SaveCheckpointAsync(checkpoint);
+            await _checkpointRepository.SaveCheckpointAsync(domainCheckpoint, cancellationToken);
 
             _logger.LogDebug(
-                "Saved checkpoint {CheckpointId} for ticket {TicketId} in graph {GraphId}",
-                checkpointId, ticketId, graphId);
+                "Saved checkpoint {CheckpointId} for ticket",
+                checkpoint.CheckpointId);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Failed to save checkpoint {CheckpointId} for ticket {TicketId} in graph {GraphId}",
-                checkpointId, ticketId, graphId);
+                "Failed to save checkpoint {CheckpointId}",
+                checkpoint.CheckpointId);
             throw;
         }
     }
 
-    public async Task<Checkpoint?> LoadCheckpointAsync(Guid ticketId, string graphId)
+    private CheckpointData MapToCheckpointData(DomainCheckpoint domainCheckpoint)
     {
-        try
+        // Deserialize state from JSON
+        var state = JsonSerializer.Deserialize<Dictionary<string, object>>(domainCheckpoint.StateJson)
+            ?? new Dictionary<string, object>();
+
+        return new CheckpointData
         {
-            var domainCheckpoint = await _checkpointRepository.GetLatestCheckpointAsync(ticketId, graphId);
-
-            if (domainCheckpoint == null)
-            {
-                _logger.LogDebug(
-                    "No checkpoint found for ticket {TicketId} in graph {GraphId}",
-                    ticketId, graphId);
-                return null;
-            }
-
-            // Deserialize state from JSON
-            var state = JsonSerializer.Deserialize<Dictionary<string, object>>(domainCheckpoint.StateJson)
-                ?? new Dictionary<string, object>();
-
-            // Convert domain checkpoint to DTO
-            var checkpoint = new Checkpoint
-            {
-                Id = domainCheckpoint.Id,
-                TicketId = domainCheckpoint.TicketId,
-                GraphId = domainCheckpoint.GraphId,
-                CheckpointId = domainCheckpoint.CheckpointId,
-                State = state,
-                CreatedAt = domainCheckpoint.CreatedAt
-            };
-
-            _logger.LogDebug(
-                "Loaded checkpoint {CheckpointId} for ticket {TicketId} in graph {GraphId}",
-                checkpoint.CheckpointId, ticketId, graphId);
-
-            return checkpoint;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Failed to load checkpoint for ticket {TicketId} in graph {GraphId}",
-                ticketId, graphId);
-            throw;
-        }
-    }
-
-    public async Task<List<Checkpoint>> GetCheckpointHistoryAsync(Guid ticketId, string graphId)
-    {
-        try
-        {
-            var domainCheckpoints = await _checkpointRepository.GetCheckpointHistoryAsync(ticketId, graphId);
-
-            var checkpoints = new List<Checkpoint>();
-
-            foreach (var domainCheckpoint in domainCheckpoints)
-            {
-                // Deserialize state from JSON
-                var state = JsonSerializer.Deserialize<Dictionary<string, object>>(domainCheckpoint.StateJson)
-                    ?? new Dictionary<string, object>();
-
-                // Convert domain checkpoint to DTO
-                var checkpoint = new Checkpoint
-                {
-                    Id = domainCheckpoint.Id,
-                    TicketId = domainCheckpoint.TicketId,
-                    GraphId = domainCheckpoint.GraphId,
-                    CheckpointId = domainCheckpoint.CheckpointId,
-                    State = state,
-                    CreatedAt = domainCheckpoint.CreatedAt
-                };
-
-                checkpoints.Add(checkpoint);
-            }
-
-            _logger.LogDebug(
-                "Retrieved {Count} checkpoints for ticket {TicketId} in graph {GraphId}",
-                checkpoints.Count, ticketId, graphId);
-
-            return checkpoints;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Failed to get checkpoint history for ticket {TicketId} in graph {GraphId}",
-                ticketId, graphId);
-            throw;
-        }
+            CheckpointId = domainCheckpoint.Id,
+            NextAgentType = domainCheckpoint.NextAgentType ?? string.Empty,
+            SavedAt = domainCheckpoint.CreatedAt,
+            State = state
+        };
     }
 }

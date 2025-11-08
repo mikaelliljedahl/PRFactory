@@ -116,8 +116,8 @@ namespace PRFactory.Infrastructure.Agents.Base
             {
                 TicketId = ticketId,
                 GraphId = GraphId,
-                CurrentState = checkpoint.State.TryGetValue("current_state", out var state) ? state?.ToString() : "unknown",
-                CurrentAgent = checkpoint.State.TryGetValue("current_agent", out var agent) ? agent?.ToString() : "unknown",
+                CurrentState = checkpoint.State.TryGetValue("current_state", out var state) ? state?.ToString() ?? "unknown" : "unknown",
+                CurrentAgent = checkpoint.State.TryGetValue("current_agent", out var agent) ? agent?.ToString() ?? "unknown" : "unknown",
                 IsRunning = checkpoint.State.TryGetValue("is_running", out var running) && (bool)running,
                 IsSuspended = checkpoint.State.TryGetValue("is_suspended", out var suspended) && (bool)suspended,
                 IsCompleted = checkpoint.State.TryGetValue("is_completed", out var completed) && (bool)completed,
@@ -172,9 +172,9 @@ namespace PRFactory.Infrastructure.Agents.Base
     {
         public Guid Id { get; set; }
         public Guid TicketId { get; set; }
-        public string GraphId { get; set; }
-        public string CheckpointId { get; set; }
-        public Dictionary<string, object> State { get; set; }
+        public string GraphId { get; set; } = string.Empty;
+        public string CheckpointId { get; set; } = string.Empty;
+        public Dictionary<string, object> State { get; set; } = new();
         public DateTime CreatedAt { get; set; }
     }
 }

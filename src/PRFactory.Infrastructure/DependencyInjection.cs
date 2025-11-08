@@ -65,6 +65,7 @@ public static class DependencyInjection
         services.AddScoped<IRepositoryRepository, RepositoryRepository>();
         services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<DomainCheckpointRepository, CheckpointRepository>();
+        services.AddScoped<IAgentPromptTemplateRepository, AgentPromptTemplateRepository>();
 
         // Register checkpoint store adapter
         services.AddScoped<WorkflowCheckpointStore, GraphCheckpointStoreAdapter>();
@@ -80,6 +81,10 @@ public static class DependencyInjection
 
         // Register configuration services
         services.AddScoped<ITenantConfigurationService, TenantConfigurationService>();
+
+        // Register agent prompt services
+        services.AddScoped<Agents.Services.IAgentPromptService, Agents.Services.AgentPromptService>();
+        services.AddScoped<Agents.Services.AgentPromptLoaderService>();
 
         // Register agents
         services.AddTransient<Agents.TriggerAgent>();

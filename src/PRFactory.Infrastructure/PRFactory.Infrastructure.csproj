@@ -30,6 +30,9 @@
     <!-- Git and Source Control -->
     <PackageReference Include="LibGit2Sharp" Version="0.30.0" />
 
+    <!-- YAML parsing for agent prompt templates -->
+    <PackageReference Include="YamlDotNet" Version="16.2.0" />
+
     <!-- API Clients -->
     <PackageReference Include="Octokit" Version="13.0.1" />
     <PackageReference Include="Refit" Version="7.2.22" />

@@ -21,6 +21,8 @@
     }
 </button>
 
+@using PRFactory.Web.UI.Buttons
+
 @code {
     [Parameter] public string? Text { get; set; }
     [Parameter] public string? LoadingText { get; set; }
@@ -73,26 +75,4 @@
             await OnClick.InvokeAsync(e);
         }
     }
-}
-
-public enum ButtonVariant
-{
-    Primary,
-    Secondary,
-    Success,
-    Danger,
-    Warning,
-    Info,
-    Light,
-    Dark,
-    OutlinePrimary,
-    OutlineSecondary,
-    OutlineDanger
-}
-
-public enum ButtonSize
-{
-    Small,
-    Normal,
-    Large
 }

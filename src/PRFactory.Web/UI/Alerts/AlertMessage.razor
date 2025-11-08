@@ -1,3 +1,5 @@
+@using PRFactory.Web.UI.Alerts
+
 @if (!string.IsNullOrEmpty(Message))
 {
     <div class="alert alert-@AlertClass @(Dismissible ? "alert-dismissible fade show" : "")" role="alert">
@@ -47,14 +49,4 @@
             await OnDismiss.InvokeAsync();
         }
     }
-}
-
-public enum AlertType
-{
-    Success,
-    Warning,
-    Danger,
-    Info,
-    Primary,
-    Secondary
 }

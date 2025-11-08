@@ -1,7 +1,9 @@
+@using PRFactory.Web.UI.Display
+
 @if (IsLoading)
 {
     <div class="@ContainerClass">
-        <div class="spinner-border text-@SpinnerColor" role="status" style="@SpinnerStyle">
+        <div class="spinner-border text-@SpinnerColorClass" role="status" style="@SpinnerStyle">
             <span class="visually-hidden">@LoadingText</span>
         </div>
         @if (!string.IsNullOrEmpty(Message))
@@ -22,7 +24,7 @@
     private string ContainerClass => Centered ? "text-center py-5" : "d-inline-block";
     private string MessageClass => Centered ? "mt-3 text-muted" : "ms-2 text-muted";
 
-    private string SpinnerColor => Color switch
+    private string SpinnerColorClass => Color switch
     {
         SpinnerColor.Primary => "primary",
         SpinnerColor.Secondary => "secondary",
@@ -40,21 +42,4 @@
         SpinnerSize.Large => "width: 3rem; height: 3rem;",
         _ => ""
     };
-}
-
-public enum SpinnerSize
-{
-    Small,
-    Normal,
-    Large
-}
-
-public enum SpinnerColor
-{
-    Primary,
-    Secondary,
-    Success,
-    Danger,
-    Warning,
-    Info
 }

@@ -17,7 +17,13 @@ PRFactory is an intelligent automation system that streamlines the development w
 - [How It Works](#how-it-works)
 - [Workflow Overview](#workflow-overview)
 - [Quick Start](#quick-start)
-- [Documentation](#documentation)
+- [Documentation Map](#documentation-map)
+  - [Getting Started](#getting-started)
+  - [Core Documentation](#core-documentation)
+  - [Architecture Deep-Dives](#architecture-deep-dives)
+  - [Planning and Design Documents](#planning-and-design-documents)
+  - [For AI Agents](#for-ai-agents)
+  - [Component Documentation](#component-documentation)
 - [Architecture](#architecture)
 - [Technology Stack](#technology-stack)
 - [Contributing](#contributing)
@@ -171,20 +177,121 @@ flowchart TB
 
 For detailed setup instructions, see [docs/SETUP.md](docs/SETUP.md).
 
-## Documentation
+## Documentation Map
 
-- **[Setup Guide](docs/SETUP.md)** - Detailed installation and configuration
-- **[Architecture](docs/ARCHITECTURE.md)** - System design and components
-- **[Workflow Details](docs/WORKFLOW.md)** - In-depth workflow explanation
-- **[Database Schema](docs/database-schema.md)** - Database structure and entities
-- **[API Reference](docs/api/)** - REST API documentation
+PRFactory has comprehensive documentation organized by purpose. Choose your path based on what you need:
+
+### Getting Started
+
+Start here if you're new to PRFactory:
+
+- **[Setup Guide](docs/SETUP.md)** - Complete installation, configuration, and deployment guide
+  - Prerequisites and requirements
+  - Docker and local setup instructions
+  - Configuration options (environment variables, user secrets, appsettings)
+  - External service integrations (Jira, GitHub, Claude)
+  - Troubleshooting common issues
+
+### Core Documentation
+
+Essential reading for understanding the system:
+
+- **[Architecture Overview](docs/ARCHITECTURE.md)** - High-level system design and architectural patterns
+  - Clean Architecture principles
+  - Domain-Driven Design approach
+  - Multi-tenancy architecture
+  - State machine and workflow management
+  - Technology stack details
+
+- **[Workflow Details](docs/WORKFLOW.md)** - Complete workflow from ticket to PR
+  - Phase 1: Requirements Clarification
+  - Phase 2: Implementation Planning
+  - Phase 3: Code Implementation
+  - State transitions and error handling
+  - Example walkthrough with timelines
+
+- **[Database Schema](docs/database-schema.md)** - Database structure and entity relationships
+  - Entity Relationship Diagrams
+  - Table definitions and indexes
+  - JSON field structures
+  - Encrypted fields and security
+  - Performance optimization tips
+
+### Architecture Deep-Dives
+
+Detailed technical documentation for specific components:
+
+- **[Core Engine Architecture](docs/architecture/core-engine.md)** - Workflow orchestration and state management
+  - State machine implementation
+  - Domain model and entities
+  - Application services and background jobs
+  - Error handling and resilience patterns
+
+- **[Claude AI Integration](docs/architecture/claude-integration.md)** - AI-powered analysis and code generation
+  - Service interfaces and prompt templates
+  - Context building and token management
+  - Conversation history tracking
+  - Cost tracking and optimization
+
+- **[Jira Integration](docs/architecture/jira-integration.md)** - Bidirectional Jira communication
+  - Webhook handling and validation
+  - Comment parsing and @claude mentions
+  - REST API client implementation
+  - Security and rate limiting
+
+- **[Git Platform Integration](docs/architecture/git-integration.md)** - Multi-platform git operations
+  - LibGit2Sharp for local operations
+  - Strategy pattern for platform providers
+  - GitHub, Bitbucket, and Azure DevOps support
+  - Workspace management and cleanup
+
+### Planning and Design Documents
+
+Historical context and future planning:
+
+- **[Original Proposal](docs/ORIGINAL_PROPOSAL.md)** - Initial project vision and requirements
+  - Problem statement and solution
+  - Proof of concept plan
+  - Pricing models and benefits
+  - Risk mitigation strategies
+
+- **[Web UI Implementation Plan](docs/IMPLEMENTATION_PLAN_WEB_UI.md)** - Planned UI enhancements
+  - Web UI as primary interface
+  - External system sync strategy
+  - 10-phase implementation plan
+  - Technology choices (Blazor vs React)
+
+### For AI Agents
+
+Working on the PRFactory codebase with AI assistance?
+
+- **[CLAUDE.md](CLAUDE.md)** - Architecture guidance for AI agents
+  - Core architectural principles to preserve
+  - Multi-graph architecture explanation
+  - Multi-platform strategy importance
+  - What NOT to simplify vs what IS overengineered
+  - Development guidelines for AI-assisted work
+  - Quick reference for architectural decisions
+
+This document helps AI agents understand which architectural decisions are intentional and should be preserved, and which areas can be simplified or improved.
 
 ### Component Documentation
 
-- [Domain Layer](src/PRFactory.Domain/README.md) - Business entities and logic
-- [Infrastructure Layer](src/PRFactory.Infrastructure/README.md) - External integrations
-- [API Layer](src/PRFactory.Api/README.md) - REST endpoints
-- [Worker Service](src/PRFactory.Worker/README.md) - Background job processing
+Deep dive into specific codebase components:
+
+- [Domain Layer](src/PRFactory.Domain/README.md) - Business entities, value objects, and domain logic
+- [Infrastructure Layer](src/PRFactory.Infrastructure/README.md) - External integrations (Jira, Git, Claude, database)
+- [API Layer](src/PRFactory.Api/README.md) - REST endpoints, controllers, and webhooks
+- [Worker Service](src/PRFactory.Worker/README.md) - Background job processing and agent execution
+
+### Navigation Tips
+
+- **New to the project?** Start with [Setup Guide](docs/SETUP.md) → [Architecture Overview](docs/ARCHITECTURE.md) → [Workflow Details](docs/WORKFLOW.md)
+- **Setting up integrations?** See [Setup Guide](docs/SETUP.md) and the integration-specific architecture docs
+- **Understanding the workflow?** Read [Workflow Details](docs/WORKFLOW.md) with the state diagrams
+- **Working with AI assistance?** Read [CLAUDE.md](CLAUDE.md) first to understand architectural principles
+- **Building new features?** Study [Architecture Overview](docs/ARCHITECTURE.md) and relevant integration docs
+- **Troubleshooting?** Check [Setup Guide - Troubleshooting](docs/SETUP.md#troubleshooting) section
 
 ## Architecture
 

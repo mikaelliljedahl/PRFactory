@@ -15,7 +15,18 @@ public class TicketHub : Hub
     }
 
     /// <summary>
+    /// Subscribe to updates for a specific tenant
+    /// </summary>
+    public async Task SubscribeToTenant(Guid tenantId)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, $"tenant-{tenantId}");
+        _logger.LogInformation("Client {ConnectionId} subscribed to tenant {TenantId}",
+            Context.ConnectionId, tenantId);
+    }
+
+    /// <summary>
     /// Subscribe to updates for a specific ticket
+    /// Also subscribes to the tenant group for that ticket's tenant
     /// </summary>
     public async Task SubscribeToTicket(Guid ticketId)
     {

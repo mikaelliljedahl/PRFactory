@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PRFactory.Domain.Entities;
+using PRFactory.Infrastructure.Events;
 
 namespace PRFactory.Infrastructure.Persistence.Configurations;
 
@@ -23,7 +24,11 @@ public class WorkflowEventConfiguration : IEntityTypeConfiguration<WorkflowEvent
             .HasValue<QuestionAdded>(nameof(QuestionAdded))
             .HasValue<AnswerAdded>(nameof(AnswerAdded))
             .HasValue<PlanCreated>(nameof(PlanCreated))
-            .HasValue<PullRequestCreated>(nameof(PullRequestCreated));
+            .HasValue<PullRequestCreated>(nameof(PullRequestCreated))
+            .HasValue<WorkflowSuspended>(nameof(WorkflowSuspended))
+            .HasValue<WorkflowCompleted>(nameof(WorkflowCompleted))
+            .HasValue<WorkflowFailed>(nameof(WorkflowFailed))
+            .HasValue<WorkflowCancelled>(nameof(WorkflowCancelled));
 
         // Common properties
         builder.Property(e => e.TicketId)
@@ -46,6 +51,10 @@ public class WorkflowEventConfiguration : IEntityTypeConfiguration<WorkflowEvent
         ConfigureAnswerAdded(builder);
         ConfigurePlanCreated(builder);
         ConfigurePullRequestCreated(builder);
+        ConfigureWorkflowSuspended(builder);
+        ConfigureWorkflowCompleted(builder);
+        ConfigureWorkflowFailed(builder);
+        ConfigureWorkflowCancelled(builder);
     }
 
     private void ConfigureWorkflowStateChanged(EntityTypeBuilder<WorkflowEvent> builder)
@@ -88,5 +97,33 @@ public class WorkflowEventConfiguration : IEntityTypeConfiguration<WorkflowEvent
             .HasMaxLength(1000);
 
         builder.Property<int>("PullRequestNumber");
+    }
+
+    private void ConfigureWorkflowSuspended(EntityTypeBuilder<WorkflowEvent> builder)
+    {
+        builder.Property<string>("GraphId")
+            .HasMaxLength(100);
+
+        builder.Property<string>("State")
+            .HasMaxLength(200);
+    }
+
+    private void ConfigureWorkflowCompleted(EntityTypeBuilder<WorkflowEvent> builder)
+    {
+        builder.Property<TimeSpan>("Duration");
+    }
+
+    private void ConfigureWorkflowFailed(EntityTypeBuilder<WorkflowEvent> builder)
+    {
+        builder.Property<string>("GraphId")
+            .HasMaxLength(100);
+
+        builder.Property<string?>("Error")
+            .HasMaxLength(2000);
+    }
+
+    private void ConfigureWorkflowCancelled(EntityTypeBuilder<WorkflowEvent> builder)
+    {
+        // WorkflowCancelled has no additional properties beyond base WorkflowEvent
     }
 }

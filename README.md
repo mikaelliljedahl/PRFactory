@@ -2,7 +2,9 @@
 
 > AI-powered automation that transforms ideas into GitHub pull requests using AI agents via CLI adapters
 
-PRFactory is an intelligent automation system that streamlines the development workflow by:
+**PRFactory transforms your team's development workflow** by combining the power of AI agents with human oversight at every critical decision point. Unlike fully autonomous AI coding tools, PRFactory puts your team in control—AI proposes, your team decides.
+
+PRFactory streamlines the development workflow by:
 - **Capturing** requirements directly in its Web UI or syncing from external systems (Jira, Azure DevOps, GitHub Issues)
 - **Analyzing** requirements and your codebase
 - **Clarifying** requirements through AI-generated questions
@@ -10,7 +12,21 @@ PRFactory is an intelligent automation system that streamlines the development w
 - **Optionally implementing** code and creating pull requests (can be disabled per tenant)
 - **Syncing** completed work back to external systems (Jira, Azure DevOps, etc.) for final storage
 
-**Key Principle:** AI assists, humans decide. Every step requires human approval - no automatic deployments.
+### What Makes PRFactory Different?
+
+✅ **Team-Based Review** - Multi-reviewer approval workflows ensure no AI-generated code reaches production without proper oversight
+✅ **Transparent Planning** - AI creates detailed implementation plans (committed to git) that your team reviews *before* any code is written
+✅ **Multi-Platform Support** - Works with GitHub, Bitbucket, Azure DevOps (GitLab coming soon)
+✅ **Enterprise-Ready** - Multi-tenant isolation, encrypted credentials, audit trails
+✅ **Optional Implementation** - Use AI to plan only, or let it implement code under your team's review
+
+### Perfect For:
+- **Regulated Industries** requiring multiple sign-offs on code changes
+- **Enterprise Teams** who need AI assistance without sacrificing control
+- **.NET Ecosystems** (built natively on C# / .NET 10)
+- **Organizations** transitioning from idea → implementation → pull request with confidence
+
+**Key Principle:** *AI assists, humans decide.* Every step requires human approval—no automatic deployments, no surprises.
 
 ## Table of Contents
 

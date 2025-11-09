@@ -1,4 +1,3 @@
-using FluentAssertions;
 using PRFactory.Domain.Entities;
 using PRFactory.Domain.ValueObjects;
 using Xunit;
@@ -18,14 +17,14 @@ public class TicketTests
         var ticket = Ticket.Create(ValidTicketKey, _tenantId, _repositoryId);
 
         // Assert
-        ticket.Should().NotBeNull();
-        ticket.TicketKey.Should().Be(ValidTicketKey);
-        ticket.TenantId.Should().Be(_tenantId);
-        ticket.RepositoryId.Should().Be(_repositoryId);
-        ticket.State.Should().Be(WorkflowState.Triggered);
-        ticket.Questions.Should().BeEmpty();
-        ticket.Answers.Should().BeEmpty();
-        ticket.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        Assert.NotNull(ticket);
+        Assert.Equal(ValidTicketKey, ticket.TicketKey);
+        Assert.Equal(_tenantId, ticket.TenantId);
+        Assert.Equal(_repositoryId, ticket.RepositoryId);
+        Assert.Equal(WorkflowState.Triggered, ticket.State);
+        Assert.Empty(ticket.Questions);
+        Assert.Empty(ticket.Answers);
+        Assert.True(Math.Abs((ticket.CreatedAt - DateTime.UtcNow).TotalSeconds) < 1);
     }
 
     [Theory]
@@ -35,27 +34,24 @@ public class TicketTests
     public void Create_WithInvalidTicketKey_ThrowsArgumentException(string? invalidKey)
     {
         // Act & Assert
-        var act = () => Ticket.Create(invalidKey, _tenantId, _repositoryId);
-        act.Should().Throw<ArgumentException>()
-            .WithMessage("*ticketKey*");
+        var ex = Assert.Throws<ArgumentException>(() => Ticket.Create(invalidKey, _tenantId, _repositoryId));
+        Assert.Contains("ticketKey", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
     public void Create_WithEmptyTenantId_ThrowsArgumentException()
     {
         // Act & Assert
-        var act = () => Ticket.Create(ValidTicketKey, Guid.Empty, _repositoryId);
-        act.Should().Throw<ArgumentException>()
-            .WithMessage("*tenantId*");
+        var ex = Assert.Throws<ArgumentException>(() => Ticket.Create(ValidTicketKey, Guid.Empty, _repositoryId));
+        Assert.Contains("tenantId", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
     public void Create_WithEmptyRepositoryId_ThrowsArgumentException()
     {
         // Act & Assert
-        var act = () => Ticket.Create(ValidTicketKey, _tenantId, Guid.Empty);
-        act.Should().Throw<ArgumentException>()
-            .WithMessage("*repositoryId*");
+        var ex = Assert.Throws<ArgumentException>(() => Ticket.Create(ValidTicketKey, _tenantId, Guid.Empty));
+        Assert.Contains("repositoryId", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -71,9 +67,9 @@ public class TicketTests
         var result = ticket.TransitionTo(WorkflowState.TicketUpdateGenerated);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
-        ticket.State.Should().Be(WorkflowState.TicketUpdateGenerated);
-        ticket.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(WorkflowState.TicketUpdateGenerated, ticket.State);
+        Assert.True(ticket.UpdatedAt > originalUpdatedAt);
     }
 
     [Fact]
@@ -95,10 +91,10 @@ public class TicketTests
         var result = ticket.TransitionTo(WorkflowState.Completed);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
-        ticket.State.Should().Be(WorkflowState.Completed);
-        ticket.CompletedAt.Should().NotBeNull();
-        ticket.CompletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        Assert.True(result.IsSuccess);
+        Assert.Equal(WorkflowState.Completed, ticket.State);
+        Assert.NotNull(ticket.CompletedAt);
+        Assert.True(Math.Abs((ticket.CompletedAt.Value - DateTime.UtcNow).TotalSeconds) < 1);
     }
 
     [Fact]
@@ -112,8 +108,8 @@ public class TicketTests
         ticket.AddQuestion(question);
 
         // Assert
-        ticket.Questions.Should().HaveCount(1);
-        ticket.Questions.First().Should().Be(question);
+        var single = Assert.Single(ticket.Questions);
+        Assert.Equal(question, single);
     }
 
     [Fact]
@@ -123,8 +119,7 @@ public class TicketTests
         var ticket = Ticket.Create(ValidTicketKey, _tenantId, _repositoryId);
 
         // Act & Assert
-        var act = () => ticket.AddQuestion(null!);
-        act.Should().Throw<ArgumentNullException>();
+        Assert.Throws<ArgumentNullException>(() => ticket.AddQuestion(null!));
     }
 
     [Fact]
@@ -139,10 +134,10 @@ public class TicketTests
         var result = ticket.AddAnswer(question.Id, "The expected behavior is X");
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
-        ticket.Answers.Should().HaveCount(1);
-        ticket.Answers.First().QuestionId.Should().Be(question.Id);
-        ticket.Answers.First().Text.Should().Be("The expected behavior is X");
+        Assert.True(result.IsSuccess);
+        var single = Assert.Single(ticket.Answers);
+        Assert.Equal(question.Id, single.QuestionId);
+        Assert.Equal("The expected behavior is X", single.Text);
     }
 
     [Fact]
@@ -156,8 +151,8 @@ public class TicketTests
         var result = ticket.AddAnswer(nonExistentQuestionId, "Some answer");
 
         // Assert
-        result.IsSuccess.Should().BeFalse();
-        ticket.Answers.Should().BeEmpty();
+        Assert.False(result.IsSuccess);
+        Assert.Empty(ticket.Answers);
     }
 
     [Theory]
@@ -175,8 +170,8 @@ public class TicketTests
         var result = ticket.AddAnswer(question.Id, invalidAnswer);
 
         // Assert
-        result.IsSuccess.Should().BeFalse();
-        ticket.Answers.Should().BeEmpty();
+        Assert.False(result.IsSuccess);
+        Assert.Empty(ticket.Answers);
     }
 
     [Fact]
@@ -191,8 +186,8 @@ public class TicketTests
         ticket.SetPlanBranch(branchName, markdownPath);
 
         // Assert
-        ticket.PlanBranchName.Should().Be(branchName);
-        ticket.PlanMarkdownPath.Should().Be(markdownPath);
+        Assert.Equal(branchName, ticket.PlanBranchName);
+        Assert.Equal(markdownPath, ticket.PlanMarkdownPath);
     }
 
     [Theory]
@@ -205,8 +200,7 @@ public class TicketTests
         var ticket = Ticket.Create(ValidTicketKey, _tenantId, _repositoryId);
 
         // Act & Assert
-        var act = () => ticket.SetPlanBranch(invalidBranch, "plans/proj-123.md");
-        act.Should().Throw<ArgumentException>();
+        Assert.Throws<ArgumentException>(() => ticket.SetPlanBranch(invalidBranch, "plans/proj-123.md"));
     }
 
     [Fact]
@@ -219,8 +213,8 @@ public class TicketTests
         ticket.ApprovePlan();
 
         // Assert
-        ticket.PlanApprovedAt.Should().NotBeNull();
-        ticket.PlanApprovedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        Assert.NotNull(ticket.PlanApprovedAt);
+        Assert.True(Math.Abs((ticket.PlanApprovedAt.Value - DateTime.UtcNow).TotalSeconds) < 1);
     }
 
     [Fact]
@@ -234,7 +228,7 @@ public class TicketTests
         ticket.SetImplementationBranch(branchName);
 
         // Assert
-        ticket.ImplementationBranchName.Should().Be(branchName);
+        Assert.Equal(branchName, ticket.ImplementationBranchName);
     }
 
     [Fact]
@@ -249,8 +243,8 @@ public class TicketTests
         ticket.SetPullRequest(prUrl, prNumber);
 
         // Assert
-        ticket.PullRequestUrl.Should().Be(prUrl);
-        ticket.PullRequestNumber.Should().Be(prNumber);
+        Assert.Equal(prUrl, ticket.PullRequestUrl);
+        Assert.Equal(prNumber, ticket.PullRequestNumber);
     }
 
     [Fact]
@@ -264,8 +258,8 @@ public class TicketTests
         ticket.RecordError(errorMessage);
 
         // Assert
-        ticket.RetryCount.Should().Be(1);
-        ticket.LastError.Should().Be(errorMessage);
+        Assert.Equal(1, ticket.RetryCount);
+        Assert.Equal(errorMessage, ticket.LastError);
     }
 
     [Fact]
@@ -279,7 +273,7 @@ public class TicketTests
         ticket.ClearError();
 
         // Assert
-        ticket.LastError.Should().BeNull();
+        Assert.Null(ticket.LastError);
     }
 
     [Fact]
@@ -293,8 +287,8 @@ public class TicketTests
         ticket.SetMetadata("key2", 42);
 
         // Assert
-        ticket.GetMetadata<string>("key1").Should().Be("value1");
-        ticket.GetMetadata<int>("key2").Should().Be(42);
+        Assert.Equal("value1", ticket.GetMetadata<string>("key1"));
+        Assert.Equal(42, ticket.GetMetadata<int>("key2"));
     }
 
     [Fact]
@@ -307,7 +301,7 @@ public class TicketTests
         var value = ticket.GetMetadata<string>("nonexistent");
 
         // Assert
-        value.Should().BeNull();
+        Assert.Null(value);
     }
 
     [Fact]
@@ -321,8 +315,8 @@ public class TicketTests
         ticket.SetExternalTicketId(externalId, TicketSource.Jira);
 
         // Assert
-        ticket.ExternalTicketId.Should().Be(externalId);
-        ticket.Source.Should().Be(TicketSource.Jira);
+        Assert.Equal(externalId, ticket.ExternalTicketId);
+        Assert.Equal(TicketSource.Jira, ticket.Source);
     }
 
     [Theory]
@@ -335,8 +329,7 @@ public class TicketTests
         var ticket = Ticket.Create(ValidTicketKey, _tenantId, _repositoryId);
 
         // Act & Assert
-        var act = () => ticket.SetExternalTicketId(invalidId, TicketSource.Jira);
-        act.Should().Throw<ArgumentException>();
+        Assert.Throws<ArgumentException>(() => ticket.SetExternalTicketId(invalidId, TicketSource.Jira));
     }
 
     [Fact]
@@ -346,9 +339,8 @@ public class TicketTests
         var ticket = Ticket.Create(ValidTicketKey, _tenantId, _repositoryId);
 
         // Act & Assert
-        var act = () => ticket.SetExternalTicketId("123", TicketSource.WebUI);
-        act.Should().Throw<ArgumentException>()
-            .WithMessage("*Web UI*");
+        var ex = Assert.Throws<ArgumentException>(() => ticket.SetExternalTicketId("123", TicketSource.WebUI));
+        Assert.Contains("Web UI", ex.Message);
     }
 
     [Fact]
@@ -361,7 +353,7 @@ public class TicketTests
         ticket.MarkAsSynced();
 
         // Assert
-        ticket.LastSyncedAt.Should().NotBeNull();
-        ticket.LastSyncedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        Assert.NotNull(ticket.LastSyncedAt);
+        Assert.True(Math.Abs((ticket.LastSyncedAt.Value - DateTime.UtcNow).TotalSeconds) < 1);
     }
 }

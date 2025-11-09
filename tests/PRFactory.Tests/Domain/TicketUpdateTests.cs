@@ -62,7 +62,7 @@ public class TicketUpdateTests
         // Act & Assert
         var ex = Assert.Throws<ArgumentException>(() => TicketUpdate.Create(
             _ticketId,
-            invalidTitle,
+            invalidTitle!,
             ValidDescription,
             _validSuccessCriteria,
             ValidAcceptanceCriteria));
@@ -79,7 +79,7 @@ public class TicketUpdateTests
         var ex = Assert.Throws<ArgumentException>(() => TicketUpdate.Create(
             _ticketId,
             ValidTitle,
-            invalidDescription,
+            invalidDescription!,
             _validSuccessCriteria,
             ValidAcceptanceCriteria));
         Assert.Contains("description", ex.Message, StringComparison.OrdinalIgnoreCase);
@@ -110,7 +110,7 @@ public class TicketUpdateTests
             ValidTitle,
             ValidDescription,
             _validSuccessCriteria,
-            invalidCriteria));
+            invalidCriteria!));
         Assert.Contains("acceptanceCriteria", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -172,7 +172,7 @@ public class TicketUpdateTests
             ValidAcceptanceCriteria);
 
         // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() => update.Reject(invalidReason));
+        var ex = Assert.Throws<ArgumentException>(() => update.Reject(invalidReason!));
         Assert.Contains("reason", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -261,6 +261,6 @@ public class TicketUpdateTests
             ValidAcceptanceCriteria);
 
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => update.Update(ValidTitle, invalidDescription, _validSuccessCriteria, ValidAcceptanceCriteria));
+        Assert.Throws<ArgumentException>(() => update.Update(ValidTitle, invalidDescription!, _validSuccessCriteria, ValidAcceptanceCriteria));
     }
 }

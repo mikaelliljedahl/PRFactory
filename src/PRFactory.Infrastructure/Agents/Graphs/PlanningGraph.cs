@@ -150,7 +150,7 @@ namespace PRFactory.Infrastructure.Agents.Graphs
             var jiraResult = results[1];
 
             // Save checkpoint after parallel execution
-            context.State["git_commit_sha"] = gitResult is PlanCommittedMessage committed ? committed.CommitSha : null;
+            context.State["git_commit_sha"] = gitResult is PlanCommittedMessage committed ? committed.CommitSha ?? string.Empty : string.Empty;
             context.State["jira_posted"] = jiraResult is MessagePostedMessage;
             await SaveCheckpointAsync(context, "plan_posted", "GitPlanAgent,JiraPostAgent");
 

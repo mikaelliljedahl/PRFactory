@@ -34,7 +34,7 @@ public class TicketTests
     public void Create_WithInvalidTicketKey_ThrowsArgumentException(string? invalidKey)
     {
         // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() => Ticket.Create(invalidKey, _tenantId, _repositoryId));
+        var ex = Assert.Throws<ArgumentException>(() => Ticket.Create(invalidKey!, _tenantId, _repositoryId));
         Assert.Contains("ticketKey", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -60,6 +60,7 @@ public class TicketTests
         // Arrange
         var ticket = Ticket.Create(ValidTicketKey, _tenantId, _repositoryId);
         ticket.TransitionTo(WorkflowState.Analyzing);
+        Assert.NotNull(ticket.UpdatedAt);
         var originalUpdatedAt = ticket.UpdatedAt.Value;
         Thread.Sleep(10); // Ensure time difference
 
@@ -167,7 +168,7 @@ public class TicketTests
         ticket.AddQuestion(question);
 
         // Act
-        var result = ticket.AddAnswer(question.Id, invalidAnswer);
+        var result = ticket.AddAnswer(question.Id, invalidAnswer!);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -200,7 +201,7 @@ public class TicketTests
         var ticket = Ticket.Create(ValidTicketKey, _tenantId, _repositoryId);
 
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => ticket.SetPlanBranch(invalidBranch, "plans/proj-123.md"));
+        Assert.Throws<ArgumentException>(() => ticket.SetPlanBranch(invalidBranch!, "plans/proj-123.md"));
     }
 
     [Fact]
@@ -329,7 +330,7 @@ public class TicketTests
         var ticket = Ticket.Create(ValidTicketKey, _tenantId, _repositoryId);
 
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => ticket.SetExternalTicketId(invalidId, TicketSource.Jira));
+        Assert.Throws<ArgumentException>(() => ticket.SetExternalTicketId(invalidId!, TicketSource.Jira));
     }
 
     [Fact]

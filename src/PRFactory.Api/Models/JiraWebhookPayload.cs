@@ -281,5 +281,5 @@ public class JiraChangeLogItem
     /// New value
     /// </summary>
     [JsonPropertyName("toString")]
-    public string? ToString { get; set; }
+    public new string? ToString { get; set; }
 }

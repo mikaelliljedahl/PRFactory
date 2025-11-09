@@ -144,7 +144,6 @@ public class ProcessExecutor : IProcessExecutor
             _logger.LogDebug("Process started with PID: {ProcessId}", process.Id);
 
             // Wait for process to complete with timeout and cancellation support
-            var completed = false;
             if (timeoutSeconds.HasValue)
             {
                 using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds.Value));
@@ -153,7 +152,6 @@ public class ProcessExecutor : IProcessExecutor
                 try
                 {
                     await process.WaitForExitAsync(linkedCts.Token);
-                    completed = true;
                 }
                 catch (OperationCanceledException)
                 {
@@ -182,7 +180,6 @@ public class ProcessExecutor : IProcessExecutor
             else
             {
                 await process.WaitForExitAsync(cancellationToken);
-                completed = true;
             }
 
             var duration = DateTime.UtcNow - startTime;

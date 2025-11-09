@@ -1293,9 +1293,12 @@ var repo = new Repository
 - Business Components: `/home/user/PRFactory/src/PRFactory.Web/Components/`
 
 **Documentation**:
+- Implementation Status: `/home/user/PRFactory/docs/IMPLEMENTATION_STATUS.md` ⭐
+- Roadmap: `/home/user/PRFactory/docs/ROADMAP.md`
 - Architecture: `/home/user/PRFactory/docs/ARCHITECTURE.md`
 - Workflow: `/home/user/PRFactory/docs/WORKFLOW.md`
 - Setup: `/home/user/PRFactory/docs/SETUP.md`
+- Documentation Index: `/home/user/PRFactory/docs/README.md`
 
 **Configuration**:
 - API: `/home/user/PRFactory/src/PRFactory.Api/appsettings.json`
@@ -1334,7 +1337,10 @@ When in doubt, **preserve flexibility** over simplicity. The architecture is opt
 
 **Questions? Check:**
 - [README.md](/home/user/PRFactory/README.md) - Project overview
+- [IMPLEMENTATION_STATUS.md](/home/user/PRFactory/docs/IMPLEMENTATION_STATUS.md) - ⭐ What's built vs. planned
 - [ARCHITECTURE.md](/home/user/PRFactory/docs/ARCHITECTURE.md) - Detailed architecture
 - [WORKFLOW.md](/home/user/PRFactory/docs/WORKFLOW.md) - Workflow details
+- [ROADMAP.md](/home/user/PRFactory/docs/ROADMAP.md) - Future enhancements
+- [docs/README.md](/home/user/PRFactory/docs/README.md) - Documentation index
 
 **Still unsure?** Ask the human developer before making structural changes to core architecture.

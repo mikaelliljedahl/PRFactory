@@ -1,3 +1,12 @@
+> **ARCHIVED**: This planning document guided the transition from Jira-first to WebUI-first architecture.
+> The WebUI is now implemented and serves as the primary interface.
+> See [IMPLEMENTATION_STATUS.md](../IMPLEMENTATION_STATUS.md) for current status.
+>
+> **Date Archived**: 2025-11-08
+> **Original Date**: 2025 (estimated)
+
+---
+
 # Implementation Plan: Web UI for Ticket Management
 
 ## Executive Summary

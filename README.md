@@ -249,13 +249,13 @@ Detailed technical documentation for specific components:
 
 Historical context and future planning:
 
-- **[Original Proposal](docs/ORIGINAL_PROPOSAL.md)** - Initial project vision and requirements
+- **[Original Proposal](docs/archive/ORIGINAL_PROPOSAL.md)** - Initial project vision and requirements
   - Problem statement and solution
   - Proof of concept plan
   - Pricing models and benefits
   - Risk mitigation strategies
 
-- **[Web UI Implementation Plan](docs/IMPLEMENTATION_PLAN_WEB_UI.md)** - Planned UI enhancements
+- **[Web UI Implementation Plan](docs/archive/IMPLEMENTATION_PLAN_WEB_UI.md)** - Planned UI enhancements
   - Web UI as primary interface
   - External system sync strategy
   - 10-phase implementation plan

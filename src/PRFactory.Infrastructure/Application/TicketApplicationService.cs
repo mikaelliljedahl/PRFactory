@@ -114,7 +114,7 @@ public class TicketApplicationService : ITicketApplicationService
         }
 
         // Verify ticket is in correct state for plan approval
-        if (ticket.State != WorkflowState.AwaitingPlanApproval)
+        if (ticket.State != WorkflowState.PlanUnderReview)
         {
             throw new InvalidOperationException(
                 $"Ticket {ticket.TicketKey} is not awaiting plan approval. Current state: {ticket.State}");
@@ -148,7 +148,7 @@ public class TicketApplicationService : ITicketApplicationService
         }
 
         // Verify ticket is in correct state for plan rejection
-        if (ticket.State != WorkflowState.AwaitingPlanApproval)
+        if (ticket.State != WorkflowState.PlanUnderReview)
         {
             throw new InvalidOperationException(
                 $"Ticket {ticket.TicketKey} is not awaiting plan approval. Current state: {ticket.State}");

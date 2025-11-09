@@ -45,8 +45,8 @@ public class RepositoryApplicationService : IRepositoryApplicationService
     {
         _logger.LogDebug("Getting all repositories");
 
-        // Get all repositories (for multi-tenant apps, this would be filtered by tenant from context)
-        var repositories = await _repositoryRepository.GetAllAsync(cancellationToken);
+        // Get all active repositories (for multi-tenant apps, this would be filtered by tenant from context)
+        var repositories = await _repositoryRepository.GetActiveRepositoriesAsync(cancellationToken);
 
         _logger.LogDebug("Found {Count} repositories", repositories.Count);
 

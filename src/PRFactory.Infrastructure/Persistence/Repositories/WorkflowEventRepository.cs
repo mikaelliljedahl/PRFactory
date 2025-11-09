@@ -68,26 +68,28 @@ public class WorkflowEventRepository : IWorkflowEventRepository
             query = query.Where(e => e.OccurredAt <= endDate.Value);
         }
 
-        if (!string.IsNullOrWhiteSpace(searchText))
-        {
-            query = query.Where(e =>
-                e.EventType.Contains(searchText) ||
-                (e is WorkflowStateChanged wsc && (wsc.Reason != null && wsc.Reason.Contains(searchText))) ||
-                (e is QuestionAdded qa && qa.Question.Text.Contains(searchText)) ||
-                (e is AnswerAdded aa && aa.AnswerText.Contains(searchText)) ||
-                (e is PlanCreated pc && pc.BranchName.Contains(searchText)) ||
-                (e is PullRequestCreated prc && prc.PullRequestUrl.Contains(searchText)));
-        }
-
-        // Get total count before pagination
+        // Get total count before search text filtering (for efficiency)
         var totalCount = await query.CountAsync(cancellationToken);
 
-        // Apply pagination
+        // Apply pagination and materialize before text search (pattern matching not supported in SQL)
         var events = await query
             .OrderByDescending(e => e.OccurredAt)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        // Apply text search in memory (pattern matching requires materialized data)
+        if (!string.IsNullOrWhiteSpace(searchText))
+        {
+            events = events.Where(e =>
+                e.EventType.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+                (e is WorkflowStateChanged wsc && wsc.Reason != null && wsc.Reason.Contains(searchText, StringComparison.OrdinalIgnoreCase)) ||
+                (e is QuestionAdded qa && qa.Question.Text.Contains(searchText, StringComparison.OrdinalIgnoreCase)) ||
+                (e is AnswerAdded aa && aa.AnswerText.Contains(searchText, StringComparison.OrdinalIgnoreCase)) ||
+                (e is PlanCreated pc && pc.BranchName.Contains(searchText, StringComparison.OrdinalIgnoreCase)) ||
+                (e is PullRequestCreated prc && prc.PullRequestUrl.Contains(searchText, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+        }
 
         return (events, totalCount);
     }

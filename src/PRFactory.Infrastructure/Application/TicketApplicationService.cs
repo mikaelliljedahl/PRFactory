@@ -2,9 +2,11 @@ using Microsoft.Extensions.Logging;
 using PRFactory.Core.Application.Services;
 using PRFactory.Domain.Entities;
 using PRFactory.Domain.Interfaces;
-using PRFactory.Domain.ValueObjects;
 using PRFactory.Infrastructure.Agents.Graphs;
 using PRFactory.Infrastructure.Agents.Messages;
+
+// Type alias to resolve ambiguity between domain and graph WorkflowState
+using WorkflowState = PRFactory.Domain.ValueObjects.WorkflowState;
 
 namespace PRFactory.Infrastructure.Application;
 

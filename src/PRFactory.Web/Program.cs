@@ -1,3 +1,4 @@
+using PRFactory.Infrastructure;
 using PRFactory.Web.Hubs;
 using PRFactory.Web.Services;
 using Serilog;
@@ -21,6 +22,9 @@ builder.Services.AddServerSideBlazor();
 // Add SignalR
 builder.Services.AddSignalR();
 
+// Register Infrastructure services (includes DbContext, repositories, application services, etc.)
+builder.Services.AddInfrastructure(builder.Configuration);
+
 // Register SignalR event broadcaster
 builder.Services.AddScoped<PRFactory.Infrastructure.Events.IEventBroadcaster,
     SignalREventBroadcaster>();
@@ -33,7 +37,7 @@ builder.Services.AddHttpClient("PRFactoryApi", client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
-// Register application services
+// Register Web UI services (facades for Blazor components)
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<IRepositoryService, RepositoryService>();
 

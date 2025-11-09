@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using PRFactory.Web.Models;
 
 namespace PRFactory.Web.Components;
 
@@ -38,14 +39,5 @@ public partial class TicketFilters
         await SelectedSourceChanged.InvokeAsync(null);
         await SelectedRepositoryIdChanged.InvokeAsync(null);
         await OnFilterChanged.InvokeAsync();
-    }
-
-    /// <summary>
-    /// Simple DTO for repository dropdown
-    /// </summary>
-    public class RepositoryInfo
-    {
-        public Guid Id { get; set; }
-        public string Name { get; set; } = string.Empty;
     }
 }

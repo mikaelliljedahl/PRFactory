@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.Logging;
-using PRFactory.Domain.Entities;
+using PRFactory.Web.Models;
+using PRFactory.Web.Services;
 
 namespace PRFactory.Web.Pages.Repositories;
 
 public partial class Index
 {
-    private List<Repository>? repositories;
+    private List<RepositoryDto>? repositories;
     private bool isLoading = true;
     private string? errorMessage;
 

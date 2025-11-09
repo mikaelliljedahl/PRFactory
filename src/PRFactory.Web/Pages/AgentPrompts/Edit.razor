@@ -1,0 +1,127 @@
+@page "/agent-prompts/edit/{Id:guid}"
+@using PRFactory.Web.Components.AgentPrompts
+@using PRFactory.Web.Models
+@using PRFactory.Web.UI.Cards
+@using PRFactory.Web.UI.Alerts
+@using PRFactory.Web.UI.Display
+
+<PageTitle>Edit Agent Prompt Template</PageTitle>
+
+<div class="container-fluid">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/agent-prompts">Agent Prompts</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Edit</li>
+        </ol>
+    </nav>
+
+    @if (IsLoading)
+    {
+        <LoadingSpinner Message="Loading template..." />
+    }
+    else if (Template == null)
+    {
+        <EmptyState
+            Icon="exclamation-triangle"
+            Title="Template Not Found"
+            Message="The requested template could not be found."
+            ActionText="Back to Templates"
+            ActionUrl="/agent-prompts" />
+    }
+    else
+    {
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="bi bi-pencil"></i> Edit Template: @Template.Name
+            </h1>
+            <a href="/agent-prompts/preview/@Id" class="btn btn-outline-primary">
+                <i class="bi bi-eye"></i> Preview
+            </a>
+        </div>
+
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <AlertMessage Message="@ErrorMessage" Type="AlertType.Danger" />
+        }
+
+        @if (!string.IsNullOrEmpty(SuccessMessage))
+        {
+            <AlertMessage Message="@SuccessMessage" Type="AlertType.Success" />
+        }
+
+        @if (Template.IsSystemTemplate)
+        {
+            <AlertMessage
+                Message="This is a system template and cannot be modified. Clone it to create a custom version."
+                Type="AlertType.Warning" />
+            <div class="mb-3">
+                <button class="btn btn-info" @onclick="HandleClone">
+                    <i class="bi bi-files"></i> Clone Template
+                </button>
+            </div>
+        }
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="row">
+                    <div class="col-md-6">
+                        <Card Title="Template Information" Icon="info-circle">
+                            <dl class="row">
+                                <dt class="col-sm-4">Name:</dt>
+                                <dd class="col-sm-8"><code>@Template.Name</code></dd>
+
+                                <dt class="col-sm-4">Type:</dt>
+                                <dd class="col-sm-8">
+                                    <span class="@Template.TypeBadgeClass">@Template.TypeDisplay</span>
+                                </dd>
+
+                                <dt class="col-sm-4">Category:</dt>
+                                <dd class="col-sm-8">
+                                    <span class="@Template.CategoryBadgeClass">@Template.Category</span>
+                                </dd>
+
+                                @if (!string.IsNullOrEmpty(Template.RecommendedModel))
+                                {
+                                    <dt class="col-sm-4">Model:</dt>
+                                    <dd class="col-sm-8">@Template.RecommendedModel</dd>
+                                }
+
+                                <dt class="col-sm-4">Created:</dt>
+                                <dd class="col-sm-8">@Template.CreatedAt.ToString("g")</dd>
+
+                                @if (Template.UpdatedAt.HasValue)
+                                {
+                                    <dt class="col-sm-4">Updated:</dt>
+                                    <dd class="col-sm-8">@Template.UpdatedAt.Value.ToString("g")</dd>
+                                }
+                            </dl>
+                        </Card>
+                    </div>
+
+                    <div class="col-md-6">
+                        <PromptVariableReference OnVariableSelected="@HandleVariableSelected" />
+                    </div>
+                </div>
+
+                @if (!Template.IsSystemTemplate)
+                {
+                    <Card Title="Edit Template" Icon="pencil" class="mt-3">
+                        <PromptTemplateForm
+                            Model="@UpdateModel"
+                            OnValidSubmit="@HandleSubmit"
+                            OnCancel="@HandleCancel"
+                            IsSubmitting="@IsSubmitting"
+                            SubmitButtonText="Save Changes"
+                            IsNewTemplate="false" />
+                    </Card>
+                }
+            </div>
+
+            <div class="col-lg-4">
+                <Card Title="Preview" Icon="eye">
+                    <PromptPreview Template="@Template" />
+                </Card>
+            </div>
+        </div>
+    }
+</div>

@@ -19,6 +19,9 @@ builder.Host.UseSerilog();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
+// Add Radzen components
+builder.Services.AddRadzenComponents();
+
 // Add SignalR
 builder.Services.AddSignalR();
 
@@ -29,17 +32,13 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<PRFactory.Infrastructure.Events.IEventBroadcaster,
     SignalREventBroadcaster>();
 
-// Configure HttpClient for PRFactory.Api
-var apiBaseUrl = builder.Configuration.GetValue<string>("ApiSettings:BaseUrl") ?? "http://localhost:5000";
-builder.Services.AddHttpClient("PRFactoryApi", client =>
-{
-    client.BaseAddress = new Uri(apiBaseUrl);
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
-
 // Register Web UI services (facades for Blazor components)
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<IRepositoryService, RepositoryService>();
+builder.Services.AddScoped<IWorkflowEventService, WorkflowEventService>();
+builder.Services.AddScoped<IAgentPromptService, AgentPromptService>();
+builder.Services.AddScoped<ITenantService, TenantService>();
+builder.Services.AddScoped<IErrorService, ErrorService>();
 
 var app = builder.Build();
 

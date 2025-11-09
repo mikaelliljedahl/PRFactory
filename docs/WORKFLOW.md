@@ -97,7 +97,8 @@ flowchart TB
 
     Webhook3 --> Agent10[ApprovalCheckAgent]
     Agent10 --> CheckApproval{Plan<br/>approved?}
-    CheckApproval -- Rejected --> State4
+    CheckApproval -- Rejected & Regenerate --> State4
+    CheckApproval -- Refined with Instructions --> Agent6
     CheckApproval -- Approved --> State7[State: PlanApproved]
 
     State7 --> Optional{Auto-implement<br/>enabled?}
@@ -342,8 +343,10 @@ sequenceDiagram
 3. **Plan Review**
    - Plan summary displayed in PRFactory UI
    - Developer reviews plan in UI and detailed files in git branch
-   - Developer can edit plan files directly in git
-   - Developer approves or rejects via PRFactory UI
+   - Developer has three options:
+     - **Approve**: Proceed with implementation using this plan
+     - **Refine**: Provide specific instructions to improve the plan (e.g., "Add database migration steps", "Use dependency injection instead of static classes")
+     - **Reject & Regenerate**: Completely regenerate the plan from scratch with feedback
    - Optionally sync plan summary to external systems
 
 ### Example Plan
@@ -617,8 +620,9 @@ stateDiagram-v2
 | AnswersReceived | Planning | All questions sufficiently answered |
 | AnswersReceived | QuestionsPosted | More clarification needed |
 | Planning | PlanPosted | Plan committed to branch |
-| PlanPosted | PlanApproved | Developer approves with "@claude plan approved" |
-| PlanPosted | AnswersReceived | Developer rejects, needs more info |
+| PlanPosted | PlanApproved | Developer approves plan in PRFactory UI |
+| PlanPosted | Planning | Developer refines plan with specific instructions in PRFactory UI |
+| PlanPosted | AnswersReceived | Developer rejects & regenerates completely in PRFactory UI |
 | PlanApproved | Implementing | Auto-implementation enabled |
 | PlanApproved | PRCreated | Manual implementation, PR created |
 | Implementing | PRCreated | Code generated, tests pass, PR created |

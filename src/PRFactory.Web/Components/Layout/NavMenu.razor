@@ -31,16 +31,36 @@
                 <i class="bi bi-diagram-3"></i> Workflows
             </NavLink>
         </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="workflows/events">
+                <i class="bi bi-calendar-event"></i> Event Log
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="errors">
+                <i class="bi bi-exclamation-triangle"></i> Errors
+                @if (UnresolvedErrorCount > 0)
+                {
+                    <span class="badge bg-danger ms-2">@UnresolvedErrorCount</span>
+                }
+            </NavLink>
+        </div>
+
+        <hr class="my-2 text-white-50" />
+
+        <div class="nav-item px-3">
+            <small class="text-white-50 px-3">ADMIN</small>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="tenants">
+                <i class="bi bi-building"></i> Tenants
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="agent-prompts">
+                <i class="bi bi-robot"></i> Agent Prompts
+            </NavLink>
+        </div>
     </nav>
 </div>
 
-@code {
-    private bool collapseNavMenu = true;
-
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
-}

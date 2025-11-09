@@ -1,0 +1,112 @@
+@using PRFactory.Web.UI.Forms
+@using PRFactory.Web.UI.Buttons
+@using PRFactory.Web.Models
+
+<EditForm Model="@Model" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+
+    <div class="row">
+        <div class="col-md-6">
+            <FormTextField @bind-Value="Model.Name"
+                          Label="Repository Name"
+                          Placeholder="my-awesome-project"
+                          Required="true"
+                          HelpText="A friendly name for this repository"
+                          For="@(() => Model.Name)" />
+        </div>
+
+        <div class="col-md-6">
+            <FormSelectField @bind-Value="Model.GitPlatform"
+                            Label="Git Platform"
+                            Required="true"
+                            HelpText="Select your Git hosting platform"
+                            For="@(() => Model.GitPlatform)">
+                <option value="">-- Select Platform --</option>
+                <option value="GitHub">GitHub</option>
+                <option value="Bitbucket">Bitbucket</option>
+                <option value="AzureDevOps">Azure DevOps</option>
+                <option value="GitLab">GitLab</option>
+            </FormSelectField>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <FormTextField @bind-Value="Model.CloneUrl"
+                          Label="Clone URL"
+                          Placeholder="https://github.com/username/repository.git"
+                          Required="true"
+                          HelpText="The HTTPS clone URL of your repository"
+                          For="@(() => Model.CloneUrl)" />
+        </div>
+    </div>
+
+    @if (ShowTenantSelection && Tenants != null && Tenants.Any())
+    {
+        <div class="row">
+            <div class="col-12">
+                <FormSelectField @bind-Value="Model.TenantId"
+                                Label="Tenant"
+                                Required="true"
+                                HelpText="Select the tenant that owns this repository"
+                                For="@(() => Model.TenantId)">
+                    <option value="@Guid.Empty">-- Select Tenant --</option>
+                    @foreach (var tenant in Tenants)
+                    {
+                        <option value="@tenant.Id">@tenant.Name</option>
+                    }
+                </FormSelectField>
+            </div>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-6">
+            <FormTextField @bind-Value="Model.DefaultBranch"
+                          Label="Default Branch"
+                          Placeholder="main"
+                          Required="true"
+                          HelpText="The default branch to use (usually 'main' or 'master')"
+                          For="@(() => Model.DefaultBranch)" />
+        </div>
+
+        <div class="col-md-6">
+            <FormTextField @bind-Value="Model.AccessToken"
+                          Label="Access Token"
+                          InputType="password"
+                          Placeholder="Enter access token"
+                          Required="@(!IsEditMode)"
+                          HelpText="@(IsEditMode ? "Leave blank to keep existing token" : "Personal access token for Git operations")"
+                          For="@(() => Model.AccessToken)" />
+        </div>
+    </div>
+
+    @if (IsEditMode && Model is UpdateRepositoryRequest updateModel)
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="isActive" @bind="updateModel.IsActive" />
+                    <label class="form-check-label" for="isActive">
+                        Repository is active
+                    </label>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="d-flex gap-2 justify-content-end">
+        @if (OnCancel.HasDelegate)
+        {
+            <button type="button" class="btn btn-secondary" @onclick="HandleCancel">
+                <i class="bi bi-x-circle me-2"></i>Cancel
+            </button>
+        }
+
+        <LoadingButton IsLoading="@IsSubmitting"
+                      Icon="check-circle"
+                      Type="submit">
+            @SubmitButtonText
+        </LoadingButton>
+    </div>
+</EditForm>

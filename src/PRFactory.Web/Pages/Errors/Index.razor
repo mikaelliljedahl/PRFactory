@@ -1,0 +1,174 @@
+@page "/errors"
+@using PRFactory.Web.Models
+@using PRFactory.Web.Components.Errors
+@using PRFactory.Web.UI.Display
+@using PRFactory.Domain.ValueObjects
+
+<PageTitle>Error Logs - PRFactory</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Error Logs
+        </h1>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary" @onclick="RefreshErrors">
+                <i class="bi bi-arrow-clockwise me-1"></i>
+                Refresh
+            </button>
+            @if (SelectedErrorIds.Any())
+            {
+                <button class="btn btn-success" @onclick="BulkResolveErrors">
+                    <i class="bi bi-check-circle me-1"></i>
+                    Resolve Selected (@SelectedErrorIds.Count)
+                </button>
+            }
+        </div>
+    </div>
+
+    @if (Statistics != null)
+    {
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-@Statistics.HealthStatusClass text-white">
+                    <div class="card-body">
+                        <h6 class="card-title">System Health</h6>
+                        <h3 class="mb-0">@Statistics.HealthStatus</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-danger text-white">
+                    <div class="card-body">
+                        <h6 class="card-title">Unresolved Errors</h6>
+                        <h3 class="mb-0">@Statistics.UnresolvedErrors</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <h6 class="card-title">Critical Errors</h6>
+                        <h3 class="mb-0">@Statistics.CriticalErrors</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h6 class="card-title">Resolution Rate</h6>
+                        <h3 class="mb-0">@Statistics.ResolutionRate%</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <ErrorListFilter OnFiltersChanged="HandleFiltersChanged" />
+
+    @if (IsLoading)
+    {
+        <div class="text-center py-5">
+            <LoadingSpinner />
+            <p class="text-muted mt-3">Loading errors...</p>
+        </div>
+    }
+    else if (Errors.Any())
+    {
+        <div class="card">
+            <div class="card-body">
+                <Radzen.Blazor.RadzenDataGrid Data="@Errors"
+                                              TItem="ErrorDto"
+                                              AllowGrouping="true"
+                                              AllowSorting="true"
+                                              AllowFiltering="false"
+                                              AllowColumnResize="true"
+                                              PageSize="@PageSize"
+                                              Count="@TotalCount"
+                                              LoadData="@LoadData"
+                                              IsLoading="@IsLoading">
+                    <Columns>
+                        <Radzen.Blazor.RadzenDataGridColumn TItem="ErrorDto" Width="50px" Sortable="false" Filterable="false">
+                            <HeaderTemplate>
+                                <input type="checkbox" @onchange="ToggleSelectAll" />
+                            </HeaderTemplate>
+                            <Template Context="error">
+                                <input type="checkbox"
+                                       checked="@SelectedErrorIds.Contains(error.Id)"
+                                       @onchange="() => ToggleErrorSelection(error.Id)" />
+                            </Template>
+                        </Radzen.Blazor.RadzenDataGridColumn>
+
+                        <Radzen.Blazor.RadzenDataGridColumn TItem="ErrorDto" Property="Severity" Title="Severity" Width="120px">
+                            <Template Context="error">
+                                <span class="badge bg-@error.SeverityClass">
+                                    <i class="bi bi-@error.SeverityIcon me-1"></i>
+                                    @error.Severity
+                                </span>
+                            </Template>
+                            <GroupTemplate Context="group">
+                                Severity: @group.Data.Key
+                            </GroupTemplate>
+                        </Radzen.Blazor.RadzenDataGridColumn>
+
+                        <Radzen.Blazor.RadzenDataGridColumn TItem="ErrorDto" Property="Message" Title="Message">
+                            <Template Context="error">
+                                <div class="text-truncate" style="max-width: 400px;" title="@error.Message">
+                                    @error.Message
+                                </div>
+                            </Template>
+                        </Radzen.Blazor.RadzenDataGridColumn>
+
+                        <Radzen.Blazor.RadzenDataGridColumn TItem="ErrorDto" Property="EntityType" Title="Entity Type" Width="150px" />
+
+                        <Radzen.Blazor.RadzenDataGridColumn TItem="ErrorDto" Property="CreatedAt" Title="Created" Width="180px">
+                            <Template Context="error">
+                                @error.FormattedCreatedAt
+                            </Template>
+                        </Radzen.Blazor.RadzenDataGridColumn>
+
+                        <Radzen.Blazor.RadzenDataGridColumn TItem="ErrorDto" Property="IsResolved" Title="Status" Width="120px">
+                            <Template Context="error">
+                                @if (error.IsResolved)
+                                {
+                                    <span class="badge bg-success">Resolved</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Unresolved</span>
+                                }
+                            </Template>
+                        </Radzen.Blazor.RadzenDataGridColumn>
+
+                        <Radzen.Blazor.RadzenDataGridColumn TItem="ErrorDto" Width="180px" Sortable="false" Filterable="false">
+                            <Template Context="error">
+                                <div class="d-flex gap-1">
+                                    <button class="btn btn-sm btn-outline-primary" @onclick="() => ViewErrorDetails(error.Id)">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    @if (!error.IsResolved)
+                                    {
+                                        <button class="btn btn-sm btn-outline-success" @onclick="() => ResolveError(error.Id)">
+                                            <i class="bi bi-check-circle"></i>
+                                        </button>
+                                    }
+                                    @if (error.EntityType == "Ticket")
+                                    {
+                                        <button class="btn btn-sm btn-outline-warning" @onclick="() => RetryOperation(error.Id)">
+                                            <i class="bi bi-arrow-clockwise"></i>
+                                        </button>
+                                    }
+                                </div>
+                            </Template>
+                        </Radzen.Blazor.RadzenDataGridColumn>
+                    </Columns>
+                </Radzen.Blazor.RadzenDataGrid>
+            </div>
+        </div>
+    }
+    else
+    {
+        <EmptyState Message="No errors found" Icon="check-circle" IconClass="text-success" />
+    }
+</div>

@@ -318,6 +318,65 @@ public partial class TicketHeader
 - **Licensing**: Some libraries have restrictive licenses
 - **Performance**: Component libraries can conflict and slow rendering
 
+#### NO JavaScript - Blazor Server Only
+
+**CRITICAL: This is a Blazor Server application. NEVER add custom JavaScript files.**
+
+**❌ FORBIDDEN:**
+- Creating custom JavaScript files in `/wwwroot/js/`
+- Adding `<script>` tags with custom JavaScript
+- Using JavaScript interop (`IJSRuntime`) for functionality that Blazor can handle natively
+- Bootstrap JavaScript (conflicts with Blazor event handling)
+- jQuery or any JavaScript framework
+
+**✅ ALLOWED (rare exceptions only):**
+- Minimal JavaScript interop for browser APIs that Blazor doesn't expose
+- Third-party component libraries' bundled JavaScript (Radzen, etc.)
+- **Always get approval before adding any JavaScript**
+
+**Why NO JavaScript:**
+- **Blazor Server renders on the server** - JavaScript defeats the purpose
+- **SignalR handles all interactivity** - No need for client-side code
+- **Complexity**: Maintaining separate JavaScript and C# code paths
+- **Debugging**: JavaScript errors harder to catch than C# compilation errors
+- **Type Safety**: JavaScript breaks C#'s type safety guarantees
+- **Performance**: SignalR roundtrips are optimized, JavaScript interop adds overhead
+
+**Examples of what to use instead:**
+
+| ❌ DON'T use JavaScript for: | ✅ DO use Blazor for: |
+|------------------------------|----------------------|
+| File downloads | `NavigationManager` with data URIs or stream downloads |
+| Form validation | Blazor `<EditForm>` with `DataAnnotations` |
+| DOM manipulation | Blazor component re-rendering |
+| AJAX calls | `HttpClient` in C# with `@inject` |
+| Event handling | Blazor `@onclick`, `@onchange`, etc. |
+| Animations | CSS transitions/animations |
+| Modals/dialogs | Radzen `DialogService` or Blazor component state |
+| Clipboard | Blazor `IJSRuntime` only if no C# alternative exists |
+
+**File Download Pattern (NO JavaScript):**
+```csharp
+// CORRECT: Pure Blazor approach for downloads
+public async Task DownloadCsvAsync()
+{
+    var csvData = GenerateCsvData();
+    var fileName = $"export-{DateTime.Now:yyyyMMdd}.csv";
+
+    // Use NavigationManager for simple downloads
+    NavigationManager.NavigateTo($"data:text/csv;charset=utf-8,{Uri.EscapeDataString(csvData)}", true);
+
+    // OR use a file stream endpoint for larger files
+    NavigationManager.NavigateTo($"/api/export/csv/{fileId}", true);
+}
+```
+
+**If you absolutely need JavaScript (get approval first):**
+1. Document why Blazor cannot handle it
+2. Keep it minimal (< 10 lines)
+3. Isolate in component-specific interop
+4. Never create separate `.js` files
+
 #### Component Design Principles
 
 **Pure UI Components (`/UI/*`):**
@@ -1607,6 +1666,64 @@ var repo = new Repository
 
 ### For AI Agents Working on This Codebase
 
+#### .NET Development Environment Setup (CRITICAL - Claude Code Web Only)
+
+**IMPORTANT: This section applies ONLY to Claude Code on the web, not local Claude Code.**
+
+**Before running any `dotnet restore` or `dotnet build` commands in Claude Code web sessions, you MUST configure the NuGet proxy.**
+
+PRFactory uses .NET 10, which is automatically installed by the SessionStart hook. However, .NET HttpClient cannot handle Claude Code web's JWT-based proxy authentication directly. A local NuGet proxy is started automatically to handle this.
+
+**Note:** Local Claude Code environments don't have this proxy requirement and can run `dotnet` commands directly.
+
+**Required Setup Before Any `dotnet` Commands:**
+
+```bash
+# Source the helper script created by SessionStart hook
+source /tmp/dotnet-proxy-setup.sh
+
+# Now you can run dotnet commands
+dotnet restore
+dotnet build
+```
+
+**What the helper script does:**
+- Unsets Claude Code's proxy environment variables that .NET can't handle
+- Sets HTTP_PROXY and HTTPS_PROXY to the local NuGet proxy (http://127.0.0.1:8888)
+
+**One-liner for convenience:**
+```bash
+source /tmp/dotnet-proxy-setup.sh && dotnet restore && dotnet build
+```
+
+**Why This Is Required:**
+- .NET HttpClient doesn't support the JWT authentication format used by Claude Code's container proxy
+- Without proper proxy configuration, `dotnet restore` fails with HTTP 401 errors
+- The NuGet proxy (running on port 8888) handles the outer proxy authentication transparently
+- This proxy is automatically started by the SessionStart hook
+
+**For New Claude Sessions:**
+- The SessionStart hook automatically:
+  1. Installs .NET SDK 10 to `/root/.dotnet`
+  2. Starts the NuGet proxy on port 8888
+  3. Creates `/tmp/dotnet-proxy-setup.sh` helper script
+- You still need to source the helper script before each `dotnet` command
+
+**Files Involved:**
+- `/home/user/PRFactory/.claude/scripts/session-start.sh` - SessionStart hook
+- `/home/user/PRFactory/.claude/scripts/nuget-proxy.py` - NuGet proxy implementation
+- `/tmp/dotnet-proxy-setup.sh` - Helper script to configure environment (created at session start)
+
+**DO:**
+- Always source `/tmp/dotnet-proxy-setup.sh` before running `dotnet` commands
+- Check that the NuGet proxy is running: `pgrep -f nuget-proxy.py`
+- Check proxy logs if issues occur: `tail -f /tmp/nuget-proxy.log`
+
+**DON'T:**
+- Run `dotnet restore` or `dotnet build` without sourcing the helper script (in Claude Code web)
+- Modify proxy environment variables manually (use the helper script)
+- Try to use .NET without the NuGet proxy in Claude Code web sessions
+
 #### When Reviewing Code
 
 **ASK YOURSELF:**
@@ -1669,6 +1786,72 @@ var repo = new Repository
 - Modifying state machine transitions
 - Changing tenant isolation model
 - Altering credential encryption
+
+#### When Writing Documentation
+
+**Documentation Best Practices:**
+
+All documentation in the `/docs` directory and root-level `.md` files should be written for **newcomers and future developers**, not for tracking specific work sessions.
+
+**DO**:
+- Write documentation that explains **what exists today** and **why it was designed this way**
+- Focus on concepts, architecture, and current implementation status
+- Use present tense ("The system uses X" not "We built X in session Y")
+- Include code examples, diagrams, and references to actual file paths
+- Update documentation to reflect the current state of the codebase
+- Archive session-specific implementation notes to `/docs/archive/` after extracting lessons learned
+
+**DON'T**:
+- Reference specific Claude sessions, branch names, or temporary identifiers in permanent documentation
+- Use past tense descriptions of "what was built when" (save for changelog/release notes)
+- Include phrases like "Completed: November 8, 2025" or "Branch: claude/xyz-session-123" in core documentation
+- Write documentation as a "work log" or "session summary" - these belong in `/docs/archive/`
+- Say "we decided", "we implemented", "in this session" - focus on **what** exists, not **when/how** it was built
+
+**Documentation Categories**:
+
+1. **Core Documentation** (`/docs/*.md`, `README.md`, `CLAUDE.md`)
+   - Timeless reference material
+   - Architecture explanations
+   - Current implementation status
+   - Setup and usage guides
+   - No session-specific information
+
+2. **Archive** (`/docs/archive/*.md`)
+   - Session-specific implementation summaries
+   - Original proposals and plans
+   - Historical architectural decisions
+   - Can include dates, session IDs, branches
+   - Useful for understanding project evolution
+
+**Example - BAD (Session-specific)**:
+```markdown
+# Ticket Refinement Implementation Summary
+**Completed**: November 8, 2025
+**Branch**: claude/refine-ticket-011CUv4WmefRiccxDkptydD9
+**Commit**: 606b388
+
+In this session, we implemented the ticket refinement workflow...
+```
+
+**Example - GOOD (Timeless reference)**:
+```markdown
+# Ticket Refinement Workflow
+
+The ticket refinement workflow provides AI-powered analysis and
+improvement of ticket descriptions using the RefinementGraph.
+
+## Architecture
+
+The system uses three specialized agents:
+1. TicketUpdateGenerationAgent - Generates refined tickets
+2. TicketUpdatePostAgent - Posts updates to ticket systems
+3. TicketUpdatePreview component - Web UI for review
+
+[See file paths, code examples, architecture diagrams...]
+```
+
+**When in doubt**: Ask yourself "Will a developer in 6 months care about which session this was built in?" If no, don't include session-specific details in permanent documentation.
 
 ---
 

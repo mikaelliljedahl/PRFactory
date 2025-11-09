@@ -1,0 +1,70 @@
+@using PRFactory.Web.Models
+@using PRFactory.Web.UI.Forms
+@using PRFactory.Web.UI.Buttons
+
+<EditForm Model="@Model" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary class="text-danger" />
+
+    <FormTextField
+        Label="Agent Name"
+        @bind-Value="Model.Name"
+        Placeholder="e.g., code-implementation-specialist"
+        HelpText="Unique identifier for this agent"
+        Required="true"
+        Disabled="@(!IsNewTemplate)" />
+
+    <FormTextField
+        Label="Description"
+        @bind-Value="Model.Description"
+        Placeholder="Brief description of what this agent does"
+        Required="true" />
+
+    <FormSelectField
+        Label="Category"
+        @bind-Value="Model.Category"
+        Required="true">
+        <option value="">-- Select Category --</option>
+        <option value="Implementation">Implementation</option>
+        <option value="Planning">Planning</option>
+        <option value="Analysis">Analysis</option>
+        <option value="Testing">Testing</option>
+        <option value="Review">Review</option>
+    </FormSelectField>
+
+    <FormCodeEditor
+        Label="Prompt Content"
+        @bind-Value="Model.PromptContent"
+        Rows="20"
+        Placeholder="Enter the prompt template content here. Use {{VariableName}} for dynamic values."
+        HelpText="Supports POML markup and variable substitution using {{VariableName}} syntax"
+        Required="true" />
+
+    <FormTextField
+        Label="Recommended Model"
+        @bind-Value="Model.RecommendedModel"
+        Placeholder="e.g., sonnet, opus, haiku"
+        HelpText="Suggested Claude model for best results (optional)" />
+
+    <FormTextField
+        Label="Color"
+        @bind-Value="Model.Color"
+        Placeholder="e.g., #4A90E2"
+        HelpText="Hex color code for UI visual identification (optional)" />
+
+    <div class="d-flex gap-2 mt-4">
+        <LoadingButton
+            Type="submit"
+            IsLoading="@IsSubmitting"
+            Icon="check-circle">
+            @SubmitButtonText
+        </LoadingButton>
+
+        @if (OnCancel.HasDelegate)
+        {
+            <button type="button" class="btn btn-secondary" @onclick="OnCancel" disabled="@IsSubmitting">
+                <i class="bi bi-x-circle"></i> Cancel
+            </button>
+        }
+    </div>
+</EditForm>

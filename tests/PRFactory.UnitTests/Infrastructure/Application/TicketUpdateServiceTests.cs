@@ -5,13 +5,13 @@ using Xunit;
 using PRFactory.Core.Application.Services;
 using PRFactory.Domain.Entities;
 using PRFactory.Domain.Interfaces;
-using PRFactory.Domain.ValueObjects;
 using PRFactory.Infrastructure.Application;
 using PRFactory.Infrastructure.Persistence;
 using PRFactory.Infrastructure.Persistence.Encryption;
 using PRFactory.Infrastructure.Persistence.Repositories;
 using PRFactory.Infrastructure.Agents.Graphs;
 using PRFactory.Infrastructure.Agents.Messages;
+using WorkflowState = PRFactory.Domain.ValueObjects.WorkflowState;
 
 namespace PRFactory.UnitTests.Infrastructure.Application;
 

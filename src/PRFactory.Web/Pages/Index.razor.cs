@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using PRFactory.Domain.Entities;
 using PRFactory.Domain.Interfaces;
 using PRFactory.Domain.ValueObjects;
+using PRFactory.Web.Services;
 
 namespace PRFactory.Web.Pages;
 

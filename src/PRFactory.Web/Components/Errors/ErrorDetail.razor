@@ -1,0 +1,117 @@
+@using PRFactory.Web.Models
+@using PRFactory.Web.UI.Display
+
+@if (Error != null)
+{
+    <div class="card">
+        <div class="card-header bg-@Error.SeverityClass text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-@Error.SeverityIcon me-2"></i>
+                    Error Details
+                </h5>
+                @if (Error.IsResolved)
+                {
+                    <span class="badge bg-success">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Resolved
+                    </span>
+                }
+            </div>
+        </div>
+
+        <div class="card-body">
+            <Radzen.Blazor.RadzenTabs>
+                <Tabs>
+                    <Radzen.Blazor.RadzenTabsItem Text="Overview">
+                        <div class="py-3">
+                            <dl class="row">
+                                <dt class="col-sm-3">Message</dt>
+                                <dd class="col-sm-9">@Error.Message</dd>
+
+                                <dt class="col-sm-3">Severity</dt>
+                                <dd class="col-sm-9">
+                                    <span class="badge bg-@Error.SeverityClass">
+                                        <i class="bi bi-@Error.SeverityIcon me-1"></i>
+                                        @Error.Severity
+                                    </span>
+                                </dd>
+
+                                <dt class="col-sm-3">Created At</dt>
+                                <dd class="col-sm-9">@Error.FormattedCreatedAt</dd>
+
+                                @if (!string.IsNullOrEmpty(Error.EntityType))
+                                {
+                                    <dt class="col-sm-3">Related Entity</dt>
+                                    <dd class="col-sm-9">
+                                        @Error.EntityType
+                                        @if (Error.EntityId.HasValue)
+                                        {
+                                            <span class="text-muted">(@Error.EntityId)</span>
+                                        }
+                                    </dd>
+                                }
+
+                                @if (Error.IsResolved)
+                                {
+                                    <dt class="col-sm-3">Resolved At</dt>
+                                    <dd class="col-sm-9">@Error.FormattedResolvedAt</dd>
+
+                                    @if (!string.IsNullOrEmpty(Error.ResolvedBy))
+                                    {
+                                        <dt class="col-sm-3">Resolved By</dt>
+                                        <dd class="col-sm-9">@Error.ResolvedBy</dd>
+                                    }
+
+                                    @if (!string.IsNullOrEmpty(Error.ResolutionNotes))
+                                    {
+                                        <dt class="col-sm-3">Resolution Notes</dt>
+                                        <dd class="col-sm-9">
+                                            <div class="alert alert-success">
+                                                @Error.ResolutionNotes
+                                            </div>
+                                        </dd>
+                                    }
+                                }
+                            </dl>
+                        </div>
+                    </Radzen.Blazor.RadzenTabsItem>
+
+                    <Radzen.Blazor.RadzenTabsItem Text="Stack Trace">
+                        <div class="py-3">
+                            <StackTraceViewer StackTrace="@Error.StackTrace" />
+                        </div>
+                    </Radzen.Blazor.RadzenTabsItem>
+
+                    @if (!string.IsNullOrEmpty(Error.ContextData))
+                    {
+                        <Radzen.Blazor.RadzenTabsItem Text="Context Data">
+                            <div class="py-3">
+                                <pre class="bg-light p-3 rounded">@Error.ContextData</pre>
+                            </div>
+                        </Radzen.Blazor.RadzenTabsItem>
+                    }
+
+                    @if (RelatedErrors?.Any() == true)
+                    {
+                        <Radzen.Blazor.RadzenTabsItem Text="Related Errors">
+                            <div class="py-3">
+                                @foreach (var relatedError in RelatedErrors)
+                                {
+                                    <ErrorCard Error="@relatedError" ShowActions="false" />
+                                }
+                            </div>
+                        </Radzen.Blazor.RadzenTabsItem>
+                    }
+                </Tabs>
+            </Radzen.Blazor.RadzenTabs>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        Error not found
+    </div>
+}

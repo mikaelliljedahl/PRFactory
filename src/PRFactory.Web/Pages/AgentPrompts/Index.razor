@@ -1,0 +1,95 @@
+@page "/agent-prompts"
+@using PRFactory.Web.Components.AgentPrompts
+@using PRFactory.Web.Models
+@using PRFactory.Web.UI.Display
+@using PRFactory.Web.UI.Alerts
+
+<PageTitle>Agent Prompt Templates</PageTitle>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="bi bi-robot"></i> Agent Prompt Templates
+        </h1>
+        <a href="/agent-prompts/create" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Create Template
+        </a>
+    </div>
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <AlertMessage Message="@ErrorMessage" Type="AlertType.Danger" />
+    }
+
+    @if (!string.IsNullOrEmpty(SuccessMessage))
+    {
+        <AlertMessage Message="@SuccessMessage" Type="AlertType.Success" />
+    }
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="bi bi-filter"></i>
+                </span>
+                <select class="form-select" @bind="SelectedCategory" @bind:after="FilterTemplates">
+                    <option value="">All Categories</option>
+                    <option value="Implementation">Implementation</option>
+                    <option value="Planning">Planning</option>
+                    <option value="Analysis">Analysis</option>
+                    <option value="Testing">Testing</option>
+                    <option value="Review">Review</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="bi bi-funnel"></i>
+                </span>
+                <select class="form-select" @bind="SelectedType" @bind:after="FilterTemplates">
+                    <option value="">All Types</option>
+                    <option value="system">System Templates</option>
+                    <option value="custom">Custom Templates</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" class="form-control" placeholder="Search templates..."
+                       @bind="SearchQuery" @bind:event="oninput" @bind:after="FilterTemplates" />
+            </div>
+        </div>
+    </div>
+
+    @if (IsLoading)
+    {
+        <LoadingSpinner Message="Loading templates..." />
+    }
+    else if (FilteredTemplates.Count == 0)
+    {
+        <EmptyState
+            Icon="robot"
+            Title="No Templates Found"
+            Message="@GetEmptyStateMessage()"
+            ActionText="Create Template"
+            ActionUrl="/agent-prompts/create" />
+    }
+    else
+    {
+        <div class="templates-list">
+            @foreach (var template in FilteredTemplates)
+            {
+                <PromptTemplateListItem
+                    Template="@template"
+                    OnPreview="@(t => NavigateToPreview(t.Id))"
+                    OnEdit="@(t => NavigateToEdit(t.Id))"
+                    OnClone="@HandleClone"
+                    OnDelete="@HandleDelete" />
+            }
+        </div>
+    }
+</div>

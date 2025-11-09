@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using PRFactory.Web.Models;
+using PRFactory.Web.Services;
 
 namespace PRFactory.Web.Pages.Tickets;
 

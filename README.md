@@ -249,13 +249,13 @@ Detailed technical documentation for specific components:
 
 Historical context and future planning:
 
-- **[Original Proposal](docs/ORIGINAL_PROPOSAL.md)** - Initial project vision and requirements
+- **[Original Proposal](docs/archive/ORIGINAL_PROPOSAL.md)** - Initial project vision and requirements
   - Problem statement and solution
   - Proof of concept plan
   - Pricing models and benefits
   - Risk mitigation strategies
 
-- **[Web UI Implementation Plan](docs/IMPLEMENTATION_PLAN_WEB_UI.md)** - Planned UI enhancements
+- **[Web UI Implementation Plan](docs/archive/IMPLEMENTATION_PLAN_WEB_UI.md)** - Planned UI enhancements
   - Web UI as primary interface
   - External system sync strategy
   - 10-phase implementation plan
@@ -430,7 +430,7 @@ PRFactory/
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the Functional Source License, Version 1.1, MIT Future License (FSL-1.1-MIT) - see the [LICENSE.md](LICENSE.md) file for details.
 
 ## Support
 

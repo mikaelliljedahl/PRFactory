@@ -133,12 +133,32 @@ if [ -f "$NUGET_PROXY_SCRIPT" ]; then
     if pgrep -f nuget-proxy.py > /dev/null; then
         echo "✅ NuGet proxy started on http://127.0.0.1:8888"
         echo ""
-        echo "💡 For dotnet restore/build, run:"
-        echo "   unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY GLOBAL_AGENT_HTTP_PROXY GLOBAL_AGENT_HTTPS_PROXY"
-        echo "   export HTTP_PROXY=http://127.0.0.1:8888"
-        echo "   export HTTPS_PROXY=http://127.0.0.1:8888"
+
+        # Configure environment for .NET to use the NuGet proxy
+        # CRITICAL: .NET HttpClient doesn't handle Claude Code's JWT proxy authentication,
+        # so we route through a local proxy that handles it
+        echo "🔧 Configuring .NET to use NuGet proxy..."
+
+        # Create a helper script that agents can source
+        DOTNET_PROXY_HELPER="/tmp/dotnet-proxy-setup.sh"
+        cat > "$DOTNET_PROXY_HELPER" <<'EOF'
+# Unset Claude Code proxy variables that .NET can't handle
+unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY GLOBAL_AGENT_HTTP_PROXY GLOBAL_AGENT_HTTPS_PROXY
+
+# Set NuGet proxy
+export HTTP_PROXY=http://127.0.0.1:8888
+export HTTPS_PROXY=http://127.0.0.1:8888
+EOF
+
+        echo "✅ Created helper script at $DOTNET_PROXY_HELPER"
+        echo ""
+        echo "💡 Before running dotnet restore/build, source the helper script:"
+        echo "   source /tmp/dotnet-proxy-setup.sh"
         echo "   dotnet restore"
         echo "   dotnet build"
+        echo ""
+        echo "📝 Or run directly:"
+        echo "   source /tmp/dotnet-proxy-setup.sh && dotnet restore && dotnet build"
     else
         echo "⚠️  NuGet proxy failed to start (check /tmp/nuget-proxy.log)"
     fi

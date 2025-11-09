@@ -68,7 +68,7 @@
 │  Workflow:                                                   │
 │    - RefinementGraph (orchestrates workflow)                │
 │  CLI Adapters:                                               │
-│    - ClaudeDesktopCliAdapter (headless mode)                │
+│    - ClaudeCodeCliAdapter (headless mode)                │
 │    - CodexCliAdapter (stub for future)                      │
 │  Persistence:                                                │
 │    - TicketUpdateRepository (EF Core)                       │
@@ -206,10 +206,10 @@ Agent-agnostic interface for CLI operations:
 - `GetCapabilities()` - Query agent capabilities
 - `AgentName`, `SupportsStreaming` properties
 
-#### **ClaudeDesktopCliAdapter** (`Infrastructure/Agents/Adapters/ClaudeDesktopCliAdapter.cs`)
+#### **ClaudeCodeCliAdapter** (`Infrastructure/Agents/Adapters/ClaudeCodeCliAdapter.cs`)
 Implementation for Claude Desktop CLI:
 - Uses `claude --headless --project-path "/path" --prompt "..."` command
-- Configurable timeouts via `ClaudeDesktopCliOptions`
+- Configurable timeouts via `ClaudeCodeCliOptions`
 - Safe argument passing with `ArgumentList` (no shell injection)
 - JSON response parsing
 - Metadata extraction (tokens, model name)
@@ -492,13 +492,13 @@ Added ticket update preview section:
 
 ## 🔧 Configuration
 
-### ClaudeDesktopCli Configuration
+### ClaudeCodeCli Configuration
 
 Added to `appsettings.json` (both Api and Worker):
 
 ```json
 {
-  "ClaudeDesktopCli": {
+  "ClaudeCodeCli": {
     "ExecutablePath": "claude",
     "DefaultTimeoutSeconds": 300,
     "ProjectContextTimeoutSeconds": 600,
@@ -605,7 +605,7 @@ Update `appsettings.json` with Claude Desktop CLI path:
 
 ```json
 {
-  "ClaudeDesktopCli": {
+  "ClaudeCodeCli": {
     "ExecutablePath": "/path/to/claude"
   }
 }
@@ -652,7 +652,7 @@ dotnet run
 
 2. **Infrastructure Layer:**
    - `TicketUpdateRepository` methods
-   - `ClaudeDesktopCliAdapter` command building
+   - `ClaudeCodeCliAdapter` command building
    - `ProcessExecutor` timeout and cancellation
    - `TicketUpdateGenerationAgent` prompt building
    - `TicketUpdatePostAgent` Jira formatting

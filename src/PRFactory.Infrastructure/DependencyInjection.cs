@@ -128,15 +128,15 @@ public static class DependencyInjection
         // Register CLI agent abstraction layer
         services.AddScoped<IProcessExecutor, ProcessExecutor>();
 
-        // Configure ClaudeDesktopCliOptions
-        services.Configure<ClaudeDesktopCliOptions>(
-            configuration.GetSection("ClaudeDesktopCli"));
+        // Configure ClaudeCodeCliOptions
+        services.Configure<ClaudeCodeCliOptions>(
+            configuration.GetSection("ClaudeCodeCli"));
 
-        services.AddScoped<ClaudeDesktopCliAdapter>();
+        services.AddScoped<ClaudeCodeCliAdapter>();
         services.AddScoped<CodexCliAdapter>();
 
-        // Register default CLI agent (Claude Desktop)
-        services.AddScoped<ICliAgent>(sp => sp.GetRequiredService<ClaudeDesktopCliAdapter>());
+        // Register default CLI agent (Claude Code)
+        services.AddScoped<ICliAgent>(sp => sp.GetRequiredService<ClaudeCodeCliAdapter>());
 
         // Register database seeder
         services.AddScoped<DbSeeder>();

@@ -953,7 +953,7 @@ var response = await client.Messages.CreateAsync(new MessageRequest
 #### Option B: Claude Desktop API Integration
 ```csharp
 // If Claude Desktop provides an API for CLI integration
-var claudeDesktop = new ClaudeDesktopClient();
+var claudeDesktop = new ClaudeCodeClient();
 await claudeDesktop.SendProjectContextAsync(repositoryPath);
 var response = await claudeDesktop.GenerateWithProjectContextAsync(prompt);
 ```

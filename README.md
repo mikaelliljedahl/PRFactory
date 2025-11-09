@@ -157,7 +157,7 @@ flowchart TB
        "BaseUrl": "https://yourcompany.atlassian.net",
        "WebhookSecret": "your-webhook-secret"
      },
-     "ClaudeDesktopCli": {
+     "ClaudeCodeCli": {
        "ExecutablePath": "claude",
        "DefaultTimeoutSeconds": 120,
        "ProjectContextTimeoutSeconds": 300

@@ -244,11 +244,11 @@ Detailed technical documentation for specific components:
   - Application services and background jobs
   - Error handling and resilience patterns
 
-- **[Claude AI Integration](docs/architecture/claude-integration.md)** - AI-powered analysis and code generation
-  - Service interfaces and prompt templates
-  - Context building and token management
-  - Conversation history tracking
-  - Cost tracking and optimization
+- **[CLI Agent Integration](docs/architecture/cli-agent-integration.md)** - LLM-agnostic AI integration ✨ **NEW**
+  - ICliAgent abstraction layer (LLM-agnostic)
+  - ClaudeCodeCliAdapter (production implementation)
+  - Agent prompt management and customization
+  - Process execution with timeout and cancellation
 
 - **[Jira Integration](docs/architecture/jira-integration.md)** - Bidirectional Jira communication
   - Webhook handling and validation

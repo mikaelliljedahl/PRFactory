@@ -50,7 +50,7 @@ PRFactory/
 │   │   ├── core-engine.md             # Core workflow engine details
 │   │   ├── jira-integration.md        # Jira integration details
 │   │   ├── git-integration.md         # Git integration details
-│   │   ├── claude-integration.md      # Claude AI integration details
+│   │   ├── cli-agent-integration.md   # LLM-agnostic CLI agent architecture ✨
 │   │   ├── cli-oauth-integration-analysis.md # CLI/OAuth integration analysis
 │   │   ├── WORKFLOW_EXECUTION_ARCHITECTURE.md # Workflow execution deep-dive
 │   │   ├── WORKFLOW_EXECUTION_CRITICAL_GAPS.md # Blocking implementation gaps
@@ -61,6 +61,10 @@ PRFactory/
 │   │   ├── team-review-design.md      # Team review feature design
 │   │   ├── implementation-quality-loop.md # Quality loop design
 │   │   └── implementation-quality-loop-addendum.md # Quality loop addendum
+│   │
+│   ├── planning/                      # Planning documents
+│   │   ├── CLI_LLM_PROVIDERS.md       # CLI LLM providers planning
+│   │   └── MICROSOFT_AGENT_FRAMEWORK_INTEGRATION.md # Microsoft Agent Framework integration
 │   │
 │   ├── reviews/                       # Architecture and code reviews
 │   │   └── ARCHITECTURE_REVIEW.md     # 2025-11-09 Comprehensive architecture review ⚠️
@@ -208,9 +212,9 @@ PRFactory/
 | Component | Document | Description |
 |-----------|----------|-------------|
 | **Workflow Engine** | [core-engine.md](architecture/core-engine.md) | State machine, transitions, checkpoints |
+| **CLI Agent Integration** | [cli-agent-integration.md](architecture/cli-agent-integration.md) | LLM-agnostic adapter pattern, ICliAgent interface ✨ |
 | **Jira Integration** | [jira-integration.md](architecture/jira-integration.md) | Webhooks, HMAC validation, comments |
 | **Git Integration** | [git-integration.md](architecture/git-integration.md) | Multi-platform, LibGit2Sharp, PRs |
-| **Claude AI** | [claude-integration.md](architecture/claude-integration.md) | API client, prompts, context building |
 
 ### Component Documentation
 

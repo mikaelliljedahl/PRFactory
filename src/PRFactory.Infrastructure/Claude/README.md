@@ -249,7 +249,7 @@ Potential improvements:
 ## Support
 
 For issues or questions:
-1. Check the architecture documentation: `/docs/architecture/claude-integration.md`
+1. Check the architecture documentation in `/docs/architecture/`
 2. Review logs for detailed error messages
 3. Monitor token usage in the tracking dashboard
 4. Contact the development team

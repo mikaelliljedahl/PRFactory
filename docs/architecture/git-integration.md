@@ -768,5 +768,6 @@ public async Task CreateBranch_ShouldCreateFromDefaultBranch()
 
 ## Next Steps
 
-Review the Claude AI integration:
-- [Claude AI Integration](./claude-integration.md)
+Review the other integration documents:
+- [Jira Integration](./jira-integration.md) - Jira integration and webhooks
+- [Core Engine](./core-engine.md) - Workflow orchestration

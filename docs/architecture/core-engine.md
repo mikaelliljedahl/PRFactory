@@ -725,4 +725,3 @@ public async Task TriggerTicket_ShouldCreateTicketAndEnqueueJob()
 This core engine forms the foundation. Review the integration-specific documents for details on:
 - [Jira Integration](./jira-integration.md)
 - [Git Platform Integration](./git-integration.md)
-- [Claude AI Integration](./claude-integration.md)

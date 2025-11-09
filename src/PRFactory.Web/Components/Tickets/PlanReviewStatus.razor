@@ -1,0 +1,135 @@
+@namespace PRFactory.Web.Components.Tickets
+@using PRFactory.Web.UI.Display
+@using PRFactory.Web.Models
+@using PRFactory.Domain.Entities
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="bi bi-clipboard-check me-2"></i>
+            Review Status
+        </h5>
+    </div>
+    <div class="card-body">
+        @if (Reviewers == null || !Reviewers.Any())
+        {
+            <p class="text-muted mb-0">
+                <i class="bi bi-info-circle me-2"></i>
+                No reviewers assigned yet. Single-user approval mode is active.
+            </p>
+        }
+        else
+        {
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="fw-bold">Required Reviewers</span>
+                    <span class="badge bg-@(AllRequiredApproved ? "success" : "warning")">
+                        @ApprovedRequiredCount / @RequiredReviewers.Count Approved
+                    </span>
+                </div>
+                <div class="list-group">
+                    @foreach (var reviewer in RequiredReviewers)
+                    {
+                        <div class="list-group-item d-flex align-items-center">
+                            <ReviewerAvatar DisplayName="@reviewer.DisplayName"
+                                          AvatarUrl="@reviewer.AvatarUrl"
+                                          Size="ReviewerAvatar.AvatarSize.Medium"
+                                          StatusBadgeColor="@GetStatusBadgeColor(reviewer.Status)"
+                                          StatusBadgeText="@GetStatusBadgeText(reviewer.Status)" />
+                            <div class="ms-3 flex-grow-1">
+                                <div class="fw-bold">@reviewer.DisplayName</div>
+                                <div class="small text-muted">@reviewer.Email</div>
+                                @if (reviewer.ReviewedAt.HasValue)
+                                {
+                                    <div class="small text-muted">
+                                        Reviewed <RelativeTime Timestamp="@reviewer.ReviewedAt.Value" />
+                                    </div>
+                                }
+                                @if (!string.IsNullOrEmpty(reviewer.Decision))
+                                {
+                                    <div class="small mt-1">
+                                        <i class="bi bi-chat-quote me-1"></i>
+                                        "@reviewer.Decision"
+                                    </div>
+                                }
+                            </div>
+                            <div>
+                                <span class="badge bg-@GetStatusColor(reviewer.Status)">
+                                    @GetStatusText(reviewer.Status)
+                                </span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            @if (OptionalReviewers.Any())
+            {
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold">Optional Reviewers</span>
+                        <span class="badge bg-secondary">
+                            @ApprovedOptionalCount / @OptionalReviewers.Count Approved
+                        </span>
+                    </div>
+                    <div class="list-group">
+                        @foreach (var reviewer in OptionalReviewers)
+                        {
+                            <div class="list-group-item d-flex align-items-center">
+                                <ReviewerAvatar DisplayName="@reviewer.DisplayName"
+                                              AvatarUrl="@reviewer.AvatarUrl"
+                                              Size="ReviewerAvatar.AvatarSize.Medium"
+                                              StatusBadgeColor="@GetStatusBadgeColor(reviewer.Status)"
+                                              StatusBadgeText="@GetStatusBadgeText(reviewer.Status)" />
+                                <div class="ms-3 flex-grow-1">
+                                    <div class="fw-bold">@reviewer.DisplayName</div>
+                                    <div class="small text-muted">@reviewer.Email</div>
+                                    @if (reviewer.ReviewedAt.HasValue)
+                                    {
+                                        <div class="small text-muted">
+                                            Reviewed <RelativeTime DateTime="@reviewer.ReviewedAt.Value" />
+                                        </div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(reviewer.Decision))
+                                    {
+                                        <div class="small mt-1">
+                                            <i class="bi bi-chat-quote me-1"></i>
+                                            "@reviewer.Decision"
+                                        </div>
+                                    }
+                                </div>
+                                <div>
+                                    <span class="badge bg-@GetStatusColor(reviewer.Status)">
+                                        @GetStatusText(reviewer.Status)
+                                    </span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (AllRequiredApproved)
+            {
+                <div class="alert alert-success mt-3 mb-0">
+                    <i class="bi bi-check-circle me-2"></i>
+                    All required reviewers have approved. The plan is ready to proceed.
+                </div>
+            }
+            else if (HasRejections)
+            {
+                <div class="alert alert-danger mt-3 mb-0">
+                    <i class="bi bi-x-circle me-2"></i>
+                    The plan has been rejected. Please address the feedback and regenerate.
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="bi bi-clock me-2"></i>
+                    Waiting for @(RequiredReviewers.Count - ApprovedRequiredCount) more required approval(s).
+                </div>
+            }
+        }
+    </div>
+</div>

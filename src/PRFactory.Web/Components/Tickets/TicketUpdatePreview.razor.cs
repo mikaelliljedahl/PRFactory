@@ -21,6 +21,9 @@ public partial class TicketUpdatePreview
     [Inject]
     public ITicketService TicketService { get; set; } = null!;
 
+    [Inject]
+    public IToastService ToastService { get; set; } = null!;
+
     private TicketUpdateDto? TicketUpdate;
     private string activeTab = "preview";
     private bool isLoading = true;
@@ -65,12 +68,14 @@ public partial class TicketUpdatePreview
             if (TicketUpdate != null)
             {
                 await TicketService.ApproveTicketUpdateAsync(TicketUpdate.Id);
+                ToastService.ShowSuccess("Ticket update approved and posted successfully!");
                 await OnUpdateApproved.InvokeAsync();
             }
         }
         catch (Exception ex)
         {
             errorMessage = $"Error approving update: {ex.Message}";
+            ToastService.ShowError($"Failed to approve update: {ex.Message}");
         }
         finally
         {
@@ -114,6 +119,7 @@ public partial class TicketUpdatePreview
             if (TicketUpdate != null)
             {
                 await TicketService.RejectTicketUpdateAsync(TicketUpdate.Id, rejectionReason);
+                ToastService.ShowInfo("Ticket update rejected. A new update will be generated based on your feedback.");
                 await OnUpdateRejected.InvokeAsync();
             }
 
@@ -124,6 +130,7 @@ public partial class TicketUpdatePreview
         catch (Exception ex)
         {
             errorMessage = $"Error rejecting update: {ex.Message}";
+            ToastService.ShowError($"Failed to reject update: {ex.Message}");
         }
         finally
         {

@@ -47,6 +47,26 @@ public class User
     /// </summary>
     public DateTime? LastSeenAt { get; private set; }
 
+    /// <summary>
+    /// OAuth access token for Anthropic API (encrypted at rest)
+    /// </summary>
+    public string? OAuthAccessToken { get; private set; }
+
+    /// <summary>
+    /// OAuth refresh token for Anthropic API (encrypted at rest)
+    /// </summary>
+    public string? OAuthRefreshToken { get; private set; }
+
+    /// <summary>
+    /// When the OAuth access token expires
+    /// </summary>
+    public DateTime? OAuthTokenExpiresAt { get; private set; }
+
+    /// <summary>
+    /// OAuth scopes granted for this user
+    /// </summary>
+    public string[] OAuthScopes { get; private set; } = Array.Empty<string>();
+
     // Navigation properties
     public Tenant Tenant { get; private set; } = null!;
     public ICollection<PlanReview> PlanReviews { get; private set; } = new List<PlanReview>();
@@ -103,5 +123,50 @@ public class User
             throw new ArgumentException("External auth ID cannot be empty", nameof(externalAuthId));
 
         ExternalAuthId = externalAuthId.Trim();
+    }
+
+    /// <summary>
+    /// Sets OAuth tokens for this user (tokens are encrypted by EF Core)
+    /// </summary>
+    public void SetOAuthTokens(string accessToken, string refreshToken, DateTime expiresAt, string[] scopes)
+    {
+        if (string.IsNullOrWhiteSpace(accessToken))
+            throw new ArgumentException("Access token cannot be empty", nameof(accessToken));
+
+        OAuthAccessToken = accessToken;
+        OAuthRefreshToken = refreshToken;
+        OAuthTokenExpiresAt = expiresAt;
+        OAuthScopes = scopes ?? Array.Empty<string>();
+    }
+
+    /// <summary>
+    /// Clears OAuth tokens for this user (logout)
+    /// </summary>
+    public void ClearOAuthTokens()
+    {
+        OAuthAccessToken = null;
+        OAuthRefreshToken = null;
+        OAuthTokenExpiresAt = null;
+        OAuthScopes = Array.Empty<string>();
+    }
+
+    /// <summary>
+    /// Returns true if the user has valid (non-expired) OAuth tokens
+    /// </summary>
+    public bool HasValidOAuthTokens()
+    {
+        return !string.IsNullOrEmpty(OAuthAccessToken)
+            && OAuthTokenExpiresAt.HasValue
+            && OAuthTokenExpiresAt.Value > DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Returns true if the OAuth tokens need to be refreshed (expire within 5 minutes)
+    /// </summary>
+    public bool OAuthTokensNeedRefresh()
+    {
+        return !string.IsNullOrEmpty(OAuthAccessToken)
+            && OAuthTokenExpiresAt.HasValue
+            && OAuthTokenExpiresAt.Value <= DateTime.UtcNow.AddMinutes(5);
     }
 }

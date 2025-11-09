@@ -430,7 +430,7 @@ PRFactory/
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the Functional Source License, Version 1.1, MIT Future License (FSL-1.1-MIT) - see the [LICENSE.md](LICENSE.md) file for details.
 
 ## Support
 

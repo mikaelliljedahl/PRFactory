@@ -1381,6 +1381,73 @@ source /tmp/dotnet-proxy-setup.sh && dotnet restore && dotnet build
 - Changing tenant isolation model
 - Altering credential encryption
 
+#### Before Committing and Pushing Code
+
+**CRITICAL: NEVER push code that doesn't compile or has failing tests.**
+
+Before committing and pushing any code changes, you **MUST** verify:
+
+1. **Code Compiles Successfully**
+   ```bash
+   source /tmp/dotnet-proxy-setup.sh && dotnet build
+   ```
+   - All projects must compile without errors
+   - Warnings should be investigated and fixed when possible
+   - Build must succeed across all projects in the solution
+
+2. **All Tests Pass**
+   ```bash
+   source /tmp/dotnet-proxy-setup.sh && dotnet test
+   ```
+   - All unit tests must pass
+   - All integration tests must pass
+   - No skipped tests without explicit reason documented in code
+   - Test output must show 0 failures
+
+**Pre-Push Checklist:**
+
+✅ **DO** verify before every push:
+- [ ] Run `dotnet build` - confirms code compiles
+- [ ] Run `dotnet test` - confirms all tests pass
+- [ ] Check for compilation warnings and address critical ones
+- [ ] Verify no new test failures introduced by changes
+- [ ] Ensure new code has appropriate test coverage
+
+❌ **NEVER** push:
+- Code that doesn't compile
+- Code that causes existing tests to fail
+- Code that breaks the build
+- Untested code to production branches (without documented reason)
+
+**Why This Matters:**
+- **CI/CD Pipeline**: Broken builds block the entire team
+- **Quality Assurance**: Failing tests indicate bugs or regressions
+- **Developer Productivity**: Other developers pulling broken code lose time debugging
+- **Professional Standards**: Non-compiling code should never reach version control
+- **Automated Workflows**: PRFactory's agents depend on a working codebase
+
+**Exceptions:**
+- Work-in-progress branches (clearly marked as WIP)
+- Draft pull requests (marked as draft)
+- Experimental feature branches (documented as such)
+
+**If Tests Fail After Your Changes:**
+1. **Fix the tests or the code** - Don't commit broken code
+2. **Investigate root cause** - Did your change break existing functionality?
+3. **Update tests if needed** - If behavior intentionally changed, update test expectations
+4. **Ask for help** - If unable to resolve, document the issue and ask for guidance
+
+**Quick Verification Command:**
+```bash
+# Run this before every git push
+source /tmp/dotnet-proxy-setup.sh && dotnet build && dotnet test
+
+# Only push if both build and test succeed
+git push
+```
+
+**Remember:** The quality bar for committed code is that it **always** compiles and **all tests pass**. This is non-negotiable for professional software development.
+
 #### When Writing Documentation
 
 **Documentation Best Practices:**

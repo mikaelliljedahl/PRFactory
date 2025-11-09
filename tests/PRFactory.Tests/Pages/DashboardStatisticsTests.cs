@@ -186,10 +186,72 @@ public class DashboardStatisticsTests
             Guid.NewGuid());
         ticket.UpdateTicketInfo("Test Ticket", "Test Description");
 
-        // Transition to desired state if not the default Triggered state
-        if (state != WorkflowState.Triggered)
+        // Transition through valid state paths to reach the desired state
+        switch (state)
         {
-            ticket.TransitionTo(state);
+            case WorkflowState.Triggered:
+                // Already in this state
+                break;
+
+            case WorkflowState.Analyzing:
+                ticket.TransitionTo(WorkflowState.Analyzing);
+                break;
+
+            case WorkflowState.Failed:
+                ticket.TransitionTo(WorkflowState.Failed);
+                break;
+
+            case WorkflowState.Cancelled:
+                ticket.TransitionTo(WorkflowState.Cancelled);
+                break;
+
+            case WorkflowState.TicketUpdateGenerated:
+                ticket.TransitionTo(WorkflowState.Analyzing);
+                ticket.TransitionTo(WorkflowState.TicketUpdateGenerated);
+                break;
+
+            case WorkflowState.TicketUpdateUnderReview:
+                ticket.TransitionTo(WorkflowState.Analyzing);
+                ticket.TransitionTo(WorkflowState.TicketUpdateGenerated);
+                ticket.TransitionTo(WorkflowState.TicketUpdateUnderReview);
+                break;
+
+            case WorkflowState.AwaitingAnswers:
+                ticket.TransitionTo(WorkflowState.Analyzing);
+                ticket.TransitionTo(WorkflowState.TicketUpdateGenerated);
+                ticket.TransitionTo(WorkflowState.TicketUpdateUnderReview);
+                ticket.TransitionTo(WorkflowState.TicketUpdateApproved);
+                ticket.TransitionTo(WorkflowState.TicketUpdatePosted);
+                ticket.TransitionTo(WorkflowState.QuestionsPosted);
+                ticket.TransitionTo(WorkflowState.AwaitingAnswers);
+                break;
+
+            case WorkflowState.PlanUnderReview:
+                ticket.TransitionTo(WorkflowState.Analyzing);
+                ticket.TransitionTo(WorkflowState.TicketUpdateGenerated);
+                ticket.TransitionTo(WorkflowState.TicketUpdateUnderReview);
+                ticket.TransitionTo(WorkflowState.TicketUpdateApproved);
+                ticket.TransitionTo(WorkflowState.TicketUpdatePosted);
+                ticket.TransitionTo(WorkflowState.Planning);
+                ticket.TransitionTo(WorkflowState.PlanPosted);
+                ticket.TransitionTo(WorkflowState.PlanUnderReview);
+                break;
+
+            case WorkflowState.Completed:
+                ticket.TransitionTo(WorkflowState.Analyzing);
+                ticket.TransitionTo(WorkflowState.TicketUpdateGenerated);
+                ticket.TransitionTo(WorkflowState.TicketUpdateUnderReview);
+                ticket.TransitionTo(WorkflowState.TicketUpdateApproved);
+                ticket.TransitionTo(WorkflowState.TicketUpdatePosted);
+                ticket.TransitionTo(WorkflowState.Planning);
+                ticket.TransitionTo(WorkflowState.PlanPosted);
+                ticket.TransitionTo(WorkflowState.PlanUnderReview);
+                ticket.TransitionTo(WorkflowState.PlanApproved);
+                ticket.TransitionTo(WorkflowState.Completed);
+                break;
+
+            default:
+                throw new ArgumentException($"Unsupported state transition to {state} in test helper");
         }
 
         return ticket;

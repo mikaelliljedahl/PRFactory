@@ -97,8 +97,8 @@ public class TenantService : ITenantService
             var tenant = await _tenantApplicationService.CreateTenantAsync(
                 request.Name,
                 request.JiraUrl,
-                request.JiraApiToken,
-                request.ClaudeApiKey,
+                request.JiraApiToken!,  // Validated by [Required] attribute
+                request.ClaudeApiKey!,  // Validated by [Required] attribute
                 configuration,
                 ct);
 

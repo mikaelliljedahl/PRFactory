@@ -47,7 +47,7 @@
                                     <div>
                                         <span class="fw-bold">@comment.AuthorName</span>
                                         <span class="text-muted small ms-2">
-                                            <RelativeTime DateTime="@comment.CreatedAt" />
+                                            <RelativeTime Timestamp="@comment.CreatedAt" />
                                         </span>
                                         @if (comment.UpdatedAt.HasValue)
                                         {

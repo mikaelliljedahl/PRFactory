@@ -42,7 +42,7 @@
                                 @if (reviewer.ReviewedAt.HasValue)
                                 {
                                     <div class="small text-muted">
-                                        Reviewed <RelativeTime DateTime="@reviewer.ReviewedAt.Value" />
+                                        Reviewed <RelativeTime Timestamp="@reviewer.ReviewedAt.Value" />
                                     </div>
                                 }
                                 @if (!string.IsNullOrEmpty(reviewer.Decision))

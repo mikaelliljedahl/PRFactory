@@ -1,5 +1,6 @@
 @page "/tickets/create"
 @using PRFactory.Web.Models
+@using PRFactory.Web.UI.Forms
 
 <h1>Create New Ticket</h1>
 
@@ -7,48 +8,49 @@
     <DataAnnotationsValidator />
     <ValidationSummary />
 
-    <div class="mb-3">
-        <label for="title" class="form-label">Title</label>
-        <InputText id="title" class="form-control" @bind-Value="model.Title" />
-        <ValidationMessage For="@(() => model.Title)" />
-    </div>
+    <FormTextField
+        Label="Title"
+        Id="title"
+        @bind-Value="model.Title"
+        Required="true"
+        For="@(() => model.Title)" />
 
-    <div class="mb-3">
-        <label for="description" class="form-label">Description</label>
-        <InputTextArea id="description" class="form-control" rows="5" @bind-Value="model.Description" />
-        <ValidationMessage For="@(() => model.Description)" />
-    </div>
+    <FormTextAreaField
+        Label="Description"
+        Id="description"
+        @bind-Value="model.Description"
+        Rows="5"
+        For="@(() => model.Description)" />
 
-    <div class="mb-3">
-        <label for="repository" class="form-label">Repository</label>
-        <InputSelect id="repository" class="form-select" @bind-Value="model.RepositoryId">
-            <option value="">Select a repository...</option>
-            @foreach (var repo in repositories)
-            {
-                <option value="@repo.Id">@repo.Name</option>
-            }
-        </InputSelect>
-        <ValidationMessage For="@(() => model.RepositoryId)" />
-    </div>
+    <FormSelectField TValue="Guid"
+                     Label="Repository"
+                     Id="repository"
+                     @bind-Value="model.RepositoryId"
+                     DefaultOptionText="Select a repository..."
+                     Required="true"
+                     For="@(() => model.RepositoryId)">
+        @foreach (var repo in repositories)
+        {
+            <option value="@repo.Id">@repo.Name</option>
+        }
+    </FormSelectField>
 
-    <div class="mb-3 form-check">
-        <InputCheckbox id="enableSync" class="form-check-input" @bind-Value="model.EnableExternalSync" />
-        <label for="enableSync" class="form-check-label">
-            Enable external system sync (Jira, Azure DevOps)
-        </label>
-    </div>
+    <FormCheckboxField
+        Label="Enable external system sync (Jira, Azure DevOps)"
+        Id="enableSync"
+        @bind-Value="model.EnableExternalSync" />
 
     @if (model.EnableExternalSync)
     {
-        <div class="mb-3">
-            <label for="externalSystem" class="form-label">External System</label>
-            <InputSelect id="externalSystem" class="form-select" @bind-Value="model.ExternalSystem">
-                <option value="">Select system...</option>
-                <option value="Jira">Jira</option>
-                <option value="AzureDevOps">Azure DevOps</option>
-                <option value="GitHubIssues">GitHub Issues</option>
-            </InputSelect>
-        </div>
+        <FormSelectField TValue="string"
+                         Label="External System"
+                         Id="externalSystem"
+                         @bind-Value="model.ExternalSystem"
+                         DefaultOptionText="Select system...">
+            <option value="Jira">Jira</option>
+            <option value="AzureDevOps">Azure DevOps</option>
+            <option value="GitHubIssues">GitHub Issues</option>
+        </FormSelectField>
     }
 
     <div class="mt-3">

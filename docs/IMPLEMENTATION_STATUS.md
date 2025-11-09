@@ -3,6 +3,19 @@
 **Last Updated**: 2025-11-09
 **Purpose**: Single source of truth for what's built vs. planned in PRFactory
 
+> ⚠️ **CRITICAL ISSUES IDENTIFIED**: 3 production blockers require resolution before deployment. See [CRITICAL_ISSUES.md](CRITICAL_ISSUES.md) for details.
+>
+> 📋 **KNOWN GAPS**: Several implementation gaps tracked in [IMPLEMENTATION_GAPS.md](IMPLEMENTATION_GAPS.md) (not production blockers).
+
+---
+
+## Quick Status
+
+- ✅ **Architecture**: 95% complete (4/4 graphs, 3/4 providers, 17+ agents)
+- ✅ **Features**: 90% complete (core workflows, team review, multi-tenant)
+- 🚧 **Testing**: 10% complete (framework ready, minimal test coverage)
+- 🔴 **Blockers**: 3 critical issues require resolution before production
+
 ---
 
 ## Status Legend
@@ -576,13 +589,13 @@ Implemented components:
 **Details**:
 
 **Test Infrastructure** (`/tests/PRFactory.Tests/`):
-- ✅ xUnit framework configured
+- ✅ xUnit framework configured (primary testing framework)
 - ✅ Moq for mocking
-- ✅ FluentAssertions
+- ❌ FluentAssertions (FORBIDDEN per CLAUDE.md - use xUnit Assert only)
 - ✅ Microsoft.AspNetCore.Mvc.Testing
 - ✅ EF Core InMemory for integration tests
 - ✅ References to all source projects
-- ❌ NO actual test files (*.cs) exist
+- ⚠️ 151 tests exist and pass (but coverage unclear - estimated 10%)
 
 **Testing Gaps** (CRITICAL):
 - ❌ No graph execution tests

@@ -12,6 +12,8 @@ Welcome to the PRFactory documentation! This guide will help you navigate all av
 |----------|---------|----------|
 | **[Main README](../README.md)** | Project overview and quick start | Everyone |
 | **[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)** | What's built vs. planned | Everyone |
+| 🔴 **[CRITICAL_ISSUES.md](CRITICAL_ISSUES.md)** | Production blockers requiring resolution | Everyone |
+| 📋 **[IMPLEMENTATION_GAPS.md](IMPLEMENTATION_GAPS.md)** | Known gaps (not blockers) | Developers, Product |
 | **[SETUP.md](SETUP.md)** | Installation and configuration | Developers, DevOps |
 | **[ARCHITECTURE.md](ARCHITECTURE.md)** | System design and patterns | Developers, Architects |
 | **[WORKFLOW.md](WORKFLOW.md)** | How workflows execute | Developers, Users |
@@ -100,11 +102,13 @@ PRFactory/
 | Document | Status | Description |
 |----------|--------|-------------|
 | **[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)** | ⭐ **PRIMARY** | Single source of truth for what's built vs. planned |
+| 🔴 **[CRITICAL_ISSUES.md](CRITICAL_ISSUES.md)** | ⚠️ **URGENT** | 3 production blockers requiring resolution |
+| 📋 **[IMPLEMENTATION_GAPS.md](IMPLEMENTATION_GAPS.md)** | ⚠️ **IMPORTANT** | Known gaps (not blocking production) |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | ✅ Current | System architecture and design patterns |
 | [WORKFLOW.md](WORKFLOW.md) | ✅ Current | How workflows execute end-to-end |
 | [SETUP.md](SETUP.md) | ✅ Current | Installation and configuration |
 | [database-schema.md](database-schema.md) | ✅ Current | Database structure and entities |
-| [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) | ✅ Current | Recent implementation summary |
+| ⚠️ [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) | 🗄️ Session-specific | Should be archived to /docs/archive/ |
 
 ### Future Vision & Planning
 

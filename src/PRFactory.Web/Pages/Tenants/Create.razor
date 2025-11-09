@@ -1,0 +1,67 @@
+@page "/tenants/create"
+@using PRFactory.Web.Components.Tenants
+@using PRFactory.Web.UI.Alerts
+
+<PageTitle>Create Tenant - PRFactory</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/tenants">Tenants</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Create</li>
+                </ol>
+            </nav>
+            <h1 class="display-6">
+                <i class="bi bi-plus-circle"></i> Create New Tenant
+            </h1>
+            <p class="text-muted">Set up a new tenant organization with Jira and Claude credentials</p>
+        </div>
+    </div>
+
+    @if (errorMessage != null)
+    {
+        <AlertMessage Type="AlertType.Danger" Title="Error" Message="@errorMessage" Icon="exclamation-triangle-fill" Dismissible="true" OnDismiss="@(() => errorMessage = null)" />
+    }
+
+    <div class="row">
+        <div class="col-lg-8">
+            <TenantForm
+                Model="@model"
+                IsEditMode="false"
+                IsSubmitting="@isSubmitting"
+                OnValidSubmit="@HandleSubmitAsync"
+                OnCancel="@HandleCancelAsync" />
+        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <i class="bi bi-info-circle"></i> Getting Started
+                </div>
+                <div class="card-body">
+                    <h6>Before you begin:</h6>
+                    <ul class="small">
+                        <li>Ensure you have admin access to your Jira instance</li>
+                        <li>Generate a Jira API token from your Atlassian account settings</li>
+                        <li>Obtain a Claude API key from Anthropic</li>
+                    </ul>
+
+                    <h6 class="mt-3">Configuration Tips:</h6>
+                    <ul class="small">
+                        <li><strong>Auto-implement:</strong> Enable if you want PRFactory to automatically write code after plan approval</li>
+                        <li><strong>Max Retries:</strong> Higher values provide more fault tolerance but may increase processing time</li>
+                        <li><strong>Max Tokens:</strong> Adjust based on your Claude API tier and typical ticket complexity</li>
+                    </ul>
+
+                    <h6 class="mt-3">Security:</h6>
+                    <ul class="small">
+                        <li>All API tokens and keys are encrypted at rest</li>
+                        <li>Credentials are never logged or displayed in the UI</li>
+                        <li>Use separate API tokens for each tenant</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

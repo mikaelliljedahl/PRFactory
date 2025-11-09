@@ -1,0 +1,105 @@
+@if (!string.IsNullOrWhiteSpace(StackTrace))
+{
+    <div class="stack-trace-viewer">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0">Stack Trace</h6>
+            <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-secondary" @onclick="ToggleInternalFrames">
+                    <i class="bi bi-@(ShowInternalFrames ? "eye-slash" : "eye")"></i>
+                    @(ShowInternalFrames ? "Hide" : "Show") Internal
+                </button>
+                <button class="btn btn-outline-secondary" @onclick="CopyToClipboard">
+                    <i class="bi bi-clipboard"></i>
+                    Copy
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-dark text-light p-3 rounded" style="font-family: monospace; font-size: 0.875rem; max-height: 500px; overflow-y: auto;">
+            @foreach (var frame in FilteredFrames)
+            {
+                <div class="@(frame.IsInternal ? "text-muted" : "")">
+                    @frame.Text
+                </div>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div class="text-muted">
+        <i class="bi bi-info-circle me-1"></i>
+        No stack trace available
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string? StackTrace { get; set; }
+
+    [Parameter]
+    public bool ShowInternalFrames { get; set; } = false;
+
+    private List<StackTraceFrame> ParsedFrames => ParseStackTrace();
+    private List<StackTraceFrame> FilteredFrames => ShowInternalFrames
+        ? ParsedFrames
+        : ParsedFrames.Where(f => !f.IsInternal).ToList();
+
+    private void ToggleInternalFrames()
+    {
+        ShowInternalFrames = !ShowInternalFrames;
+    }
+
+    private async Task CopyToClipboard()
+    {
+        if (!string.IsNullOrWhiteSpace(StackTrace))
+        {
+            // Note: In a real implementation, use JS interop to copy to clipboard
+            // For now, this is a placeholder
+            await Task.CompletedTask;
+        }
+    }
+
+    private List<StackTraceFrame> ParseStackTrace()
+    {
+        if (string.IsNullOrWhiteSpace(StackTrace))
+            return new List<StackTraceFrame>();
+
+        var lines = StackTrace.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+        return lines.Select(line =>
+        {
+            var trimmed = line.Trim();
+            var isInternal = IsInternalFrame(trimmed);
+            return new StackTraceFrame
+            {
+                Text = trimmed,
+                IsInternal = isInternal
+            };
+        }).ToList();
+    }
+
+    private static bool IsInternalFrame(string frame)
+    {
+        var internalPatterns = new[]
+        {
+            "System.",
+            "Microsoft.",
+            "at lambda_method",
+            "at async"
+        };
+
+        return internalPatterns.Any(pattern => frame.Contains(pattern, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private class StackTraceFrame
+    {
+        public string Text { get; set; } = string.Empty;
+        public bool IsInternal { get; set; }
+    }
+}
+
+<style>
+    .stack-trace-viewer {
+        font-family: 'Courier New', monospace;
+    }
+</style>

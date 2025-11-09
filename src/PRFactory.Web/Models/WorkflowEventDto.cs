@@ -18,6 +18,11 @@ public class WorkflowEventDto
     public Guid TicketId { get; set; }
 
     /// <summary>
+    /// Ticket key (e.g., "PROJ-123") for display
+    /// </summary>
+    public string? TicketKey { get; set; }
+
+    /// <summary>
     /// When the event occurred
     /// </summary>
     public DateTime OccurredAt { get; set; }
@@ -48,7 +53,33 @@ public class WorkflowEventDto
     public string? Reason { get; set; }
 
     /// <summary>
-    /// Additional metadata as JSON
+    /// Severity level for visual indicators (success, error, warning, info)
+    /// </summary>
+    public EventSeverity Severity { get; set; }
+
+    /// <summary>
+    /// Icon name for display
+    /// </summary>
+    public string Icon { get; set; } = "circle";
+
+    /// <summary>
+    /// Additional metadata as JSON string
+    /// </summary>
+    public string? MetadataJson { get; set; }
+
+    /// <summary>
+    /// Additional metadata as dictionary (for UI binding)
     /// </summary>
     public Dictionary<string, object> Metadata { get; set; } = new();
+}
+
+/// <summary>
+/// Event severity levels for visual indicators
+/// </summary>
+public enum EventSeverity
+{
+    Info,
+    Success,
+    Warning,
+    Error
 }

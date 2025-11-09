@@ -2,43 +2,36 @@ using PRFactory.Core.Application.Services;
 using PRFactory.Domain.Entities;
 using PRFactory.Domain.ValueObjects;
 using PRFactory.Web.Models;
-using System.Net.Http.Json;
 
 namespace PRFactory.Web.Services;
 
 /// <summary>
 /// Implementation of ticket service.
-/// Uses direct application service injection for ticket update operations (Blazor Server architecture).
-/// Uses HttpClient for other operations (legacy - should be refactored to use application services).
+/// Uses direct application service injection (Blazor Server architecture).
+/// This is a facade service that converts between domain entities and DTOs.
 /// </summary>
 public class TicketService : ITicketService
 {
-    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<TicketService> _logger;
+    private readonly ITicketApplicationService _ticketApplicationService;
     private readonly ITicketUpdateService _ticketUpdateService;
 
     public TicketService(
-        IHttpClientFactory httpClientFactory,
         ILogger<TicketService> logger,
+        ITicketApplicationService ticketApplicationService,
         ITicketUpdateService ticketUpdateService)
     {
-        _httpClientFactory = httpClientFactory;
         _logger = logger;
+        _ticketApplicationService = ticketApplicationService;
         _ticketUpdateService = ticketUpdateService;
-    }
-
-    private HttpClient CreateClient()
-    {
-        return _httpClientFactory.CreateClient("PRFactoryApi");
     }
 
     public async Task<List<Ticket>> GetAllTicketsAsync(CancellationToken ct = default)
     {
         try
         {
-            var client = CreateClient();
-            var tickets = await client.GetFromJsonAsync<List<Ticket>>("/api/tickets", ct);
-            return tickets ?? new List<Ticket>();
+            // Use application service directly (Blazor Server architecture)
+            return await _ticketApplicationService.GetAllTicketsAsync(ct);
         }
         catch (Exception ex)
         {
@@ -51,13 +44,8 @@ public class TicketService : ITicketService
     {
         try
         {
-            var client = CreateClient();
-            return await client.GetFromJsonAsync<Ticket>($"/api/tickets/{ticketId}", ct);
-        }
-        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-        {
-            _logger.LogWarning("Ticket {TicketId} not found", ticketId);
-            return null;
+            // Use application service directly (Blazor Server architecture)
+            return await _ticketApplicationService.GetTicketByIdAsync(ticketId, ct);
         }
         catch (Exception ex)
         {
@@ -70,9 +58,8 @@ public class TicketService : ITicketService
     {
         try
         {
-            var client = CreateClient();
-            var tickets = await client.GetFromJsonAsync<List<Ticket>>($"/api/repositories/{repositoryId}/tickets", ct);
-            return tickets ?? new List<Ticket>();
+            // Use application service directly (Blazor Server architecture)
+            return await _ticketApplicationService.GetTicketsByRepositoryAsync(repositoryId, ct);
         }
         catch (Exception ex)
         {
@@ -85,9 +72,8 @@ public class TicketService : ITicketService
     {
         try
         {
-            var client = CreateClient();
-            var response = await client.PostAsync($"/api/tickets/{ticketId}/trigger", null, ct);
-            response.EnsureSuccessStatusCode();
+            // Use application service directly (Blazor Server architecture)
+            await _ticketApplicationService.TriggerWorkflowAsync(ticketId, ct);
             _logger.LogInformation("Triggered workflow for ticket {TicketId}", ticketId);
         }
         catch (Exception ex)
@@ -101,10 +87,8 @@ public class TicketService : ITicketService
     {
         try
         {
-            var client = CreateClient();
-            var request = new { Comments = comments };
-            var response = await client.PostAsJsonAsync($"/api/tickets/{ticketId}/approve", request, ct);
-            response.EnsureSuccessStatusCode();
+            // Use application service directly (Blazor Server architecture)
+            await _ticketApplicationService.ApprovePlanAsync(ticketId, comments, ct);
             _logger.LogInformation("Approved plan for ticket {TicketId}", ticketId);
         }
         catch (Exception ex)
@@ -118,10 +102,8 @@ public class TicketService : ITicketService
     {
         try
         {
-            var client = CreateClient();
-            var request = new { RejectionReason = rejectionReason };
-            var response = await client.PostAsJsonAsync($"/api/tickets/{ticketId}/reject", request, ct);
-            response.EnsureSuccessStatusCode();
+            // Use application service directly (Blazor Server architecture)
+            await _ticketApplicationService.RejectPlanAsync(ticketId, rejectionReason, ct);
             _logger.LogInformation("Rejected plan for ticket {TicketId}", ticketId);
         }
         catch (Exception ex)
@@ -135,9 +117,8 @@ public class TicketService : ITicketService
     {
         try
         {
-            var client = CreateClient();
-            var response = await client.PostAsJsonAsync($"/api/tickets/{ticketId}/answers", answers, ct);
-            response.EnsureSuccessStatusCode();
+            // Use application service directly (Blazor Server architecture)
+            await _ticketApplicationService.SubmitAnswersAsync(ticketId, answers, ct);
             _logger.LogInformation("Submitted answers for ticket {TicketId}", ticketId);
         }
         catch (Exception ex)

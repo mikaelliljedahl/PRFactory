@@ -1,0 +1,103 @@
+@using PRFactory.Web.UI.Cards
+
+<Card Title="Available Variables" Icon="braces">
+    <p class="text-muted small mb-3">Click a variable to copy to clipboard</p>
+
+    <div class="variable-category mb-3">
+        <h6 class="text-primary mb-2">
+            <i class="bi bi-ticket-detailed"></i> Ticket Variables
+        </h6>
+        <div class="variable-list">
+            @foreach (var variable in TicketVariables)
+            {
+                <button class="btn btn-sm btn-outline-secondary variable-button mb-1"
+                        @onclick="() => OnVariableClick(variable.Key)">
+                    <code>@variable.Key</code>
+                    <span class="variable-description">@variable.Value</span>
+                </button>
+            }
+        </div>
+    </div>
+
+    <div class="variable-category mb-3">
+        <h6 class="text-success mb-2">
+            <i class="bi bi-folder"></i> Repository Variables
+        </h6>
+        <div class="variable-list">
+            @foreach (var variable in RepositoryVariables)
+            {
+                <button class="btn btn-sm btn-outline-secondary variable-button mb-1"
+                        @onclick="() => OnVariableClick(variable.Key)">
+                    <code>@variable.Key</code>
+                    <span class="variable-description">@variable.Value</span>
+                </button>
+            }
+        </div>
+    </div>
+
+    <div class="variable-category mb-3">
+        <h6 class="text-info mb-2">
+            <i class="bi bi-file-earmark-text"></i> Plan Variables
+        </h6>
+        <div class="variable-list">
+            @foreach (var variable in PlanVariables)
+            {
+                <button class="btn btn-sm btn-outline-secondary variable-button mb-1"
+                        @onclick="() => OnVariableClick(variable.Key)">
+                    <code>@variable.Key</code>
+                    <span class="variable-description">@variable.Value</span>
+                </button>
+            }
+        </div>
+    </div>
+</Card>
+
+@if (!string.IsNullOrEmpty(CopiedVariable))
+{
+    <div class="alert alert-success alert-dismissible fade show mt-2" role="alert">
+        <i class="bi bi-check-circle"></i> Copied <code>@CopiedVariable</code> to clipboard!
+        <button type="button" class="btn-close" @onclick="() => CopiedVariable = null"></button>
+    </div>
+}
+
+<style>
+    .variable-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .variable-button {
+        text-align: left;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .variable-button:hover {
+        background-color: #e9ecef;
+    }
+
+    .variable-button code {
+        font-weight: 600;
+        color: #d63384;
+        background: none;
+        padding: 0;
+    }
+
+    .variable-description {
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-left: 0.5rem;
+    }
+
+    .variable-category h6 {
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+</style>

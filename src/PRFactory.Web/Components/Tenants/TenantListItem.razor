@@ -1,0 +1,132 @@
+@using PRFactory.Web.UI.Display
+@using PRFactory.Web.UI.Buttons
+
+<div class="card mb-3 @(Tenant.IsActive ? "" : "border-secondary")">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+                <h5 class="card-title mb-2">
+                    @if (Tenant.IsActive)
+                    {
+                        <span class="badge bg-success me-2">Active</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary me-2">Inactive</span>
+                    }
+                    @Tenant.Name
+                </h5>
+
+                <p class="card-text text-muted mb-2">
+                    <i class="bi bi-link-45deg"></i>
+                    <a href="@Tenant.JiraUrl" target="_blank" rel="noopener noreferrer">
+                        @Tenant.JiraUrl
+                    </a>
+                </p>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-auto">
+                        <small class="text-muted">
+                            <i class="bi bi-folder"></i> @Tenant.RepositoryCount repositories
+                        </small>
+                    </div>
+                    <div class="col-auto">
+                        <small class="text-muted">
+                            <i class="bi bi-ticket-detailed"></i> @Tenant.TicketCount tickets
+                        </small>
+                    </div>
+                    <div class="col-auto">
+                        <small class="text-muted">
+                            <i class="bi bi-cpu"></i> @Tenant.ClaudeModel
+                        </small>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                    @if (Tenant.AutoImplementAfterPlanApproval)
+                    {
+                        <span class="badge bg-info">
+                            <i class="bi bi-lightning-charge"></i> Auto-implement
+                        </span>
+                    }
+                    @if (Tenant.EnableCodeReview)
+                    {
+                        <span class="badge bg-primary">
+                            <i class="bi bi-code-slash"></i> Code review
+                        </span>
+                    }
+                    @if (Tenant.HasJiraApiToken)
+                    {
+                        <span class="badge bg-success">
+                            <i class="bi bi-check-circle"></i> Jira configured
+                        </span>
+                    }
+                    @if (Tenant.HasClaudeApiKey)
+                    {
+                        <span class="badge bg-success">
+                            <i class="bi bi-check-circle"></i> Claude configured
+                        </span>
+                    }
+                </div>
+
+                <div class="mt-2">
+                    <small class="text-muted">
+                        <i class="bi bi-calendar-plus"></i>
+                        Created <RelativeTime Timestamp="@Tenant.CreatedAt" />
+                    </small>
+                    @if (Tenant.UpdatedAt.HasValue)
+                    {
+                        <small class="text-muted ms-3">
+                            <i class="bi bi-calendar-check"></i>
+                            Updated <RelativeTime Timestamp="@Tenant.UpdatedAt.Value" />
+                        </small>
+                    }
+                </div>
+            </div>
+
+            <div class="ms-3">
+                <div class="btn-group-vertical" role="group">
+                    <IconButton
+                        Icon="eye"
+                        Text="View"
+                        Variant="ButtonVariant.OutlinePrimary"
+                        Size="ButtonSize.Small"
+                        OnClick="@(() => OnView.InvokeAsync(Tenant.Id))" />
+
+                    <IconButton
+                        Icon="pencil"
+                        Text="Edit"
+                        Variant="ButtonVariant.OutlineSecondary"
+                        Size="ButtonSize.Small"
+                        OnClick="@(() => OnEdit.InvokeAsync(Tenant.Id))" />
+
+                    @if (Tenant.IsActive)
+                    {
+                        <IconButton
+                            Icon="pause-circle"
+                            Text="Deactivate"
+                            Variant="ButtonVariant.OutlineWarning"
+                            Size="ButtonSize.Small"
+                            OnClick="@(() => OnDeactivate.InvokeAsync(Tenant.Id))" />
+                    }
+                    else
+                    {
+                        <IconButton
+                            Icon="play-circle"
+                            Text="Activate"
+                            Variant="ButtonVariant.OutlineSuccess"
+                            Size="ButtonSize.Small"
+                            OnClick="@(() => OnActivate.InvokeAsync(Tenant.Id))" />
+                    }
+
+                    <IconButton
+                        Icon="trash"
+                        Text="Delete"
+                        Variant="ButtonVariant.OutlineDanger"
+                        Size="ButtonSize.Small"
+                        OnClick="@(() => OnDelete.InvokeAsync(Tenant.Id))" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

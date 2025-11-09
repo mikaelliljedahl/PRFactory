@@ -1,0 +1,74 @@
+@page "/repositories/create"
+@using PRFactory.Web.Components.Repositories
+@using PRFactory.Web.UI.Cards
+@using PRFactory.Web.UI.Alerts
+@using Radzen.Blazor
+
+<PageTitle>Create Repository - PRFactory</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-6">
+                <i class="bi bi-plus-circle"></i> Create Repository
+            </h1>
+            <p class="text-muted">Add a new Git repository to PRFactory</p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <AlertMessage Type="AlertType.Danger"
+                     Title="Error"
+                     Message="@errorMessage"
+                     Icon="exclamation-triangle-fill"
+                     Dismissible="true"
+                     OnDismiss="@(() => errorMessage = null)" />
+    }
+
+    <RadzenSteps>
+        <Steps>
+            <RadzenStepsItem Text="Basic Information">
+                <Card Title="Repository Details" Icon="info-circle">
+                    <ChildContent>
+                        <RepositoryForm Model="@model"
+                                       IsEditMode="false"
+                                       ShowTenantSelection="true"
+                                       Tenants="@tenants"
+                                       OnValidSubmit="@HandleNextStep"
+                                       OnCancel="@HandleCancel"
+                                       IsSubmitting="false"
+                                       SubmitButtonText="Next: Test Connection" />
+                    </ChildContent>
+                </Card>
+            </RadzenStepsItem>
+
+            <RadzenStepsItem Text="Test Connection">
+                <RepositoryConnectionTest CloneUrl="@model.CloneUrl"
+                                         AccessToken="@model.AccessToken"
+                                         OnTestCompleted="@HandleTestCompleted" />
+
+                <div class="d-flex gap-2 justify-content-between mt-3">
+                    <button type="button" class="btn btn-secondary" @onclick="HandlePreviousStep">
+                        <i class="bi bi-arrow-left me-2"></i>Back
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-primary"
+                            @onclick="HandleCreateRepository"
+                            disabled="@(!connectionTested || isSubmitting)">
+                        @if (isSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-check-circle me-2"></i>
+                        }
+                        Create Repository
+                    </button>
+                </div>
+            </RadzenStepsItem>
+        </Steps>
+    </RadzenSteps>
+</div>

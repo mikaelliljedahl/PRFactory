@@ -70,7 +70,9 @@
                         <ChildContent>
                             <div class="mb-3">
                                 <small class="text-muted">Platform</small>
-                                <div>@repository.GitPlatform</div>
+                                <div>
+                                    <span class="badge bg-secondary">@repository.GitPlatform</span>
+                                </div>
                             </div>
                             <div class="mb-3">
                                 <small class="text-muted">Clone URL</small>
@@ -84,6 +86,15 @@
                                     <span class="badge bg-info">@repository.DefaultBranch</span>
                                 </div>
                             </div>
+                            @if (repository.TicketCount > 0)
+                            {
+                                <div class="mb-3">
+                                    <small class="text-muted">Tickets</small>
+                                    <div>
+                                        <span class="badge bg-primary">@repository.TicketCount</span>
+                                    </div>
+                                </div>
+                            }
                             @if (repository.LastAccessedAt.HasValue)
                             {
                                 <div class="mb-3">

@@ -1,0 +1,61 @@
+@using PRFactory.Web.UI.Cards
+@using Radzen.Blazor
+
+<Card Title="Filters" Icon="funnel">
+    <div class="mb-3">
+        <label class="form-label">Event Type</label>
+        <RadzenDropDown @bind-Value="@SelectedEventType"
+                        Data="@EventTypes"
+                        AllowClear="true"
+                        Placeholder="All event types"
+                        Style="width: 100%"
+                        Change="@OnFilterChanged" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Date Range</label>
+        <RadzenDateRangePicker @bind-Value="@DateRange"
+                               ShowTime="false"
+                               DateFormat="MM/dd/yyyy"
+                               Placeholder="Select date range"
+                               Style="width: 100%"
+                               Change="@OnFilterChanged" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Severity</label>
+        <RadzenDropDown @bind-Value="@SelectedSeverity"
+                        Data="@SeverityOptions"
+                        AllowClear="true"
+                        Placeholder="All severities"
+                        Style="width: 100%"
+                        Change="@OnFilterChanged" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Search</label>
+        <div class="input-group">
+            <span class="input-group-text">
+                <i class="bi bi-search"></i>
+            </span>
+            <input type="text"
+                   class="form-control"
+                   placeholder="Search events..."
+                   @bind="SearchText"
+                   @bind:event="oninput"
+                   @onkeyup="OnSearchKeyUp" />
+            @if (!string.IsNullOrEmpty(SearchText))
+            {
+                <button class="btn btn-outline-secondary" type="button" @onclick="ClearSearch">
+                    <i class="bi bi-x"></i>
+                </button>
+            }
+        </div>
+    </div>
+
+    <div class="d-grid gap-2">
+        <button type="button" class="btn btn-outline-secondary" @onclick="ClearAllFilters">
+            <i class="bi bi-x-circle me-2"></i>Clear All Filters
+        </button>
+    </div>
+</Card>

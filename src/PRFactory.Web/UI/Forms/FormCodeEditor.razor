@@ -1,0 +1,84 @@
+@using System.Linq.Expressions
+
+<div class="mb-3">
+    <label for="@FieldId" class="form-label">
+        @Label
+        @if (Required)
+        {
+            <span class="text-danger">*</span>
+        }
+    </label>
+    <textarea
+        id="@FieldId"
+        class="form-control code-editor @(IsInvalid ? "is-invalid" : "")"
+        rows="@Rows"
+        @oninput="OnInputChanged"
+        placeholder="@Placeholder"
+        disabled="@Disabled"
+        required="@Required"
+        spellcheck="false">@Value</textarea>
+
+    @if (For != null)
+    {
+        <ValidationMessage For="@For" />
+    }
+
+    @if (!string.IsNullOrEmpty(HelpText))
+    {
+        <small class="form-text text-muted">@HelpText</small>
+    }
+</div>
+
+<style>
+    .code-editor {
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        tab-size: 4;
+        white-space: pre;
+        overflow-x: auto;
+    }
+</style>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = null!;
+
+    [Parameter]
+    public string? Id { get; set; }
+
+    [Parameter]
+    public string? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> ValueChanged { get; set; }
+
+    [Parameter]
+    public int Rows { get; set; } = 15;
+
+    [Parameter]
+    public bool Required { get; set; }
+
+    [Parameter]
+    public string? Placeholder { get; set; }
+
+    [Parameter]
+    public string? HelpText { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    [Parameter]
+    public Expression<Func<string?>>? For { get; set; }
+
+    [Parameter]
+    public bool IsInvalid { get; set; }
+
+    private string FieldId => Id ?? $"field-{Label.Replace(" ", "-").ToLower()}";
+
+    private async Task OnInputChanged(ChangeEventArgs e)
+    {
+        Value = e.Value?.ToString();
+        await ValueChanged.InvokeAsync(Value);
+    }
+}

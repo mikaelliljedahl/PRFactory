@@ -1,0 +1,98 @@
+@page "/errors/{ErrorId:guid}"
+@using PRFactory.Web.Models
+@using PRFactory.Web.Components.Errors
+@using PRFactory.Web.UI.Display
+
+<PageTitle>Error Details - PRFactory</PageTitle>
+
+<div class="container-fluid py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/errors">Errors</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Error Details</li>
+        </ol>
+    </nav>
+
+    @if (IsLoading)
+    {
+        <div class="text-center py-5">
+            <LoadingSpinner />
+            <p class="text-muted mt-3">Loading error details...</p>
+        </div>
+    }
+    else if (Error == null)
+    {
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Error not found
+        </div>
+        <a href="/errors" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-1"></i>
+            Back to Errors
+        </a>
+    }
+    else
+    {
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="mb-0">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Error Details
+            </h1>
+            <div class="d-flex gap-2">
+                <a href="/errors" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Back
+                </a>
+                @if (!Error.IsResolved)
+                {
+                    <button class="btn btn-success" @onclick="ShowResolutionForm">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Mark as Resolved
+                    </button>
+                }
+                @if (Error.EntityType == "Ticket" && Error.EntityId.HasValue)
+                {
+                    <button class="btn btn-warning" @onclick="RetryOperation">
+                        <i class="bi bi-arrow-clockwise me-1"></i>
+                        Retry Operation
+                    </button>
+                    <a href="/tickets/@Error.EntityId" class="btn btn-outline-primary">
+                        <i class="bi bi-box-arrow-up-right me-1"></i>
+                        View Related Ticket
+                    </a>
+                }
+                <button class="btn btn-outline-secondary" @onclick="CopyToClipboard">
+                    <i class="bi bi-clipboard me-1"></i>
+                    Copy to Clipboard
+                </button>
+            </div>
+        </div>
+
+        @if (ShowResolution)
+        {
+            <div class="mb-4">
+                <ErrorResolutionForm ErrorId="@Error.Id"
+                                     OnSubmit="HandleResolve"
+                                     OnCancel="() => ShowResolution = false" />
+            </div>
+        }
+
+        <ErrorDetail Error="@Error" RelatedErrors="@RelatedErrors" />
+
+        @if (SuccessMessage != null)
+        {
+            <div class="alert alert-success mt-3">
+                <i class="bi bi-check-circle me-2"></i>
+                @SuccessMessage
+            </div>
+        }
+
+        @if (ErrorMessage != null)
+        {
+            <div class="alert alert-danger mt-3">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                @ErrorMessage
+            </div>
+        }
+    }
+</div>

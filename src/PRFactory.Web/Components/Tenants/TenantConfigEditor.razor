@@ -1,0 +1,90 @@
+@using PRFactory.Web.UI.Cards
+@using PRFactory.Web.UI.Buttons
+@using System.Text.Json
+
+<Card Title="Tenant Configuration" Icon="gear">
+    @if (IsLoading)
+    {
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (ErrorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            @ErrorMessage
+        </div>
+    }
+    else
+    {
+        <div class="mb-3">
+            <label class="form-label">Configuration (JSON)</label>
+            <textarea
+                class="form-control font-monospace"
+                rows="20"
+                @bind="configJson"
+                @bind:event="oninput"
+                style="font-size: 0.875rem;"
+                disabled="@IsSaving"></textarea>
+            @if (!string.IsNullOrEmpty(validationError))
+            {
+                <div class="invalid-feedback d-block">
+                    @validationError
+                </div>
+            }
+            <small class="form-text text-muted">
+                Edit the JSON configuration. Changes will be validated before saving.
+            </small>
+        </div>
+
+        <div class="alert alert-info" role="alert">
+            <strong>Available Options:</strong>
+            <ul class="mb-0 mt-2">
+                <li><code>AutoImplementAfterPlanApproval</code>: bool - Auto-start implementation after plan approval</li>
+                <li><code>MaxRetries</code>: int (1-10) - Maximum retry attempts</li>
+                <li><code>ClaudeModel</code>: string - Claude model to use</li>
+                <li><code>MaxTokensPerRequest</code>: int (1000-100000) - Max tokens per API request</li>
+                <li><code>ApiTimeoutSeconds</code>: int (30-600) - API timeout in seconds</li>
+                <li><code>EnableVerboseLogging</code>: bool - Enable detailed logging</li>
+                <li><code>EnableCodeReview</code>: bool - Enable code review workflow</li>
+                <li><code>AllowedRepositories</code>: string[] - List of allowed repository names</li>
+            </ul>
+        </div>
+
+        <div class="d-flex gap-2">
+            <LoadingButton
+                IsLoading="@IsSaving"
+                Icon="save"
+                Variant="ButtonVariant.Primary"
+                OnClick="@HandleSaveAsync"
+                Disabled="@(!string.IsNullOrEmpty(validationError))">
+                Save Configuration
+            </LoadingButton>
+
+            <IconButton
+                Icon="arrow-clockwise"
+                Text="Reset"
+                Variant="ButtonVariant.OutlineSecondary"
+                OnClick="@HandleResetAsync"
+                Disabled="@IsSaving" />
+
+            <IconButton
+                Icon="code"
+                Text="Format JSON"
+                Variant="ButtonVariant.OutlineInfo"
+                OnClick="@HandleFormatAsync"
+                Disabled="@IsSaving" />
+        </div>
+
+        @if (SuccessMessage != null)
+        {
+            <div class="alert alert-success mt-3" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                @SuccessMessage
+            </div>
+        }
+    }
+</Card>

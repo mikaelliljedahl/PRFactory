@@ -30,18 +30,27 @@ public class TenantConfiguration : IEntityTypeConfiguration<Tenant>
             .IsRequired()
             .HasMaxLength(200);
 
-        builder.Property(t => t.JiraUrl)
+        builder.Property(t => t.TicketPlatform)
+            .IsRequired()
+            .HasMaxLength(50)
+            .HasDefaultValue("Jira");
+
+        builder.Property(t => t.TicketPlatformUrl)
             .IsRequired()
             .HasMaxLength(500);
 
         // Encrypted fields - store as encrypted strings
-        builder.Property(t => t.JiraApiToken)
+        builder.Property(t => t.TicketPlatformApiToken)
             .IsRequired()
             .HasMaxLength(1000)
             .HasConversion(
                 v => _encryptionService.Encrypt(v),
                 v => _encryptionService.Decrypt(v)
             );
+
+        // Legacy property mappings (for backward compatibility)
+        builder.Ignore(t => t.JiraUrl);
+        builder.Ignore(t => t.JiraApiToken);
 
         builder.Property(t => t.ClaudeApiKey)
             .IsRequired()
@@ -73,6 +82,10 @@ public class TenantConfiguration : IEntityTypeConfiguration<Tenant>
             config.Property(c => c.AllowedRepositories);
             config.OwnsOne(c => c.CustomPromptTemplates);
         });
+
+        // Indexes
+        builder.HasIndex(t => t.TicketPlatform)
+            .HasDatabaseName("IX_Tenants_TicketPlatform");
 
         // Relationships
         builder.HasMany(t => t.Repositories)

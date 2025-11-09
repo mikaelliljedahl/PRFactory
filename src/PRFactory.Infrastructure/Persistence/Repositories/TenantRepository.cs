@@ -66,7 +66,7 @@ public class TenantRepository : ITenantRepository
     public async Task<List<Tenant>> GetByJiraUrlAsync(string jiraUrl, CancellationToken cancellationToken = default)
     {
         return await _context.Tenants
-            .Where(t => t.JiraUrl == jiraUrl)
+            .Where(t => t.TicketPlatformUrl == jiraUrl)
             .ToListAsync(cancellationToken);
     }
 

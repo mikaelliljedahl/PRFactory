@@ -20,14 +20,26 @@
         </div>
 
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Ticket Platform <span class="text-danger">*</span></label>
+                    <InputSelect @bind-Value="@Model.TicketPlatform" class="form-select" required>
+                        <option value="Jira">Jira</option>
+                        <option value="AzureDevOps">Azure DevOps</option>
+                        <option value="GitHub">GitHub Issues</option>
+                        <option value="GitLab">GitLab Issues</option>
+                    </InputSelect>
+                    <div class="form-text">Select the ticket management platform you use</div>
+                </div>
+            </div>
+            <div class="col-md-6">
                 <FormTextField
-                    Label="Jira URL"
-                    @bind-Value="@Model.JiraUrl"
+                    Label="Ticket Platform URL"
+                    @bind-Value="@Model.TicketPlatformUrl"
                     Placeholder="https://your-company.atlassian.net"
                     Required="true"
-                    HelpText="The base URL of your Jira instance"
-                    For="@(() => Model.JiraUrl)" />
+                    HelpText="The base URL of your ticket platform instance"
+                    For="@(() => Model.TicketPlatformUrl)" />
             </div>
         </div>
 
@@ -37,12 +49,12 @@
         <div class="row">
             <div class="col-md-12">
                 <FormPasswordField
-                    Label="Jira API Token"
-                    @bind-Value="@Model.JiraApiToken"
-                    Placeholder="Enter Jira API token"
+                    Label="Ticket Platform API Token"
+                    @bind-Value="@Model.TicketPlatformApiToken"
+                    Placeholder="Enter API token for your ticket platform"
                     Required="@(!IsEditMode)"
-                    HelpText="@(IsEditMode ? "Leave empty to keep existing token" : "API token for Jira authentication")"
-                    For="@(() => Model.JiraApiToken)" />
+                    HelpText="@(IsEditMode ? "Leave empty to keep existing token" : "API token for authenticating with your ticket platform")"
+                    For="@(() => Model.TicketPlatformApiToken)" />
             </div>
         </div>
 

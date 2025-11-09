@@ -36,7 +36,8 @@
                     {
                         <p class="text-muted">
                             <i class="bi bi-link-45deg"></i>
-                            <a href="@tenant.JiraUrl" target="_blank" rel="noopener noreferrer">@tenant.JiraUrl</a>
+                            <a href="@tenant.TicketPlatformUrl" target="_blank" rel="noopener noreferrer">@tenant.TicketPlatformUrl</a>
+                            <span class="badge bg-secondary ms-2">@tenant.TicketPlatform</span>
                         </p>
                     }
                 </div>
@@ -84,8 +85,12 @@
                                                 <td>@tenant.Name</td>
                                             </tr>
                                             <tr>
-                                                <th>Jira URL:</th>
-                                                <td><a href="@tenant.JiraUrl" target="_blank">@tenant.JiraUrl</a></td>
+                                                <th>Ticket Platform:</th>
+                                                <td><span class="badge bg-secondary">@tenant.TicketPlatform</span></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Ticket Platform URL:</th>
+                                                <td><a href="@tenant.TicketPlatformUrl" target="_blank">@tenant.TicketPlatformUrl</a></td>
                                             </tr>
                                             <tr>
                                                 <th>Status:</th>
@@ -122,8 +127,8 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <span>Jira API Token:</span>
-                                        @if (tenant.HasJiraApiToken)
+                                        <span>@tenant.TicketPlatform API Token:</span>
+                                        @if (tenant.HasTicketPlatformApiToken)
                                         {
                                             <span class="badge bg-success"><i class="bi bi-check-circle"></i> Configured</span>
                                         }

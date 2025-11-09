@@ -64,12 +64,13 @@ public class DbSeeder
         var encryptedJiraToken = _encryptionService.Encrypt(DemoTenantData.JiraApiToken);
         var encryptedClaudeKey = _encryptionService.Encrypt(DemoTenantData.ClaudeApiKey);
 
-        // Create tenant using factory method
+        // Create tenant using factory method with platform parameter
         var tenant = Tenant.Create(
             DemoTenantData.TenantName,
             DemoTenantData.JiraUrl,
             encryptedJiraToken,
-            encryptedClaudeKey
+            encryptedClaudeKey,
+            "Jira"
         );
 
         // Override the auto-generated ID with our hardcoded demo ID

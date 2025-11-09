@@ -228,8 +228,8 @@ public class TenantService : ITenantService
         {
             Id = tenant.Id,
             Name = tenant.Name,
-            TicketPlatformUrl = tenant.JiraUrl,  // Map from domain entity's JiraUrl to DTO's TicketPlatformUrl
-            TicketPlatform = tenant.TicketPlatform ?? "Jira",  // Default to "Jira" if not set
+            TicketPlatformUrl = tenant.TicketPlatformUrl,
+            TicketPlatform = tenant.TicketPlatform,
             IsActive = tenant.IsActive,
             CreatedAt = tenant.CreatedAt,
             UpdatedAt = tenant.UpdatedAt,
@@ -238,7 +238,7 @@ public class TenantService : ITenantService
             ClaudeModel = tenant.Configuration.ClaudeModel,
             MaxTokensPerRequest = tenant.Configuration.MaxTokensPerRequest,
             EnableCodeReview = tenant.Configuration.EnableCodeReview,
-            HasTicketPlatformApiToken = !string.IsNullOrEmpty(tenant.JiraApiToken),  // Map from domain entity's JiraApiToken
+            HasTicketPlatformApiToken = !string.IsNullOrEmpty(tenant.TicketPlatformApiToken),
             HasClaudeApiKey = !string.IsNullOrEmpty(tenant.ClaudeApiKey),
             RepositoryCount = 0,
             TicketCount = 0

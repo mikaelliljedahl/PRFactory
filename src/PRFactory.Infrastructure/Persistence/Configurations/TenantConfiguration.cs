@@ -48,10 +48,6 @@ public class TenantConfiguration : IEntityTypeConfiguration<Tenant>
                 v => _encryptionService.Decrypt(v)
             );
 
-        // Legacy property mappings (for backward compatibility)
-        builder.Ignore(t => t.JiraUrl);
-        builder.Ignore(t => t.JiraApiToken);
-
         builder.Property(t => t.ClaudeApiKey)
             .IsRequired()
             .HasMaxLength(1000)

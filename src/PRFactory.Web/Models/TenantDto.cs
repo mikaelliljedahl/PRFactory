@@ -29,19 +29,4 @@ public class TenantDto
     // Credentials - masked for display
     public bool HasTicketPlatformApiToken { get; set; }
     public bool HasClaudeApiKey { get; set; }
-
-    // Backward compatibility - obsolete aliases
-    [Obsolete("Use TicketPlatformUrl instead. This property will be removed in a future version.")]
-    public string JiraUrl
-    {
-        get => TicketPlatformUrl;
-        set => TicketPlatformUrl = value;
-    }
-
-    [Obsolete("Use HasTicketPlatformApiToken instead. This property will be removed in a future version.")]
-    public bool HasJiraApiToken
-    {
-        get => HasTicketPlatformApiToken;
-        set => HasTicketPlatformApiToken = value;
-    }
 }

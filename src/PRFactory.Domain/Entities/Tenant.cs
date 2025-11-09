@@ -31,21 +31,6 @@ public class Tenant
     /// </summary>
     public string TicketPlatformApiToken { get; private set; } = string.Empty;
 
-    // Legacy properties for backward compatibility - map to new properties
-    [Obsolete("Use TicketPlatformUrl instead")]
-    public string JiraUrl
-    {
-        get => TicketPlatformUrl;
-        private set => TicketPlatformUrl = value;
-    }
-
-    [Obsolete("Use TicketPlatformApiToken instead")]
-    public string JiraApiToken
-    {
-        get => TicketPlatformApiToken;
-        private set => TicketPlatformApiToken = value;
-    }
-
     /// <summary>
     /// Claude API key for this tenant (should be encrypted at rest)
     /// </summary>
@@ -119,15 +104,6 @@ public class Tenant
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
-    }
-
-    /// <summary>
-    /// Creates a new tenant (legacy overload for backward compatibility)
-    /// </summary>
-    [Obsolete("Use Create(name, ticketPlatformUrl, ticketPlatformApiToken, claudeApiKey, ticketPlatform) instead")]
-    public static Tenant Create(string name, string jiraUrl, string jiraApiToken, string claudeApiKey)
-    {
-        return Create(name, jiraUrl, jiraApiToken, claudeApiKey, "Jira");
     }
 
     /// <summary>

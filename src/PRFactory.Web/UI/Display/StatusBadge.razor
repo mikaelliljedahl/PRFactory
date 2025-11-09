@@ -15,16 +15,23 @@
 
     private string DisplayText => CustomText ?? State switch
     {
-        WorkflowState.Pending => "Pending",
         WorkflowState.Triggered => "Triggered",
-        WorkflowState.AnalyzingRepository => "Analyzing Repository",
-        WorkflowState.GeneratingQuestions => "Generating Questions",
+        WorkflowState.Analyzing => "Analyzing Repository",
+        WorkflowState.TicketUpdateGenerated => "Ticket Update Generated",
+        WorkflowState.TicketUpdateUnderReview => "Ticket Update Under Review",
+        WorkflowState.TicketUpdateRejected => "Ticket Update Rejected",
+        WorkflowState.TicketUpdateApproved => "Ticket Update Approved",
+        WorkflowState.TicketUpdatePosted => "Ticket Update Posted",
         WorkflowState.QuestionsPosted => "Questions Posted",
         WorkflowState.AwaitingAnswers => "Awaiting Answers",
+        WorkflowState.AnswersReceived => "Answers Received",
         WorkflowState.Planning => "Planning",
         WorkflowState.PlanPosted => "Plan Posted",
         WorkflowState.PlanUnderReview => "Plan Under Review",
+        WorkflowState.PlanApproved => "Plan Approved",
+        WorkflowState.PlanRejected => "Plan Rejected",
         WorkflowState.Implementing => "Implementing",
+        WorkflowState.ImplementationFailed => "Implementation Failed",
         WorkflowState.PRCreated => "PR Created",
         WorkflowState.InReview => "In Review",
         WorkflowState.Completed => "Completed",
@@ -38,11 +45,13 @@
     private string GetBadgeColor() => State switch
     {
         WorkflowState.Completed => "bg-success",
-        WorkflowState.Failed => "bg-danger",
+        WorkflowState.Failed or WorkflowState.ImplementationFailed => "bg-danger",
         WorkflowState.Cancelled => "bg-secondary",
-        WorkflowState.AwaitingAnswers or WorkflowState.PlanUnderReview or WorkflowState.InReview => "bg-warning",
+        WorkflowState.AwaitingAnswers or WorkflowState.PlanUnderReview or WorkflowState.InReview or WorkflowState.TicketUpdateUnderReview => "bg-warning",
         WorkflowState.PRCreated => "bg-info",
-        WorkflowState.Pending or WorkflowState.Triggered => "bg-secondary",
+        WorkflowState.Triggered => "bg-secondary",
+        WorkflowState.PlanRejected or WorkflowState.TicketUpdateRejected => "bg-danger",
+        WorkflowState.PlanApproved or WorkflowState.TicketUpdateApproved => "bg-success",
         _ => "bg-primary"
     };
 }

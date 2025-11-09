@@ -153,6 +153,11 @@ public partial class Detail : IAsyncDisposable
     }
 
     private async Task HandleAnswersSubmitted()
+    {
+        await LoadTicket();
+        await LoadEvents();
+    }
+
     private async Task HandleTicketUpdateApproved()
     {
         await LoadTicket();
@@ -160,11 +165,6 @@ public partial class Detail : IAsyncDisposable
     }
 
     private async Task HandleTicketUpdateRejected()
-    {
-        await LoadTicket();
-        await LoadEvents();
-    }
-
     {
         await LoadTicket();
         await LoadEvents();

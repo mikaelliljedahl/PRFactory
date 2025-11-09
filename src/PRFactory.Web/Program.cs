@@ -19,9 +19,6 @@ builder.Host.UseSerilog();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
-// Add Radzen components
-builder.Services.AddRadzenComponents();
-
 // Add SignalR
 builder.Services.AddSignalR();
 
@@ -39,6 +36,9 @@ builder.Services.AddScoped<IWorkflowEventService, WorkflowEventService>();
 builder.Services.AddScoped<IAgentPromptService, AgentPromptService>();
 builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<IErrorService, ErrorService>();
+
+// Register Toast notification service
+builder.Services.AddScoped<IToastService, ToastService>();
 
 var app = builder.Build();
 

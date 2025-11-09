@@ -6,6 +6,7 @@
 @using PRFactory.Web.UI.Cards
 @using PRFactory.Web.UI.Display
 @using Radzen.Blazor
+@using ButtonSize = PRFactory.Web.UI.Buttons.ButtonSize
 
 <PageTitle>Event Log - PRFactory</PageTitle>
 
@@ -64,7 +65,8 @@
             <div class="col-md-3">
                 <EventLogFilter EventTypes="@eventTypes"
                                 @bind-SelectedEventType="selectedEventType"
-                                @bind-DateRange="dateRange"
+                                @bind-StartDate="startDate"
+                                @bind-EndDate="endDate"
                                 @bind-SelectedSeverity="selectedSeverity"
                                 @bind-SearchText="searchText"
                                 OnFilterChange="@OnFilterChanged" />
@@ -86,71 +88,73 @@
                 {
                     <!-- Events Table -->
                     <Card Title="@GetEventsTitle()" Icon="list-ul">
-                        <RadzenDataGrid Data="@pagedResult.Items"
-                                        TItem="WorkflowEventDto"
-                                        AllowVirtualization="true"
-                                        Style="height: 600px"
-                                        AllowRowSelectOnRowClick="true"
-                                        SelectionMode="DataGridSelectionMode.Single"
-                                        @bind-Value="@selectedEvents"
-                                        RowClick="@OnRowClick"
-                                        Density="Density.Compact">
-                            <Columns>
-                                <RadzenDataGridColumn TItem="WorkflowEventDto" Property="OccurredAt" Title="Time" Width="180px" Sortable="true">
-                                    <Template Context="evt">
-                                        <div>
-                                            @evt.OccurredAt.ToString("MM/dd HH:mm:ss")
-                                            <div class="text-muted small">
-                                                <RelativeTime Timestamp="@evt.OccurredAt" />
+                        <ChildContent>
+                            <RadzenDataGrid Data="@pagedResult.Items"
+                                            TItem="WorkflowEventDto"
+                                            AllowVirtualization="true"
+                                            Style="height: 600px"
+                                            AllowRowSelectOnRowClick="true"
+                                            SelectionMode="DataGridSelectionMode.Single"
+                                            @bind-Value="@selectedEvents"
+                                            RowClick="@OnRowClick"
+                                            Density="Density.Compact">
+                                <Columns>
+                                    <RadzenDataGridColumn TItem="WorkflowEventDto" Property="OccurredAt" Title="Time" Width="180px" Sortable="true">
+                                        <Template Context="evt">
+                                            <div>
+                                                @evt.OccurredAt.ToString("MM/dd HH:mm:ss")
+                                                <div class="text-muted small">
+                                                    <RelativeTime Timestamp="@evt.OccurredAt" />
+                                                </div>
                                             </div>
-                                        </div>
-                                    </Template>
-                                </RadzenDataGridColumn>
+                                        </Template>
+                                    </RadzenDataGridColumn>
 
-                                <RadzenDataGridColumn TItem="WorkflowEventDto" Property="EventType" Title="Event Type" Width="200px" Sortable="true">
-                                    <Template Context="evt">
-                                        <span class="badge bg-light text-dark">@evt.EventType</span>
-                                    </Template>
-                                </RadzenDataGridColumn>
+                                    <RadzenDataGridColumn TItem="WorkflowEventDto" Property="EventType" Title="Event Type" Width="200px" Sortable="true">
+                                        <Template Context="evt">
+                                            <span class="badge bg-light text-dark">@evt.EventType</span>
+                                        </Template>
+                                    </RadzenDataGridColumn>
 
-                                <RadzenDataGridColumn TItem="WorkflowEventDto" Property="Severity" Title="Severity" Width="120px" Sortable="true">
-                                    <Template Context="evt">
-                                        <span class="badge @GetSeverityBadgeClass(evt.Severity)">
-                                            <i class="bi bi-@evt.Icon me-1"></i>@evt.Severity
-                                        </span>
-                                    </Template>
-                                </RadzenDataGridColumn>
+                                    <RadzenDataGridColumn TItem="WorkflowEventDto" Property="Severity" Title="Severity" Width="120px" Sortable="true">
+                                        <Template Context="evt">
+                                            <span class="badge @GetSeverityBadgeClass(evt.Severity)">
+                                                <i class="bi bi-@evt.Icon me-1"></i>@evt.Severity
+                                            </span>
+                                        </Template>
+                                    </RadzenDataGridColumn>
 
-                                <RadzenDataGridColumn TItem="WorkflowEventDto" Property="TicketKey" Title="Ticket" Width="120px" Sortable="true">
-                                    <Template Context="evt">
-                                        @if (!string.IsNullOrEmpty(evt.TicketKey))
-                                        {
-                                            <a href="/tickets/@evt.TicketId">@evt.TicketKey</a>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted">N/A</span>
-                                        }
-                                    </Template>
-                                </RadzenDataGridColumn>
+                                    <RadzenDataGridColumn TItem="WorkflowEventDto" Property="TicketKey" Title="Ticket" Width="120px" Sortable="true">
+                                        <Template Context="evt">
+                                            @if (!string.IsNullOrEmpty(evt.TicketKey))
+                                            {
+                                                <a href="/tickets/@evt.TicketId">@evt.TicketKey</a>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">N/A</span>
+                                            }
+                                        </Template>
+                                    </RadzenDataGridColumn>
 
-                                <RadzenDataGridColumn TItem="WorkflowEventDto" Property="Description" Title="Description" Sortable="false">
-                                    <Template Context="evt">
-                                        @evt.Description
-                                    </Template>
-                                </RadzenDataGridColumn>
+                                    <RadzenDataGridColumn TItem="WorkflowEventDto" Property="Description" Title="Description" Sortable="false">
+                                        <Template Context="evt">
+                                            @evt.Description
+                                        </Template>
+                                    </RadzenDataGridColumn>
 
-                                <RadzenDataGridColumn TItem="WorkflowEventDto" Title="Actions" Width="100px" Sortable="false">
-                                    <Template Context="evt">
-                                        <button type="button"
-                                                class="btn btn-sm btn-outline-primary"
-                                                @onclick="@(() => ViewEventDetail(evt))">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                    </Template>
-                                </RadzenDataGridColumn>
-                            </Columns>
-                        </RadzenDataGrid>
+                                    <RadzenDataGridColumn TItem="WorkflowEventDto" Title="Actions" Width="100px" Sortable="false">
+                                        <Template Context="evt">
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-primary"
+                                                    @onclick="@(() => ViewEventDetail(evt))">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </Template>
+                                    </RadzenDataGridColumn>
+                                </Columns>
+                            </RadzenDataGrid>
+                        </ChildContent>
 
                         <FooterContent>
                             <div class="d-flex justify-content-between align-items-center mt-3">

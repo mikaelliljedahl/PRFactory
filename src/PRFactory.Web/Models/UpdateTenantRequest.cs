@@ -5,7 +5,7 @@ namespace PRFactory.Web.Models;
 /// <summary>
 /// Request model for updating an existing tenant
 /// </summary>
-public class UpdateTenantRequest
+public class UpdateTenantRequest : ITenantRequest
 {
     [Required]
     public Guid Id { get; set; }

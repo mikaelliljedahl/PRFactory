@@ -1,0 +1,50 @@
+@using PRFactory.Web.UI.Navigation
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb @AdditionalClass">
+        @foreach (var item in Items)
+        {
+            @if (item == Items.Last())
+            {
+                <li class="breadcrumb-item active" aria-current="page">
+                    @if (!string.IsNullOrEmpty(item.Icon))
+                    {
+                        <i class="bi bi-@item.Icon me-1"></i>
+                    }
+                    @item.Text
+                </li>
+            }
+            else
+            {
+                <li class="breadcrumb-item">
+                    @if (!string.IsNullOrEmpty(item.Href))
+                    {
+                        <a href="@item.Href">
+                            @if (!string.IsNullOrEmpty(item.Icon))
+                            {
+                                <i class="bi bi-@item.Icon me-1"></i>
+                            }
+                            @item.Text
+                        </a>
+                    }
+                    else
+                    {
+                        @if (!string.IsNullOrEmpty(item.Icon))
+                        {
+                            <i class="bi bi-@item.Icon me-1"></i>
+                        }
+                        @item.Text
+                    }
+                </li>
+            }
+        }
+    </ol>
+</nav>
+
+@code {
+    [Parameter, EditorRequired]
+    public List<BreadcrumbItem> Items { get; set; } = new();
+
+    [Parameter]
+    public string? AdditionalClass { get; set; }
+}

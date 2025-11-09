@@ -4,6 +4,10 @@ namespace PRFactory.Web.Models;
 
 public class CreateTicketModel
 {
+    [Required(ErrorMessage = "Ticket key is required")]
+    [StringLength(50, ErrorMessage = "Ticket key cannot exceed 50 characters")]
+    public string TicketKey { get; set; } = string.Empty;
+
     [Required(ErrorMessage = "Title is required")]
     [StringLength(200, ErrorMessage = "Title cannot exceed 200 characters")]
     public string Title { get; set; } = string.Empty;

@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Components;
 using PRFactory.Web.Models;
+using PRFactory.Web.Services;
 using PRFactory.Web.UI.Dialogs;
+using PRFactory.Web.UI.Navigation;
 using Radzen;
 
 namespace PRFactory.Web.Pages.Repositories;
@@ -10,6 +12,7 @@ public partial class Detail
     private RepositoryDto? repository;
     private bool isLoading = true;
     private string? errorMessage;
+    private List<BreadcrumbItem> breadcrumbItems = new();
 
     [Parameter]
     public Guid RepositoryId { get; set; }
@@ -29,6 +32,11 @@ public partial class Detail
     protected override async Task OnInitializedAsync()
     {
         await LoadRepositoryAsync();
+
+        if (repository != null)
+        {
+            BuildBreadcrumbs();
+        }
     }
 
     private async Task LoadRepositoryAsync()
@@ -113,4 +121,18 @@ public partial class Detail
         "GitLab" => "git",
         _ => "folder2"
     };
+
+    private void BuildBreadcrumbs()
+    {
+        breadcrumbItems = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem { Text = "Dashboard", Href = "/", Icon = "house" },
+            new BreadcrumbItem { Text = "Repositories", Href = "/repositories", Icon = "folder" },
+            new BreadcrumbItem
+            {
+                Text = repository?.Name ?? "Detail",
+                Icon = "git"
+            }
+        };
+    }
 }

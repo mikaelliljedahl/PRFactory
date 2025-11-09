@@ -2,11 +2,15 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 using PRFactory.Domain.ValueObjects;
+using PRFactory.Web.Components;
 using PRFactory.Web.Models;
+using PRFactory.Web.Services;
+using PRFactory.Web.UI.Navigation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static PRFactory.Web.Components.TicketFilters;
 
 namespace PRFactory.Web.Pages.Tickets;
 
@@ -27,6 +31,12 @@ public partial class Index : IAsyncDisposable
 
     private bool isLoading = true;
     private string? errorMessage;
+
+    private List<BreadcrumbItem> breadcrumbItems = new()
+    {
+        new BreadcrumbItem { Text = "Dashboard", Href = "/", Icon = "house" },
+        new BreadcrumbItem { Text = "Tickets", Icon = "ticket-detailed" }
+    };
 
     [Inject]
     private ITicketService TicketService { get; set; } = null!;

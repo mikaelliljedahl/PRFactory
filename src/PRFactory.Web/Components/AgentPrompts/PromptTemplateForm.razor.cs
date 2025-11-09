@@ -6,7 +6,7 @@ namespace PRFactory.Web.Components.AgentPrompts;
 public partial class PromptTemplateForm
 {
     [Parameter, EditorRequired]
-    public object Model { get; set; } = null!;
+    public PromptTemplateFormModel Model { get; set; } = null!;
 
     [Parameter]
     public EventCallback OnValidSubmit { get; set; }

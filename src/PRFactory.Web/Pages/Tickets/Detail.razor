@@ -1,14 +1,19 @@
 @page "/tickets/{id}"
 @using Microsoft.AspNetCore.SignalR.Client
-@using PRFactory.Api.Models
 @using PRFactory.Web.Models
 @using PRFactory.Web.Components.Tickets
 @using PRFactory.Web.UI.Alerts
 @using PRFactory.Web.UI.Cards
 @using PRFactory.Web.UI.Display
+@using PRFactory.Web.UI.Navigation
 @using PRFactory.Domain.ValueObjects
 
 <PageTitle>@(ticket != null ? $"{ticket.TicketKey} - PRFactory" : "Loading...")</PageTitle>
+
+@if (ticket != null)
+{
+    <Breadcrumbs Items="@breadcrumbItems" AdditionalClass="mb-3" />
+}
 
 @if (isLoading)
 {
@@ -38,6 +43,22 @@ else
                 </button>
             </div>
         </div>
+
+        @if (connectionState != HubConnectionState.Connected)
+        {
+            <div class="row mb-3">
+                <div class="col">
+                    <div class="alert @GetConnectionAlertClass()" role="alert">
+                        <i class="bi @GetConnectionIcon() me-2"></i>
+                        <strong>@GetConnectionStatusText()</strong>
+                        @if (connectionState == HubConnectionState.Disconnected)
+                        {
+                            <span> - Real-time updates unavailable. Please refresh to see latest changes.</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
 
         <div class="row">
             <div class="col-md-8">

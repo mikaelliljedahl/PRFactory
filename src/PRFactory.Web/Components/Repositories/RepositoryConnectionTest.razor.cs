@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using PRFactory.Web.Models;
+using PRFactory.Web.Services;
 
 namespace PRFactory.Web.Components.Repositories;
 

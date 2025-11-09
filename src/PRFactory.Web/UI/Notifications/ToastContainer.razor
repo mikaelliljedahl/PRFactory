@@ -1,0 +1,39 @@
+@namespace PRFactory.Web.UI.Notifications
+@using PRFactory.Web.Services
+@implements IDisposable
+@inject IToastService ToastService
+
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 11000;">
+    @foreach (var toast in toasts)
+    {
+        <Toast Title="@toast.Title"
+               Message="@toast.Message"
+               Type="@toast.Type"
+               Icon="@toast.Icon"
+               IsVisible="@toast.IsVisible"
+               Dismissible="true"
+               ShowTimestamp="true"
+               OnDismiss="@(() => ToastService.RemoveToast(toast.Id))" />
+    }
+</div>
+
+@code {
+    private List<ToastModel> toasts = new();
+
+    protected override void OnInitialized()
+    {
+        ToastService.OnToastsChanged += LoadToasts;
+        LoadToasts();
+    }
+
+    private void LoadToasts()
+    {
+        toasts = ToastService.GetToasts();
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        ToastService.OnToastsChanged -= LoadToasts;
+    }
+}

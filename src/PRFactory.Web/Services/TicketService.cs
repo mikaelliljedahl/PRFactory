@@ -70,6 +70,46 @@ public class TicketService : ITicketService
         }
     }
 
+    public async Task<TicketDto?> GetTicketDtoByIdAsync(Guid ticketId, CancellationToken ct = default)
+    {
+        try
+        {
+            // Use application service to get entity
+            var ticket = await _ticketApplicationService.GetTicketByIdAsync(ticketId, ct);
+
+            if (ticket == null)
+            {
+                return null;
+            }
+
+            // Map to DTO
+            return new TicketDto
+            {
+                Id = ticket.Id,
+                TicketKey = ticket.TicketKey,
+                Title = ticket.Title,
+                Description = ticket.Description,
+                State = ticket.State,
+                Source = ticket.Source,
+                RepositoryId = ticket.RepositoryId,
+                RepositoryName = ticket.Repository?.Name,
+                CreatedAt = ticket.CreatedAt,
+                UpdatedAt = ticket.UpdatedAt,
+                CompletedAt = ticket.CompletedAt,
+                PullRequestUrl = ticket.PullRequestUrl,
+                PullRequestNumber = ticket.PullRequestNumber,
+                PlanBranchName = ticket.PlanBranchName,
+                PlanMarkdownPath = ticket.PlanMarkdownPath,
+                LastError = ticket.LastError
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching ticket DTO for {TicketId}", ticketId);
+            throw;
+        }
+    }
+
     public async Task<List<Ticket>> GetTicketsByRepositoryAsync(Guid repositoryId, CancellationToken ct = default)
     {
         try

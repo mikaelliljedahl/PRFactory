@@ -1381,6 +1381,80 @@ source /tmp/dotnet-proxy-setup.sh && dotnet restore && dotnet build
 - Changing tenant isolation model
 - Altering credential encryption
 
+#### When Writing Tests
+
+**Testing Framework Standards:**
+
+PRFactory uses **xUnit** as the primary testing framework. All test assertions MUST use xUnit's native `Assert` class.
+
+**CRITICAL: DO NOT use FluentAssertions**
+
+FluentAssertions is **NOT ALLOWED** in this codebase. All assertions must use xUnit's standard `Assert` class.
+
+**Approved Testing Libraries:**
+- ✅ **xUnit** - Primary testing framework
+- ✅ **Moq** - Mocking framework
+- ✅ **Microsoft.AspNetCore.Mvc.Testing** - Integration testing
+- ✅ **Microsoft.EntityFrameworkCore.InMemory** - In-memory database for tests
+
+**Forbidden Testing Libraries:**
+- ❌ **FluentAssertions** - NOT ALLOWED (use xUnit Assert instead)
+- ❌ **NUnit** - Not used in this project
+- ❌ **MSTest** - Not used in this project
+- ❌ **Shouldly** - Not allowed
+- ❌ **Any other assertion library** - Use xUnit Assert only
+
+**Standard xUnit Assertion Patterns:**
+
+```csharp
+// Equality
+Assert.Equal(expected, actual);
+Assert.NotEqual(expected, actual);
+
+// Boolean
+Assert.True(condition);
+Assert.False(condition);
+
+// Null checks
+Assert.Null(obj);
+Assert.NotNull(obj);
+
+// Collections
+Assert.Equal(expectedCount, collection.Count);
+Assert.Contains(item, collection);
+Assert.DoesNotContain(item, collection);
+Assert.Empty(collection);
+Assert.NotEmpty(collection);
+
+// Exceptions
+Assert.Throws<ExceptionType>(() => methodCall());
+var ex = Assert.Throws<ExceptionType>(() => methodCall());
+Assert.Equal("Expected message", ex.Message);
+
+// Ranges (for approximate values)
+Assert.InRange(actual, low, high);
+```
+
+**Why xUnit Assert Only:**
+- **Consistency**: Single assertion style across the entire codebase
+- **Simplicity**: Fewer dependencies, less complexity
+- **Standard**: xUnit Assert is the industry standard for .NET testing
+- **Maintenance**: Reduces dependency management overhead
+- **CI/CD**: Simpler build pipelines without extra assertion libraries
+
+**DO:**
+- Use xUnit's `Assert` class for all test assertions
+- Write clear, descriptive test names (e.g., `CreateTicket_WithValidData_ReturnsTicket`)
+- Follow Arrange-Act-Assert pattern
+- Test both success and failure paths
+- Mock external dependencies
+
+**DON'T:**
+- Add FluentAssertions or any other assertion library
+- Use magic strings or numbers in tests (use constants)
+- Test multiple concerns in a single test
+- Ignore test warnings or failures
+
 #### Before Committing and Pushing Code
 
 **CRITICAL: NEVER push code that doesn't compile or has failing tests.**

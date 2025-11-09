@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Components;
+using PRFactory.Domain.Entities;
 using PRFactory.Web.Models;
+using PRFactory.Web.Services;
 using PRFactory.Web.UI.Dialogs;
+using PRFactory.Web.UI.Navigation;
 using Radzen;
 
 namespace PRFactory.Web.Pages.Repositories;
@@ -10,6 +13,12 @@ public partial class Index
     private List<RepositoryDto>? repositories;
     private bool isLoading = true;
     private string? errorMessage;
+
+    private List<BreadcrumbItem> breadcrumbItems = new()
+    {
+        new BreadcrumbItem { Text = "Dashboard", Href = "/", Icon = "house" },
+        new BreadcrumbItem { Text = "Repositories", Icon = "folder" }
+    };
 
     [Inject]
     private IRepositoryService RepositoryService { get; set; } = null!;
@@ -44,7 +53,7 @@ public partial class Index
         {
             Logger.LogError(ex, "Error loading repositories");
             errorMessage = "Failed to load repositories. Please try again.";
-            repositories = new List<Repository>();
+            repositories = new List<RepositoryDto>();
         }
         finally
         {

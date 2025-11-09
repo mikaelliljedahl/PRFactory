@@ -2,102 +2,307 @@
 @using PRFactory.Web.UI.Cards
 @using PRFactory.Web.UI.Display
 @using PRFactory.Web.UI.Alerts
+@using Radzen.Blazor
 
 <PageTitle>PRFactory - Dashboard</PageTitle>
 
 <div class="container-fluid">
+    <!-- Header Section -->
     <div class="row mb-4">
         <div class="col">
             <h1 class="display-4">
-                <i class="bi bi-speedometer2"></i> PRFactory Dashboard
+                <i class="bi bi-speedometer2"></i> Dashboard
             </h1>
-            <p class="lead">AI-powered pull request automation</p>
+            <p class="lead text-muted">AI-powered pull request automation</p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary btn-lg" @onclick="NavigateToCreateTicket">
+                <i class="bi bi-plus-circle me-2"></i> Create Ticket
+            </button>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-12">
-            <Card Title="Recent Tickets" Icon="ticket-detailed" Variant="CardVariant.Primary">
-                @if (isLoading)
-                {
-                    <LoadingSpinner IsLoading="true" Message="Loading tickets..." />
-                }
-                else if (errorMessage != null)
-                {
-                    <AlertMessage Message="@errorMessage" Type="AlertType.Danger" Icon="exclamation-triangle" />
-                }
-                else if (tickets.Count == 0)
-                {
-                    <AlertMessage Message="No tickets found. Start by configuring your repositories." Type="AlertType.Info" Icon="info-circle" />
-                }
-                else
-                {
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Ticket</th>
-                                    <th>Title</th>
-                                    <th>Status</th>
-                                    <th>Repository</th>
-                                    <th>Created</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var ticket in tickets.Take(10))
-                                {
-                                    <tr>
-                                        <td><code>@ticket.ExternalTicketKey</code></td>
-                                        <td>@ticket.Title</td>
-                                        <td>
-                                            <StatusBadge State="@ticket.State" />
-                                        </td>
-                                        <td>@ticket.Repository?.Name</td>
-                                        <td>@ticket.CreatedAt.ToString("g")</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary"
-                                                    @onclick="() => ViewTicket(ticket.Id)">
-                                                <i class="bi bi-eye"></i> View
-                                            </button>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
+    @if (isLoading)
+    {
+        <LoadingSpinner IsLoading="true" Message="Loading dashboard..." />
+    }
+    else if (errorMessage != null)
+    {
+        <AlertMessage Message="@errorMessage" Type="AlertType.Danger" Icon="exclamation-triangle" />
+    }
+    else
+    {
+        <!-- Key Metrics Row -->
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6 mb-3">
+                <Card AdditionalClass="border-start border-primary border-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-ticket-detailed display-4 text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">Total Tickets</div>
+                            <div class="display-6 fw-bold">@statistics.TotalTickets</div>
+                        </div>
                     </div>
-                }
-            </Card>
-        </div>
-    </div>
+                </Card>
+            </div>
 
-    <div class="row mt-4">
-        <div class="col-md-4">
-            <Card AdditionalClass="border-primary">
-                <div class="text-center">
-                    <i class="bi bi-ticket-detailed display-4 text-primary"></i>
-                    <h5 class="mt-3">Tickets</h5>
-                    <p class="display-6">@tickets.Count</p>
-                </div>
-            </Card>
+            <div class="col-xl-3 col-md-6 mb-3">
+                <Card AdditionalClass="border-start border-success border-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-check-circle display-4 text-success"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">Completed</div>
+                            <div class="display-6 fw-bold">@statistics.CompletedTickets</div>
+                            @if (statistics.TotalTickets > 0)
+                            {
+                                <div class="small text-success">
+                                    <i class="bi bi-graph-up"></i> @statistics.CompletionRate.ToString("F1")%
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </Card>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-3">
+                <Card AdditionalClass="border-start border-warning border-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-hourglass-split display-4 text-warning"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">In Progress</div>
+                            <div class="display-6 fw-bold">@statistics.InProgressTickets</div>
+                            @if (statistics.AwaitingUserInput > 0)
+                            {
+                                <div class="small text-info">
+                                    <i class="bi bi-person-raised-hand"></i> @statistics.AwaitingUserInput awaiting input
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </Card>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-3">
+                <Card AdditionalClass="border-start border-danger border-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-exclamation-triangle display-4 text-danger"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">Failed</div>
+                            <div class="display-6 fw-bold">@statistics.FailedTickets</div>
+                            @if (statistics.TotalTickets > 0)
+                            {
+                                <div class="small text-danger">
+                                    @statistics.FailureRate.ToString("F1")% failure rate
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </Card>
+            </div>
         </div>
-        <div class="col-md-4">
-            <Card AdditionalClass="border-success">
-                <div class="text-center">
-                    <i class="bi bi-check-circle display-4 text-success"></i>
-                    <h5 class="mt-3">Completed</h5>
-                    <p class="display-6">@tickets.Count(t => t.State == WorkflowState.Completed)</p>
-                </div>
-            </Card>
+
+        <!-- Charts Row -->
+        <div class="row mb-4">
+            <!-- Workflow State Distribution -->
+            <div class="col-lg-6 mb-3">
+                <Card Title="Workflow State Distribution" Icon="pie-chart">
+                    @if (stateDistribution.Any())
+                    {
+                        <RadzenChart>
+                            <RadzenDonutSeries Data="@stateDistribution"
+                                              CategoryProperty="State"
+                                              ValueProperty="Count"
+                                              Fills="@chartColors" />
+                        </RadzenChart>
+                    }
+                    else
+                    {
+                        <EmptyState Icon="pie-chart"
+                                   Title="No Data"
+                                   Message="No tickets to display" />
+                    }
+                </Card>
+            </div>
+
+            <!-- Success vs Failure Rate -->
+            <div class="col-lg-6 mb-3">
+                <Card Title="Success & Failure Rates" Icon="graph-up">
+                    @if (statistics.TotalTickets > 0)
+                    {
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted">Success Rate</span>
+                                <span class="fw-bold text-success">@statistics.CompletionRate.ToString("F1")%</span>
+                            </div>
+                            <ProgressBar Value="@((int)statistics.CompletionRate)"
+                                       Variant="ProgressVariant.Success"
+                                       Striped="true" />
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted">Failure Rate</span>
+                                <span class="fw-bold text-danger">@statistics.FailureRate.ToString("F1")%</span>
+                            </div>
+                            <ProgressBar Value="@((int)statistics.FailureRate)"
+                                       Variant="ProgressVariant.Danger"
+                                       Striped="true" />
+                        </div>
+
+                        <div class="row text-center mt-4">
+                            <div class="col-4">
+                                <div class="text-success display-6">@statistics.CompletedTickets</div>
+                                <div class="small text-muted">Completed</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-warning display-6">@statistics.InProgressTickets</div>
+                                <div class="small text-muted">In Progress</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-danger display-6">@statistics.FailedTickets</div>
+                                <div class="small text-muted">Failed</div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <EmptyState Icon="graph-up"
+                                   Title="No Data"
+                                   Message="No completed workflows yet" />
+                    }
+                </Card>
+            </div>
         </div>
-        <div class="col-md-4">
-            <Card AdditionalClass="border-warning">
-                <div class="text-center">
-                    <i class="bi bi-hourglass-split display-4 text-warning"></i>
-                    <h5 class="mt-3">In Progress</h5>
-                    <p class="display-6">@tickets.Count(t => t.State != WorkflowState.Completed && t.State != WorkflowState.Failed && t.State != WorkflowState.Cancelled)</p>
-                </div>
-            </Card>
+
+        <!-- Workflow Duration & Recent Activity Row -->
+        <div class="row mb-4">
+            <!-- Average Duration Stats -->
+            <div class="col-lg-4 mb-3">
+                <Card Title="Workflow Duration" Icon="clock-history">
+                    @if (durationStats != null)
+                    {
+                        <div class="mb-3">
+                            <div class="text-muted small">Average Duration</div>
+                            <div class="h4 mb-0">@durationStats.AverageDuration</div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="text-muted small">Fastest Workflow</div>
+                            <div class="h5 mb-0 text-success">
+                                <i class="bi bi-lightning-fill"></i> @durationStats.FastestDuration
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="text-muted small">Slowest Workflow</div>
+                            <div class="h5 mb-0 text-warning">
+                                <i class="bi bi-hourglass"></i> @durationStats.SlowestDuration
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <EmptyState Icon="clock-history"
+                                   Title="No Data"
+                                   Message="No completed workflows to analyze"
+                                   Centered="true" />
+                    }
+                </Card>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="col-lg-8 mb-3">
+                <Card Title="Recent Activity" Icon="activity">
+                    @if (recentTickets.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var ticket in recentTickets.Take(5))
+                            {
+                                <a href="/tickets/@ticket.Id" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between align-items-center">
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center mb-1">
+                                                <code class="me-2">@ticket.TicketKey</code>
+                                                <StatusBadge State="@ticket.State" />
+                                            </div>
+                                            <h6 class="mb-1">@ticket.Title</h6>
+                                            <p class="mb-1 text-muted small">
+                                                <i class="bi bi-folder me-1"></i> @ticket.Repository?.Name
+                                            </p>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="small text-muted">
+                                                <RelativeTime Timestamp="@(ticket.UpdatedAt ?? ticket.CreatedAt)" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+
+                        <div class="mt-3 text-center">
+                            <a href="/tickets" class="btn btn-outline-primary">
+                                <i class="bi bi-arrow-right-circle me-2"></i> View All Tickets
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <EmptyState Icon="ticket-detailed"
+                                   Title="No Tickets Yet"
+                                   Message="Get started by creating your first ticket"
+                                   Centered="true">
+                            <button class="btn btn-primary" @onclick="NavigateToCreateTicket">
+                                <i class="bi bi-plus-circle me-2"></i> Create Ticket
+                            </button>
+                        </EmptyState>
+                    }
+                </Card>
+            </div>
         </div>
-    </div>
+
+        <!-- Quick Actions -->
+        <div class="row mb-4">
+            <div class="col">
+                <Card Title="Quick Actions" Icon="lightning-charge">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-primary w-100" @onclick="NavigateToCreateTicket">
+                                <i class="bi bi-plus-circle d-block mb-2" style="font-size: 2rem;"></i>
+                                Create Ticket
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-secondary w-100" @onclick="NavigateToRepositories">
+                                <i class="bi bi-folder d-block mb-2" style="font-size: 2rem;"></i>
+                                Manage Repositories
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-info w-100" @onclick="NavigateToWorkflows">
+                                <i class="bi bi-diagram-3 d-block mb-2" style="font-size: 2rem;"></i>
+                                View Workflows
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-warning w-100" @onclick="NavigateToTickets">
+                                <i class="bi bi-list-ul d-block mb-2" style="font-size: 2rem;"></i>
+                                View All Tickets
+                                @if (statistics.AwaitingUserInput > 0)
+                                {
+                                    <span class="badge bg-info ms-2">@statistics.AwaitingUserInput</span>
+                                }
+                            </button>
+                        </div>
+                    </div>
+                </Card>
+            </div>
+        </div>
+    }
 </div>

@@ -3,8 +3,12 @@
 @using PRFactory.Web.UI.Buttons
 @using PRFactory.Web.UI.Display
 @using PRFactory.Web.UI.Cards
+@using PRFactory.Web.UI.Navigation
+@using ButtonSize = PRFactory.Web.UI.Buttons.ButtonSize
 
 <PageTitle>Repositories - PRFactory</PageTitle>
+
+<Breadcrumbs Items="@breadcrumbItems" AdditionalClass="mb-3" />
 
 <div class="container-fluid">
     <div class="row mb-4">

@@ -86,7 +86,8 @@
                 {
                     <!-- Events Table -->
                     <Card Title="@GetEventsTitle()" Icon="list-ul">
-                        <RadzenDataGrid Data="@pagedResult.Items"
+                        <ChildContent>
+                            <RadzenDataGrid Data="@pagedResult.Items"
                                         TItem="WorkflowEventDto"
                                         AllowVirtualization="true"
                                         Style="height: 600px"
@@ -151,6 +152,7 @@
                                 </RadzenDataGridColumn>
                             </Columns>
                         </RadzenDataGrid>
+                        </ChildContent>
 
                         <FooterContent>
                             <div class="d-flex justify-content-between align-items-center mt-3">

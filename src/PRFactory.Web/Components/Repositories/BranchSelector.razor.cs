@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using PRFactory.Web.Services;
 
 namespace PRFactory.Web.Components.Repositories;
 

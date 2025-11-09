@@ -14,12 +14,12 @@
 
     <div class="mb-3">
         <label class="form-label">Date Range</label>
-        <RadzenDateRangePicker @bind-Value="@DateRange"
+        <RadzenDateRangePicker Value="@DateRange"
+                               ValueChanged="@((DateRange? value) => { DateRange = value; OnFilterChanged(); })"
                                ShowTime="false"
                                DateFormat="MM/dd/yyyy"
                                Placeholder="Select date range"
-                               Style="width: 100%"
-                               Change="@OnFilterChanged" />
+                               Style="width: 100%" />
     </div>
 
     <div class="mb-3">

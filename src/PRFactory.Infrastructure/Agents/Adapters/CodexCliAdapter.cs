@@ -48,7 +48,7 @@ public class CodexCliAdapter : ICliAgent
         throw new NotImplementedException(
             "Codex CLI adapter is a placeholder for future implementation. " +
             "To implement this adapter, add the logic to execute Codex CLI commands " +
-            "similar to ClaudeDesktopCliAdapter.");
+            "similar to ClaudeCodeCliAdapter.");
     }
 
     /// <summary>
@@ -64,7 +64,7 @@ public class CodexCliAdapter : ICliAgent
         throw new NotImplementedException(
             "Codex CLI adapter is a placeholder for future implementation. " +
             "To implement this adapter, add the logic to execute Codex CLI commands " +
-            "with project context similar to ClaudeDesktopCliAdapter.");
+            "with project context similar to ClaudeCodeCliAdapter.");
     }
 
     /// <summary>

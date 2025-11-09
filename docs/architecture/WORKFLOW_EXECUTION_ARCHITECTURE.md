@@ -413,7 +413,7 @@ PRFactory.Worker (running on server)
   │
   └─> ICliAgent abstraction
         │
-        ├─> ClaudeDesktopCliAdapter
+        ├─> ClaudeCodeCliAdapter
         │   └─> ProcessExecutor.ExecuteAsync("claude --headless --prompt '...'")
         │       └─> Spawns subprocess on local machine
         │           (Claude CLI must be installed locally)
@@ -424,13 +424,13 @@ PRFactory.Worker (running on server)
 ```
 
 **Key Files**:
-- Adapter: `/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Adapters/ClaudeDesktopCliAdapter.cs`
+- Adapter: `/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Adapters/ClaudeCodeCliAdapter.cs`
 - Executor: `/home/user/PRFactory/src/PRFactory.Infrastructure/Execution/ProcessExecutor.cs`
 
 **Configuration**:
 ```csharp
 // In appsettings.json
-"ClaudeDesktopCli": {
+"ClaudeCodeCli": {
     "CommandPath": "claude",              // Where to find 'claude' command
     "SupportsHeadless": true,             // CLI supports --headless flag
     "TimeoutSeconds": 900,                // 15-minute timeout
@@ -613,7 +613,7 @@ services:
 - ✅ **AgentExecutor** - Agent resolution from DI and execution
 - ✅ **CheckpointStore** - Persistence via EF Core repositories
 - ✅ **ProcessExecutor** - Safe subprocess execution with timeouts
-- ✅ **ClaudeDesktopCliAdapter** - Local CLI invocation
+- ✅ **ClaudeCodeCliAdapter** - Local CLI invocation
 - ✅ **GraphBuilder** - Fluent API for custom graphs
 
 ### 8.2 Partially Implemented ⚠️
@@ -758,7 +758,7 @@ PRFactory.Infrastructure/
 │   │   ├── AgentExecutor.cs         # Agent execution
 │   │   └── GraphBuilder.cs          # Custom graph DSL
 │   ├── Adapters/
-│   │   └── ClaudeDesktopCliAdapter.cs  # Local CLI wrapper
+│   │   └── ClaudeCodeCliAdapter.cs  # Local CLI wrapper
 │   ├── Base/
 │   │   ├── AgentGraphBase.cs        # Base class
 │   │   └── CheckpointData.cs        # Checkpoint model

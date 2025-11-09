@@ -51,9 +51,7 @@
                                         <td><code>@ticket.ExternalTicketKey</code></td>
                                         <td>@ticket.Title</td>
                                         <td>
-                                            <span class="badge bg-@GetStatusBadgeColor(ticket.WorkflowState)">
-                                                @ticket.WorkflowState
-                                            </span>
+                                            <StatusBadge State="@ticket.State" />
                                         </td>
                                         <td>@ticket.Repository?.Name</td>
                                         <td>@ticket.CreatedAt.ToString("g")</td>
@@ -88,7 +86,7 @@
                 <div class="text-center">
                     <i class="bi bi-check-circle display-4 text-success"></i>
                     <h5 class="mt-3">Completed</h5>
-                    <p class="display-6">@tickets.Count(t => t.WorkflowState == WorkflowState.Completed)</p>
+                    <p class="display-6">@tickets.Count(t => t.State == WorkflowState.Completed)</p>
                 </div>
             </Card>
         </div>
@@ -97,7 +95,7 @@
                 <div class="text-center">
                     <i class="bi bi-hourglass-split display-4 text-warning"></i>
                     <h5 class="mt-3">In Progress</h5>
-                    <p class="display-6">@tickets.Count(t => t.WorkflowState != WorkflowState.Completed && t.WorkflowState != WorkflowState.Failed && t.WorkflowState != WorkflowState.Cancelled)</p>
+                    <p class="display-6">@tickets.Count(t => t.State != WorkflowState.Completed && t.State != WorkflowState.Failed && t.State != WorkflowState.Cancelled)</p>
                 </div>
             </Card>
         </div>

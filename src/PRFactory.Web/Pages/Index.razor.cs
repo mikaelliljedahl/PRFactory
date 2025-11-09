@@ -41,29 +41,4 @@ public partial class Index
     {
         Navigation.NavigateTo($"/tickets/{ticketId}");
     }
-
-    private string GetStatusBadgeColor(WorkflowState state)
-    {
-        return state switch
-        {
-            WorkflowState.Triggered => "primary",
-            WorkflowState.Analyzing => "primary",
-            WorkflowState.QuestionsPosted => "warning",
-            WorkflowState.AwaitingAnswers => "warning",
-            WorkflowState.AnswersReceived => "info",
-            WorkflowState.Planning => "primary",
-            WorkflowState.PlanPosted => "info",
-            WorkflowState.PlanUnderReview => "info",
-            WorkflowState.PlanApproved => "success",
-            WorkflowState.PlanRejected => "danger",
-            WorkflowState.Implementing => "primary",
-            WorkflowState.ImplementationFailed => "danger",
-            WorkflowState.PRCreated => "success",
-            WorkflowState.InReview => "info",
-            WorkflowState.Completed => "success",
-            WorkflowState.Cancelled => "secondary",
-            WorkflowState.Failed => "danger",
-            _ => "primary"
-        };
-    }
 }

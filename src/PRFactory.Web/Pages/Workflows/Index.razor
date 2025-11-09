@@ -1,0 +1,168 @@
+@page "/workflows"
+@using PRFactory.Web.Models
+@using PRFactory.Web.UI.Alerts
+@using PRFactory.Web.UI.Buttons
+@using PRFactory.Web.UI.Cards
+@using PRFactory.Web.UI.Display
+@using PRFactory.Domain.ValueObjects
+
+<PageTitle>Workflows - PRFactory</PageTitle>
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-6">
+                <i class="bi bi-diagram-3"></i> Workflows
+            </h1>
+            <p class="text-muted">Monitor active workflows and their current states</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <Card Icon="arrow-repeat" Variant="CardVariant.Primary">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-muted mb-1">Active Workflows</h6>
+                        <h2 class="mb-0">@activeWorkflowsCount</h2>
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-arrow-repeat fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </Card>
+        </div>
+
+        <div class="col-md-3">
+            <Card Icon="hourglass-split" Variant="CardVariant.Warning">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-muted mb-1">Awaiting Input</h6>
+                        <h2 class="mb-0">@awaitingInputCount</h2>
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-hourglass-split fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </Card>
+        </div>
+
+        <div class="col-md-3">
+            <Card Icon="check-circle" Variant="CardVariant.Success">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-muted mb-1">Completed Today</h6>
+                        <h2 class="mb-0">@completedTodayCount</h2>
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-check-circle fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </Card>
+        </div>
+
+        <div class="col-md-3">
+            <Card Icon="x-circle" Variant="CardVariant.Danger">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-muted mb-1">Failed</h6>
+                        <h2 class="mb-0">@failedCount</h2>
+                    </div>
+                    <div class="ms-3">
+                        <i class="bi bi-x-circle fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </Card>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    @if (isLoading)
+    {
+        <LoadingSpinner IsLoading="true" Message="Loading workflows..." />
+    }
+    else if (errorMessage != null)
+    {
+        <!-- Error State -->
+        <AlertMessage Type="AlertType.Danger" Title="Error" Message="@errorMessage" Icon="exclamation-triangle-fill">
+            <IconButton Icon="arrow-clockwise" Text="Retry" Variant="ButtonVariant.OutlineDanger" Size="ButtonSize.Small" AdditionalClass="ms-3" OnClick="@(async _ => await LoadWorkflows())" />
+        </AlertMessage>
+    }
+    else if (workflows == null || !workflows.Any())
+    {
+        <!-- Empty State -->
+        <EmptyState Icon="diagram-3"
+                    Title="No workflows found"
+                    Message="Workflows will appear here once tickets are triggered"
+                    ActionUrl="/tickets"
+                    ActionText="View Tickets"
+                    ActionIcon="ticket-perforated" />
+    }
+    else
+    {
+        <!-- Workflows Table -->
+        <Card Title="Recent Workflows" Icon="list-ul">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Ticket</th>
+                            <th>Repository</th>
+                            <th>State</th>
+                            <th>Started</th>
+                            <th>Duration</th>
+                            <th style="width: 100px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var workflow in workflows)
+                        {
+                            <tr>
+                                <td>
+                                    <div>
+                                        <strong>@workflow.TicketKey</strong>
+                                        @if (!string.IsNullOrEmpty(workflow.Title))
+                                        {
+                                            <br />
+                                            <small class="text-muted">@workflow.Title</small>
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(workflow.RepositoryName))
+                                    {
+                                        <span class="badge bg-light text-dark">
+                                            <i class="bi bi-git me-1"></i>@workflow.RepositoryName
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">N/A</span>
+                                    }
+                                </td>
+                                <td>
+                                    <StatusBadge State="@workflow.State" />
+                                </td>
+                                <td>
+                                    <RelativeTime Timestamp="@workflow.CreatedAt" />
+                                </td>
+                                <td>
+                                    <span class="text-muted">@GetDuration(workflow)</span>
+                                </td>
+                                <td>
+                                    <IconButton Icon="eye"
+                                                Text="View"
+                                                Variant="ButtonVariant.OutlinePrimary"
+                                                Size="ButtonSize.Small"
+                                                OnClick="@(_ => ViewTicket(workflow.Id))" />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </Card>
+    }
+</div>

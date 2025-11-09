@@ -123,7 +123,9 @@ namespace PRFactory.Infrastructure.Agents.Messages
 
     public record PlanRejectedMessage(
         Guid TicketId,
-        string Reason
+        string Reason,
+        string? RefinementInstructions = null,
+        bool RegenerateCompletely = false
     ) : IAgentMessage
     {
         public DateTime Timestamp { get; init; } = DateTime.UtcNow;
@@ -157,6 +159,45 @@ namespace PRFactory.Infrastructure.Agents.Messages
         string FinalState,
         TimeSpan TotalDuration,
         Dictionary<string, object> Metrics
+    ) : IAgentMessage
+    {
+        public DateTime Timestamp { get; init; } = DateTime.UtcNow;
+    }
+
+    // Ticket update messages
+    public record TicketUpdateGeneratedMessage(
+        Guid TicketId,
+        Guid TicketUpdateId,
+        int Version,
+        string UpdatedTitle
+    ) : IAgentMessage
+    {
+        public DateTime Timestamp { get; init; } = DateTime.UtcNow;
+    }
+
+    public record TicketUpdateApprovedMessage(
+        Guid TicketId,
+        Guid TicketUpdateId,
+        DateTime ApprovedAt,
+        string ApprovedBy
+    ) : IAgentMessage
+    {
+        public DateTime Timestamp { get; init; } = DateTime.UtcNow;
+    }
+
+    public record TicketUpdateRejectedMessage(
+        Guid TicketId,
+        Guid TicketUpdateId,
+        string Reason
+    ) : IAgentMessage
+    {
+        public DateTime Timestamp { get; init; } = DateTime.UtcNow;
+    }
+
+    public record TicketUpdatePostedMessage(
+        Guid TicketId,
+        Guid TicketUpdateId,
+        DateTime PostedAt
     ) : IAgentMessage
     {
         public DateTime Timestamp { get; init; } = DateTime.UtcNow;

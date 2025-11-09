@@ -1,3 +1,12 @@
+> **ARCHIVED**: This proposal described the initial Jira-first design approach.
+> The current implementation uses WebUI as the primary interface, with external systems (Jira, Azure DevOps, GitHub Issues) as optional sync targets.
+> See [ARCHITECTURE.md](../ARCHITECTURE.md) for current design.
+>
+> **Date Archived**: 2025-11-08
+> **Original Date**: 2025 (estimated)
+
+---
+
 # Claude AI-Powered Development Assistant for Jira
 
 ## Executive Summary

@@ -1,0 +1,66 @@
+@using PRFactory.Web.Models
+
+<div class="prompt-preview-container">
+    <RadzenSplitter Orientation="Orientation.Vertical" style="height: 600px;">
+        <RadzenSplitterPane Size="50%">
+            <div class="p-3">
+                <h5 class="mb-3">
+                    <i class="bi bi-file-earmark-text"></i> Template
+                    @if (!string.IsNullOrEmpty(Template?.Name))
+                    {
+                        <span class="text-muted small">(@Template.Name)</span>
+                    }
+                </h5>
+                <div class="code-block">
+                    <pre><code>@TemplateContent</code></pre>
+                </div>
+            </div>
+        </RadzenSplitterPane>
+        <RadzenSplitterPane Size="50%">
+            <div class="p-3">
+                <h5 class="mb-3">
+                    <i class="bi bi-eye"></i> Preview with Sample Data
+                </h5>
+                <div class="code-block preview-content">
+                    <pre><code>@PreviewContent</code></pre>
+                </div>
+            </div>
+        </RadzenSplitterPane>
+    </RadzenSplitter>
+</div>
+
+<style>
+    .prompt-preview-container {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+    }
+
+    .code-block {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        padding: 1rem;
+        max-height: 500px;
+        overflow: auto;
+    }
+
+    .code-block pre {
+        margin: 0;
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    .code-block code {
+        background: none;
+        padding: 0;
+        color: inherit;
+    }
+
+    .preview-content {
+        background: #f8f9fa;
+    }
+</style>

@@ -1,0 +1,219 @@
+@page "/repositories/{RepositoryId:guid}"
+@using PRFactory.Web.UI.Cards
+@using PRFactory.Web.UI.Alerts
+@using PRFactory.Web.UI.Display
+@using PRFactory.Web.UI.Buttons
+@using Radzen.Blazor
+
+<PageTitle>@(repository?.Name ?? "Repository") - PRFactory</PageTitle>
+
+<div class="container-fluid">
+    @if (isLoading)
+    {
+        <LoadingSpinner IsLoading="true" Message="Loading repository..." />
+    }
+    else if (repository == null)
+    {
+        <AlertMessage Type="AlertType.Warning"
+                     Title="Not Found"
+                     Message="Repository not found."
+                     Icon="exclamation-triangle-fill" />
+    }
+    else
+    {
+        <div class="row mb-4">
+            <div class="col">
+                <h1 class="display-6">
+                    <i class="bi bi-@GetPlatformIcon(repository.GitPlatform) me-2"></i>
+                    @repository.Name
+                </h1>
+                <p class="text-muted">@repository.CloneUrl</p>
+            </div>
+            <div class="col-auto align-self-center">
+                <div class="d-flex gap-2">
+                    <IconButton Icon="pencil"
+                               Text="Edit"
+                               Variant="ButtonVariant.Primary"
+                               OnClick="@(async _ => NavigationManager.NavigateTo($"/repositories/{RepositoryId}/edit"))" />
+                    <IconButton Icon="trash"
+                               Text="Delete"
+                               Variant="ButtonVariant.Danger"
+                               OnClick="@(async _ => await HandleDeleteAsync())" />
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <AlertMessage Type="AlertType.Danger"
+                         Title="Error"
+                         Message="@errorMessage"
+                         Icon="exclamation-triangle-fill"
+                         Dismissible="true"
+                         OnDismiss="@(() => errorMessage = null)" />
+        }
+
+        <RadzenTabs>
+            <Tabs>
+                <RadzenTabsItem Text="Overview">
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <Card Title="Repository Details" Icon="info-circle">
+                                <ChildContent>
+                                    <div class="mb-3">
+                                        <small class="text-muted">Status</small>
+                                        <div>
+                                            @if (repository.IsActive)
+                                            {
+                                                <span class="badge bg-success">Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <small class="text-muted">Platform</small>
+                                        <div>
+                                            <span class="badge bg-secondary">@repository.GitPlatform</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <small class="text-muted">Clone URL</small>
+                                        <div>
+                                            <code class="small">@repository.CloneUrl</code>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <small class="text-muted">Default Branch</small>
+                                        <div>
+                                            <span class="badge bg-info">@repository.DefaultBranch</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <small class="text-muted">Tenant</small>
+                                        <div>@repository.TenantName</div>
+                                    </div>
+
+                                    <div class="mb-0">
+                                        <small class="text-muted">Repository ID</small>
+                                        <div><code class="small">@repository.Id</code></div>
+                                    </div>
+                                </ChildContent>
+                            </Card>
+                        </div>
+
+                        <div class="col-md-6">
+                            <Card Title="Activity" Icon="clock-history">
+                                <ChildContent>
+                                    <div class="mb-3">
+                                        <small class="text-muted">Created</small>
+                                        <div>
+                                            @repository.CreatedAt.ToLocalTime().ToString("g")
+                                            <br />
+                                            <small class="text-muted">
+                                                <RelativeTime DateTime="@repository.CreatedAt" />
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    @if (repository.UpdatedAt.HasValue)
+                                    {
+                                        <div class="mb-3">
+                                            <small class="text-muted">Last Updated</small>
+                                            <div>
+                                                @repository.UpdatedAt.Value.ToLocalTime().ToString("g")
+                                                <br />
+                                                <small class="text-muted">
+                                                    <RelativeTime DateTime="@repository.UpdatedAt.Value" />
+                                                </small>
+                                            </div>
+                                        </div>
+                                    }
+
+                                    @if (repository.LastAccessedAt.HasValue)
+                                    {
+                                        <div class="mb-3">
+                                            <small class="text-muted">Last Accessed</small>
+                                            <div>
+                                                @repository.LastAccessedAt.Value.ToLocalTime().ToString("g")
+                                                <br />
+                                                <small class="text-muted">
+                                                    <RelativeTime DateTime="@repository.LastAccessedAt.Value" />
+                                                </small>
+                                            </div>
+                                        </div>
+                                    }
+
+                                    <div class="mb-0">
+                                        <small class="text-muted">Associated Tickets</small>
+                                        <div>
+                                            <span class="badge bg-primary">@repository.TicketCount</span>
+                                        </div>
+                                    </div>
+                                </ChildContent>
+                            </Card>
+                        </div>
+                    </div>
+                </RadzenTabsItem>
+
+                <RadzenTabsItem Text="Configuration">
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <Card Title="Configuration Settings" Icon="gear">
+                                <ChildContent>
+                                    <p class="text-muted">
+                                        Repository configuration settings will be displayed here.
+                                    </p>
+                                    <EmptyState Icon="gear"
+                                               Title="Configuration"
+                                               Message="Repository-specific configuration settings (branch protection, webhooks, etc.) will be added in future updates."
+                                               ActionUrl="@($"/repositories/{RepositoryId}/edit")"
+                                               ActionText="Edit Repository"
+                                               ActionIcon="pencil" />
+                                </ChildContent>
+                            </Card>
+                        </div>
+                    </div>
+                </RadzenTabsItem>
+
+                <RadzenTabsItem Text="Tickets">
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <Card Title="Associated Tickets" Icon="ticket">
+                                <ChildContent>
+                                    @if (repository.TicketCount > 0)
+                                    {
+                                        <p class="text-muted">
+                                            This repository has @repository.TicketCount associated ticket(s).
+                                        </p>
+                                        <EmptyState Icon="ticket"
+                                                   Title="Tickets"
+                                                   Message="Ticket list view will be implemented in a future update."
+                                                   ActionUrl="/tickets"
+                                                   ActionText="View All Tickets"
+                                                   ActionIcon="list" />
+                                    }
+                                    else
+                                    {
+                                        <EmptyState Icon="ticket"
+                                                   Title="No Tickets"
+                                                   Message="This repository has no associated tickets yet."
+                                                   ActionUrl="/tickets/create"
+                                                   ActionText="Create Ticket"
+                                                   ActionIcon="plus-circle" />
+                                    }
+                                </ChildContent>
+                            </Card>
+                        </div>
+                    </div>
+                </RadzenTabsItem>
+            </Tabs>
+        </RadzenTabs>
+    }
+</div>

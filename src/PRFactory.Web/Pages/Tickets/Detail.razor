@@ -3,37 +3,27 @@
 @using PRFactory.Api.Models
 @using PRFactory.Web.Models
 @using PRFactory.Web.Components.Tickets
+@using PRFactory.Web.UI.Alerts
+@using PRFactory.Web.UI.Cards
+@using PRFactory.Web.UI.Display
 @using PRFactory.Domain.ValueObjects
-@inject ITicketService TicketService
-@inject IHttpClientFactory HttpClientFactory
-@inject NavigationManager NavigationManager
-@implements IAsyncDisposable
 
 <PageTitle>@(ticket != null ? $"{ticket.TicketKey} - PRFactory" : "Loading...")</PageTitle>
 
 @if (isLoading)
 {
-    <div class="text-center p-5">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-        <p class="mt-2">Loading ticket details...</p>
-    </div>
+    <LoadingSpinner IsLoading="true" Message="Loading ticket details..." />
 }
 else if (errorMessage != null)
 {
-    <div class="alert alert-danger">
-        <i class="bi bi-exclamation-triangle"></i> @errorMessage
-    </div>
+    <AlertMessage Type="AlertType.Danger" Message="@errorMessage" Icon="exclamation-triangle" />
     <button class="btn btn-primary" @onclick="@(() => NavigationManager.NavigateTo("/"))">
         <i class="bi bi-arrow-left"></i> Back to Dashboard
     </button>
 }
 else if (ticket == null)
 {
-    <div class="alert alert-warning">
-        <i class="bi bi-info-circle"></i> Ticket not found
-    </div>
+    <AlertMessage Type="AlertType.Warning" Message="Ticket not found" Icon="info-circle" />
     <button class="btn btn-primary" @onclick="@(() => NavigationManager.NavigateTo("/"))">
         <i class="bi bi-arrow-left"></i> Back to Dashboard
     </button>
@@ -53,7 +43,14 @@ else
             <div class="col-md-8">
                 <TicketHeader Ticket="@ticket" />
 
-                @if (ticket.State == WorkflowState.QuestionsPosted || ticket.State == WorkflowState.AwaitingAnswers)
+                @if (ticket.State == WorkflowState.TicketUpdateUnderReview || ticket.State == WorkflowState.TicketUpdateGenerated)
+                {
+                    <TicketUpdatePreview TicketId="@ticket.Id"
+                                        OriginalTicket="@ticket"
+                                        OnUpdateApproved="HandleTicketUpdateApproved"
+                                        OnUpdateRejected="HandleTicketUpdateRejected" />
+                }
+                else if (ticket.State == WorkflowState.QuestionsPosted || ticket.State == WorkflowState.AwaitingAnswers)
                 {
                     <QuestionAnswerForm TicketId="@ticket.Id"
                                       Questions="@questions"
@@ -67,93 +64,56 @@ else
                 }
                 else if (ticket.State == WorkflowState.PRCreated || ticket.State == WorkflowState.InReview)
                 {
-                    <div class="card mb-3">
-                        <div class="card-header bg-success text-white">
-                            <h4 class="mb-0">
-                                <i class="bi bi-git"></i> Pull Request Created
-                            </h4>
-                        </div>
-                        <div class="card-body">
-                            <p>A pull request has been created for this ticket.</p>
-                            @if (!string.IsNullOrEmpty(ticket.PullRequestUrl))
-                            {
-                                <a href="@ticket.PullRequestUrl" target="_blank" class="btn btn-primary">
-                                    <i class="bi bi-box-arrow-up-right"></i> View Pull Request
-                                </a>
-                            }
-                        </div>
-                    </div>
+                    <Card Title="Pull Request Created" Icon="git" Variant="CardVariant.Success">
+                        <p>A pull request has been created for this ticket.</p>
+                        @if (!string.IsNullOrEmpty(ticket.PullRequestUrl))
+                        {
+                            <a href="@ticket.PullRequestUrl" target="_blank" class="btn btn-primary">
+                                <i class="bi bi-box-arrow-up-right"></i> View Pull Request
+                            </a>
+                        }
+                    </Card>
                 }
                 else if (ticket.State == WorkflowState.Completed)
                 {
-                    <div class="card mb-3">
-                        <div class="card-header bg-success text-white">
-                            <h4 class="mb-0">
-                                <i class="bi bi-check-circle"></i> Ticket Completed
-                            </h4>
-                        </div>
-                        <div class="card-body">
-                            <p>This ticket has been successfully completed and merged.</p>
-                            @if (ticket.CompletedAt.HasValue)
-                            {
-                                <p class="text-muted">
-                                    <small>Completed on @ticket.CompletedAt.Value.ToString("g")</small>
-                                </p>
-                            }
-                            @if (!string.IsNullOrEmpty(ticket.PullRequestUrl))
-                            {
-                                <a href="@ticket.PullRequestUrl" target="_blank" class="btn btn-outline-primary">
-                                    <i class="bi bi-box-arrow-up-right"></i> View Pull Request
-                                </a>
-                            }
-                        </div>
-                    </div>
+                    <Card Title="Ticket Completed" Icon="check-circle" Variant="CardVariant.Success">
+                        <p>This ticket has been successfully completed and merged.</p>
+                        @if (ticket.CompletedAt.HasValue)
+                        {
+                            <p class="text-muted">
+                                <small>Completed on @ticket.CompletedAt.Value.ToString("g")</small>
+                            </p>
+                        }
+                        @if (!string.IsNullOrEmpty(ticket.PullRequestUrl))
+                        {
+                            <a href="@ticket.PullRequestUrl" target="_blank" class="btn btn-outline-primary">
+                                <i class="bi bi-box-arrow-up-right"></i> View Pull Request
+                            </a>
+                        }
+                    </Card>
                 }
                 else if (ticket.State == WorkflowState.Failed)
                 {
-                    <div class="card mb-3">
-                        <div class="card-header bg-danger text-white">
-                            <h4 class="mb-0">
-                                <i class="bi bi-exclamation-triangle"></i> Workflow Failed
-                            </h4>
-                        </div>
-                        <div class="card-body">
-                            <p>The workflow encountered an error and could not complete.</p>
-                            @if (!string.IsNullOrEmpty(ticket.LastError))
-                            {
-                                <div class="alert alert-danger">
-                                    <strong>Error:</strong> @ticket.LastError
-                                </div>
-                            }
-                        </div>
-                    </div>
+                    <Card Title="Workflow Failed" Icon="exclamation-triangle" Variant="CardVariant.Danger">
+                        <p>The workflow encountered an error and could not complete.</p>
+                        @if (!string.IsNullOrEmpty(ticket.LastError))
+                        {
+                            <AlertMessage Type="AlertType.Danger" Title="Error" Message="@ticket.LastError" />
+                        }
+                    </Card>
                 }
                 else if (ticket.State == WorkflowState.Cancelled)
                 {
-                    <div class="card mb-3">
-                        <div class="card-header bg-secondary text-white">
-                            <h4 class="mb-0">
-                                <i class="bi bi-x-circle"></i> Ticket Cancelled
-                            </h4>
-                        </div>
-                        <div class="card-body">
-                            <p>This ticket has been cancelled and will not be processed.</p>
-                        </div>
-                    </div>
+                    <Card Title="Ticket Cancelled" Icon="x-circle" Variant="CardVariant.Secondary">
+                        <p>This ticket has been cancelled and will not be processed.</p>
+                    </Card>
                 }
                 else
                 {
-                    <div class="card mb-3">
-                        <div class="card-header">
-                            <h4 class="mb-0">
-                                <i class="bi bi-hourglass-split"></i> In Progress
-                            </h4>
-                        </div>
-                        <div class="card-body">
-                            <p>The workflow is currently processing this ticket.</p>
-                            <p class="text-muted">Current state: <strong>@ticket.StateDisplay</strong></p>
-                        </div>
-                    </div>
+                    <Card Title="In Progress" Icon="hourglass-split">
+                        <p>The workflow is currently processing this ticket.</p>
+                        <p class="text-muted">Current state: <strong>@ticket.StateDisplay</strong></p>
+                    </Card>
                 }
             </div>
 
@@ -162,168 +122,4 @@ else
             </div>
         </div>
     </div>
-}
-
-@code {
-    [Parameter]
-    public string Id { get; set; } = string.Empty;
-
-    private TicketDto? ticket;
-    private List<QuestionDto>? questions;
-    private List<WorkflowEventDto>? events;
-    private HubConnection? hubConnection;
-    private bool isLoading = true;
-    private string? errorMessage;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadTicket();
-
-        if (ticket != null)
-        {
-            await LoadQuestions();
-            await LoadEvents();
-            await InitializeSignalR();
-        }
-    }
-
-    private async Task LoadTicket()
-    {
-        try
-        {
-            isLoading = true;
-            errorMessage = null;
-
-            if (Guid.TryParse(Id, out var ticketId))
-            {
-                // TODO: Replace with proper API call that returns TicketDto
-                // For now, get the Ticket entity and map to TicketDto
-                var ticketEntity = await TicketService.GetTicketByIdAsync(ticketId);
-
-                if (ticketEntity != null)
-                {
-                    ticket = new TicketDto
-                    {
-                        Id = ticketEntity.Id,
-                        TicketKey = ticketEntity.TicketKey,
-                        Title = ticketEntity.Title,
-                        Description = ticketEntity.Description,
-                        State = ticketEntity.State,
-                        Source = ticketEntity.Source,
-                        RepositoryId = ticketEntity.RepositoryId,
-                        RepositoryName = ticketEntity.Repository?.Name,
-                        CreatedAt = ticketEntity.CreatedAt,
-                        UpdatedAt = ticketEntity.UpdatedAt,
-                        CompletedAt = ticketEntity.CompletedAt,
-                        PullRequestUrl = ticketEntity.PullRequestUrl,
-                        PullRequestNumber = ticketEntity.PullRequestNumber,
-                        PlanBranchName = ticketEntity.PlanBranchName,
-                        PlanMarkdownPath = ticketEntity.PlanMarkdownPath,
-                        LastError = ticketEntity.LastError
-                    };
-                }
-            }
-            else
-            {
-                errorMessage = "Invalid ticket ID format";
-            }
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Error loading ticket: {ex.Message}";
-        }
-        finally
-        {
-            isLoading = false;
-        }
-    }
-
-    private async Task LoadQuestions()
-    {
-        try
-        {
-            // TODO: Implement API endpoint GET /api/tickets/{id}/questions
-            // For now, return empty list
-            var client = HttpClientFactory.CreateClient("PRFactoryApi");
-            var response = await client.GetFromJsonAsync<QuestionsResponse>($"/api/tickets/{Id}/questions");
-            questions = response?.Questions ?? new List<QuestionDto>();
-        }
-        catch (Exception ex)
-        {
-            // Log but don't fail the page load
-            Console.WriteLine($"Error loading questions: {ex.Message}");
-            questions = new List<QuestionDto>();
-        }
-    }
-
-    private async Task LoadEvents()
-    {
-        try
-        {
-            // TODO: Implement API endpoint GET /api/tickets/{id}/events
-            // For now, return empty list
-            var client = HttpClientFactory.CreateClient("PRFactoryApi");
-            events = await client.GetFromJsonAsync<List<WorkflowEventDto>>($"/api/tickets/{Id}/events");
-            events ??= new List<WorkflowEventDto>();
-        }
-        catch (Exception ex)
-        {
-            // Log but don't fail the page load
-            Console.WriteLine($"Error loading events: {ex.Message}");
-            events = new List<WorkflowEventDto>();
-        }
-    }
-
-    private async Task InitializeSignalR()
-    {
-        try
-        {
-            // TODO: Set up SignalR connection for real-time ticket updates
-            // hubConnection = new HubConnectionBuilder()
-            //     .WithUrl(NavigationManager.ToAbsoluteUri("/hubs/tickets"))
-            //     .Build();
-            //
-            // hubConnection.On<TicketDto>("TicketUpdated", async (updatedTicket) =>
-            // {
-            //     if (updatedTicket.Id == ticket?.Id)
-            //     {
-            //         ticket = updatedTicket;
-            //         await InvokeAsync(StateHasChanged);
-            //     }
-            // });
-            //
-            // await hubConnection.StartAsync();
-        }
-        catch (Exception ex)
-        {
-            // Log but don't fail the page load
-            Console.WriteLine($"Error initializing SignalR: {ex.Message}");
-        }
-    }
-
-    private async Task HandleAnswersSubmitted()
-    {
-        await LoadTicket();
-        await LoadEvents();
-    }
-
-    private async Task HandlePlanApproved()
-    {
-        await LoadTicket();
-        await LoadEvents();
-    }
-
-    private async Task HandlePlanRejected()
-    {
-        await LoadTicket();
-        await LoadEvents();
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (hubConnection != null)
-        {
-            await hubConnection.DisposeAsync();
-        }
-    }
 }

@@ -1,0 +1,132 @@
+@page "/repositories"
+@using PRFactory.Web.UI.Alerts
+@using PRFactory.Web.UI.Buttons
+@using PRFactory.Web.UI.Display
+@using PRFactory.Web.UI.Cards
+
+<PageTitle>Repositories - PRFactory</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-6">
+                <i class="bi bi-folder2"></i> Repositories
+            </h1>
+            <p class="text-muted">Manage your Git repositories</p>
+        </div>
+        <div class="col-auto align-self-center">
+            <a href="/repositories/create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Add Repository
+            </a>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    @if (isLoading)
+    {
+        <LoadingSpinner IsLoading="true" Message="Loading repositories..." />
+    }
+    else if (errorMessage != null)
+    {
+        <!-- Error State -->
+        <AlertMessage Type="AlertType.Danger" Title="Error" Message="@errorMessage" Icon="exclamation-triangle-fill">
+            <IconButton Icon="arrow-clockwise" Text="Retry" Variant="ButtonVariant.OutlineDanger" Size="ButtonSize.Small" AdditionalClass="ms-3" OnClick="@(async _ => await LoadRepositoriesAsync())" />
+        </AlertMessage>
+    }
+    else if (repositories == null || !repositories.Any())
+    {
+        <!-- Empty State -->
+        <EmptyState Icon="folder2-open"
+                    Title="No repositories found"
+                    Message="Add your first repository to get started with PRFactory"
+                    ActionUrl="/repositories/create"
+                    ActionText="Add Repository"
+                    ActionIcon="plus-circle" />
+    }
+    else
+    {
+        <!-- Repositories Grid -->
+        <div class="row">
+            @foreach (var repository in repositories)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <Card AdditionalClass="h-100">
+                        <HeaderContent>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-@GetPlatformIcon(repository.GitPlatform) me-2"></i>
+                                    @repository.Name
+                                </h5>
+                                @if (repository.IsActive)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Inactive</span>
+                                }
+                            </div>
+                        </HeaderContent>
+                        <ChildContent>
+                            <div class="mb-3">
+                                <small class="text-muted">Platform</small>
+                                <div>
+                                    <span class="badge bg-secondary">@repository.GitPlatform</span>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <small class="text-muted">Clone URL</small>
+                                <div class="text-truncate" title="@repository.CloneUrl">
+                                    <code class="small">@repository.CloneUrl</code>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <small class="text-muted">Default Branch</small>
+                                <div>
+                                    <span class="badge bg-info">@repository.DefaultBranch</span>
+                                </div>
+                            </div>
+                            @if (repository.TicketCount > 0)
+                            {
+                                <div class="mb-3">
+                                    <small class="text-muted">Tickets</small>
+                                    <div>
+                                        <span class="badge bg-primary">@repository.TicketCount</span>
+                                    </div>
+                                </div>
+                            }
+                            @if (repository.LastAccessedAt.HasValue)
+                            {
+                                <div class="mb-3">
+                                    <small class="text-muted">Last Accessed</small>
+                                    <div>
+                                        <RelativeTime DateTime="@repository.LastAccessedAt.Value" />
+                                    </div>
+                                </div>
+                            }
+                        </ChildContent>
+                        <FooterContent>
+                            <div class="d-flex justify-content-end gap-2">
+                                <IconButton Icon="eye"
+                                           Text="View"
+                                           Variant="ButtonVariant.OutlinePrimary"
+                                           Size="ButtonSize.Small"
+                                           OnClick="@(async _ => await ViewRepositoryAsync(repository.Id))" />
+                                <IconButton Icon="pencil"
+                                           Text="Edit"
+                                           Variant="ButtonVariant.OutlineSecondary"
+                                           Size="ButtonSize.Small"
+                                           OnClick="@(async _ => await EditRepositoryAsync(repository.Id))" />
+                                <IconButton Icon="trash"
+                                           Text="Delete"
+                                           Variant="ButtonVariant.OutlineDanger"
+                                           Size="ButtonSize.Small"
+                                           OnClick="@(async _ => await DeleteRepositoryAsync(repository.Id))" />
+                            </div>
+                        </FooterContent>
+                    </Card>
+                </div>
+            }
+        </div>
+    }
+</div>

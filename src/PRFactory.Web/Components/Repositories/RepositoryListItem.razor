@@ -1,0 +1,126 @@
+@using PRFactory.Web.UI.Display
+@using PRFactory.Web.UI.Buttons
+
+<div class="card mb-3 @(Repository.IsActive ? "" : "border-secondary")">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+                <h5 class="card-title mb-2">
+                    @if (Repository.IsActive)
+                    {
+                        <span class="badge bg-success me-2">Active</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary me-2">Inactive</span>
+                    }
+                    <span class="@GetPlatformBadgeClass() me-2">
+                        <i class="bi @GetPlatformIcon()"></i>
+                        @Repository.GitPlatform
+                    </span>
+                    <a href="/repositories/@Repository.Id" class="text-decoration-none">
+                        @Repository.Name
+                    </a>
+                </h5>
+
+                <p class="card-text text-muted mb-2">
+                    <i class="bi bi-link-45deg"></i>
+                    <code>@TruncateUrl(Repository.CloneUrl, 50)</code>
+                </p>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-auto">
+                        <small class="text-muted">
+                            <i class="bi bi-diagram-2"></i> Branch: <code>@Repository.DefaultBranch</code>
+                        </small>
+                    </div>
+                    <div class="col-auto">
+                        <small class="text-muted">
+                            <i class="bi bi-building"></i> Tenant: @Repository.TenantName
+                        </small>
+                    </div>
+                    @if (Repository.TicketCount > 0)
+                    {
+                        <div class="col-auto">
+                            <span class="badge bg-info">
+                                <i class="bi bi-ticket-detailed"></i> @Repository.TicketCount tickets
+                            </span>
+                        </div>
+                    }
+                </div>
+
+                <div class="mt-2">
+                    <small class="text-muted">
+                        <i class="bi bi-calendar-plus"></i>
+                        Created <RelativeTime Timestamp="@Repository.CreatedAt" />
+                    </small>
+                    @if (Repository.UpdatedAt.HasValue)
+                    {
+                        <small class="text-muted ms-3">
+                            <i class="bi bi-calendar-check"></i>
+                            Updated <RelativeTime Timestamp="@Repository.UpdatedAt.Value" />
+                        </small>
+                    }
+                    @if (Repository.LastAccessedAt.HasValue)
+                    {
+                        <small class="text-muted ms-3">
+                            <i class="bi bi-clock"></i>
+                            Accessed <RelativeTime Timestamp="@Repository.LastAccessedAt.Value" />
+                        </small>
+                    }
+                </div>
+            </div>
+
+            <div class="ms-3">
+                <div class="btn-group-vertical" role="group">
+                    <IconButton
+                        Icon="eye"
+                        Text="Details"
+                        Variant="ButtonVariant.OutlinePrimary"
+                        Size="ButtonSize.Small"
+                        OnClick="@(() => HandleViewDetails())" />
+
+                    <IconButton
+                        Icon="pencil"
+                        Text="Edit"
+                        Variant="ButtonVariant.OutlineSecondary"
+                        Size="ButtonSize.Small"
+                        OnClick="@(() => OnEdit.InvokeAsync(Repository.Id))" />
+
+                    <IconButton
+                        Icon="plug"
+                        Text="Test"
+                        Variant="ButtonVariant.OutlineInfo"
+                        Size="ButtonSize.Small"
+                        OnClick="@(() => OnTestConnection.InvokeAsync(Repository.Id))" />
+
+                    @if (Repository.IsActive)
+                    {
+                        <IconButton
+                            Icon="pause-circle"
+                            Text="Deactivate"
+                            Variant="ButtonVariant.OutlineWarning"
+                            Size="ButtonSize.Small"
+                            OnClick="@(() => OnDeactivate.InvokeAsync(Repository.Id))" />
+                    }
+                    else
+                    {
+                        <IconButton
+                            Icon="play-circle"
+                            Text="Activate"
+                            Variant="ButtonVariant.OutlineSuccess"
+                            Size="ButtonSize.Small"
+                            OnClick="@(() => OnActivate.InvokeAsync(Repository.Id))" />
+                    }
+
+                    <IconButton
+                        Icon="trash"
+                        Text="Delete"
+                        Variant="ButtonVariant.OutlineDanger"
+                        Size="ButtonSize.Small"
+                        OnClick="@(() => OnDelete.InvokeAsync(Repository.Id))" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

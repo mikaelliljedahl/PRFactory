@@ -1,3 +1,11 @@
+> **ARCHIVED**: This was a comprehensive architecture review snapshot from 2025-11-07.
+> For current implementation status, see [IMPLEMENTATION_STATUS.md](../IMPLEMENTATION_STATUS.md).
+>
+> **Date Archived**: 2025-11-08
+> **Review Date**: 2025-11-07
+
+---
+
 # PRFactory Architecture and Documentation Review
 
 **Review Date**: 2025-11-07

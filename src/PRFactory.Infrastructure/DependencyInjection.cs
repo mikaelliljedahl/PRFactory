@@ -2,10 +2,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using PRFactory.Core.Application.Services;
 using PRFactory.Domain.Interfaces;
 using PRFactory.Infrastructure.Agents.Adapters;
 using PRFactory.Infrastructure.Agents.Base;
 using PRFactory.Infrastructure.Configuration;
+using PRFactory.Infrastructure.Execution;
 using PRFactory.Infrastructure.Persistence;
 using PRFactory.Infrastructure.Persistence.Encryption;
 using PRFactory.Infrastructure.Persistence.Repositories;
@@ -64,7 +66,11 @@ public static class DependencyInjection
         services.AddScoped<ITenantRepository, TenantRepository>();
         services.AddScoped<IRepositoryRepository, RepositoryRepository>();
         services.AddScoped<ITicketRepository, TicketRepository>();
+        services.AddScoped<ITicketUpdateRepository, TicketUpdateRepository>();
+        services.AddScoped<IWorkflowEventRepository, WorkflowEventRepository>();
         services.AddScoped<DomainCheckpointRepository, CheckpointRepository>();
+        services.AddScoped<IAgentPromptTemplateRepository, AgentPromptTemplateRepository>();
+        services.AddScoped<IErrorRepository, ErrorRepository>();
 
         // Register checkpoint store adapter
         services.AddScoped<WorkflowCheckpointStore, GraphCheckpointStoreAdapter>();
@@ -80,6 +86,21 @@ public static class DependencyInjection
 
         // Register configuration services
         services.AddScoped<ITenantConfigurationService, TenantConfigurationService>();
+
+        // Register application services
+        services.AddScoped<ITicketUpdateService, Application.TicketUpdateService>();
+        services.AddScoped<ITicketApplicationService, Application.TicketApplicationService>();
+        services.AddScoped<IRepositoryApplicationService, Application.RepositoryApplicationService>();
+        services.AddScoped<ITenantApplicationService, Application.TenantApplicationService>();
+        services.AddScoped<IErrorApplicationService, Application.ErrorApplicationService>();
+        services.AddScoped<ITenantContext, Application.TenantContext>();
+        services.AddScoped<IQuestionApplicationService, Application.QuestionApplicationService>();
+        services.AddScoped<IWorkflowEventApplicationService, Application.WorkflowEventApplicationService>();
+        services.AddScoped<IPlanService, Application.PlanService>();
+
+        // Register agent prompt services
+        services.AddScoped<Agents.Services.IAgentPromptService, Agents.Services.AgentPromptService>();
+        services.AddScoped<Agents.Services.AgentPromptLoaderService>();
 
         // Register agents
         services.AddTransient<Agents.TriggerAgent>();
@@ -100,6 +121,22 @@ public static class DependencyInjection
 
         // Register agent executor
         services.AddScoped<Agents.Graphs.IAgentExecutor, Agents.Graphs.AgentExecutor>();
+
+        // Register CLI agent abstraction layer
+        services.AddScoped<IProcessExecutor, ProcessExecutor>();
+
+        // Configure ClaudeDesktopCliOptions
+        services.Configure<ClaudeDesktopCliOptions>(
+            configuration.GetSection("ClaudeDesktopCli"));
+
+        services.AddScoped<ClaudeDesktopCliAdapter>();
+        services.AddScoped<CodexCliAdapter>();
+
+        // Register default CLI agent (Claude Desktop)
+        services.AddScoped<ICliAgent>(sp => sp.GetRequiredService<ClaudeDesktopCliAdapter>());
+
+        // Register database seeder
+        services.AddScoped<DbSeeder>();
 
         return services;
     }

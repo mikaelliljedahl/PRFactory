@@ -16,6 +16,31 @@ public enum WorkflowState
     Analyzing,
 
     /// <summary>
+    /// AI has generated a ticket update with refined title, description, and success criteria
+    /// </summary>
+    TicketUpdateGenerated,
+
+    /// <summary>
+    /// Developer is reviewing the generated ticket update
+    /// </summary>
+    TicketUpdateUnderReview,
+
+    /// <summary>
+    /// Developer has rejected the ticket update (will return to Analyzing state)
+    /// </summary>
+    TicketUpdateRejected,
+
+    /// <summary>
+    /// Developer has approved the ticket update
+    /// </summary>
+    TicketUpdateApproved,
+
+    /// <summary>
+    /// The approved ticket update has been posted to the ticket system
+    /// </summary>
+    TicketUpdatePosted,
+
+    /// <summary>
     /// Clarifying questions have been posted to the ticket system
     /// </summary>
     QuestionsPosted,

@@ -1,0 +1,67 @@
+@using PRFactory.Web.Models
+
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+                <h5 class="card-title mb-2">
+                    @if (!string.IsNullOrEmpty(Template.Color))
+                    {
+                        <span class="badge me-2" style="background-color: @Template.Color">
+                            <i class="bi bi-robot"></i>
+                        </span>
+                    }
+                    @Template.Name
+                </h5>
+                <p class="card-text text-muted mb-2">@Template.Description</p>
+                <div class="d-flex gap-2 flex-wrap">
+                    <span class="@Template.CategoryBadgeClass">
+                        @Template.Category
+                    </span>
+                    <span class="@Template.TypeBadgeClass">
+                        @Template.TypeDisplay
+                    </span>
+                    @if (!string.IsNullOrEmpty(Template.RecommendedModel))
+                    {
+                        <span class="badge bg-secondary">
+                            <i class="bi bi-cpu"></i> @Template.RecommendedModel
+                        </span>
+                    }
+                </div>
+                <div class="mt-2 text-muted small">
+                    <i class="bi bi-clock"></i> Created @Template.CreatedAt.ToString("g")
+                    @if (Template.UpdatedAt.HasValue)
+                    {
+                        <span class="ms-2">| Updated @Template.UpdatedAt.Value.ToString("g")</span>
+                    }
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                @if (OnPreview.HasDelegate)
+                {
+                    <button class="btn btn-sm btn-outline-primary" @onclick="() => OnPreview.InvokeAsync(Template)">
+                        <i class="bi bi-eye"></i> Preview
+                    </button>
+                }
+                @if (OnEdit.HasDelegate && !Template.IsSystemTemplate)
+                {
+                    <button class="btn btn-sm btn-outline-secondary" @onclick="() => OnEdit.InvokeAsync(Template)">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+                }
+                @if (OnClone.HasDelegate && Template.IsSystemTemplate)
+                {
+                    <button class="btn btn-sm btn-outline-info" @onclick="() => OnClone.InvokeAsync(Template)">
+                        <i class="bi bi-files"></i> Clone
+                    </button>
+                }
+                @if (OnDelete.HasDelegate && !Template.IsSystemTemplate)
+                {
+                    <button class="btn btn-sm btn-outline-danger" @onclick="() => OnDelete.InvokeAsync(Template)">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+</div>

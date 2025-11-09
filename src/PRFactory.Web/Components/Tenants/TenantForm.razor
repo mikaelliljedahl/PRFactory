@@ -1,0 +1,164 @@
+@using PRFactory.Web.UI.Forms
+@using PRFactory.Web.UI.Cards
+@using PRFactory.Web.UI.Buttons
+
+<EditForm Model="@Model" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+
+    <Card Title="@(IsEditMode ? "Edit Tenant" : "Create Tenant")" Icon="building">
+        <!-- Basic Information -->
+        <div class="row">
+            <div class="col-md-12">
+                <FormTextField
+                    Label="Tenant Name"
+                    @bind-Value="@Model.Name"
+                    Placeholder="e.g., ACME Corporation"
+                    Required="true"
+                    HelpText="A unique name for this tenant"
+                    For="@(() => Model.Name)" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <FormTextField
+                    Label="Jira URL"
+                    @bind-Value="@Model.JiraUrl"
+                    Placeholder="https://your-company.atlassian.net"
+                    Required="true"
+                    HelpText="The base URL of your Jira instance"
+                    For="@(() => Model.JiraUrl)" />
+            </div>
+        </div>
+
+        <!-- Credentials -->
+        <h5 class="mt-4 mb-3">Credentials</h5>
+
+        <div class="row">
+            <div class="col-md-12">
+                <FormPasswordField
+                    Label="Jira API Token"
+                    @bind-Value="@Model.JiraApiToken"
+                    Placeholder="Enter Jira API token"
+                    Required="@(!IsEditMode)"
+                    HelpText="@(IsEditMode ? "Leave empty to keep existing token" : "API token for Jira authentication")"
+                    For="@(() => Model.JiraApiToken)" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <FormPasswordField
+                    Label="Claude API Key"
+                    @bind-Value="@Model.ClaudeApiKey"
+                    Placeholder="Enter Claude API key"
+                    Required="@(!IsEditMode)"
+                    ShowStrengthIndicator="false"
+                    HelpText="@(IsEditMode ? "Leave empty to keep existing key" : "API key for Claude AI")"
+                    For="@(() => Model.ClaudeApiKey)" />
+            </div>
+        </div>
+
+        <!-- Configuration -->
+        <h5 class="mt-4 mb-3">Configuration</h5>
+
+        <div class="row">
+            <div class="col-md-12">
+                <FormCheckboxField
+                    Label="Active"
+                    @bind-Value="@Model.IsActive"
+                    HelpText="Inactive tenants will not process new tickets" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <FormCheckboxField
+                    Label="Auto-implement after plan approval"
+                    @bind-Value="@Model.AutoImplementAfterPlanApproval"
+                    HelpText="Automatically start code implementation after plan is approved" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <FormCheckboxField
+                    Label="Enable code review"
+                    @bind-Value="@Model.EnableCodeReview"
+                    HelpText="Enable automated code review workflow" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <FormCheckboxField
+                    Label="Enable verbose logging"
+                    @bind-Value="@Model.EnableVerboseLogging"
+                    HelpText="Enable detailed logging for debugging" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <FormTextField
+                    Label="Claude Model"
+                    @bind-Value="@Model.ClaudeModel"
+                    Placeholder="claude-sonnet-4-5-20250929"
+                    Required="true"
+                    For="@(() => Model.ClaudeModel)" />
+            </div>
+
+            <div class="col-md-6">
+                <FormTextField
+                    Label="Max Retries"
+                    @bind-Value="@maxRetriesString"
+                    InputType="number"
+                    Placeholder="3"
+                    Required="true"
+                    HelpText="Maximum retry attempts for failed operations (1-10)" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <FormTextField
+                    Label="Max Tokens per Request"
+                    @bind-Value="@maxTokensString"
+                    InputType="number"
+                    Placeholder="8000"
+                    Required="true"
+                    HelpText="Maximum tokens per Claude API request (1000-100000)" />
+            </div>
+
+            <div class="col-md-6">
+                <FormTextField
+                    Label="API Timeout (seconds)"
+                    @bind-Value="@apiTimeoutString"
+                    InputType="number"
+                    Placeholder="300"
+                    Required="true"
+                    HelpText="Timeout for Claude API requests (30-600)" />
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="mt-4 d-flex gap-2">
+            <LoadingButton
+                ButtonType="submit"
+                IsLoading="@IsSubmitting"
+                Icon="@(IsEditMode ? "save" : "plus-circle")"
+                Variant="ButtonVariant.Primary">
+                @(IsEditMode ? "Update Tenant" : "Create Tenant")
+            </LoadingButton>
+
+            <IconButton
+                Icon="x-circle"
+                Text="Cancel"
+                Variant="ButtonVariant.OutlineSecondary"
+                OnClick="@HandleCancel"
+                Disabled="@IsSubmitting" />
+        </div>
+
+        <ValidationSummary class="mt-3" />
+    </Card>
+</EditForm>

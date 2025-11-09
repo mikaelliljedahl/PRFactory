@@ -1,0 +1,105 @@
+@using PRFactory.Web.Models
+@using PRFactory.Web.UI.Cards
+
+<div class="row">
+    <div class="col-md-3">
+        <Card Variant="CardVariant.Primary">
+            <div class="d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <h6 class="text-muted mb-1">Total Events</h6>
+                    <h2 class="mb-0">@Statistics.TotalEvents</h2>
+                </div>
+                <div class="ms-3">
+                    <i class="bi bi-calendar-event fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </Card>
+    </div>
+
+    <div class="col-md-3">
+        <Card Variant="CardVariant.Danger">
+            <div class="d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <h6 class="text-muted mb-1">Errors</h6>
+                    <h2 class="mb-0">@Statistics.ErrorCount</h2>
+                </div>
+                <div class="ms-3">
+                    <i class="bi bi-x-circle fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </Card>
+    </div>
+
+    <div class="col-md-3">
+        <Card Variant="CardVariant.Success">
+            <div class="d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <h6 class="text-muted mb-1">Success Rate</h6>
+                    <h2 class="mb-0">@Statistics.SuccessRate.ToString("F1")%</h2>
+                </div>
+                <div class="ms-3">
+                    <i class="bi bi-check-circle fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </Card>
+    </div>
+
+    <div class="col-md-3">
+        <Card Variant="CardVariant.Info">
+            <div class="d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <h6 class="text-muted mb-1">Avg Duration</h6>
+                    <h2 class="mb-0">@FormatDuration(Statistics.AverageDurationSeconds)</h2>
+                </div>
+                <div class="ms-3">
+                    <i class="bi bi-hourglass-split fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </Card>
+    </div>
+</div>
+
+@if (Statistics.EventTypeCounts.Any())
+{
+    <div class="row mt-3">
+        <div class="col-12">
+            <Card Title="Event Type Distribution" Icon="pie-chart">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Event Type</th>
+                                <th class="text-end">Count</th>
+                                <th style="width: 60%;">Distribution</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var (eventType, count) in Statistics.EventTypeCounts.OrderByDescending(x => x.Value))
+                            {
+                                var percentage = Statistics.TotalEvents > 0 ? (double)count / Statistics.TotalEvents * 100 : 0;
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-light text-dark">@eventType</span>
+                                    </td>
+                                    <td class="text-end">@count</td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar @GetEventTypeProgressColor(eventType)"
+                                                 role="progressbar"
+                                                 style="width: @percentage%"
+                                                 aria-valuenow="@percentage"
+                                                 aria-valuemin="0"
+                                                 aria-valuemax="100">
+                                                @percentage.ToString("F1")%
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </Card>
+        </div>
+    </div>
+}

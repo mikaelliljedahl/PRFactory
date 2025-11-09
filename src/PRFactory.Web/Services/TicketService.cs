@@ -1,34 +1,53 @@
+using PRFactory.Core.Application.Services;
 using PRFactory.Domain.Entities;
-using System.Net.Http.Json;
+using PRFactory.Domain.Interfaces;
+using PRFactory.Domain.ValueObjects;
+using PRFactory.Web.Models;
 
 namespace PRFactory.Web.Services;
 
 /// <summary>
-/// Implementation of ticket service using HttpClient to call PRFactory.Api
+/// Implementation of ticket service.
+/// Uses direct application service injection (Blazor Server architecture).
+/// This is a facade service that converts between domain entities and DTOs.
 /// </summary>
 public class TicketService : ITicketService
 {
-    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<TicketService> _logger;
+    private readonly ITicketApplicationService _ticketApplicationService;
+    private readonly ITicketUpdateService _ticketUpdateService;
+    private readonly IQuestionApplicationService _questionApplicationService;
+    private readonly IWorkflowEventApplicationService _workflowEventApplicationService;
+    private readonly IPlanService _planService;
+    private readonly ITenantContext _tenantContext;
+    private readonly ITicketRepository _ticketRepository;
 
-    public TicketService(IHttpClientFactory httpClientFactory, ILogger<TicketService> logger)
+    public TicketService(
+        ILogger<TicketService> logger,
+        ITicketApplicationService ticketApplicationService,
+        ITicketUpdateService ticketUpdateService,
+        IQuestionApplicationService questionApplicationService,
+        IWorkflowEventApplicationService workflowEventApplicationService,
+        IPlanService planService,
+        ITenantContext tenantContext,
+        ITicketRepository ticketRepository)
     {
-        _httpClientFactory = httpClientFactory;
         _logger = logger;
-    }
-
-    private HttpClient CreateClient()
-    {
-        return _httpClientFactory.CreateClient("PRFactoryApi");
+        _ticketApplicationService = ticketApplicationService;
+        _ticketUpdateService = ticketUpdateService;
+        _questionApplicationService = questionApplicationService;
+        _workflowEventApplicationService = workflowEventApplicationService;
+        _planService = planService;
+        _tenantContext = tenantContext;
+        _ticketRepository = ticketRepository;
     }
 
     public async Task<List<Ticket>> GetAllTicketsAsync(CancellationToken ct = default)
     {
         try
         {
-            var client = CreateClient();
-            var tickets = await client.GetFromJsonAsync<List<Ticket>>("/api/tickets", ct);
-            return tickets ?? new List<Ticket>();
+            // Use application service directly (Blazor Server architecture)
+            return await _ticketApplicationService.GetAllTicketsAsync(ct);
         }
         catch (Exception ex)
         {
@@ -41,13 +60,8 @@ public class TicketService : ITicketService
     {
         try
         {
-            var client = CreateClient();
-            return await client.GetFromJsonAsync<Ticket>($"/api/tickets/{ticketId}", ct);
-        }
-        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-        {
-            _logger.LogWarning("Ticket {TicketId} not found", ticketId);
-            return null;
+            // Use application service directly (Blazor Server architecture)
+            return await _ticketApplicationService.GetTicketByIdAsync(ticketId, ct);
         }
         catch (Exception ex)
         {
@@ -60,9 +74,8 @@ public class TicketService : ITicketService
     {
         try
         {
-            var client = CreateClient();
-            var tickets = await client.GetFromJsonAsync<List<Ticket>>($"/api/repositories/{repositoryId}/tickets", ct);
-            return tickets ?? new List<Ticket>();
+            // Use application service directly (Blazor Server architecture)
+            return await _ticketApplicationService.GetTicketsByRepositoryAsync(repositoryId, ct);
         }
         catch (Exception ex)
         {
@@ -75,9 +88,8 @@ public class TicketService : ITicketService
     {
         try
         {
-            var client = CreateClient();
-            var response = await client.PostAsync($"/api/tickets/{ticketId}/trigger", null, ct);
-            response.EnsureSuccessStatusCode();
+            // Use application service directly (Blazor Server architecture)
+            await _ticketApplicationService.TriggerWorkflowAsync(ticketId, ct);
             _logger.LogInformation("Triggered workflow for ticket {TicketId}", ticketId);
         }
         catch (Exception ex)
@@ -91,10 +103,8 @@ public class TicketService : ITicketService
     {
         try
         {
-            var client = CreateClient();
-            var request = new { Comments = comments };
-            var response = await client.PostAsJsonAsync($"/api/tickets/{ticketId}/approve", request, ct);
-            response.EnsureSuccessStatusCode();
+            // Use application service directly (Blazor Server architecture)
+            await _ticketApplicationService.ApprovePlanAsync(ticketId, comments, ct);
             _logger.LogInformation("Approved plan for ticket {TicketId}", ticketId);
         }
         catch (Exception ex)
@@ -104,15 +114,14 @@ public class TicketService : ITicketService
         }
     }
 
-    public async Task RejectPlanAsync(Guid ticketId, string rejectionReason, CancellationToken ct = default)
+    public async Task RejectPlanAsync(Guid ticketId, string rejectionReason, bool regenerateCompletely = false, CancellationToken ct = default)
     {
         try
         {
-            var client = CreateClient();
-            var request = new { RejectionReason = rejectionReason };
-            var response = await client.PostAsJsonAsync($"/api/tickets/{ticketId}/reject", request, ct);
-            response.EnsureSuccessStatusCode();
-            _logger.LogInformation("Rejected plan for ticket {TicketId}", ticketId);
+            // Use application service directly (Blazor Server architecture)
+            await _ticketApplicationService.RejectPlanAsync(ticketId, rejectionReason, regenerateCompletely, ct);
+            var action = regenerateCompletely ? "Rejected and regenerating" : "Rejected";
+            _logger.LogInformation("{Action} plan for ticket {TicketId}", action, ticketId);
         }
         catch (Exception ex)
         {
@@ -121,13 +130,27 @@ public class TicketService : ITicketService
         }
     }
 
+    public async Task RefinePlanAsync(Guid ticketId, string refinementInstructions, CancellationToken ct = default)
+    {
+        try
+        {
+            // Use application service directly (Blazor Server architecture)
+            await _ticketApplicationService.RefinePlanAsync(ticketId, refinementInstructions, ct);
+            _logger.LogInformation("Refining plan for ticket {TicketId} with instructions", ticketId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error refining plan for ticket {TicketId}", ticketId);
+            throw;
+        }
+    }
+
     public async Task SubmitAnswersAsync(Guid ticketId, Dictionary<string, string> answers, CancellationToken ct = default)
     {
         try
         {
-            var client = CreateClient();
-            var response = await client.PostAsJsonAsync($"/api/tickets/{ticketId}/answers", answers, ct);
-            response.EnsureSuccessStatusCode();
+            // Use application service directly (Blazor Server architecture)
+            await _ticketApplicationService.SubmitAnswersAsync(ticketId, answers, ct);
             _logger.LogInformation("Submitted answers for ticket {TicketId}", ticketId);
         }
         catch (Exception ex)
@@ -135,5 +158,329 @@ public class TicketService : ITicketService
             _logger.LogError(ex, "Error submitting answers for ticket {TicketId}", ticketId);
             throw;
         }
+    }
+
+    public async Task<TicketUpdateDto?> GetLatestTicketUpdateAsync(Guid ticketId, CancellationToken ct = default)
+    {
+        try
+        {
+            // Use application service directly (Blazor Server architecture)
+            var ticketUpdate = await _ticketUpdateService.GetLatestTicketUpdateAsync(ticketId, ct);
+            if (ticketUpdate == null)
+            {
+                _logger.LogWarning("No ticket update found for ticket {TicketId}", ticketId);
+                return null;
+            }
+
+            // Map entity to DTO
+            return MapToDto(ticketUpdate);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching ticket update for ticket {TicketId}", ticketId);
+            throw;
+        }
+    }
+
+    public async Task UpdateTicketUpdateAsync(Guid ticketUpdateId, TicketUpdateDto ticketUpdate, CancellationToken ct = default)
+    {
+        try
+        {
+            // Use application service directly (Blazor Server architecture)
+            await _ticketUpdateService.UpdateTicketUpdateAsync(
+                ticketUpdateId,
+                ticketUpdate.UpdatedTitle,
+                ticketUpdate.UpdatedDescription,
+                ticketUpdate.AcceptanceCriteria,
+                ct);
+
+            _logger.LogInformation("Updated ticket update {TicketUpdateId}", ticketUpdateId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating ticket update {TicketUpdateId}", ticketUpdateId);
+            throw;
+        }
+    }
+
+    public async Task ApproveTicketUpdateAsync(Guid ticketUpdateId, CancellationToken ct = default)
+    {
+        try
+        {
+            // Use application service directly (Blazor Server architecture)
+            await _ticketUpdateService.ApproveTicketUpdateAsync(ticketUpdateId, approvedBy: null, ct);
+            _logger.LogInformation("Approved ticket update {TicketUpdateId}", ticketUpdateId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error approving ticket update {TicketUpdateId}", ticketUpdateId);
+            throw;
+        }
+    }
+
+    public async Task RejectTicketUpdateAsync(Guid ticketUpdateId, string rejectionReason, CancellationToken ct = default)
+    {
+        try
+        {
+            // Use application service directly (Blazor Server architecture)
+            await _ticketUpdateService.RejectTicketUpdateAsync(
+                ticketUpdateId,
+                rejectionReason,
+                rejectedBy: null,
+                regenerate: true,
+                ct);
+
+            _logger.LogInformation("Rejected ticket update {TicketUpdateId}", ticketUpdateId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error rejecting ticket update {TicketUpdateId}", ticketUpdateId);
+            throw;
+        }
+    }
+
+    public async Task<List<QuestionDto>> GetQuestionsAsync(Guid ticketId, CancellationToken ct = default)
+    {
+        try
+        {
+            // Use application service directly (Blazor Server architecture)
+            var questionsWithAnswers = await _questionApplicationService.GetQuestionsWithAnswersAsync(ticketId, ct);
+
+            // Map to DTOs
+            return questionsWithAnswers.Select(qa => new QuestionDto
+            {
+                Id = qa.Question.Id,
+                Text = qa.Question.Text,
+                Category = qa.Question.Category,
+                CreatedAt = qa.Question.CreatedAt,
+                IsAnswered = qa.IsAnswered,
+                AnswerText = qa.Answer?.Text,
+                AnsweredAt = qa.Answer?.AnsweredAt
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching questions for ticket {TicketId}", ticketId);
+            throw;
+        }
+    }
+
+    public async Task<List<WorkflowEventDto>> GetEventsAsync(Guid ticketId, CancellationToken ct = default)
+    {
+        try
+        {
+            // Use application service directly (Blazor Server architecture)
+            var events = await _workflowEventApplicationService.GetEventsAsync(ticketId, ct);
+
+            // Map to DTOs
+            return events.Select(MapEventToDto).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching events for ticket {TicketId}", ticketId);
+            throw;
+        }
+    }
+
+    public async Task<PlanDto?> GetPlanAsync(Guid ticketId, CancellationToken ct = default)
+    {
+        try
+        {
+            // Use application service directly (Blazor Server architecture)
+            var planInfo = await _planService.GetPlanAsync(ticketId, ct);
+
+            if (planInfo == null)
+            {
+                return null;
+            }
+
+            // Map to DTO
+            return new PlanDto
+            {
+                BranchName = planInfo.BranchName,
+                MarkdownPath = planInfo.MarkdownPath,
+                Content = planInfo.Content,
+                CreatedAt = planInfo.CreatedAt,
+                IsApproved = planInfo.IsApproved,
+                ApprovedAt = planInfo.ApprovedAt
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching plan for ticket {TicketId}", ticketId);
+            throw;
+        }
+    }
+
+    public async Task<Ticket> CreateTicketAsync(string ticketKey, string title, string description, Guid repositoryId, CancellationToken ct = default)
+    {
+        try
+        {
+            // Get current tenant ID
+            var tenantId = _tenantContext.GetCurrentTenantId();
+
+            // Create ticket using domain factory method
+            var ticket = Ticket.Create(
+                ticketKey: ticketKey,
+                tenantId: tenantId,
+                repositoryId: repositoryId,
+                ticketSystem: "Jira",
+                source: TicketSource.WebUI);
+
+            // Set ticket info
+            ticket.UpdateTicketInfo(title, description);
+
+            // Save to repository
+            var savedTicket = await _ticketRepository.AddAsync(ticket, ct);
+
+            _logger.LogInformation("Created ticket {TicketKey} with ID {TicketId}", ticketKey, savedTicket.Id);
+
+            return savedTicket;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating ticket {TicketKey}", ticketKey);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Maps a TicketUpdate entity to a TicketUpdateDto
+    /// </summary>
+    private TicketUpdateDto MapToDto(TicketUpdate ticketUpdate)
+    {
+        return new TicketUpdateDto
+        {
+            Id = ticketUpdate.Id,
+            TicketId = ticketUpdate.TicketId,
+            UpdatedTitle = ticketUpdate.UpdatedTitle,
+            UpdatedDescription = ticketUpdate.UpdatedDescription,
+            AcceptanceCriteria = ticketUpdate.AcceptanceCriteria,
+            Version = ticketUpdate.Version,
+            IsDraft = ticketUpdate.IsDraft,
+            IsApproved = ticketUpdate.IsApproved,
+            RejectionReason = ticketUpdate.RejectionReason,
+            GeneratedAt = ticketUpdate.GeneratedAt,
+            ApprovedAt = ticketUpdate.ApprovedAt,
+            PostedAt = ticketUpdate.PostedAt,
+            SuccessCriteria = ticketUpdate.SuccessCriteria.Select(sc => new SuccessCriterionDto
+            {
+                Category = sc.Category,
+                Description = sc.Description,
+                Priority = sc.Priority,
+                IsTestable = sc.IsTestable
+            }).ToList()
+        };
+    }
+
+    /// <summary>
+    /// Maps a WorkflowEvent entity to a WorkflowEventDto
+    /// </summary>
+    private WorkflowEventDto MapEventToDto(WorkflowEvent evt)
+    {
+        var dto = new WorkflowEventDto
+        {
+            Id = evt.Id,
+            TicketId = evt.TicketId,
+            OccurredAt = evt.OccurredAt,
+            EventType = evt.EventType
+        };
+
+        // Map specific event types to friendly descriptions and icons
+        switch (evt)
+        {
+            case WorkflowStateChanged stateChanged:
+                dto.FromState = stateChanged.From;
+                dto.ToState = stateChanged.To;
+                dto.Reason = stateChanged.Reason;
+                dto.Description = $"Changed from {stateChanged.From} to {stateChanged.To}";
+                dto.Icon = GetIconForState(stateChanged.To);
+                dto.Severity = GetSeverityForState(stateChanged.To);
+                break;
+
+            case QuestionAdded questionAdded:
+                dto.Description = $"Question added: {questionAdded.Question.Text}";
+                dto.Icon = "question-circle";
+                dto.Severity = EventSeverity.Info;
+                break;
+
+            case AnswerAdded answerAdded:
+                dto.Description = "Answer provided";
+                dto.Icon = "check-circle";
+                dto.Severity = EventSeverity.Success;
+                break;
+
+            case PlanCreated planCreated:
+                dto.Description = $"Implementation plan created in branch {planCreated.BranchName}";
+                dto.Icon = "file-text";
+                dto.Severity = EventSeverity.Info;
+                break;
+
+            case PullRequestCreated prCreated:
+                dto.Description = $"Pull request #{prCreated.PullRequestNumber} created";
+                dto.Icon = "git-pull-request";
+                dto.Severity = EventSeverity.Success;
+                break;
+
+            default:
+                dto.Description = evt.EventType;
+                dto.Icon = "circle";
+                dto.Severity = EventSeverity.Info;
+                break;
+        }
+
+        return dto;
+    }
+
+    /// <summary>
+    /// Gets the icon name for a workflow state
+    /// </summary>
+    private string GetIconForState(WorkflowState state)
+    {
+        return state switch
+        {
+            WorkflowState.Triggered => "play-circle",
+            WorkflowState.Analyzing => "search",
+            WorkflowState.TicketUpdateGenerated => "file-text",
+            WorkflowState.TicketUpdateUnderReview => "eye",
+            WorkflowState.TicketUpdateApproved => "check-circle",
+            WorkflowState.TicketUpdateRejected => "x-circle",
+            WorkflowState.QuestionsPosted => "help-circle",
+            WorkflowState.AwaitingAnswers => "clock",
+            WorkflowState.AnswersReceived => "message-circle",
+            WorkflowState.Planning => "clipboard",
+            WorkflowState.PlanPosted => "file-text",
+            WorkflowState.PlanUnderReview => "eye",
+            WorkflowState.PlanApproved => "check-circle",
+            WorkflowState.PlanRejected => "x-circle",
+            WorkflowState.Implementing => "code",
+            WorkflowState.PRCreated => "git-pull-request",
+            WorkflowState.InReview => "eye",
+            WorkflowState.Completed => "check-circle",
+            WorkflowState.Cancelled => "x",
+            WorkflowState.Failed => "alert-circle",
+            _ => "circle"
+        };
+    }
+
+    /// <summary>
+    /// Gets the severity for a workflow state
+    /// </summary>
+    private EventSeverity GetSeverityForState(WorkflowState state)
+    {
+        return state switch
+        {
+            WorkflowState.Completed => EventSeverity.Success,
+            WorkflowState.PlanApproved => EventSeverity.Success,
+            WorkflowState.TicketUpdateApproved => EventSeverity.Success,
+            WorkflowState.PRCreated => EventSeverity.Success,
+            WorkflowState.Failed => EventSeverity.Error,
+            WorkflowState.ImplementationFailed => EventSeverity.Error,
+            WorkflowState.PlanRejected => EventSeverity.Warning,
+            WorkflowState.TicketUpdateRejected => EventSeverity.Warning,
+            WorkflowState.Cancelled => EventSeverity.Warning,
+            WorkflowState.AwaitingAnswers => EventSeverity.Warning,
+            _ => EventSeverity.Info
+        };
     }
 }

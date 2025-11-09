@@ -203,16 +203,17 @@ namespace PRFactory.Infrastructure.Agents.Graphs
         }
 
         /// <summary>
-        /// Handle plan rejection - loop back to Planning
+        /// Handle plan rejection - either refine with instructions or regenerate completely
         /// </summary>
         private async Task<GraphExecutionResult> HandlePlanRejectionAsync(
             PlanRejectedMessage rejectedMessage,
             GraphContext context,
             CancellationToken cancellationToken)
         {
+            var actionType = rejectedMessage.RegenerateCompletely ? "regenerated" : "refined";
             Logger.LogInformation(
-                "Plan rejected for ticket {TicketId}, reason: {Reason}",
-                context.TicketId, rejectedMessage.Reason);
+                "Plan {ActionType} for ticket {TicketId}, reason: {Reason}",
+                actionType, context.TicketId, rejectedMessage.Reason);
 
             // Increment retry count
             var retryCount = context.State.TryGetValue("plan_retry_count", out var count)
@@ -222,6 +223,8 @@ namespace PRFactory.Infrastructure.Agents.Graphs
 
             context.State["plan_retry_count"] = retryCount;
             context.State["rejection_reason"] = rejectedMessage.Reason;
+            context.State["refinement_instructions"] = rejectedMessage.RefinementInstructions ?? string.Empty;
+            context.State["regenerate_completely"] = rejectedMessage.RegenerateCompletely;
             context.State["is_suspended"] = false;
             await SaveCheckpointAsync(context, "plan_rejected", "PlanningAgent");
 
@@ -241,18 +244,27 @@ namespace PRFactory.Infrastructure.Agents.Graphs
             }
 
             // Loop back to planning - execute the full cycle again
+            var mode = rejectedMessage.RegenerateCompletely ? "regenerating" : "refining";
             Logger.LogInformation(
-                "Looping back to Planning Agent for ticket {TicketId}, attempt {Attempt}",
-                context.TicketId, retryCount + 1);
+                "Looping back to Planning Agent for ticket {TicketId} ({Mode}), attempt {Attempt}",
+                context.TicketId, mode, retryCount + 1);
 
-            // Create a new input message with the rejection context
+            // Create a new input message with the rejection context and refinement instructions
+            var contextData = new Dictionary<string, string>
+            {
+                ["rejection_reason"] = rejectedMessage.Reason,
+                ["retry_attempt"] = retryCount.ToString(),
+                ["regenerate_completely"] = rejectedMessage.RegenerateCompletely.ToString()
+            };
+
+            if (!string.IsNullOrEmpty(rejectedMessage.RefinementInstructions))
+            {
+                contextData["refinement_instructions"] = rejectedMessage.RefinementInstructions;
+            }
+
             var retryMessage = new AnswersReceivedMessage(
                 context.TicketId,
-                new Dictionary<string, string>
-                {
-                    ["rejection_reason"] = rejectedMessage.Reason,
-                    ["retry_attempt"] = retryCount.ToString()
-                }
+                contextData
             );
 
             return await GenerateAndPostPlanAsync(retryMessage, context, cancellationToken);

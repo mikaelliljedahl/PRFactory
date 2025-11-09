@@ -10,6 +10,12 @@
     <!-- SignalR Client -->
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.0" />
 
+    <!-- Markdown Rendering -->
+    <PackageReference Include="Markdig" Version="0.40.0" />
+
+    <!-- UI Components -->
+    <PackageReference Include="Radzen.Blazor" Version="5.8.5" />
+
     <!-- Logging -->
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />

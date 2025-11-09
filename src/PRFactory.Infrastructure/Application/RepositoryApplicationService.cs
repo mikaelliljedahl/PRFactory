@@ -1,12 +1,12 @@
 using LibGit2Sharp;
 using Microsoft.Extensions.Logging;
 using PRFactory.Core.Application.Services;
-using PRFactory.Domain.Entities;
 using PRFactory.Domain.Interfaces;
 using PRFactory.Infrastructure.Git;
 using PRFactory.Infrastructure.Persistence.Encryption;
 
-// Type alias to resolve ambiguity between PRFactory.Domain.Entities.Repository and LibGit2Sharp.Repository
+// Type aliases to resolve ambiguity between domain and LibGit2Sharp Repository types
+using DomainRepository = PRFactory.Domain.Entities.Repository;
 using GitRepository = LibGit2Sharp.Repository;
 
 namespace PRFactory.Infrastructure.Application;
@@ -41,7 +41,7 @@ public class RepositoryApplicationService : IRepositoryApplicationService
     }
 
     /// <inheritdoc/>
-    public async Task<List<Repository>> GetAllRepositoriesAsync(CancellationToken cancellationToken = default)
+    public async Task<List<DomainRepository>> GetAllRepositoriesAsync(CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Getting all repositories");
 
@@ -54,14 +54,14 @@ public class RepositoryApplicationService : IRepositoryApplicationService
     }
 
     /// <inheritdoc/>
-    public async Task<Repository?> GetRepositoryByIdAsync(Guid repositoryId, CancellationToken cancellationToken = default)
+    public async Task<DomainRepository?> GetRepositoryByIdAsync(Guid repositoryId, CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Getting repository {RepositoryId}", repositoryId);
         return await _repositoryRepository.GetByIdAsync(repositoryId, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async Task<Repository> CreateRepositoryAsync(Repository repository, CancellationToken cancellationToken = default)
+    public async Task<DomainRepository> CreateRepositoryAsync(DomainRepository repository, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Creating repository {RepositoryName}", repository.Name);
 
@@ -97,7 +97,7 @@ public class RepositoryApplicationService : IRepositoryApplicationService
     }
 
     /// <inheritdoc/>
-    public async Task UpdateRepositoryAsync(Guid repositoryId, Repository repository, CancellationToken cancellationToken = default)
+    public async Task UpdateRepositoryAsync(Guid repositoryId, DomainRepository repository, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Updating repository {RepositoryId}", repositoryId);
 

@@ -1,4 +1,5 @@
-using PRFactory.Domain.Entities;
+// Type alias to avoid ambiguity with LibGit2Sharp.Repository
+using Repository = PRFactory.Domain.Entities.Repository;
 
 namespace PRFactory.Core.Application.Services;
 

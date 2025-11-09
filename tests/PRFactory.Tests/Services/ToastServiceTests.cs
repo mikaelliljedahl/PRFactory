@@ -1,4 +1,3 @@
-using FluentAssertions;
 using PRFactory.Web.Services;
 using Xunit;
 
@@ -18,13 +17,13 @@ public class ToastServiceTests
         service.ShowSuccess("Test message", "Test title");
 
         // Assert
-        eventFired.Should().BeTrue();
+        Assert.True(eventFired);
         var toasts = service.GetToasts();
-        toasts.Should().HaveCount(1);
-        toasts[0].Type.Should().Be(ToastType.Success);
-        toasts[0].Title.Should().Be("Test title");
-        toasts[0].Message.Should().Be("Test message");
-        toasts[0].Icon.Should().Be("check-circle");
+        Assert.Equal(1, toasts.Count);
+        Assert.Equal(ToastType.Success, toasts[0].Type);
+        Assert.Equal("Test title", toasts[0].Title);
+        Assert.Equal("Test message", toasts[0].Message);
+        Assert.Equal("check-circle", toasts[0].Icon);
     }
 
     [Fact]
@@ -38,9 +37,9 @@ public class ToastServiceTests
 
         // Assert
         var toasts = service.GetToasts();
-        toasts.Should().HaveCount(1);
-        toasts[0].Type.Should().Be(ToastType.Error);
-        toasts[0].Icon.Should().Be("exclamation-triangle");
+        Assert.Equal(1, toasts.Count);
+        Assert.Equal(ToastType.Error, toasts[0].Type);
+        Assert.Equal("exclamation-triangle", toasts[0].Icon);
     }
 
     [Fact]
@@ -54,8 +53,8 @@ public class ToastServiceTests
 
         // Assert
         var toasts = service.GetToasts();
-        toasts[0].Type.Should().Be(ToastType.Warning);
-        toasts[0].Icon.Should().Be("exclamation-circle");
+        Assert.Equal(ToastType.Warning, toasts[0].Type);
+        Assert.Equal("exclamation-circle", toasts[0].Icon);
     }
 
     [Fact]
@@ -69,8 +68,8 @@ public class ToastServiceTests
 
         // Assert
         var toasts = service.GetToasts();
-        toasts[0].Type.Should().Be(ToastType.Info);
-        toasts[0].Icon.Should().Be("info-circle");
+        Assert.Equal(ToastType.Info, toasts[0].Type);
+        Assert.Equal("info-circle", toasts[0].Icon);
     }
 
     [Fact]
@@ -88,8 +87,8 @@ public class ToastServiceTests
 
         // Assert
         var remainingToasts = service.GetToasts();
-        remainingToasts.Should().HaveCount(1);
-        remainingToasts.Should().NotContain(t => t.Id == toastToRemove.Id);
+        Assert.Equal(1, remainingToasts.Count);
+        Assert.DoesNotContain(remainingToasts, t => t.Id == toastToRemove.Id);
     }
 
     [Fact]
@@ -103,7 +102,7 @@ public class ToastServiceTests
 
         // Assert
         var toasts = service.GetToasts();
-        toasts[0].Icon.Should().Be("custom-icon");
+        Assert.Equal("custom-icon", toasts[0].Icon);
     }
 
     [Fact]
@@ -118,7 +117,7 @@ public class ToastServiceTests
         service.ShowSuccess("Test");
 
         // Assert
-        eventFiredCount.Should().Be(1);
+        Assert.Equal(1, eventFiredCount);
     }
 
     [Fact]
@@ -135,7 +134,7 @@ public class ToastServiceTests
         service.RemoveToast(toastId);
 
         // Assert
-        eventFiredCount.Should().Be(1);
+        Assert.Equal(1, eventFiredCount);
     }
 
     [Fact]
@@ -150,7 +149,13 @@ public class ToastServiceTests
         var toasts2 = service.GetToasts();
 
         // Assert
-        toasts1.Should().NotBeSameAs(toasts2);
-        toasts1.Should().BeEquivalentTo(toasts2);
+        Assert.NotSame(toasts2, toasts1);
+        Assert.Equal(toasts1.Count, toasts2.Count);
+        for (int i = 0; i < toasts1.Count; i++)
+        {
+            Assert.Equal(toasts1[i].Id, toasts2[i].Id);
+            Assert.Equal(toasts1[i].Type, toasts2[i].Type);
+            Assert.Equal(toasts1[i].Message, toasts2[i].Message);
+        }
     }
 }

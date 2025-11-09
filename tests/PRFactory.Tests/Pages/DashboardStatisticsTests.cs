@@ -1,4 +1,3 @@
-using FluentAssertions;
 using PRFactory.Domain.Entities;
 using PRFactory.Domain.ValueObjects;
 using Xunit;
@@ -18,13 +17,13 @@ public class DashboardStatisticsTests
         CalculateStatistics(tickets, stats);
 
         // Assert
-        stats.TotalTickets.Should().Be(0);
-        stats.CompletedTickets.Should().Be(0);
-        stats.InProgressTickets.Should().Be(0);
-        stats.FailedTickets.Should().Be(0);
-        stats.AwaitingUserInput.Should().Be(0);
-        stats.CompletionRate.Should().Be(0);
-        stats.FailureRate.Should().Be(0);
+        Assert.Equal(0, stats.TotalTickets);
+        Assert.Equal(0, stats.CompletedTickets);
+        Assert.Equal(0, stats.InProgressTickets);
+        Assert.Equal(0, stats.FailedTickets);
+        Assert.Equal(0, stats.AwaitingUserInput);
+        Assert.Equal(0, stats.CompletionRate);
+        Assert.Equal(0, stats.FailureRate);
     }
 
     [Fact]
@@ -45,12 +44,12 @@ public class DashboardStatisticsTests
         CalculateStatistics(tickets, stats);
 
         // Assert
-        stats.TotalTickets.Should().Be(5);
-        stats.CompletedTickets.Should().Be(3);
-        stats.FailedTickets.Should().Be(1);
-        stats.InProgressTickets.Should().Be(1);
-        stats.CompletionRate.Should().BeApproximately(60.0, 0.1);
-        stats.FailureRate.Should().BeApproximately(20.0, 0.1);
+        Assert.Equal(5, stats.TotalTickets);
+        Assert.Equal(3, stats.CompletedTickets);
+        Assert.Equal(1, stats.FailedTickets);
+        Assert.Equal(1, stats.InProgressTickets);
+        Assert.InRange(stats.CompletionRate, 60.0 - 0.1, 60.0 + 0.1);
+        Assert.InRange(stats.FailureRate, 20.0 - 0.1, 20.0 + 0.1);
     }
 
     [Fact]
@@ -70,8 +69,8 @@ public class DashboardStatisticsTests
         CalculateStatistics(tickets, stats);
 
         // Assert
-        stats.AwaitingUserInput.Should().Be(3);
-        stats.InProgressTickets.Should().Be(4); // All non-completed/failed/cancelled
+        Assert.Equal(3, stats.AwaitingUserInput);
+        Assert.Equal(4, stats.InProgressTickets); // All non-completed/failed/cancelled
     }
 
     [Fact]
@@ -90,7 +89,7 @@ public class DashboardStatisticsTests
         CalculateStatistics(tickets, stats);
 
         // Assert
-        stats.InProgressTickets.Should().Be(1);
+        Assert.Equal(1, stats.InProgressTickets);
     }
 
     [Fact]
@@ -103,7 +102,7 @@ public class DashboardStatisticsTests
         var formatted = FormatDuration(duration);
 
         // Assert
-        formatted.Should().Be("2.5d");
+        Assert.Equal("2.5d", formatted);
     }
 
     [Fact]
@@ -116,7 +115,7 @@ public class DashboardStatisticsTests
         var formatted = FormatDuration(duration);
 
         // Assert
-        formatted.Should().Be("3.2h");
+        Assert.Equal("3.2h", formatted);
     }
 
     [Fact]
@@ -129,7 +128,7 @@ public class DashboardStatisticsTests
         var formatted = FormatDuration(duration);
 
         // Assert
-        formatted.Should().Be("45m");
+        Assert.Equal("45m", formatted);
     }
 
     [Fact]
@@ -142,7 +141,7 @@ public class DashboardStatisticsTests
         var formatted = FormatDuration(duration);
 
         // Assert
-        formatted.Should().Be("30s");
+        Assert.Equal("30s", formatted);
     }
 
     // Helper methods that mirror the Dashboard implementation

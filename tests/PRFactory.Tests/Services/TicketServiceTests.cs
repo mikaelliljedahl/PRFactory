@@ -1,4 +1,3 @@
-using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using PRFactory.Core.Application.Services;
@@ -35,12 +34,12 @@ public class TicketServiceTests
         var result = await service.GetTicketDtoByIdAsync(ticketId);
 
         // Assert
-        result.Should().NotBeNull();
-        result!.Id.Should().Be(ticket.Id);
-        result.TicketKey.Should().Be("TICKET-123");
-        result.Title.Should().Be("Test Ticket");
-        result.Description.Should().Be("Description");
-        result.State.Should().Be(WorkflowState.Analyzing);
+        Assert.NotNull(result);
+        Assert.Equal(ticket.Id, result!.Id);
+        Assert.Equal("TICKET-123", result.TicketKey);
+        Assert.Equal("Test Ticket", result.Title);
+        Assert.Equal("Description", result.Description);
+        Assert.Equal(WorkflowState.Analyzing, result.State);
     }
 
     [Fact]
@@ -60,7 +59,7 @@ public class TicketServiceTests
         var result = await service.GetTicketDtoByIdAsync(ticketId);
 
         // Assert
-        result.Should().BeNull();
+        Assert.Null(result);
     }
 
     private static TicketService CreateTicketService(ITicketApplicationService? ticketAppService = null)

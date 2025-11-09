@@ -51,14 +51,9 @@ public partial class ReviewerAssignment
             IsLoading = true;
             ErrorMessage = null;
 
-            var tenantId = await TenantContext.GetTenantIdAsync();
-            if (!tenantId.HasValue)
-            {
-                ErrorMessage = "No tenant context found";
-                return;
-            }
+            var tenantId = TenantContext.GetCurrentTenantId();
 
-            AvailableUsers = await UserService.GetByTenantIdAsync(tenantId.Value);
+            AvailableUsers = await UserService.GetByTenantIdAsync(tenantId);
             Logger.LogInformation("Loaded {Count} users for reviewer assignment", AvailableUsers.Count);
         }
         catch (Exception ex)

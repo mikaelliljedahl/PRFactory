@@ -72,7 +72,7 @@ jobs:
           /d:sonar.host.url="https://sonarcloud.io" \
           /d:sonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.opencover.xml" \
           /d:sonar.coverage.exclusions="**/tests/**,**/Migrations/**,**/*.Designer.cs" \
-          /d:sonar.exclusions="**/Migrations/**,**/wwwroot/lib/**" \
+          /d:sonar.exclusions="**/Migrations/**,**/wwwroot/lib/**,presentation-pr-factory.html,presentation.pptx,docs/**" \
           /d:sonar.cpd.exclusions="**/Migrations/**" \
           /d:sonar.verbose=true
 

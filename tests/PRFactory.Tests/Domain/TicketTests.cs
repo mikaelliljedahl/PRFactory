@@ -32,7 +32,7 @@ public class TicketTests
     [InlineData("")]
     [InlineData(" ")]
     [InlineData(null)]
-    public void Create_WithInvalidTicketKey_ThrowsArgumentException(string invalidKey)
+    public void Create_WithInvalidTicketKey_ThrowsArgumentException(string? invalidKey)
     {
         // Act & Assert
         var act = () => Ticket.Create(invalidKey, _tenantId, _repositoryId);
@@ -164,7 +164,7 @@ public class TicketTests
     [InlineData("")]
     [InlineData(" ")]
     [InlineData(null)]
-    public void AddAnswer_WithEmptyAnswerText_ReturnsFailure(string invalidAnswer)
+    public void AddAnswer_WithEmptyAnswerText_ReturnsFailure(string? invalidAnswer)
     {
         // Arrange
         var ticket = Ticket.Create(ValidTicketKey, _tenantId, _repositoryId);
@@ -199,7 +199,7 @@ public class TicketTests
     [InlineData("")]
     [InlineData(" ")]
     [InlineData(null)]
-    public void SetPlanBranch_WithEmptyBranch_ThrowsArgumentException(string invalidBranch)
+    public void SetPlanBranch_WithEmptyBranch_ThrowsArgumentException(string? invalidBranch)
     {
         // Arrange
         var ticket = Ticket.Create(ValidTicketKey, _tenantId, _repositoryId);
@@ -329,7 +329,7 @@ public class TicketTests
     [InlineData("")]
     [InlineData(" ")]
     [InlineData(null)]
-    public void SetExternalTicketId_WithEmptyId_ThrowsArgumentException(string invalidId)
+    public void SetExternalTicketId_WithEmptyId_ThrowsArgumentException(string? invalidId)
     {
         // Arrange
         var ticket = Ticket.Create(ValidTicketKey, _tenantId, _repositoryId);

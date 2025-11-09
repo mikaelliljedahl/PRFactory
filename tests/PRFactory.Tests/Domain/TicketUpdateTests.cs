@@ -60,7 +60,7 @@ public class TicketUpdateTests
     [InlineData("")]
     [InlineData(" ")]
     [InlineData(null)]
-    public void Create_WithInvalidTitle_ThrowsArgumentException(string invalidTitle)
+    public void Create_WithInvalidTitle_ThrowsArgumentException(string? invalidTitle)
     {
         // Act & Assert
         var act = () => TicketUpdate.Create(
@@ -78,7 +78,7 @@ public class TicketUpdateTests
     [InlineData("")]
     [InlineData(" ")]
     [InlineData(null)]
-    public void Create_WithInvalidDescription_ThrowsArgumentException(string invalidDescription)
+    public void Create_WithInvalidDescription_ThrowsArgumentException(string? invalidDescription)
     {
         // Act & Assert
         var act = () => TicketUpdate.Create(
@@ -111,7 +111,7 @@ public class TicketUpdateTests
     [InlineData("")]
     [InlineData(" ")]
     [InlineData(null)]
-    public void Create_WithInvalidAcceptanceCriteria_ThrowsArgumentException(string invalidCriteria)
+    public void Create_WithInvalidAcceptanceCriteria_ThrowsArgumentException(string? invalidCriteria)
     {
         // Act & Assert
         var act = () => TicketUpdate.Create(
@@ -172,7 +172,7 @@ public class TicketUpdateTests
     [InlineData("")]
     [InlineData(" ")]
     [InlineData(null)]
-    public void Reject_WithEmptyReason_ThrowsArgumentException(string invalidReason)
+    public void Reject_WithEmptyReason_ThrowsArgumentException(string? invalidReason)
     {
         // Arrange
         var update = TicketUpdate.Create(
@@ -262,7 +262,7 @@ public class TicketUpdateTests
     [InlineData("")]
     [InlineData(" ")]
     [InlineData(null)]
-    public void Update_WithInvalidDescription_ThrowsArgumentException(string invalidDescription)
+    public void Update_WithInvalidDescription_ThrowsArgumentException(string? invalidDescription)
     {
         // Arrange
         var update = TicketUpdate.Create(

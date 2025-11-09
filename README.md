@@ -1,8 +1,17 @@
 # PRFactory
 
 > **The Safe, Controlled Way to Use AI for Code Generation**
+> AI-powered automation that transforms ideas into pull requests using AI agents via CLI adapters
 
-**PRFactory transforms your team's development workflow** by combining the power of Claude AI with human oversight at every critical decision point. Unlike fully autonomous AI coding tools, PRFactory puts your team in control—AI proposes, your team decides.
+**PRFactory transforms your team's development workflow** by combining the power of AI agents with human oversight at every critical decision point. Unlike fully autonomous AI coding tools, PRFactory puts your team in control—AI proposes, your team decides.
+
+PRFactory streamlines the development workflow by:
+- **Capturing** requirements directly in its Web UI or syncing from external systems (Jira, Azure DevOps, GitHub Issues)
+- **Analyzing** requirements and your codebase
+- **Clarifying** requirements through AI-generated questions
+- **Planning** detailed implementations for developer review
+- **Optionally implementing** code and creating pull requests (can be disabled per tenant)
+- **Syncing** completed work back to external systems (Jira, Azure DevOps, etc.) for final storage
 
 ### What Makes PRFactory Different?
 

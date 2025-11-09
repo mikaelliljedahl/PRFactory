@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using PRFactory.Web.Models;
+using PRFactory.Web.Services;
 using PRFactory.Web.UI.Dialogs;
 using PRFactory.Web.UI.Navigation;
 using Radzen;

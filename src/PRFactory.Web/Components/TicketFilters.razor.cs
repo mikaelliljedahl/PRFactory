@@ -28,6 +28,14 @@ public partial class TicketFilters
     [Parameter]
     public List<RepositoryInfo>? Repositories { get; set; }
 
+    /// <summary>
+    /// Synchronous wrapper for @bind:after, which expects Action not EventCallback
+    /// </summary>
+    private void InvokeFilterChanged()
+    {
+        _ = OnFilterChanged.InvokeAsync();
+    }
+
     private async Task ClearFilters()
     {
         SelectedState = null;

@@ -42,6 +42,7 @@ public partial class Edit
                 // Populate update model with current values
                 UpdateModel = new UpdatePromptTemplateRequest
                 {
+                    Name = Template.Name,
                     Description = Template.Description,
                     PromptContent = Template.PromptContent,
                     Category = Template.Category,

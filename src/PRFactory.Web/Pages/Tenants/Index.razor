@@ -5,6 +5,7 @@
 @using PRFactory.Web.UI.Buttons
 @using Radzen
 @using Radzen.Blazor
+@using ButtonSize = PRFactory.Web.UI.Buttons.ButtonSize
 
 <PageTitle>Tenants - PRFactory</PageTitle>
 
@@ -63,7 +64,7 @@
                            @onkeyup="OnSearchChanged" />
                 </div>
                 <div class="col-md-3">
-                    <select class="form-select" @bind="filterStatus" @onchange="LoadTenantsAsync">
+                    <select class="form-select" @bind="filterStatus" @bind:after="LoadTenantsAsync">
                         <option value="all">All Tenants</option>
                         <option value="active">Active Only</option>
                         <option value="inactive">Inactive Only</option>

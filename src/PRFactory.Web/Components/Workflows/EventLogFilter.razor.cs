@@ -19,10 +19,16 @@ public partial class EventLogFilter
     public EventCallback<string?> SelectedEventTypeChanged { get; set; }
 
     [Parameter]
-    public DateRange? DateRange { get; set; }
+    public DateTime? StartDate { get; set; }
 
     [Parameter]
-    public EventCallback<DateRange?> DateRangeChanged { get; set; }
+    public EventCallback<DateTime?> StartDateChanged { get; set; }
+
+    [Parameter]
+    public DateTime? EndDate { get; set; }
+
+    [Parameter]
+    public EventCallback<DateTime?> EndDateChanged { get; set; }
 
     [Parameter]
     public string? SelectedSeverity { get; set; }
@@ -68,12 +74,14 @@ public partial class EventLogFilter
     private async Task ClearAllFilters()
     {
         SelectedEventType = null;
-        DateRange = null;
+        StartDate = null;
+        EndDate = null;
         SelectedSeverity = null;
         SearchText = null;
 
         await SelectedEventTypeChanged.InvokeAsync(SelectedEventType);
-        await DateRangeChanged.InvokeAsync(DateRange);
+        await StartDateChanged.InvokeAsync(StartDate);
+        await EndDateChanged.InvokeAsync(EndDate);
         await SelectedSeverityChanged.InvokeAsync(SelectedSeverity);
         await SearchTextChanged.InvokeAsync(SearchText);
         await OnFilterChange.InvokeAsync();

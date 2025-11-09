@@ -30,10 +30,7 @@ public partial class TicketDiffViewer
 
         try
         {
-            var pipeline = new Markdig.MarkdownPipelineBuilder()
-                .UseAdvancedExtensions()
-                .Build();
-            return Markdig.Markdown.ToHtml(markdown, pipeline);
+            return Markdig.Markdown.ToHtml(markdown);
         }
         catch
         {

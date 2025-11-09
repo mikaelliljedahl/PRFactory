@@ -87,7 +87,6 @@ public class TicketService : ITicketService
             {
                 Id = ticket.Id,
                 TicketKey = ticket.TicketKey,
-                ExternalTicketKey = ticket.ExternalTicketKey,
                 Title = ticket.Title,
                 Description = ticket.Description,
                 State = ticket.State,

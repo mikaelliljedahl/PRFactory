@@ -6,7 +6,7 @@ namespace PRFactory.Web.Components.Repositories;
 public partial class RepositoryForm
 {
     [Parameter, EditorRequired]
-    public object Model { get; set; } = null!;
+    public RepositoryFormModel Model { get; set; } = null!;
 
     [Parameter]
     public bool IsEditMode { get; set; }

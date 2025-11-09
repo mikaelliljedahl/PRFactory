@@ -15,7 +15,8 @@ public partial class Events : IDisposable
 
     // Filters
     private string? selectedEventType;
-    private DateRange? dateRange;
+    private DateTime? startDate;
+    private DateTime? endDate;
     private string? selectedSeverity;
     private string? searchText;
 
@@ -78,8 +79,6 @@ public partial class Events : IDisposable
 
     private async Task LoadEvents()
     {
-        var startDate = dateRange?.Start;
-        var endDate = dateRange?.End;
 
         // Filter by severity if selected
         string? eventTypeFilter = selectedEventType;
@@ -112,9 +111,6 @@ public partial class Events : IDisposable
 
     private async Task LoadStatistics()
     {
-        var startDate = dateRange?.Start;
-        var endDate = dateRange?.End;
-
         statistics = await WorkflowEventService.GetStatisticsAsync(startDate, endDate);
     }
 
@@ -133,7 +129,8 @@ public partial class Events : IDisposable
     private async Task ClearAllFilters()
     {
         selectedEventType = null;
-        dateRange = null;
+        startDate = null;
+        endDate = null;
         selectedSeverity = null;
         searchText = null;
         currentPage = 1;
@@ -222,8 +219,8 @@ public partial class Events : IDisposable
             var csvData = await WorkflowEventService.ExportToCsvAsync(
                 null,
                 selectedEventType,
-                dateRange?.Start,
-                dateRange?.End);
+                startDate,
+                endDate);
 
             DownloadFile("workflow-events.csv", "text/csv", csvData);
             Logger.LogInformation("Exported events to CSV");
@@ -242,8 +239,8 @@ public partial class Events : IDisposable
             var jsonData = await WorkflowEventService.ExportToJsonAsync(
                 null,
                 selectedEventType,
-                dateRange?.Start,
-                dateRange?.End);
+                startDate,
+                endDate);
 
             DownloadFile("workflow-events.json", "application/json", jsonData);
             Logger.LogInformation("Exported events to JSON");
@@ -285,7 +282,7 @@ public partial class Events : IDisposable
         if (pagedResult == null) return "Events";
 
         var count = pagedResult.TotalCount;
-        var filtered = selectedEventType != null || dateRange != null || selectedSeverity != null || searchText != null;
+        var filtered = selectedEventType != null || startDate != null || endDate != null || selectedSeverity != null || searchText != null;
 
         return filtered ? $"Events ({count} filtered)" : $"Events ({count})";
     }

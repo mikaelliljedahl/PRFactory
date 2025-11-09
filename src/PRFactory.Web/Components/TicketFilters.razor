@@ -6,7 +6,7 @@
         <!-- State Filter -->
         <div class="col-md-4">
             <label for="stateFilter" class="form-label">State</label>
-            <select id="stateFilter" class="form-select" @bind="SelectedState" @bind:after="OnFilterChanged">
+            <select id="stateFilter" class="form-select" @bind="SelectedState" @bind:after="InvokeFilterChanged">
                 <option value="">All States</option>
                 <option value="@WorkflowState.Triggered">Triggered</option>
                 <option value="@WorkflowState.Analyzing">Analyzing</option>
@@ -31,7 +31,7 @@
         <!-- Source Filter -->
         <div class="col-md-4">
             <label for="sourceFilter" class="form-label">Source</label>
-            <select id="sourceFilter" class="form-select" @bind="SelectedSource" @bind:after="OnFilterChanged">
+            <select id="sourceFilter" class="form-select" @bind="SelectedSource" @bind:after="InvokeFilterChanged">
                 <option value="">All Sources</option>
                 <option value="@TicketSource.WebUI">Web UI</option>
                 <option value="@TicketSource.Jira">Jira</option>
@@ -43,7 +43,7 @@
         <!-- Repository Filter -->
         <div class="col-md-4">
             <label for="repositoryFilter" class="form-label">Repository</label>
-            <select id="repositoryFilter" class="form-select" @bind="SelectedRepositoryId" @bind:after="OnFilterChanged">
+            <select id="repositoryFilter" class="form-select" @bind="SelectedRepositoryId" @bind:after="InvokeFilterChanged">
                 <option value="">All Repositories</option>
                 @if (Repositories != null)
                 {

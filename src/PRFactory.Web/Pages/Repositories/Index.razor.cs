@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Components;
+using PRFactory.Domain.Entities;
 using PRFactory.Web.Models;
+using PRFactory.Web.Services;
 using PRFactory.Web.UI.Dialogs;
 using PRFactory.Web.UI.Navigation;
 using Radzen;
@@ -51,7 +53,7 @@ public partial class Index
         {
             Logger.LogError(ex, "Error loading repositories");
             errorMessage = "Failed to load repositories. Please try again.";
-            repositories = new List<Repository>();
+            repositories = new List<RepositoryDto>();
         }
         finally
         {

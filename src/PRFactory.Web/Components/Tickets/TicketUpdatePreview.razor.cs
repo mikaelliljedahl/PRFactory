@@ -148,10 +148,8 @@ public partial class TicketUpdatePreview
 
         try
         {
-            var pipeline = new Markdig.MarkdownPipelineBuilder()
-                .UseAdvancedExtensions()
-                .Build();
-            return Markdig.Markdown.ToHtml(markdown, pipeline);
+            // Use default Markdig conversion without custom pipeline
+            return Markdig.Markdown.ToHtml(markdown);
         }
         catch
         {

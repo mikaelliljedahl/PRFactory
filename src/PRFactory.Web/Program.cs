@@ -19,9 +19,6 @@ builder.Host.UseSerilog();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
-// Add Radzen components
-builder.Services.AddRadzenComponents();
-
 // Add SignalR
 builder.Services.AddSignalR();
 

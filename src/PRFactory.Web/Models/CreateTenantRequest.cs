@@ -5,7 +5,7 @@ namespace PRFactory.Web.Models;
 /// <summary>
 /// Request model for creating a new tenant
 /// </summary>
-public class CreateTenantRequest
+public class CreateTenantRequest : ITenantRequest
 {
     [Required(ErrorMessage = "Tenant name is required")]
     [StringLength(100, MinimumLength = 3, ErrorMessage = "Name must be between 3 and 100 characters")]

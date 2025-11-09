@@ -6,7 +6,7 @@ namespace PRFactory.Web.Components.Tenants;
 public partial class TenantForm
 {
     [Parameter, EditorRequired]
-    public object Model { get; set; } = null!;
+    public ITenantRequest Model { get; set; } = null!;
 
     [Parameter]
     public bool IsEditMode { get; set; }
@@ -67,73 +67,13 @@ public partial class TenantForm
         await OnCancel.InvokeAsync();
     }
 
-    // Helper methods to handle both CreateTenantRequest and UpdateTenantRequest
-    private int GetMaxRetries()
-    {
-        return Model switch
-        {
-            CreateTenantRequest create => create.MaxRetries,
-            UpdateTenantRequest update => update.MaxRetries,
-            _ => 3
-        };
-    }
+    // Helper methods for string-to-int binding (workaround for two-way binding with InputText)
+    private int GetMaxRetries() => Model.MaxRetries;
+    private void SetMaxRetries(int value) => Model.MaxRetries = value;
 
-    private void SetMaxRetries(int value)
-    {
-        switch (Model)
-        {
-            case CreateTenantRequest create:
-                create.MaxRetries = value;
-                break;
-            case UpdateTenantRequest update:
-                update.MaxRetries = value;
-                break;
-        }
-    }
+    private int GetMaxTokens() => Model.MaxTokensPerRequest;
+    private void SetMaxTokens(int value) => Model.MaxTokensPerRequest = value;
 
-    private int GetMaxTokens()
-    {
-        return Model switch
-        {
-            CreateTenantRequest create => create.MaxTokensPerRequest,
-            UpdateTenantRequest update => update.MaxTokensPerRequest,
-            _ => 8000
-        };
-    }
-
-    private void SetMaxTokens(int value)
-    {
-        switch (Model)
-        {
-            case CreateTenantRequest create:
-                create.MaxTokensPerRequest = value;
-                break;
-            case UpdateTenantRequest update:
-                update.MaxTokensPerRequest = value;
-                break;
-        }
-    }
-
-    private int GetApiTimeout()
-    {
-        return Model switch
-        {
-            CreateTenantRequest create => create.ApiTimeoutSeconds,
-            UpdateTenantRequest update => update.ApiTimeoutSeconds,
-            _ => 300
-        };
-    }
-
-    private void SetApiTimeout(int value)
-    {
-        switch (Model)
-        {
-            case CreateTenantRequest create:
-                create.ApiTimeoutSeconds = value;
-                break;
-            case UpdateTenantRequest update:
-                update.ApiTimeoutSeconds = value;
-                break;
-        }
-    }
+    private int GetApiTimeout() => Model.ApiTimeoutSeconds;
+    private void SetApiTimeout(int value) => Model.ApiTimeoutSeconds = value;
 }

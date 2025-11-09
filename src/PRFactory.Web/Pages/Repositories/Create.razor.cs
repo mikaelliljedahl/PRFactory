@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using PRFactory.Web.Models;
+using PRFactory.Web.Services;
 using Radzen;
 
 namespace PRFactory.Web.Pages.Repositories;

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PRFactory.Domain.Entities;
+using PRFactory.Domain.ValueObjects;
 using PRFactory.Infrastructure.Events;
 
 namespace PRFactory.Infrastructure.Persistence.Configurations;
@@ -59,21 +60,16 @@ public class WorkflowEventConfiguration : IEntityTypeConfiguration<WorkflowEvent
 
     private void ConfigureWorkflowStateChanged(EntityTypeBuilder<WorkflowEvent> builder)
     {
-        // Properties specific to WorkflowStateChanged
-        builder.Property<string>("From")
-            .HasMaxLength(50);
-
-        builder.Property<string>("To")
-            .HasMaxLength(50);
-
-        builder.Property<string?>("Reason")
-            .HasMaxLength(1000);
+        // No additional configuration needed - From, To, and Reason are real properties
+        // on WorkflowStateChanged class, not shadow properties
+        // EF Core will discover them automatically through inheritance
     }
 
     private void ConfigureQuestionAdded(EntityTypeBuilder<WorkflowEvent> builder)
     {
         // QuestionAdded stores the question as a JSON complex type
-        // The Question property will be mapped through the entity's own configuration
+        // This is handled by a separate configuration for the QuestionAdded type
+        // No shadow properties needed - Question property exists on QuestionAdded class
     }
 
     private void ConfigureAnswerAdded(EntityTypeBuilder<WorkflowEvent> builder)

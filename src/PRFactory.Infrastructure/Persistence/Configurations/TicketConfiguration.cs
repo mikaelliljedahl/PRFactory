@@ -54,7 +54,7 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
         builder.OwnsMany(t => t.Questions, question =>
         {
             question.ToJson();
-            question.Property(q => q.Id).HasMaxLength(50);
+            question.Ignore(q => q.Id); // Ignore Id - EF Core will use implicit ordinal key
             question.Property(q => q.Text).HasMaxLength(2000);
             question.Property(q => q.Category).HasMaxLength(100);
             question.Property(q => q.CreatedAt);
@@ -99,6 +99,11 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
             metadata.ToJson();
         });
 
+        // Team review properties
+        builder.Property(t => t.RequiredApprovalCount)
+            .IsRequired()
+            .HasDefaultValue(1);
+
         // Relationships
         builder.HasOne(t => t.Repository)
             .WithMany(r => r.Tickets)
@@ -113,6 +118,16 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
         builder.HasMany(t => t.Events)
             .WithOne()
             .HasForeignKey(e => e.TicketId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(t => t.PlanReviews)
+            .WithOne(pr => pr.Ticket)
+            .HasForeignKey(pr => pr.TicketId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(t => t.ReviewComments)
+            .WithOne(rc => rc.Ticket)
+            .HasForeignKey(rc => rc.TicketId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

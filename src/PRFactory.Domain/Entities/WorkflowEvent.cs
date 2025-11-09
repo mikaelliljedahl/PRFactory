@@ -48,6 +48,9 @@ public class WorkflowStateChanged : WorkflowEvent
     /// </summary>
     public string? Reason { get; init; }
 
+    // EF Core constructor
+    private WorkflowStateChanged() { }
+
     /// <summary>
     /// Creates a new workflow state change event
     /// </summary>
@@ -70,7 +73,10 @@ public class QuestionAdded : WorkflowEvent
     /// <summary>
     /// The question that was added
     /// </summary>
-    public Question Question { get; init; }
+    public Question Question { get; init; } = null!;
+
+    // EF Core constructor
+    private QuestionAdded() { }
 
     /// <summary>
     /// Creates a new question added event
@@ -95,12 +101,15 @@ public class AnswerAdded : WorkflowEvent
     /// <summary>
     /// The ID of the question that was answered
     /// </summary>
-    public string QuestionId { get; init; }
+    public string QuestionId { get; init; } = string.Empty;
 
     /// <summary>
     /// The answer text
     /// </summary>
-    public string AnswerText { get; init; }
+    public string AnswerText { get; init; } = string.Empty;
+
+    // EF Core constructor
+    private AnswerAdded() { }
 
     /// <summary>
     /// Creates a new answer added event
@@ -129,7 +138,10 @@ public class PlanCreated : WorkflowEvent
     /// <summary>
     /// The branch name where the plan was committed
     /// </summary>
-    public string BranchName { get; init; }
+    public string BranchName { get; init; } = string.Empty;
+
+    // EF Core constructor
+    private PlanCreated() { }
 
     /// <summary>
     /// Creates a new plan created event
@@ -154,12 +166,15 @@ public class PullRequestCreated : WorkflowEvent
     /// <summary>
     /// The URL of the created pull request
     /// </summary>
-    public string PullRequestUrl { get; init; }
+    public string PullRequestUrl { get; init; } = string.Empty;
 
     /// <summary>
     /// The pull request number
     /// </summary>
     public int PullRequestNumber { get; init; }
+
+    // EF Core constructor
+    private PullRequestCreated() { }
 
     /// <summary>
     /// Creates a new pull request created event

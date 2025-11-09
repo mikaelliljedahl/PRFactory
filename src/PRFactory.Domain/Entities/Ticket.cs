@@ -136,6 +136,12 @@ public class Ticket
     public Dictionary<string, object> Metadata { get; private set; } = new();
 
     /// <summary>
+    /// Number of required reviewer approvals needed before plan can be approved
+    /// Default: 1 (backward compatible with single-user workflow)
+    /// </summary>
+    public int RequiredApprovalCount { get; private set; } = 1;
+
+    /// <summary>
     /// Navigation property to the repository
     /// </summary>
     public Repository? Repository { get; private set; }
@@ -154,6 +160,16 @@ public class Ticket
     /// Ticket updates generated during the refinement workflow
     /// </summary>
     public List<TicketUpdate> TicketUpdates { get; private set; } = new();
+
+    /// <summary>
+    /// Plan reviews by individual reviewers (team review feature)
+    /// </summary>
+    public List<PlanReview> PlanReviews { get; private set; } = new();
+
+    /// <summary>
+    /// Comments made during plan review discussions
+    /// </summary>
+    public List<ReviewComment> ReviewComments { get; private set; } = new();
 
     private Ticket() { }
 
@@ -325,10 +341,18 @@ public class Ticket
     }
 
     /// <summary>
-    /// Marks the plan as approved
+    /// Marks the plan as approved (validates multi-reviewer logic if team review is enabled)
     /// </summary>
     public void ApprovePlan()
     {
+        // For team review: validate that sufficient approvals have been received
+        if (PlanReviews.Any() && !HasSufficientApprovals())
+        {
+            var approvedCount = PlanReviews.Count(r => r.IsRequired && r.Status == ReviewStatus.Approved);
+            throw new InvalidOperationException(
+                $"Cannot approve plan: Insufficient approvals. Required: {RequiredApprovalCount}, Received: {approvedCount}");
+        }
+
         PlanApprovedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
@@ -425,6 +449,104 @@ public class Ticket
             return typedValue;
 
         return default;
+    }
+
+    /// <summary>
+    /// Assigns reviewers to the plan (team review feature)
+    /// </summary>
+    /// <param name="requiredReviewerIds">List of user IDs who must approve the plan</param>
+    /// <param name="optionalReviewerIds">List of user IDs who can optionally review the plan</param>
+    public void AssignReviewers(List<Guid> requiredReviewerIds, List<Guid>? optionalReviewerIds = null)
+    {
+        if (State != WorkflowState.PlanPosted && State != WorkflowState.PlanUnderReview)
+            throw new InvalidOperationException($"Cannot assign reviewers when state is {State}. Plan must be posted first.");
+
+        if (requiredReviewerIds == null || requiredReviewerIds.Count == 0)
+            throw new ArgumentException("At least one required reviewer must be specified", nameof(requiredReviewerIds));
+
+        // Clear existing reviews (in case of re-assignment)
+        PlanReviews.Clear();
+
+        // Add required reviewers
+        foreach (var reviewerId in requiredReviewerIds)
+        {
+            PlanReviews.Add(new PlanReview(Id, reviewerId, isRequired: true));
+        }
+
+        // Add optional reviewers
+        if (optionalReviewerIds != null)
+        {
+            foreach (var reviewerId in optionalReviewerIds)
+            {
+                PlanReviews.Add(new PlanReview(Id, reviewerId, isRequired: false));
+            }
+        }
+
+        RequiredApprovalCount = requiredReviewerIds.Count;
+        UpdatedAt = DateTime.UtcNow;
+
+        // Transition to PlanUnderReview if not already
+        if (State == WorkflowState.PlanPosted)
+        {
+            TransitionTo(WorkflowState.PlanUnderReview, "Reviewers assigned");
+        }
+    }
+
+    /// <summary>
+    /// Checks if the plan has received sufficient approvals from required reviewers
+    /// </summary>
+    public bool HasSufficientApprovals()
+    {
+        // If no reviewers assigned, fall back to single-user workflow (backward compatible)
+        if (!PlanReviews.Any())
+            return true;
+
+        var requiredReviews = PlanReviews.Where(r => r.IsRequired).ToList();
+        var approvedCount = requiredReviews.Count(r => r.Status == ReviewStatus.Approved);
+
+        return approvedCount >= RequiredApprovalCount;
+    }
+
+    /// <summary>
+    /// Checks if any reviewer has rejected the plan
+    /// </summary>
+    public bool HasRejections()
+    {
+        return PlanReviews.Any(r =>
+            r.Status == ReviewStatus.RejectedForRefinement ||
+            r.Status == ReviewStatus.RejectedForRegeneration);
+    }
+
+    /// <summary>
+    /// Gets the rejection details from the first rejection found
+    /// </summary>
+    /// <returns>Tuple of (reason, regenerateCompletely) or null if no rejections</returns>
+    public (string Reason, bool RegenerateCompletely)? GetRejectionDetails()
+    {
+        var rejection = PlanReviews.FirstOrDefault(r =>
+            r.Status == ReviewStatus.RejectedForRefinement ||
+            r.Status == ReviewStatus.RejectedForRegeneration);
+
+        if (rejection == null)
+            return null;
+
+        return (rejection.Decision ?? "No reason provided",
+                rejection.Status == ReviewStatus.RejectedForRegeneration);
+    }
+
+    /// <summary>
+    /// Resets all plan reviews to pending status when a new plan is generated
+    /// Called when the plan is regenerated/refined and needs to be reviewed again
+    /// </summary>
+    public void ResetReviewsForNewPlan()
+    {
+        foreach (var review in PlanReviews)
+        {
+            review.ResetForNewPlan();
+        }
+
+        PlanApprovedAt = null; // Clear previous approval timestamp
+        UpdatedAt = DateTime.UtcNow;
     }
 
     /// <summary>

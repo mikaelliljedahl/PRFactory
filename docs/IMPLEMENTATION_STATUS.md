@@ -1,6 +1,6 @@
 # Implementation Status
 
-**Last Updated**: 2025-11-08
+**Last Updated**: 2025-11-09
 **Purpose**: Single source of truth for what's built vs. planned in PRFactory
 
 ---
@@ -17,7 +17,7 @@
 
 ## Executive Summary
 
-**PRFactory MVP Status**: ⚠️ Core architecture complete, testing and polish needed
+**PRFactory MVP Status**: ⚠️ Core architecture complete, Team Review data model implemented, testing needed
 
 ### What Works Today ✅
 - Multi-graph workflow orchestration with checkpointing
@@ -26,9 +26,11 @@
 - Web UI for ticket management
 - Multi-tenant isolation with encrypted credentials
 - Event-driven state machine with 17 states
+- **Team Review data model** (multi-reviewer plan approval)
 
 ### Key Gaps 🚧
-- Comprehensive test suite (0% coverage)
+- Comprehensive test suite (0% coverage) ⚠️ **CRITICAL**
+- Team Review application services and UI (Phase 2+3)
 - Web UI polish and real-time updates
 - GitLab provider integration
 
@@ -342,19 +344,27 @@
 - ✅ Tenant
 - ✅ Repository
 - ✅ Ticket
+- ✅ TicketUpdate
 - ✅ Checkpoint
 - ✅ WorkflowState
 - ✅ WorkflowEvent (base + 10+ derived types)
 - ✅ AgentPromptTemplate
+- ✅ **User** (Team Review - Phase 1)
+- ✅ **PlanReview** (Team Review - Phase 1)
+- ✅ **ReviewComment** (Team Review - Phase 1)
 
 **Entity Configurations** (`/src/PRFactory.Infrastructure/Persistence/Configurations/`):
 - ✅ TenantConfiguration
 - ✅ RepositoryConfiguration
 - ✅ TicketConfiguration
+- ✅ TicketUpdateConfiguration
 - ✅ CheckpointConfiguration
 - ✅ WorkflowStateConfiguration
 - ✅ WorkflowEventConfiguration
 - ✅ AgentPromptTemplateConfiguration
+- ✅ **UserConfiguration** (Team Review - Phase 1)
+- ✅ **PlanReviewConfiguration** (Team Review - Phase 1)
+- ✅ **ReviewCommentConfiguration** (Team Review - Phase 1)
 
 **Repositories** (`/src/PRFactory.Infrastructure/Persistence/Repositories/`):
 - ✅ CheckpointRepository
@@ -366,14 +376,151 @@
 - ✅ Base repository pattern for common operations
 
 **Migrations**:
-- ✅ Initial migration (database schema)
-- ✅ Checkpoint entity migration (20251107223500)
-- ⚠️ Agent prompt template migration (pending)
+- ✅ InitialCreateWithTeamReview (20251109140452) - **Latest**
+  - Creates Users, PlanReviews, ReviewComments tables
+  - Adds RequiredApprovalCount to Tickets
+  - Includes all prior schema (Tenants, Repositories, Tickets, Checkpoints, etc.)
+- ⚠️ Migration not yet applied to production database
 - ⚠️ No migration rollback tests
 
 ---
 
-### 7. External Integrations
+### 7. Team Review (Collaborative Plan Approval)
+
+| Component | Status | Completeness | Lines | Notes |
+|-----------|--------|--------------|-------|-------|
+| **Phase 1: Data Model** | ✅ COMPLETE | 100% | ~500 | Domain entities, EF Core, migration |
+| **Phase 2: Application Services** | 📋 PLANNED | 0% | 0 | UserService, PlanReviewService |
+| **Phase 3: UI Components** | 📋 PLANNED | 0% | 0 | ReviewerAssignment, CommentThread |
+
+**Purpose**: Enable team-based review and approval of AI-generated implementation plans (Phase 2 of workflow). Addresses the "Single-Player" limitation identified in strategic analysis vs. Agor.live.
+
+**Phase 1: Data Model** ✅ **COMPLETE (2025-11-09)**
+
+**Domain Entities** (`/src/PRFactory.Domain/Entities/`):
+
+| Entity | File | Lines | Purpose | Status |
+|--------|------|-------|---------|--------|
+| User | User.cs | 95 | Team members who can review plans | ✅ |
+| PlanReview | PlanReview.cs | 120 | Individual reviewer approval/rejection | ✅ |
+| ReviewComment | ReviewComment.cs | 110 | Discussion threads with @mentions | ✅ |
+| ReviewStatus | ReviewStatus.cs | 25 | Enum (Pending, Approved, Rejected*) | ✅ |
+
+**User Entity**:
+- ✅ Properties: Id, TenantId, Email, DisplayName, AvatarUrl, ExternalAuthId
+- ✅ Timestamps: CreatedAt, LastSeenAt
+- ✅ Methods: UpdateLastSeen(), UpdateProfile(), LinkExternalAuth()
+- ✅ Navigation: Tenant, PlanReviews, Comments
+- ✅ Validation: Email and DisplayName required
+- ⚠️ No unit tests
+
+**PlanReview Entity**:
+- ✅ Properties: Id, TicketId, ReviewerId, Status, IsRequired, Decision
+- ✅ Timestamps: AssignedAt, ReviewedAt
+- ✅ Methods: Approve(), Reject(), ResetForNewPlan(), SetRequired()
+- ✅ Navigation: Ticket, Reviewer
+- ✅ Status tracking: Pending → Approved/RejectedForRefinement/RejectedForRegeneration
+- ✅ Required vs Optional reviewer distinction
+- ⚠️ No unit tests
+
+**ReviewComment Entity**:
+- ✅ Properties: Id, TicketId, AuthorId, Content, MentionedUserIds (List<Guid>)
+- ✅ Timestamps: CreatedAt, UpdatedAt
+- ✅ Methods: Update(), MentionsUser(), AddMention(), RemoveMention()
+- ✅ Navigation: Ticket, Author
+- ✅ Support for @mention functionality
+- ⚠️ No unit tests
+
+**Ticket Entity Updates** (`/src/PRFactory.Domain/Entities/Ticket.cs`):
+- ✅ New property: RequiredApprovalCount (default: 1 for backward compatibility)
+- ✅ New navigation: PlanReviews, ReviewComments
+- ✅ New methods:
+  - `AssignReviewers(requiredIds, optionalIds)` - Assign team members
+  - `HasSufficientApprovals()` - Check if threshold met (e.g., 2/3)
+  - `HasRejections()` - Check for any rejections
+  - `GetRejectionDetails()` - Get reason and regenerate flag
+  - `ResetReviewsForNewPlan()` - Reset reviews when plan regenerated
+- ✅ Updated `ApprovePlan()` - Validates multi-reviewer logic
+- ✅ State transitions: PlanPosted → PlanUnderReview (on reviewer assignment)
+- ⚠️ No unit tests for new methods
+
+**EF Core Configuration**:
+- ✅ UserConfiguration.cs (66 lines)
+  - Unique constraint: TenantId + Email
+  - Indexes: TenantId, Email
+  - Cascade delete for PlanReviews and Comments
+- ✅ PlanReviewConfiguration.cs (61 lines)
+  - Unique constraint: TicketId + ReviewerId
+  - Indexes: TicketId, ReviewerId, Status
+  - ReviewStatus stored as int
+- ✅ ReviewCommentConfiguration.cs (64 lines)
+  - MentionedUserIds stored as JSONB
+  - Index on CreatedAt (descending)
+- ✅ TicketConfiguration updates
+  - RequiredApprovalCount with default value 1
+  - HasMany relationships for PlanReviews and ReviewComments
+
+**Database Migration**:
+- ✅ Migration name: `InitialCreateWithTeamReview`
+- ✅ Generated: 2025-11-09 14:04:52 UTC
+- ✅ Creates tables: Users, PlanReviews, ReviewComments
+- ✅ Adds column: Tickets.RequiredApprovalCount (default 1)
+- ✅ Foreign keys with cascade delete
+- ✅ Indexes for performance
+- ⚠️ Not yet applied to database
+- ⚠️ No rollback tested
+
+**Design Documentation**:
+- ✅ Comprehensive design doc: `/docs/design/team-review-design.md` (870 lines)
+- ✅ Includes: Data model, UI mockups, workflow diagrams, implementation phases
+- ✅ Documents: Multi-approver logic, rejection handling, @mention support
+- ✅ Test scenarios documented
+
+**Phase 2: Application Services** 📋 **PLANNED**
+
+Planned components (not yet implemented):
+- 📋 `IUserService` - User management (create, search, get by email)
+- 📋 `IPlanReviewService` - Review management (assign, approve, reject, comment)
+- 📋 `ICurrentUserService` - Stub for MVP (auth integration later)
+- 📋 Update `TicketApplicationService` with `CheckAndProcessApprovals()`
+- 📋 Multi-reviewer orchestration logic
+- 📋 Workflow resume on sufficient approvals (2/3 met)
+- 📋 Workflow resume on any rejection
+- 📋 Reset reviews when plan regenerated
+
+**Phase 3: UI Components** 📋 **PLANNED**
+
+Planned components (not yet implemented):
+- 📋 `ReviewerAssignment.razor` - Search and assign team members
+- 📋 `PlanReviewStatus.razor` - Show approval progress (2/3)
+- 📋 `ReviewCommentThread.razor` - Comment thread with @mentions
+- 📋 Update `PlanReviewSection.razor` - Team-aware review UI
+- 📋 @mention parsing and formatting
+- 📋 Real-time updates (optional SignalR)
+
+**Backward Compatibility**:
+- ✅ Single-user workflow still supported (no reviewers assigned = auto-approve)
+- ✅ Default RequiredApprovalCount = 1
+- ✅ Existing tickets unaffected (no migration required)
+- ✅ Optional feature (enabled by assigning reviewers)
+
+**Strategic Impact**:
+- ✅ Addresses "Single-Player" weakness identified in Agor.live comparison
+- ✅ Enables enterprise approval processes (2/3 reviewers, tech lead + architect, etc.)
+- ✅ Strengthens "safe, controlled AI" positioning
+- ✅ Priority 1 feature from strategic roadmap
+
+**Remaining Work**:
+- ⚠️ **CRITICAL**: Write comprehensive unit tests for Phase 1 (0% coverage)
+- ⚠️ Implement Phase 2 (Application Services)
+- ⚠️ Implement Phase 3 (UI Components)
+- ⚠️ End-to-end integration testing
+- ⚠️ Apply database migration
+- ⚠️ User authentication integration
+
+---
+
+### 8. External Integrations
 
 | Integration | Status | Completeness | Notes |
 |-------------|--------|--------------|-------|

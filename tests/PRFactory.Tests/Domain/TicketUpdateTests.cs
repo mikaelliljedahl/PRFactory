@@ -1,4 +1,3 @@
-using FluentAssertions;
 using PRFactory.Domain.Entities;
 using PRFactory.Domain.ValueObjects;
 using Xunit;
@@ -29,31 +28,29 @@ public class TicketUpdateTests
             ValidAcceptanceCriteria);
 
         // Assert
-        update.Should().NotBeNull();
-        update.TicketId.Should().Be(_ticketId);
-        update.UpdatedTitle.Should().Be(ValidTitle);
-        update.UpdatedDescription.Should().Be(ValidDescription);
-        update.AcceptanceCriteria.Should().Be(ValidAcceptanceCriteria);
-        update.SuccessCriteria.Should().HaveCount(2);
-        update.IsApproved.Should().BeFalse();
-        update.IsDraft.Should().BeTrue();
-        update.Version.Should().Be(1);
-        update.GeneratedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        Assert.NotNull(update);
+        Assert.Equal(_ticketId, update.TicketId);
+        Assert.Equal(ValidTitle, update.UpdatedTitle);
+        Assert.Equal(ValidDescription, update.UpdatedDescription);
+        Assert.Equal(ValidAcceptanceCriteria, update.AcceptanceCriteria);
+        Assert.Equal(2, update.SuccessCriteria.Count);
+        Assert.False(update.IsApproved);
+        Assert.True(update.IsDraft);
+        Assert.Equal(1, update.Version);
+        Assert.True(Math.Abs((update.GeneratedAt - DateTime.UtcNow).TotalSeconds) < 1);
     }
 
     [Fact]
     public void Create_WithEmptyTicketId_ThrowsArgumentException()
     {
         // Act & Assert
-        var act = () => TicketUpdate.Create(
+        var ex = Assert.Throws<ArgumentException>(() => TicketUpdate.Create(
             Guid.Empty,
             ValidTitle,
             ValidDescription,
             _validSuccessCriteria,
-            ValidAcceptanceCriteria);
-
-        act.Should().Throw<ArgumentException>()
-            .WithMessage("*ticketId*");
+            ValidAcceptanceCriteria));
+        Assert.Contains("ticketId", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
@@ -63,15 +60,13 @@ public class TicketUpdateTests
     public void Create_WithInvalidTitle_ThrowsArgumentException(string? invalidTitle)
     {
         // Act & Assert
-        var act = () => TicketUpdate.Create(
+        var ex = Assert.Throws<ArgumentException>(() => TicketUpdate.Create(
             _ticketId,
             invalidTitle,
             ValidDescription,
             _validSuccessCriteria,
-            ValidAcceptanceCriteria);
-
-        act.Should().Throw<ArgumentException>()
-            .WithMessage("*title*");
+            ValidAcceptanceCriteria));
+        Assert.Contains("title", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
@@ -81,30 +76,26 @@ public class TicketUpdateTests
     public void Create_WithInvalidDescription_ThrowsArgumentException(string? invalidDescription)
     {
         // Act & Assert
-        var act = () => TicketUpdate.Create(
+        var ex = Assert.Throws<ArgumentException>(() => TicketUpdate.Create(
             _ticketId,
             ValidTitle,
             invalidDescription,
             _validSuccessCriteria,
-            ValidAcceptanceCriteria);
-
-        act.Should().Throw<ArgumentException>()
-            .WithMessage("*description*");
+            ValidAcceptanceCriteria));
+        Assert.Contains("description", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
     public void Create_WithEmptySuccessCriteria_ThrowsArgumentException()
     {
         // Act & Assert
-        var act = () => TicketUpdate.Create(
+        var ex = Assert.Throws<ArgumentException>(() => TicketUpdate.Create(
             _ticketId,
             ValidTitle,
             ValidDescription,
             new List<SuccessCriterion>(),
-            ValidAcceptanceCriteria);
-
-        act.Should().Throw<ArgumentException>()
-            .WithMessage("*successCriteria*");
+            ValidAcceptanceCriteria));
+        Assert.Contains("successCriteria", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
@@ -114,15 +105,13 @@ public class TicketUpdateTests
     public void Create_WithInvalidAcceptanceCriteria_ThrowsArgumentException(string? invalidCriteria)
     {
         // Act & Assert
-        var act = () => TicketUpdate.Create(
+        var ex = Assert.Throws<ArgumentException>(() => TicketUpdate.Create(
             _ticketId,
             ValidTitle,
             ValidDescription,
             _validSuccessCriteria,
-            invalidCriteria);
-
-        act.Should().Throw<ArgumentException>()
-            .WithMessage("*acceptanceCriteria*");
+            invalidCriteria));
+        Assert.Contains("acceptanceCriteria", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -140,10 +129,10 @@ public class TicketUpdateTests
         update.Approve();
 
         // Assert
-        update.IsApproved.Should().BeTrue();
-        update.IsDraft.Should().BeFalse();
-        update.ApprovedAt.Should().NotBeNull();
-        update.ApprovedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        Assert.True(update.IsApproved);
+        Assert.False(update.IsDraft);
+        Assert.NotNull(update.ApprovedAt);
+        Assert.True(Math.Abs((update.ApprovedAt.Value - DateTime.UtcNow).TotalSeconds) < 1);
     }
 
     [Fact]
@@ -163,9 +152,9 @@ public class TicketUpdateTests
         update.Reject(rejectionReason);
 
         // Assert
-        update.IsApproved.Should().BeFalse();
-        update.IsDraft.Should().BeTrue();
-        update.RejectionReason.Should().Be(rejectionReason);
+        Assert.False(update.IsApproved);
+        Assert.True(update.IsDraft);
+        Assert.Equal(rejectionReason, update.RejectionReason);
     }
 
     [Theory]
@@ -183,9 +172,8 @@ public class TicketUpdateTests
             ValidAcceptanceCriteria);
 
         // Act & Assert
-        var act = () => update.Reject(invalidReason);
-        act.Should().Throw<ArgumentException>()
-            .WithMessage("*reason*");
+        var ex = Assert.Throws<ArgumentException>(() => update.Reject(invalidReason));
+        Assert.Contains("reason", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -204,7 +192,7 @@ public class TicketUpdateTests
         update.IncrementVersion();
 
         // Assert
-        update.Version.Should().Be(4); // previous version + 1
+        Assert.Equal(4, update.Version); // previous version + 1
     }
 
     [Fact]
@@ -225,8 +213,8 @@ public class TicketUpdateTests
         update.MarkAsPosted();
 
         // Assert
-        update.PostedAt.Should().NotBeNull();
-        update.PostedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        Assert.NotNull(update.PostedAt);
+        Assert.True(Math.Abs((update.PostedAt.Value - DateTime.UtcNow).TotalSeconds) < 1);
     }
 
     [Fact]
@@ -251,11 +239,11 @@ public class TicketUpdateTests
         update.Update(newTitle, newDescription, newCriteria, ValidAcceptanceCriteria);
 
         // Assert
-        update.UpdatedTitle.Should().Be(newTitle);
-        update.UpdatedDescription.Should().Be(newDescription);
-        update.SuccessCriteria.Should().Contain(newCriteria[0]);
-        update.IsApproved.Should().BeFalse();
-        update.IsDraft.Should().BeTrue();
+        Assert.Equal(newTitle, update.UpdatedTitle);
+        Assert.Equal(newDescription, update.UpdatedDescription);
+        Assert.Contains(newCriteria[0], update.SuccessCriteria);
+        Assert.False(update.IsApproved);
+        Assert.True(update.IsDraft);
     }
 
     [Theory]
@@ -273,7 +261,6 @@ public class TicketUpdateTests
             ValidAcceptanceCriteria);
 
         // Act & Assert
-        var act = () => update.Update(ValidTitle, invalidDescription, _validSuccessCriteria, ValidAcceptanceCriteria);
-        act.Should().Throw<ArgumentException>();
+        Assert.Throws<ArgumentException>(() => update.Update(ValidTitle, invalidDescription, _validSuccessCriteria, ValidAcceptanceCriteria));
     }
 }

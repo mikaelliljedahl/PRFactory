@@ -13,6 +13,9 @@ using WorkflowEventConfig = PRFactory.Infrastructure.Persistence.Configurations.
 using WorkflowStateConfig = PRFactory.Infrastructure.Persistence.Configurations.WorkflowStateConfiguration;
 using CheckpointConfig = PRFactory.Infrastructure.Persistence.Configurations.CheckpointConfiguration;
 using AgentPromptTemplateConfig = PRFactory.Infrastructure.Persistence.Configurations.AgentPromptTemplateConfiguration;
+using UserConfig = PRFactory.Infrastructure.Persistence.Configurations.UserConfiguration;
+using PlanReviewConfig = PRFactory.Infrastructure.Persistence.Configurations.PlanReviewConfiguration;
+using ReviewCommentConfig = PRFactory.Infrastructure.Persistence.Configurations.ReviewCommentConfiguration;
 
 namespace PRFactory.Infrastructure.Persistence;
 
@@ -46,6 +49,11 @@ public class ApplicationDbContext : DbContext
     public DbSet<AgentPromptTemplate> AgentPromptTemplates => Set<AgentPromptTemplate>();
     public DbSet<ErrorLog> ErrorLogs => Set<ErrorLog>();
 
+    // Team Review DbSets
+    public DbSet<User> Users => Set<User>();
+    public DbSet<PlanReview> PlanReviews => Set<PlanReview>();
+    public DbSet<ReviewComment> ReviewComments => Set<ReviewComment>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -59,6 +67,11 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new WorkflowStateConfig());
         modelBuilder.ApplyConfiguration(new CheckpointConfig());
         modelBuilder.ApplyConfiguration(new AgentPromptTemplateConfig());
+
+        // Team Review configurations
+        modelBuilder.ApplyConfiguration(new UserConfig());
+        modelBuilder.ApplyConfiguration(new PlanReviewConfig());
+        modelBuilder.ApplyConfiguration(new ReviewCommentConfig());
 
         // Add indexes for common queries
         AddIndexes(modelBuilder);
@@ -170,6 +183,17 @@ public class ApplicationDbContext : DbContext
                 v => v.ToString(),
                 v => (ErrorSeverity)Enum.Parse(typeof(ErrorSeverity), v)
             );
+
+        // QuestionAdded - store Question as JSON
+        modelBuilder.Entity<QuestionAdded>()
+            .OwnsOne(e => e.Question, question =>
+            {
+                question.ToJson();
+                question.Ignore(q => q.Id); // Ignore Id - EF Core will use implicit ordinal key
+                question.Property(q => q.Text).HasMaxLength(2000);
+                question.Property(q => q.Category).HasMaxLength(100);
+                question.Property(q => q.CreatedAt);
+            });
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

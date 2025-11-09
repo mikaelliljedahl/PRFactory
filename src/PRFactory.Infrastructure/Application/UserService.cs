@@ -28,7 +28,7 @@ public class UserService : IUserService
 
     public async Task<User?> GetByEmailAsync(string email, Guid tenantId, CancellationToken cancellationToken = default)
     {
-        return await _userRepository.GetByEmailAsync(email, tenantId, cancellationToken);
+        return await _userRepository.GetByEmailAsync(tenantId, email, cancellationToken);
     }
 
     public async Task<List<User>> GetByTenantIdAsync(Guid tenantId, CancellationToken cancellationToken = default)
@@ -50,13 +50,13 @@ public class UserService : IUserService
         CancellationToken cancellationToken = default)
     {
         // Validate that email is unique within tenant
-        if (await _userRepository.ExistsAsync(email, tenantId, cancellationToken))
+        if (await _userRepository.ExistsAsync(tenantId, email, cancellationToken))
         {
             throw new InvalidOperationException($"A user with email '{email}' already exists in this tenant.");
         }
 
         var user = new User(tenantId, email, displayName, avatarUrl, externalAuthId);
-        await _userRepository.CreateAsync(user, cancellationToken);
+        await _userRepository.AddAsync(user, cancellationToken);
 
         _logger.LogInformation("Created user {UserId} ({Email}) for tenant {TenantId}", user.Id, user.Email, tenantId);
 
@@ -98,6 +98,6 @@ public class UserService : IUserService
 
     public async Task<bool> ExistsAsync(string email, Guid tenantId, CancellationToken cancellationToken = default)
     {
-        return await _userRepository.ExistsAsync(email, tenantId, cancellationToken);
+        return await _userRepository.ExistsAsync(tenantId, email, cancellationToken);
     }
 }

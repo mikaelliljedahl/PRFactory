@@ -80,9 +80,9 @@ Claude Code is:
   - ❌ PROBLEM: Server-side Worker service has no access to developer's OAuth tokens
 ```
 
-### 1.2 The Attempted Solution (ClaudeDesktopCliAdapter)
+### 1.2 The Attempted Solution (ClaudeCodeCliAdapter)
 
-**File**: `/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Adapters/ClaudeDesktopCliAdapter.cs`
+**File**: `/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Adapters/ClaudeCodeCliAdapter.cs`
 
 ```csharp
 public async Task<CliAgentResponse> ExecuteWithProjectContextAsync(
@@ -213,7 +213,7 @@ Workflow Execution Flow:
 5. Workflow Execution
    - RefinementGraph → PlanningGraph → ImplementationGraph
    - Each graph has agents that need Claude
-   - Agents call ClaudeDesktopCliAdapter
+   - Agents call ClaudeCodeCliAdapter
    - ❌ CLI execution fails
    ↓
 6. Workflow marked as FAILED
@@ -234,7 +234,7 @@ Workflow Execution Flow:
 - Polling-based job queue
 
 **❌ These components need fixes to work**:
-- ClaudeDesktopCliAdapter (uses wrong CLI flags, authentication unclear)
+- ClaudeCodeCliAdapter (uses wrong CLI flags, authentication unclear)
 - AnalysisAgent (requires Claude with proper CLI invocation)
 - PlanningAgent (requires Claude with proper CLI invocation)
 - ImplementationAgent (requires Claude with proper CLI invocation)
@@ -779,7 +779,7 @@ if (_cleanupConfig.CleanupAfterCompletion)
 
 ## 7. Architectural Solutions
 
-### 7.1 Option 1: Fix ClaudeDesktopCliAdapter (IF authentication can be resolved)
+### 7.1 Option 1: Fix ClaudeCodeCliAdapter (IF authentication can be resolved)
 
 **Current Issues**:
 1. Uses wrong CLI flags (`--headless` should be `--print`)
@@ -839,7 +839,7 @@ public async Task<CliAgentResponse> ExecuteWithProjectContextAsync(
 
 ### 7.2 Option 2: Use Anthropic API Directly (RECOMMENDED if CLI auth doesn't work)
 
-**Replace**: ClaudeDesktopCliAdapter
+**Replace**: ClaudeCodeCliAdapter
 **With**: Anthropic Messages API (REST)
 
 ```csharp
@@ -1048,7 +1048,7 @@ Logged in as: developer@example.com
    - Verify API key support in headless mode
    - Time: 1 day
 
-2. **Update ClaudeDesktopCliAdapter**
+2. **Update ClaudeCodeCliAdapter**
    - Change `--headless` to `--print`
    - Fix CLI arguments structure
    - Add environment variable for API key
@@ -1071,7 +1071,7 @@ Logged in as: developer@example.com
 **Option B: Use Anthropic API Directly** (recommended if CLI auth doesn't work):
 1. **Implement AnthropicApiClient**
    - Create new HTTP client for Anthropic API
-   - Replace ClaudeDesktopCliAdapter registrations
+   - Replace ClaudeCodeCliAdapter registrations
    - Time: 2-3 days
 
 2. **Update agent implementations**
@@ -1155,7 +1155,7 @@ Logged in as: developer@example.com
 
 ### Critical Findings
 
-1. **🔴 ClaudeDesktopCliAdapter uses wrong CLI syntax** - Uses `--headless` instead of `--print`, server authentication mechanism unclear
+1. **🔴 ClaudeCodeCliAdapter uses wrong CLI syntax** - Uses `--headless` instead of `--print`, server authentication mechanism unclear
 2. **🔴 No API authentication** - All endpoints publicly accessible
 3. **🔴 Secrets logged to files** - All API keys exposed in logs
 4. **🔴 Hardcoded tenant ID** - Multi-tenant isolation completely broken

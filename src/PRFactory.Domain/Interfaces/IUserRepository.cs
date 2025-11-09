@@ -3,19 +3,24 @@ using PRFactory.Domain.Entities;
 namespace PRFactory.Domain.Interfaces;
 
 /// <summary>
-/// Repository interface for managing users
+/// Repository interface for User entity operations
 /// </summary>
 public interface IUserRepository
 {
     /// <summary>
-    /// Gets a user by their unique ID
+    /// Gets a user by their unique identifier
     /// </summary>
-    Task<User?> GetByIdAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a user by their email address within a tenant
     /// </summary>
-    Task<User?> GetByEmailAsync(string email, Guid tenantId, CancellationToken cancellationToken = default);
+    Task<User?> GetByEmailAsync(Guid tenantId, string email, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a user by their external authentication ID
+    /// </summary>
+    Task<User?> GetByExternalAuthIdAsync(string externalAuthId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all users for a specific tenant
@@ -28,9 +33,14 @@ public interface IUserRepository
     Task<List<User>> GetByIdsAsync(List<Guid> userIds, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Creates a new user
+    /// Gets all users
     /// </summary>
-    Task<User> CreateAsync(User user, CancellationToken cancellationToken = default);
+    Task<List<User>> GetAllAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Adds a new user
+    /// </summary>
+    Task<User> AddAsync(User user, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Updates an existing user
@@ -38,12 +48,17 @@ public interface IUserRepository
     Task UpdateAsync(User user, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Deletes a user by ID
+    /// Deletes a user
     /// </summary>
-    Task DeleteAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Checks if a user with the given email exists in the tenant
+    /// Checks if a user with the given email already exists within a tenant
     /// </summary>
-    Task<bool> ExistsAsync(string email, Guid tenantId, CancellationToken cancellationToken = default);
+    Task<bool> ExistsAsync(Guid tenantId, string email, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets users with OAuth tokens configured
+    /// </summary>
+    Task<List<User>> GetUsersWithOAuthTokensAsync(Guid? tenantId = null, CancellationToken cancellationToken = default);
 }

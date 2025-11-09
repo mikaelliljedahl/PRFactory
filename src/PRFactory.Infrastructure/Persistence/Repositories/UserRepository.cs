@@ -21,17 +21,23 @@ public class UserRepository : IUserRepository
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<User?> GetByIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.Users
-            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+            .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
     }
 
-    public async Task<User?> GetByEmailAsync(string email, Guid tenantId, CancellationToken cancellationToken = default)
+    public async Task<User?> GetByEmailAsync(Guid tenantId, string email, CancellationToken cancellationToken = default)
     {
         var normalizedEmail = email.Trim().ToLowerInvariant();
         return await _context.Users
             .FirstOrDefaultAsync(u => u.Email == normalizedEmail && u.TenantId == tenantId, cancellationToken);
+    }
+
+    public async Task<User?> GetByExternalAuthIdAsync(string externalAuthId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Users
+            .FirstOrDefaultAsync(u => u.ExternalAuthId == externalAuthId, cancellationToken);
     }
 
     public async Task<List<User>> GetByTenantIdAsync(Guid tenantId, CancellationToken cancellationToken = default)
@@ -49,7 +55,14 @@ public class UserRepository : IUserRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<User> CreateAsync(User user, CancellationToken cancellationToken = default)
+    public async Task<List<User>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Users
+            .OrderBy(u => u.DisplayName)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<User> AddAsync(User user, CancellationToken cancellationToken = default)
     {
         _context.Users.Add(user);
         await _context.SaveChangesAsync(cancellationToken);
@@ -68,12 +81,12 @@ public class UserRepository : IUserRepository
         _logger.LogInformation("Updated user {UserId} ({Email})", user.Id, user.Email);
     }
 
-    public async Task DeleteAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var user = await GetByIdAsync(userId, cancellationToken);
+        var user = await GetByIdAsync(id, cancellationToken);
         if (user == null)
         {
-            _logger.LogWarning("Attempted to delete non-existent user {UserId}", userId);
+            _logger.LogWarning("Attempted to delete non-existent user {UserId}", id);
             return;
         }
 
@@ -83,10 +96,25 @@ public class UserRepository : IUserRepository
         _logger.LogWarning("Deleted user {UserId} ({Email})", user.Id, user.Email);
     }
 
-    public async Task<bool> ExistsAsync(string email, Guid tenantId, CancellationToken cancellationToken = default)
+    public async Task<bool> ExistsAsync(Guid tenantId, string email, CancellationToken cancellationToken = default)
     {
         var normalizedEmail = email.Trim().ToLowerInvariant();
         return await _context.Users
             .AnyAsync(u => u.Email == normalizedEmail && u.TenantId == tenantId, cancellationToken);
+    }
+
+    public async Task<List<User>> GetUsersWithOAuthTokensAsync(Guid? tenantId = null, CancellationToken cancellationToken = default)
+    {
+        var query = _context.Users.AsQueryable();
+
+        if (tenantId.HasValue)
+        {
+            query = query.Where(u => u.TenantId == tenantId.Value);
+        }
+
+        return await query
+            .Where(u => !string.IsNullOrEmpty(u.OAuthAccessToken))
+            .OrderBy(u => u.DisplayName)
+            .ToListAsync(cancellationToken);
     }
 }

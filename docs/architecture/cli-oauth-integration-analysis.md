@@ -10,7 +10,7 @@
 PRFactory has **foundational architecture** for Claude CLI integration and token management, but **NO functional OAuth flows** and **NO developer machine workflows**. The existing implementation is incomplete and would not work in production for external developer access.
 
 **Critical Issues:**
-1. ❌ ClaudeDesktopCliAdapter is **hypothetical, not real**
+1. ❌ ClaudeCodeCliAdapter is **hypothetical, not real**
 2. ❌ **Zero OAuth implementation** (no auth endpoints, no token generation)
 3. ❌ **Unauthenticated API endpoints** (no API key or OAuth validation)
 4. ❌ **No developer machine workflow** (only Jira webhook triggers)
@@ -23,7 +23,7 @@ PRFactory has **foundational architecture** for Claude CLI integration and token
 
 ### Current Implementation
 
-#### ClaudeDesktopCliAdapter (Infrastructure/Agents/Adapters/ClaudeDesktopCliAdapter.cs)
+#### ClaudeCodeCliAdapter (Infrastructure/Agents/Adapters/ClaudeCodeCliAdapter.cs)
 
 **What Exists:**
 - ✅ Adapter interface (`ICliAgent`) for CLI-based agents
@@ -90,7 +90,7 @@ var cliResponse = await _cliAgent.ExecuteWithProjectContextAsync(
 
 ### Configuration Issues
 
-**ClaudeDesktopCliOptions** (Configuration/ClaudeDesktopCliOptions.cs):
+**ClaudeCodeCliOptions** (Configuration/ClaudeCodeCliOptions.cs):
 ```csharp
 public string ExecutablePath { get; set; } = "claude";  // Assumes CLI in PATH
 public int DefaultTimeoutSeconds { get; set; } = 300;
@@ -577,7 +577,7 @@ public class ApiAuditLog
     "Model": "claude-sonnet-4-5-20250929",
     "MaxTokens": 8000
   },
-  "ClaudeDesktopCli": {
+  "ClaudeCodeCli": {
     "ExecutablePath": "claude",
     "DefaultTimeoutSeconds": 300
   },
@@ -749,7 +749,7 @@ PRFactory has **solid foundational infrastructure** (encryption, token storage, 
 
 ### Key Takeaways
 
-1. **ClaudeDesktopCliAdapter is non-functional** - assumes a CLI that doesn't exist
+1. **ClaudeCodeCliAdapter is non-functional** - assumes a CLI that doesn't exist
 2. **No OAuth implementation** - not a single endpoint or flow implemented
 3. **API endpoints are unauthenticated** - critical security issue
 4. **No developer machine workflow** - only Jira webhooks supported

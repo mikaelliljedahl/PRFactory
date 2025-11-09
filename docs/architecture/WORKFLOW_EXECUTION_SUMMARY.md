@@ -101,7 +101,7 @@ Agents can invoke local CLI tools (Claude Desktop, Codex):
 Worker Service (on server)
   → Agent needs AI analysis
   → ICliAgent abstraction
-    → ClaudeDesktopCliAdapter
+    → ClaudeCodeCliAdapter
       → ProcessExecutor.ExecuteAsync("claude --headless --prompt '...'")
         → Spawns subprocess on local machine
 ```
@@ -168,7 +168,7 @@ PRFactory.Infrastructure/
 │   │   ├── WorkflowOrchestrator.cs      # Coordinator
 │   │   └── AgentExecutor.cs             # Agent resolution & execution
 │   └── Adapters/
-│       └── ClaudeDesktopCliAdapter.cs   # Local CLI wrapper
+│       └── ClaudeCodeCliAdapter.cs   # Local CLI wrapper
 └── Execution/ProcessExecutor.cs         # Safe subprocess execution
 ```
 

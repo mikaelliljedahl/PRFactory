@@ -71,6 +71,8 @@ public class TicketServiceTests
         var mockPlanService = new Mock<IPlanService>();
         var mockTenantContext = new Mock<ITenantContext>();
         var mockTicketRepo = new Mock<ITicketRepository>();
+        var mockPlanReviewService = new Mock<IPlanReviewService>();
+        var mockCurrentUserService = new Mock<ICurrentUserService>();
 
         return new TicketService(
             mockLogger.Object,
@@ -80,6 +82,8 @@ public class TicketServiceTests
             mockEventService.Object,
             mockPlanService.Object,
             mockTenantContext.Object,
-            mockTicketRepo.Object);
+            mockTicketRepo.Object,
+            mockPlanReviewService.Object,
+            mockCurrentUserService.Object);
     }
 }

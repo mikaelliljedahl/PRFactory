@@ -32,11 +32,18 @@
                 </small>
             </div>
 
+            <!-- Help Text -->
+            <div class="alert alert-info mb-3">
+                <i class="bi bi-info-circle"></i>
+                <strong>Review the AI-generated ticket update:</strong> Use the tabs below to preview the changes, make edits, or compare with the original ticket.
+            </div>
+
             <!-- Tabs -->
             <ul class="nav nav-tabs mb-3" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link @(activeTab == "preview" ? "active" : "")"
                             type="button"
+                            title="View the formatted ticket update with all improvements"
                             @onclick='() => activeTab = "preview"'>
                         <i class="bi bi-eye"></i> Preview
                     </button>
@@ -44,6 +51,7 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link @(activeTab == "edit" ? "active" : "")"
                             type="button"
+                            title="Make manual changes to the ticket update before approving"
                             @onclick='() => activeTab = "edit"'>
                         <i class="bi bi-pencil"></i> Edit
                     </button>
@@ -51,8 +59,9 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link @(activeTab == "compare" ? "active" : "")"
                             type="button"
+                            title="See side-by-side comparison of original vs. updated ticket"
                             @onclick='() => activeTab = "compare"'>
-                        <i class="bi bi-arrows-angle-contract"></i> Compare
+                        <i class="bi bi-arrows-angle-contract"></i> View Changes
                     </button>
                 </li>
             </ul>
@@ -160,20 +169,21 @@
             {
                 <div class="action-buttons mt-4 pt-4 border-top">
                     <div class="d-flex gap-2">
-                        <button class="btn btn-success btn-lg" @onclick="HandleApprove" disabled="@isSubmitting">
+                        <button class="btn btn-success btn-lg" @onclick="HandleApprove" disabled="@isSubmitting" title="Approve and post this update to the ticket system">
                             @if (isSubmitting)
                             {
                                 <span class="spinner-border spinner-border-sm me-2" role="status"></span>
                             }
-                            <i class="bi bi-check-circle me-2"></i> Approve Update
+                            <i class="bi bi-check-circle me-2"></i> Approve and Post Update
                         </button>
-                        <button class="btn btn-outline-danger btn-lg" @onclick="ShowRejectForm" disabled="@isSubmitting">
-                            <i class="bi bi-x-circle me-2"></i> Reject Update
+                        <button class="btn btn-outline-danger btn-lg" @onclick="ShowRejectForm" disabled="@isSubmitting" title="Reject this update and provide feedback for regeneration">
+                            <i class="bi bi-x-circle me-2"></i> Reject and Request Changes
                         </button>
                     </div>
-                    <div class="mt-3">
+                    <div class="mt-3 help-guidance">
                         <small class="text-muted">
-                            <strong>Approve</strong> to post the update to the ticket system, or <strong>Reject</strong> to request changes.
+                            <i class="bi bi-lightbulb me-1"></i>
+                            <strong>Approve</strong> to post the update to your ticket system, or <strong>Reject</strong> to provide feedback and regenerate the update.
                         </small>
                     </div>
                 </div>

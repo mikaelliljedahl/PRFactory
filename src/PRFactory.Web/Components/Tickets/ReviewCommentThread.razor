@@ -1,0 +1,109 @@
+@namespace PRFactory.Web.Components.Tickets
+@using PRFactory.Web.UI.Display
+@using PRFactory.Web.Models
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="bi bi-chat-dots me-2"></i>
+            Discussion
+            @if (Comments.Any())
+            {
+                <span class="badge bg-primary ms-2">@Comments.Count</span>
+            }
+        </h5>
+    </div>
+    <div class="card-body">
+        @if (IsLoading)
+        {
+            <div class="text-center py-3">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading comments...</span>
+                </div>
+            </div>
+        }
+        else
+        {
+            @if (!Comments.Any())
+            {
+                <div class="text-center text-muted py-3">
+                    <i class="bi bi-chat-text me-2"></i>
+                    No comments yet. Start the discussion!
+                </div>
+            }
+            else
+            {
+                <div class="comments-list mb-3">
+                    @foreach (var comment in Comments)
+                    {
+                        <div class="comment-item d-flex mb-3 pb-3 border-bottom">
+                            <div class="me-3">
+                                <ReviewerAvatar DisplayName="@comment.AuthorName"
+                                              AvatarUrl="@comment.AuthorAvatarUrl"
+                                              Size="ReviewerAvatar.AvatarSize.Medium" />
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <div>
+                                        <span class="fw-bold">@comment.AuthorName</span>
+                                        <span class="text-muted small ms-2">
+                                            <RelativeTime Timestamp="@comment.CreatedAt" />
+                                        </span>
+                                        @if (comment.UpdatedAt.HasValue)
+                                        {
+                                            <span class="text-muted small ms-1">(edited)</span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="comment-content">
+                                    @((MarkupString)FormatMarkdown(comment.Content))
+                                </div>
+                                @if (comment.MentionedUserIds.Any())
+                                {
+                                    <div class="mt-2">
+                                        <small class="text-muted">
+                                            <i class="bi bi-at me-1"></i>
+                                            Mentioned @comment.MentionedUserIds.Count user(s)
+                                        </small>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+
+            <div class="new-comment-form">
+                <div class="mb-2">
+                    <label class="form-label fw-bold">Add Comment</label>
+                    <textarea class="form-control"
+                              rows="3"
+                              placeholder="Share your thoughts on this plan (Markdown supported)"
+                              @bind="NewCommentContent"
+                              disabled="@IsSubmitting"></textarea>
+                    <div class="form-text">
+                        Use Markdown formatting. Mentions not yet supported in this version.
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary"
+                            @onclick="HandlePostComment"
+                            disabled="@(IsSubmitting || string.IsNullOrWhiteSpace(NewCommentContent))">
+                        @if (IsSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        }
+                        <i class="bi bi-send me-2"></i>
+                        Post Comment
+                    </button>
+                    @if (!string.IsNullOrWhiteSpace(NewCommentContent))
+                    {
+                        <button class="btn btn-secondary" @onclick="ClearComment" disabled="@IsSubmitting">
+                            Clear
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>

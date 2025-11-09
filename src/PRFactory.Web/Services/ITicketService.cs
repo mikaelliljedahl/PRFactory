@@ -92,4 +92,41 @@ public interface ITicketService
     /// Create a new ticket
     /// </summary>
     Task<Ticket> CreateTicketAsync(string ticketKey, string title, string description, Guid repositoryId, CancellationToken ct = default);
+
+    // Team Review methods
+
+    /// <summary>
+    /// Get all reviewers assigned to a ticket's plan
+    /// </summary>
+    Task<List<ReviewerDto>> GetReviewersAsync(Guid ticketId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Assign reviewers to a ticket's plan
+    /// </summary>
+    Task AssignReviewersAsync(Guid ticketId, List<Guid> requiredReviewerIds, List<Guid>? optionalReviewerIds = null, CancellationToken ct = default);
+
+    /// <summary>
+    /// Approve a plan review (team review feature)
+    /// </summary>
+    Task ApproveReviewAsync(Guid ticketId, Guid reviewerId, string? decision = null, CancellationToken ct = default);
+
+    /// <summary>
+    /// Reject a plan review (team review feature)
+    /// </summary>
+    Task RejectReviewAsync(Guid ticketId, Guid reviewerId, string reason, bool regenerateCompletely, CancellationToken ct = default);
+
+    /// <summary>
+    /// Get all comments for a ticket's plan review discussion
+    /// </summary>
+    Task<List<ReviewCommentDto>> GetCommentsAsync(Guid ticketId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Add a comment to a ticket's plan review discussion
+    /// </summary>
+    Task<ReviewCommentDto> AddCommentAsync(Guid ticketId, string content, List<Guid>? mentionedUserIds = null, CancellationToken ct = default);
+
+    /// <summary>
+    /// Check if a ticket has sufficient approvals to proceed
+    /// </summary>
+    Task<bool> HasSufficientApprovalsAsync(Guid ticketId, CancellationToken ct = default);
 }

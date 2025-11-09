@@ -48,13 +48,13 @@ public class StubCurrentUserService : ICurrentUserService
         }
 
         // Try to get existing default user
-        var user = await _userRepository.GetByEmailAsync(DefaultUserEmail, tenant.Id, cancellationToken);
+        var user = await _userRepository.GetByEmailAsync(tenant.Id, DefaultUserEmail, cancellationToken);
 
         // Create default user if it doesn't exist
         if (user == null)
         {
             user = new User(tenant.Id, DefaultUserEmail, DefaultUserDisplayName);
-            await _userRepository.CreateAsync(user, cancellationToken);
+            await _userRepository.AddAsync(user, cancellationToken);
             _logger.LogInformation("Created stub user {UserId} for tenant {TenantId}", user.Id, tenant.Id);
         }
 

@@ -1264,6 +1264,72 @@ var repo = new Repository
 - Changing tenant isolation model
 - Altering credential encryption
 
+#### When Writing Documentation
+
+**Documentation Best Practices:**
+
+All documentation in the `/docs` directory and root-level `.md` files should be written for **newcomers and future developers**, not for tracking specific work sessions.
+
+**DO**:
+- Write documentation that explains **what exists today** and **why it was designed this way**
+- Focus on concepts, architecture, and current implementation status
+- Use present tense ("The system uses X" not "We built X in session Y")
+- Include code examples, diagrams, and references to actual file paths
+- Update documentation to reflect the current state of the codebase
+- Archive session-specific implementation notes to `/docs/archive/` after extracting lessons learned
+
+**DON'T**:
+- Reference specific Claude sessions, branch names, or temporary identifiers in permanent documentation
+- Use past tense descriptions of "what was built when" (save for changelog/release notes)
+- Include phrases like "Completed: November 8, 2025" or "Branch: claude/xyz-session-123" in core documentation
+- Write documentation as a "work log" or "session summary" - these belong in `/docs/archive/`
+- Say "we decided", "we implemented", "in this session" - focus on **what** exists, not **when/how** it was built
+
+**Documentation Categories**:
+
+1. **Core Documentation** (`/docs/*.md`, `README.md`, `CLAUDE.md`)
+   - Timeless reference material
+   - Architecture explanations
+   - Current implementation status
+   - Setup and usage guides
+   - No session-specific information
+
+2. **Archive** (`/docs/archive/*.md`)
+   - Session-specific implementation summaries
+   - Original proposals and plans
+   - Historical architectural decisions
+   - Can include dates, session IDs, branches
+   - Useful for understanding project evolution
+
+**Example - BAD (Session-specific)**:
+```markdown
+# Ticket Refinement Implementation Summary
+**Completed**: November 8, 2025
+**Branch**: claude/refine-ticket-011CUv4WmefRiccxDkptydD9
+**Commit**: 606b388
+
+In this session, we implemented the ticket refinement workflow...
+```
+
+**Example - GOOD (Timeless reference)**:
+```markdown
+# Ticket Refinement Workflow
+
+The ticket refinement workflow provides AI-powered analysis and
+improvement of ticket descriptions using the RefinementGraph.
+
+## Architecture
+
+The system uses three specialized agents:
+1. TicketUpdateGenerationAgent - Generates refined tickets
+2. TicketUpdatePostAgent - Posts updates to ticket systems
+3. TicketUpdatePreview component - Web UI for review
+
+[See file paths, code examples, architecture diagrams...]
+```
+
+**When in doubt**: Ask yourself "Will a developer in 6 months care about which session this was built in?" If no, don't include session-specific details in permanent documentation.
+
 ---
 
 ## Quick Reference

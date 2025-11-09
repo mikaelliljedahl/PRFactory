@@ -317,6 +317,65 @@ public partial class TicketHeader
 - **Licensing**: Some libraries have restrictive licenses
 - **Performance**: Component libraries can conflict and slow rendering
 
+#### NO JavaScript - Blazor Server Only
+
+**CRITICAL: This is a Blazor Server application. NEVER add custom JavaScript files.**
+
+**❌ FORBIDDEN:**
+- Creating custom JavaScript files in `/wwwroot/js/`
+- Adding `<script>` tags with custom JavaScript
+- Using JavaScript interop (`IJSRuntime`) for functionality that Blazor can handle natively
+- Bootstrap JavaScript (conflicts with Blazor event handling)
+- jQuery or any JavaScript framework
+
+**✅ ALLOWED (rare exceptions only):**
+- Minimal JavaScript interop for browser APIs that Blazor doesn't expose
+- Third-party component libraries' bundled JavaScript (Radzen, etc.)
+- **Always get approval before adding any JavaScript**
+
+**Why NO JavaScript:**
+- **Blazor Server renders on the server** - JavaScript defeats the purpose
+- **SignalR handles all interactivity** - No need for client-side code
+- **Complexity**: Maintaining separate JavaScript and C# code paths
+- **Debugging**: JavaScript errors harder to catch than C# compilation errors
+- **Type Safety**: JavaScript breaks C#'s type safety guarantees
+- **Performance**: SignalR roundtrips are optimized, JavaScript interop adds overhead
+
+**Examples of what to use instead:**
+
+| ❌ DON'T use JavaScript for: | ✅ DO use Blazor for: |
+|------------------------------|----------------------|
+| File downloads | `NavigationManager` with data URIs or stream downloads |
+| Form validation | Blazor `<EditForm>` with `DataAnnotations` |
+| DOM manipulation | Blazor component re-rendering |
+| AJAX calls | `HttpClient` in C# with `@inject` |
+| Event handling | Blazor `@onclick`, `@onchange`, etc. |
+| Animations | CSS transitions/animations |
+| Modals/dialogs | Radzen `DialogService` or Blazor component state |
+| Clipboard | Blazor `IJSRuntime` only if no C# alternative exists |
+
+**File Download Pattern (NO JavaScript):**
+```csharp
+// CORRECT: Pure Blazor approach for downloads
+public async Task DownloadCsvAsync()
+{
+    var csvData = GenerateCsvData();
+    var fileName = $"export-{DateTime.Now:yyyyMMdd}.csv";
+
+    // Use NavigationManager for simple downloads
+    NavigationManager.NavigateTo($"data:text/csv;charset=utf-8,{Uri.EscapeDataString(csvData)}", true);
+
+    // OR use a file stream endpoint for larger files
+    NavigationManager.NavigateTo($"/api/export/csv/{fileId}", true);
+}
+```
+
+**If you absolutely need JavaScript (get approval first):**
+1. Document why Blazor cannot handle it
+2. Keep it minimal (< 10 lines)
+3. Isolate in component-specific interop
+4. Never create separate `.js` files
+
 #### Component Design Principles
 
 **Pure UI Components (`/UI/*`):**

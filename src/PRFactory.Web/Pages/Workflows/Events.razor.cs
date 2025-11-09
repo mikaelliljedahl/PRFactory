@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 using PRFactory.Web.Models;
 using PRFactory.Web.Services;
 using System.Timers;
@@ -40,9 +39,6 @@ public partial class Events : IDisposable
 
     [Inject]
     private ILogger<Events> Logger { get; set; } = null!;
-
-    [Inject]
-    private IJSRuntime JSRuntime { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -229,7 +225,7 @@ public partial class Events : IDisposable
                 dateRange?.Start,
                 dateRange?.End);
 
-            await DownloadFile("workflow-events.csv", "text/csv", csvData);
+            DownloadFile("workflow-events.csv", "text/csv", csvData);
             Logger.LogInformation("Exported events to CSV");
         }
         catch (Exception ex)
@@ -249,7 +245,7 @@ public partial class Events : IDisposable
                 dateRange?.Start,
                 dateRange?.End);
 
-            await DownloadFile("workflow-events.json", "application/json", jsonData);
+            DownloadFile("workflow-events.json", "application/json", jsonData);
             Logger.LogInformation("Exported events to JSON");
         }
         catch (Exception ex)
@@ -259,10 +255,17 @@ public partial class Events : IDisposable
         }
     }
 
-    private async Task DownloadFile(string fileName, string contentType, byte[] data)
+    /// <summary>
+    /// Downloads a file using pure Blazor approach with data URI (no JavaScript required).
+    /// </summary>
+    private void DownloadFile(string fileName, string contentType, byte[] data)
     {
         var base64 = Convert.ToBase64String(data);
-        await JSRuntime.InvokeVoidAsync("downloadFile", fileName, contentType, base64);
+        var dataUri = $"data:{contentType};base64,{base64}";
+
+        // Use NavigationManager to trigger download (Blazor-native approach)
+        // The 'true' parameter forces the browser to download rather than navigate
+        NavigationManager.NavigateTo(dataUri, forceLoad: true);
     }
 
     private string GetSeverityBadgeClass(EventSeverity severity)

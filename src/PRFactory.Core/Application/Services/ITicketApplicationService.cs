@@ -53,9 +53,19 @@ public interface ITicketApplicationService
     /// </summary>
     /// <param name="ticketId">The ticket ID</param>
     /// <param name="rejectionReason">Reason for rejection</param>
+    /// <param name="regenerateCompletely">If true, regenerate the plan from scratch; if false, refine the existing plan</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <exception cref="InvalidOperationException">Thrown if ticket not found or plan cannot be rejected</exception>
-    Task RejectPlanAsync(Guid ticketId, string rejectionReason, CancellationToken cancellationToken = default);
+    Task RejectPlanAsync(Guid ticketId, string rejectionReason, bool regenerateCompletely = false, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Refines a plan for a ticket with specific instructions
+    /// </summary>
+    /// <param name="ticketId">The ticket ID</param>
+    /// <param name="refinementInstructions">Specific instructions for refining the plan</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <exception cref="InvalidOperationException">Thrown if ticket not found or plan cannot be refined</exception>
+    Task RefinePlanAsync(Guid ticketId, string refinementInstructions, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Submits answers to refinement questions for a ticket

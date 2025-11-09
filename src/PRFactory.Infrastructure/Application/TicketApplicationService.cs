@@ -137,9 +137,10 @@ public class TicketApplicationService : ITicketApplicationService
     }
 
     /// <inheritdoc/>
-    public async Task RejectPlanAsync(Guid ticketId, string rejectionReason, CancellationToken cancellationToken = default)
+    public async Task RejectPlanAsync(Guid ticketId, string rejectionReason, bool regenerateCompletely = false, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Rejecting plan for ticket {TicketId}, Reason={Reason}", ticketId, rejectionReason);
+        var action = regenerateCompletely ? "Rejecting and regenerating" : "Rejecting";
+        _logger.LogInformation("{Action} plan for ticket {TicketId}, Reason={Reason}", action, ticketId, rejectionReason);
 
         var ticket = await _ticketRepository.GetByIdAsync(ticketId, cancellationToken);
         if (ticket == null)
@@ -161,12 +162,50 @@ public class TicketApplicationService : ITicketApplicationService
         // Resume workflow with rejection message
         var rejectionMessage = new PlanRejectedMessage(
             TicketId: ticket.Id,
-            Reason: rejectionReason
+            Reason: rejectionReason,
+            RefinementInstructions: null,
+            RegenerateCompletely: regenerateCompletely
         );
 
         await _workflowOrchestrator.ResumeWorkflowAsync(ticket.Id, rejectionMessage, cancellationToken);
 
-        _logger.LogInformation("Plan rejected for ticket {TicketKey}, will regenerate", ticket.TicketKey);
+        var actionComplete = regenerateCompletely ? "rejected and will regenerate" : "rejected";
+        _logger.LogInformation("Plan {ActionComplete} for ticket {TicketKey}", actionComplete, ticket.TicketKey);
+    }
+
+    /// <inheritdoc/>
+    public async Task RefinePlanAsync(Guid ticketId, string refinementInstructions, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Refining plan for ticket {TicketId} with instructions", ticketId);
+
+        var ticket = await _ticketRepository.GetByIdAsync(ticketId, cancellationToken);
+        if (ticket == null)
+        {
+            throw new InvalidOperationException($"Ticket {ticketId} not found");
+        }
+
+        // Verify ticket is in correct state for plan refinement
+        if (ticket.State != WorkflowState.PlanUnderReview)
+        {
+            throw new InvalidOperationException(
+                $"Ticket {ticket.TicketKey} is not awaiting plan approval. Current state: {ticket.State}");
+        }
+
+        // Update ticket state
+        ticket.TransitionTo(WorkflowState.PlanRejected);
+        await _ticketRepository.UpdateAsync(ticket, cancellationToken);
+
+        // Resume workflow with refinement message
+        var refinementMessage = new PlanRejectedMessage(
+            TicketId: ticket.Id,
+            Reason: "Plan refinement requested",
+            RefinementInstructions: refinementInstructions,
+            RegenerateCompletely: false
+        );
+
+        await _workflowOrchestrator.ResumeWorkflowAsync(ticket.Id, refinementMessage, cancellationToken);
+
+        _logger.LogInformation("Plan refinement requested for ticket {TicketKey}", ticket.TicketKey);
     }
 
     /// <inheritdoc/>

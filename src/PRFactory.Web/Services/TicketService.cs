@@ -98,17 +98,33 @@ public class TicketService : ITicketService
         }
     }
 
-    public async Task RejectPlanAsync(Guid ticketId, string rejectionReason, CancellationToken ct = default)
+    public async Task RejectPlanAsync(Guid ticketId, string rejectionReason, bool regenerateCompletely = false, CancellationToken ct = default)
     {
         try
         {
             // Use application service directly (Blazor Server architecture)
-            await _ticketApplicationService.RejectPlanAsync(ticketId, rejectionReason, ct);
-            _logger.LogInformation("Rejected plan for ticket {TicketId}", ticketId);
+            await _ticketApplicationService.RejectPlanAsync(ticketId, rejectionReason, regenerateCompletely, ct);
+            var action = regenerateCompletely ? "Rejected and regenerating" : "Rejected";
+            _logger.LogInformation("{Action} plan for ticket {TicketId}", action, ticketId);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error rejecting plan for ticket {TicketId}", ticketId);
+            throw;
+        }
+    }
+
+    public async Task RefinePlanAsync(Guid ticketId, string refinementInstructions, CancellationToken ct = default)
+    {
+        try
+        {
+            // Use application service directly (Blazor Server architecture)
+            await _ticketApplicationService.RefinePlanAsync(ticketId, refinementInstructions, ct);
+            _logger.LogInformation("Refining plan for ticket {TicketId} with instructions", ticketId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error refining plan for ticket {TicketId}", ticketId);
             throw;
         }
     }

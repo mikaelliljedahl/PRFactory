@@ -34,9 +34,14 @@ public interface ITicketService
     Task ApprovePlanAsync(Guid ticketId, string? comments = null, CancellationToken ct = default);
 
     /// <summary>
-    /// Reject a plan
+    /// Reject a plan and optionally regenerate it completely
     /// </summary>
-    Task RejectPlanAsync(Guid ticketId, string rejectionReason, CancellationToken ct = default);
+    Task RejectPlanAsync(Guid ticketId, string rejectionReason, bool regenerateCompletely = false, CancellationToken ct = default);
+
+    /// <summary>
+    /// Refine a plan with specific instructions
+    /// </summary>
+    Task RefinePlanAsync(Guid ticketId, string refinementInstructions, CancellationToken ct = default);
 
     /// <summary>
     /// Submit answers to refinement questions

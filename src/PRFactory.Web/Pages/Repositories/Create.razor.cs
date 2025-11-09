@@ -26,6 +26,9 @@ public partial class Create
     [Inject]
     private DialogService DialogService { get; set; } = null!;
 
+    [Inject]
+    private IToastService ToastService { get; set; } = null!;
+
     protected override async Task OnInitializedAsync()
     {
         await LoadTenantsAsync();
@@ -48,6 +51,7 @@ public partial class Create
         {
             Logger.LogError(ex, "Error loading tenants");
             errorMessage = "Failed to load tenants. Please refresh the page.";
+            ToastService.ShowError("Failed to load tenants. Please refresh the page.");
         }
     }
 
@@ -82,6 +86,7 @@ public partial class Create
         if (!connectionTested)
         {
             errorMessage = "Please test the connection before creating the repository.";
+            ToastService.ShowWarning("Please test the connection before creating the repository.");
             return;
         }
 
@@ -97,12 +102,16 @@ public partial class Create
 
             Logger.LogInformation("Repository created successfully: {RepositoryId}", created.Id);
 
+            // Show success toast
+            ToastService.ShowSuccess($"Repository '{created.Name}' created successfully!");
+
             NavigationManager.NavigateTo($"/repositories/{created.Id}");
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error creating repository");
             errorMessage = $"Failed to create repository: {ex.Message}";
+            ToastService.ShowError($"Failed to create repository: {ex.Message}");
         }
         finally
         {

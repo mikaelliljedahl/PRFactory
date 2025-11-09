@@ -1,5 +1,6 @@
 @using PRFactory.Web.Models
 @inject ITicketService TicketService
+@inject IToastService ToastService
 
 <div class="card mb-3">
     <div class="card-header bg-primary text-white">
@@ -43,6 +44,16 @@
             <div class="plan-actions-container">
                 <h5 class="mb-3">Review Actions</h5>
 
+                <!-- Help Section -->
+                <div class="alert alert-light border mb-3">
+                    <h6 class="mb-2"><i class="bi bi-info-circle me-2"></i>What do these actions do?</h6>
+                    <ul class="mb-0 small">
+                        <li><strong>Approve:</strong> The plan is good. Proceed to implementation (auto or manual based on your settings).</li>
+                        <li><strong>Refine:</strong> The plan is mostly good but needs specific improvements. Provide instructions to adjust it while keeping its structure.</li>
+                        <li><strong>Reject & Regenerate:</strong> The plan misses the mark entirely. Start over from scratch with your feedback.</li>
+                    </ul>
+                </div>
+
                 @if (showRefineForm)
                 {
                     <div class="refine-form-container">
@@ -50,6 +61,30 @@
                             <i class="bi bi-info-circle"></i>
                             <strong>Refine Plan:</strong> Provide specific instructions to improve the plan while keeping its overall structure.
                         </div>
+
+                        <!-- Examples Section -->
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="@(() => showExamples = !showExamples)">
+                                <i class="bi bi-@(showExamples ? "chevron-down" : "chevron-right") me-1"></i>
+                                @(showExamples ? "Hide" : "Show") Examples
+                            </button>
+                        </div>
+
+                        @if (showExamples)
+                        {
+                            <div class="examples-box mb-3">
+                                <h6 class="mb-2">Example Refinement Instructions:</h6>
+                                <ul class="small mb-0">
+                                    <li>"Add database migration steps to the implementation plan"</li>
+                                    <li>"Use dependency injection instead of static classes for the service layer"</li>
+                                    <li>"Include integration tests for the API endpoints"</li>
+                                    <li>"Add error handling for network failures in the data sync logic"</li>
+                                    <li>"Include TypeScript type definitions for the frontend models"</li>
+                                    <li>"Add logging statements for debugging the workflow transitions"</li>
+                                </ul>
+                            </div>
+                        }
+
                         <div class="mb-3">
                             <label for="refinementInstructions" class="form-label">
                                 <strong>Refinement Instructions</strong> <span class="text-danger">*</span>
@@ -58,7 +93,7 @@
                                     class="form-control @(showRefineError ? "is-invalid" : "")"
                                     rows="5"
                                     @bind="refinementInstructions"
-                                    placeholder="Example: Add database migration steps, use dependency injection instead of static classes, include integration tests..."
+                                    placeholder="Be specific about what changes you want. For example: 'Add database migration steps', 'Use dependency injection for services', 'Include integration tests'..."
                                     disabled="@isSubmitting"></textarea>
                             @if (showRefineError)
                             {
@@ -123,28 +158,20 @@
                 }
                 else
                 {
-                    <div class="d-flex gap-2 mb-3">
-                        <button class="btn btn-success btn-lg" @onclick="HandleApprove" disabled="@isSubmitting">
+                    <div class="d-flex gap-2 mb-3 flex-wrap">
+                        <button class="btn btn-success btn-lg" @onclick="HandleApprove" disabled="@isSubmitting" title="Approve this plan and proceed to implementation">
                             @if (isSubmitting)
                             {
                                 <span class="spinner-border spinner-border-sm me-2" role="status"></span>
                             }
                             <i class="bi bi-check-circle me-2"></i> Approve Plan
                         </button>
-                        <button class="btn btn-primary btn-lg" @onclick="ShowRefineForm" disabled="@isSubmitting">
-                            <i class="bi bi-arrow-repeat me-2"></i> Refine Plan
+                        <button class="btn btn-primary btn-lg" @onclick="ShowRefineForm" disabled="@isSubmitting" title="Request specific changes to improve the plan">
+                            <i class="bi bi-arrow-repeat me-2"></i> Request Refinements
                         </button>
-                        <button class="btn btn-outline-danger btn-lg" @onclick="ShowRejectForm" disabled="@isSubmitting">
+                        <button class="btn btn-outline-danger btn-lg" @onclick="ShowRejectForm" disabled="@isSubmitting" title="Reject this plan and start over with new feedback">
                             <i class="bi bi-x-circle me-2"></i> Reject & Regenerate
                         </button>
-                    </div>
-
-                    <div class="help-text">
-                        <small class="text-muted">
-                            <strong>Approve</strong> to proceed with implementation,
-                            <strong>Refine</strong> to improve the plan with specific instructions, or
-                            <strong>Reject</strong> to regenerate the plan from scratch.
-                        </small>
                     </div>
                 }
             </div>
@@ -181,6 +208,7 @@
     private bool isSubmitting;
     private bool showRefineError;
     private bool showRejectError;
+    private bool showExamples;
     private string refinementInstructions = string.Empty;
     private string rejectionReason = string.Empty;
     private string? errorMessage;
@@ -195,12 +223,15 @@
 
             await TicketService.ApprovePlanAsync(Ticket.Id);
 
+            ToastService.ShowSuccess("Implementation plan approved successfully! Implementation will begin shortly.");
+
             // Notify parent component
             await OnPlanApproved.InvokeAsync();
         }
         catch (Exception ex)
         {
             errorMessage = $"Error approving plan: {ex.Message}";
+            ToastService.ShowError($"Failed to approve plan: {ex.Message}");
         }
         finally
         {
@@ -243,6 +274,8 @@
 
             await TicketService.RefinePlanAsync(Ticket.Id, refinementInstructions);
 
+            ToastService.ShowInfo("Refinement instructions submitted. The plan will be updated based on your feedback.");
+
             // Notify parent component
             await OnPlanRejected.InvokeAsync();
 
@@ -253,6 +286,7 @@
         catch (Exception ex)
         {
             errorMessage = $"Error refining plan: {ex.Message}";
+            ToastService.ShowError($"Failed to submit refinement: {ex.Message}");
         }
         finally
         {
@@ -295,6 +329,8 @@
 
             await TicketService.RejectPlanAsync(Ticket.Id, rejectionReason, regenerateCompletely: true);
 
+            ToastService.ShowInfo("Plan rejected. A completely new plan will be generated from scratch based on your feedback.");
+
             // Notify parent component
             await OnPlanRejected.InvokeAsync();
 
@@ -305,6 +341,7 @@
         catch (Exception ex)
         {
             errorMessage = $"Error rejecting plan: {ex.Message}";
+            ToastService.ShowError($"Failed to reject plan: {ex.Message}");
         }
         finally
         {
@@ -340,6 +377,13 @@
     .help-text {
         padding: 0.75rem;
         background-color: #f8f9fa;
+        border-radius: 0.375rem;
+    }
+
+    .examples-box {
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
         border-radius: 0.375rem;
     }
 </style>

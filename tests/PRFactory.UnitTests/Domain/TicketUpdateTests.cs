@@ -1,3 +1,7 @@
+using PRFactory.Domain.Entities;
+using PRFactory.Domain.ValueObjects;
+using Xunit;
+
 namespace PRFactory.UnitTests.Domain;
 
 /// <summary>
@@ -14,7 +18,7 @@ public class TicketUpdateTests
         var description = "Updated Description";
         var successCriteria = new List<SuccessCriterion>
         {
-            new SuccessCriterion("Feature works correctly", SuccessCriterionCategory.Functional, 0, true)
+            new SuccessCriterion(SuccessCriterionCategory.Functional, "Feature works correctly", 0, true)
         };
         var acceptanceCriteria = "- Test passes\n- Code reviewed";
 
@@ -41,7 +45,7 @@ public class TicketUpdateTests
         // Arrange
         var successCriteria = new List<SuccessCriterion>
         {
-            new SuccessCriterion("Test", SuccessCriterionCategory.Functional, 0, true)
+            new SuccessCriterion(SuccessCriterionCategory.Functional, "Test", 0, true)
         };
 
         // Act & Assert
@@ -55,7 +59,7 @@ public class TicketUpdateTests
         // Arrange
         var successCriteria = new List<SuccessCriterion>
         {
-            new SuccessCriterion("Test", SuccessCriterionCategory.Functional, 0, true)
+            new SuccessCriterion(SuccessCriterionCategory.Functional, "Test", 0, true)
         };
 
         // Act & Assert
@@ -211,7 +215,7 @@ public class TicketUpdateTests
         var newDescription = "New Description";
         var newSuccessCriteria = new List<SuccessCriterion>
         {
-            new SuccessCriterion("New criterion", SuccessCriterionCategory.Performance, 1, false)
+            new SuccessCriterion(SuccessCriterionCategory.Performance, "New criterion", 1, false)
         };
         var newAcceptanceCriteria = "New AC";
 
@@ -249,9 +253,9 @@ public class TicketUpdateTests
         // Arrange
         var successCriteria = new List<SuccessCriterion>
         {
-            new SuccessCriterion("Functional test", SuccessCriterionCategory.Functional, 0, true),
-            new SuccessCriterion("Performance test", SuccessCriterionCategory.Performance, 1, true),
-            new SuccessCriterion("Another functional", SuccessCriterionCategory.Functional, 0, false)
+            new SuccessCriterion(SuccessCriterionCategory.Functional, "Functional test", 0, true),
+            new SuccessCriterion(SuccessCriterionCategory.Performance, "Performance test", 1, true),
+            new SuccessCriterion(SuccessCriterionCategory.Functional, "Another functional", 0, false)
         };
         var ticketUpdate = TicketUpdate.Create(
             Guid.NewGuid(), "Title", "Desc", successCriteria, "AC");
@@ -271,9 +275,9 @@ public class TicketUpdateTests
         // Arrange
         var successCriteria = new List<SuccessCriterion>
         {
-            new SuccessCriterion("Must have", SuccessCriterionCategory.Functional, 0, true),
-            new SuccessCriterion("Should have", SuccessCriterionCategory.Functional, 1, true),
-            new SuccessCriterion("Nice to have", SuccessCriterionCategory.Functional, 2, false)
+            new SuccessCriterion(SuccessCriterionCategory.Functional, "Must have", 0, true),
+            new SuccessCriterion(SuccessCriterionCategory.Functional, "Should have", 1, true),
+            new SuccessCriterion(SuccessCriterionCategory.Functional, "Nice to have", 2, false)
         };
         var ticketUpdate = TicketUpdate.Create(
             Guid.NewGuid(), "Title", "Desc", successCriteria, "AC");
@@ -292,9 +296,9 @@ public class TicketUpdateTests
         // Arrange
         var successCriteria = new List<SuccessCriterion>
         {
-            new SuccessCriterion("Must have", SuccessCriterionCategory.Functional, 0, true),
-            new SuccessCriterion("Should have", SuccessCriterionCategory.Functional, 1, true),
-            new SuccessCriterion("Nice to have", SuccessCriterionCategory.Functional, 2, false)
+            new SuccessCriterion(SuccessCriterionCategory.Functional, "Must have", 0, true),
+            new SuccessCriterion(SuccessCriterionCategory.Functional, "Should have", 1, true),
+            new SuccessCriterion(SuccessCriterionCategory.Functional, "Nice to have", 2, false)
         };
         var ticketUpdate = TicketUpdate.Create(
             Guid.NewGuid(), "Title", "Desc", successCriteria, "AC");
@@ -313,9 +317,9 @@ public class TicketUpdateTests
         // Arrange
         var successCriteria = new List<SuccessCriterion>
         {
-            new SuccessCriterion("Must have", SuccessCriterionCategory.Functional, 0, true),
-            new SuccessCriterion("Should have", SuccessCriterionCategory.Functional, 1, true),
-            new SuccessCriterion("Nice to have", SuccessCriterionCategory.Functional, 2, false)
+            new SuccessCriterion(SuccessCriterionCategory.Functional, "Must have", 0, true),
+            new SuccessCriterion(SuccessCriterionCategory.Functional, "Should have", 1, true),
+            new SuccessCriterion(SuccessCriterionCategory.Functional, "Nice to have", 2, false)
         };
         var ticketUpdate = TicketUpdate.Create(
             Guid.NewGuid(), "Title", "Desc", successCriteria, "AC");
@@ -334,9 +338,9 @@ public class TicketUpdateTests
         // Arrange
         var successCriteria = new List<SuccessCriterion>
         {
-            new SuccessCriterion("Testable", SuccessCriterionCategory.Functional, 0, true),
-            new SuccessCriterion("Not testable", SuccessCriterionCategory.Functional, 0, false),
-            new SuccessCriterion("Also testable", SuccessCriterionCategory.Performance, 1, true)
+            new SuccessCriterion(SuccessCriterionCategory.Functional, "Testable", 0, true),
+            new SuccessCriterion(SuccessCriterionCategory.Functional, "Not testable", 0, false),
+            new SuccessCriterion(SuccessCriterionCategory.Performance, "Also testable", 1, true)
         };
         var ticketUpdate = TicketUpdate.Create(
             Guid.NewGuid(), "Title", "Desc", successCriteria, "AC");
@@ -396,7 +400,7 @@ public class TicketUpdateTests
     {
         var successCriteria = new List<SuccessCriterion>
         {
-            new SuccessCriterion("Feature works", SuccessCriterionCategory.Functional, 0, true)
+            new SuccessCriterion(SuccessCriterionCategory.Functional, "Feature works", 0, true)
         };
 
         return TicketUpdate.Create(

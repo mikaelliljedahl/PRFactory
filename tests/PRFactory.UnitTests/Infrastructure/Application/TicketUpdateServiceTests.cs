@@ -1,7 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Moq;
+using Xunit;
 using PRFactory.Core.Application.Services;
+using PRFactory.Domain.Entities;
 using PRFactory.Domain.Interfaces;
+using PRFactory.Domain.ValueObjects;
 using PRFactory.Infrastructure.Application;
 using PRFactory.Infrastructure.Persistence;
 using PRFactory.Infrastructure.Persistence.Encryption;
@@ -348,7 +352,7 @@ public class TicketUpdateServiceTests : IDisposable
     {
         var successCriteria = new List<SuccessCriterion>
         {
-            new SuccessCriterion("Feature works", SuccessCriterionCategory.Functional, 0, true)
+            new SuccessCriterion(SuccessCriterionCategory.Functional, "Feature works", 0, true)
         };
 
         var ticketUpdate = TicketUpdate.Create(

@@ -1,3 +1,7 @@
+using PRFactory.Domain.Entities;
+using PRFactory.Domain.ValueObjects;
+using Xunit;
+
 namespace PRFactory.UnitTests.Domain;
 
 /// <summary>

@@ -11,13 +11,15 @@ public class CreateTenantRequest : ITenantRequest
     [StringLength(100, MinimumLength = 3, ErrorMessage = "Name must be between 3 and 100 characters")]
     public string Name { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Jira URL is required")]
+    [Required(ErrorMessage = "Ticket platform URL is required")]
     [Url(ErrorMessage = "Please enter a valid URL")]
-    public string JiraUrl { get; set; } = string.Empty;
+    public string TicketPlatformUrl { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Jira API Token is required")]
+    [Required(ErrorMessage = "Ticket platform API Token is required")]
     [StringLength(500, MinimumLength = 10, ErrorMessage = "API token appears to be invalid")]
-    public string? JiraApiToken { get; set; }
+    public string? TicketPlatformApiToken { get; set; }
+
+    public string TicketPlatform { get; set; } = "Jira";
 
     [Required(ErrorMessage = "Claude API Key is required")]
     [StringLength(500, MinimumLength = 10, ErrorMessage = "API key appears to be invalid")]

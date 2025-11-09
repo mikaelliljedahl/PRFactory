@@ -135,7 +135,8 @@ public partial class TenantConfigEditor
             {
                 Id = TenantId,
                 Name = tenant.Name,
-                JiraUrl = tenant.JiraUrl,
+                TicketPlatformUrl = tenant.TicketPlatformUrl,
+                TicketPlatform = tenant.TicketPlatform,
                 IsActive = tenant.IsActive,
                 AutoImplementAfterPlanApproval = config.AutoImplementAfterPlanApproval,
                 MaxRetries = config.MaxRetries,

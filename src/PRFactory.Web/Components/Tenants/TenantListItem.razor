@@ -20,9 +20,10 @@
 
                 <p class="card-text text-muted mb-2">
                     <i class="bi bi-link-45deg"></i>
-                    <a href="@Tenant.JiraUrl" target="_blank" rel="noopener noreferrer">
-                        @Tenant.JiraUrl
+                    <a href="@Tenant.TicketPlatformUrl" target="_blank" rel="noopener noreferrer">
+                        @Tenant.TicketPlatformUrl
                     </a>
+                    <span class="badge bg-secondary ms-2">@Tenant.TicketPlatform</span>
                 </p>
 
                 <div class="row g-2 mb-3">
@@ -56,10 +57,10 @@
                             <i class="bi bi-code-slash"></i> Code review
                         </span>
                     }
-                    @if (Tenant.HasJiraApiToken)
+                    @if (Tenant.HasTicketPlatformApiToken)
                     {
                         <span class="badge bg-success">
-                            <i class="bi bi-check-circle"></i> Jira configured
+                            <i class="bi bi-check-circle"></i> @Tenant.TicketPlatform configured
                         </span>
                     }
                     @if (Tenant.HasClaudeApiKey)

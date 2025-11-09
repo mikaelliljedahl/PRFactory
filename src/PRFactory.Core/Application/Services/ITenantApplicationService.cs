@@ -42,17 +42,19 @@ public interface ITenantApplicationService
     /// Creates a new tenant
     /// </summary>
     /// <param name="name">Tenant name</param>
-    /// <param name="jiraUrl">Jira instance URL</param>
-    /// <param name="jiraApiToken">Jira API token (will be encrypted)</param>
+    /// <param name="ticketPlatformUrl">Ticket platform instance URL (e.g., Jira, Azure DevOps)</param>
+    /// <param name="ticketPlatformApiToken">Ticket platform API token (will be encrypted)</param>
     /// <param name="claudeApiKey">Claude API key (will be encrypted)</param>
+    /// <param name="ticketPlatform">Ticket platform type (e.g., "Jira", "AzureDevOps"). Defaults to "Jira"</param>
     /// <param name="configuration">Optional tenant configuration</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Created tenant</returns>
     Task<Tenant> CreateTenantAsync(
         string name,
-        string jiraUrl,
-        string jiraApiToken,
+        string ticketPlatformUrl,
+        string ticketPlatformApiToken,
         string claudeApiKey,
+        string ticketPlatform = "Jira",
         TenantConfiguration? configuration = null,
         CancellationToken ct = default);
 
@@ -62,9 +64,10 @@ public interface ITenantApplicationService
     Task<Tenant> UpdateTenantAsync(
         Guid id,
         string name,
-        string jiraUrl,
-        string? jiraApiToken = null,
+        string ticketPlatformUrl,
+        string? ticketPlatformApiToken = null,
         string? claudeApiKey = null,
+        string? ticketPlatform = null,
         TenantConfiguration? configuration = null,
         CancellationToken ct = default);
 

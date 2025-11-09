@@ -91,7 +91,8 @@ public partial class Index
             var search = searchTerm.ToLower();
             filteredTenants = filteredTenants
                 .Where(t => t.Name.ToLower().Contains(search) ||
-                           t.JiraUrl.ToLower().Contains(search))
+                           t.TicketPlatformUrl.ToLower().Contains(search) ||
+                           t.TicketPlatform.ToLower().Contains(search))
                 .ToList();
         }
     }

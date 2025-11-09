@@ -1,3 +1,5 @@
+using System;
+
 namespace PRFactory.Web.Models;
 
 /// <summary>
@@ -7,7 +9,8 @@ public class TenantDto
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
-    public string JiraUrl { get; set; } = string.Empty;
+    public string TicketPlatformUrl { get; set; } = string.Empty;
+    public string TicketPlatform { get; set; } = "Jira";
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
@@ -24,6 +27,6 @@ public class TenantDto
     public int TicketCount { get; set; }
 
     // Credentials - masked for display
-    public bool HasJiraApiToken { get; set; }
+    public bool HasTicketPlatformApiToken { get; set; }
     public bool HasClaudeApiKey { get; set; }
 }

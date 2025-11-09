@@ -60,13 +60,14 @@ public class TenantApplicationService : ITenantApplicationService
 
     public async Task<Tenant> CreateTenantAsync(
         string name,
-        string jiraUrl,
-        string jiraApiToken,
+        string ticketPlatformUrl,
+        string ticketPlatformApiToken,
         string claudeApiKey,
+        string ticketPlatform = "Jira",
         TenantConfiguration? configuration = null,
         CancellationToken ct = default)
     {
-        _logger.LogInformation("Creating new tenant: {TenantName}", name);
+        _logger.LogInformation("Creating new tenant: {TenantName} with platform: {Platform}", name, ticketPlatform);
 
         // Check if name is already taken
         var existingTenant = await _tenantRepository.GetByNameAsync(name, ct);
@@ -76,7 +77,7 @@ public class TenantApplicationService : ITenantApplicationService
         }
 
         // Create tenant entity
-        var tenant = Tenant.Create(name, jiraUrl, jiraApiToken, claudeApiKey);
+        var tenant = Tenant.Create(name, ticketPlatformUrl, ticketPlatformApiToken, claudeApiKey, ticketPlatform);
 
         // Update configuration if provided
         if (configuration != null)
@@ -87,8 +88,8 @@ public class TenantApplicationService : ITenantApplicationService
         // Save to database
         var createdTenant = await _tenantRepository.AddAsync(tenant, ct);
 
-        _logger.LogInformation("Successfully created tenant {TenantId} with name {TenantName}",
-            createdTenant.Id, createdTenant.Name);
+        _logger.LogInformation("Successfully created tenant {TenantId} with name {TenantName} and platform {Platform}",
+            createdTenant.Id, createdTenant.Name, createdTenant.TicketPlatform);
 
         return createdTenant;
     }
@@ -96,9 +97,10 @@ public class TenantApplicationService : ITenantApplicationService
     public async Task<Tenant> UpdateTenantAsync(
         Guid id,
         string name,
-        string jiraUrl,
-        string? jiraApiToken = null,
+        string ticketPlatformUrl,
+        string? ticketPlatformApiToken = null,
         string? claudeApiKey = null,
+        string? ticketPlatform = null,
         TenantConfiguration? configuration = null,
         CancellationToken ct = default)
     {
@@ -120,10 +122,16 @@ public class TenantApplicationService : ITenantApplicationService
             }
         }
 
-        // Update credentials if provided
-        if (!string.IsNullOrEmpty(jiraApiToken) || !string.IsNullOrEmpty(claudeApiKey))
+        // Update platform settings if provided
+        if (!string.IsNullOrEmpty(ticketPlatform) || !string.IsNullOrEmpty(ticketPlatformUrl))
         {
-            tenant.UpdateCredentials(jiraApiToken, claudeApiKey);
+            tenant.UpdatePlatformSettings(ticketPlatform, ticketPlatformUrl);
+        }
+
+        // Update credentials if provided
+        if (!string.IsNullOrEmpty(ticketPlatformApiToken) || !string.IsNullOrEmpty(claudeApiKey))
+        {
+            tenant.UpdateCredentials(ticketPlatformApiToken, claudeApiKey);
         }
 
         // Update configuration if provided

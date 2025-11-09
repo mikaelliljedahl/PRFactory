@@ -17,14 +17,19 @@ public class Tenant
     public string Name { get; private set; } = string.Empty;
 
     /// <summary>
-    /// Base URL for the tenant's Jira instance (e.g., https://company.atlassian.net)
+    /// Ticket platform being used (Jira, AzureDevOps, GitHub, GitLab)
     /// </summary>
-    public string JiraUrl { get; private set; } = string.Empty;
+    public string TicketPlatform { get; private set; } = "Jira"; // Default to Jira for backward compatibility
 
     /// <summary>
-    /// API token for accessing Jira (should be encrypted at rest)
+    /// Base URL for the tenant's ticket system (e.g., https://company.atlassian.net for Jira)
     /// </summary>
-    public string JiraApiToken { get; private set; } = string.Empty;
+    public string TicketPlatformUrl { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// API token for accessing the ticket platform (should be encrypted at rest)
+    /// </summary>
+    public string TicketPlatformApiToken { get; private set; } = string.Empty;
 
     /// <summary>
     /// Claude API key for this tenant (should be encrypted at rest)
@@ -66,26 +71,35 @@ public class Tenant
     /// <summary>
     /// Creates a new tenant
     /// </summary>
-    public static Tenant Create(string name, string jiraUrl, string jiraApiToken, string claudeApiKey)
+    public static Tenant Create(
+        string name,
+        string ticketPlatformUrl,
+        string ticketPlatformApiToken,
+        string claudeApiKey,
+        string ticketPlatform = "Jira")
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Tenant name cannot be empty", nameof(name));
 
-        if (string.IsNullOrWhiteSpace(jiraUrl))
-            throw new ArgumentException("Jira URL cannot be empty", nameof(jiraUrl));
+        if (string.IsNullOrWhiteSpace(ticketPlatformUrl))
+            throw new ArgumentException("Ticket platform URL cannot be empty", nameof(ticketPlatformUrl));
 
-        if (string.IsNullOrWhiteSpace(jiraApiToken))
-            throw new ArgumentException("Jira API token cannot be empty", nameof(jiraApiToken));
+        if (string.IsNullOrWhiteSpace(ticketPlatformApiToken))
+            throw new ArgumentException("Ticket platform API token cannot be empty", nameof(ticketPlatformApiToken));
 
         if (string.IsNullOrWhiteSpace(claudeApiKey))
             throw new ArgumentException("Claude API key cannot be empty", nameof(claudeApiKey));
+
+        if (string.IsNullOrWhiteSpace(ticketPlatform))
+            throw new ArgumentException("Ticket platform cannot be empty", nameof(ticketPlatform));
 
         return new Tenant
         {
             Id = Guid.NewGuid(),
             Name = name,
-            JiraUrl = jiraUrl.TrimEnd('/'),
-            JiraApiToken = jiraApiToken,
+            TicketPlatform = ticketPlatform,
+            TicketPlatformUrl = ticketPlatformUrl.TrimEnd('/'),
+            TicketPlatformApiToken = ticketPlatformApiToken,
             ClaudeApiKey = claudeApiKey,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
@@ -95,13 +109,27 @@ public class Tenant
     /// <summary>
     /// Updates tenant credentials
     /// </summary>
-    public void UpdateCredentials(string? jiraApiToken = null, string? claudeApiKey = null)
+    public void UpdateCredentials(string? ticketPlatformApiToken = null, string? claudeApiKey = null)
     {
-        if (!string.IsNullOrWhiteSpace(jiraApiToken))
-            JiraApiToken = jiraApiToken;
+        if (!string.IsNullOrWhiteSpace(ticketPlatformApiToken))
+            TicketPlatformApiToken = ticketPlatformApiToken;
 
         if (!string.IsNullOrWhiteSpace(claudeApiKey))
             ClaudeApiKey = claudeApiKey;
+
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Updates tenant platform settings
+    /// </summary>
+    public void UpdatePlatformSettings(string? ticketPlatform = null, string? ticketPlatformUrl = null)
+    {
+        if (!string.IsNullOrWhiteSpace(ticketPlatform))
+            TicketPlatform = ticketPlatform;
+
+        if (!string.IsNullOrWhiteSpace(ticketPlatformUrl))
+            TicketPlatformUrl = ticketPlatformUrl.TrimEnd('/');
 
         UpdatedAt = DateTime.UtcNow;
     }

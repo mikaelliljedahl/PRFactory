@@ -96,9 +96,10 @@ public class TenantService : ITenantService
 
             var tenant = await _tenantApplicationService.CreateTenantAsync(
                 request.Name,
-                request.JiraUrl,
-                request.JiraApiToken!,  // Validated by [Required] attribute
+                request.TicketPlatformUrl,
+                request.TicketPlatformApiToken!,  // Validated by [Required] attribute
                 request.ClaudeApiKey!,  // Validated by [Required] attribute
+                request.TicketPlatform,
                 configuration,
                 ct);
 
@@ -132,9 +133,10 @@ public class TenantService : ITenantService
             var tenant = await _tenantApplicationService.UpdateTenantAsync(
                 request.Id,
                 request.Name,
-                request.JiraUrl,
-                request.JiraApiToken,
+                request.TicketPlatformUrl,
+                request.TicketPlatformApiToken,
                 request.ClaudeApiKey,
+                request.TicketPlatform,
                 configuration,
                 ct);
 
@@ -226,7 +228,8 @@ public class TenantService : ITenantService
         {
             Id = tenant.Id,
             Name = tenant.Name,
-            JiraUrl = tenant.JiraUrl,
+            TicketPlatformUrl = tenant.TicketPlatformUrl,
+            TicketPlatform = tenant.TicketPlatform,
             IsActive = tenant.IsActive,
             CreatedAt = tenant.CreatedAt,
             UpdatedAt = tenant.UpdatedAt,
@@ -235,7 +238,7 @@ public class TenantService : ITenantService
             ClaudeModel = tenant.Configuration.ClaudeModel,
             MaxTokensPerRequest = tenant.Configuration.MaxTokensPerRequest,
             EnableCodeReview = tenant.Configuration.EnableCodeReview,
-            HasJiraApiToken = !string.IsNullOrEmpty(tenant.JiraApiToken),
+            HasTicketPlatformApiToken = !string.IsNullOrEmpty(tenant.TicketPlatformApiToken),
             HasClaudeApiKey = !string.IsNullOrEmpty(tenant.ClaudeApiKey),
             RepositoryCount = 0,
             TicketCount = 0

@@ -46,7 +46,8 @@ public partial class Edit
             {
                 Id = tenant.Id,
                 Name = tenant.Name,
-                JiraUrl = tenant.JiraUrl,
+                TicketPlatformUrl = tenant.TicketPlatformUrl,
+                TicketPlatform = tenant.TicketPlatform,
                 IsActive = tenant.IsActive,
                 AutoImplementAfterPlanApproval = tenant.AutoImplementAfterPlanApproval,
                 MaxRetries = tenant.MaxRetries,

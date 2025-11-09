@@ -6,11 +6,12 @@ namespace PRFactory.Web.Models;
 public interface ITenantRequest
 {
     string Name { get; set; }
-    string JiraUrl { get; set; }
+    string TicketPlatformUrl { get; set; }
+    string TicketPlatform { get; set; }
 
     // Nullable to support UpdateTenantRequest where these are optional
     // CreateTenantRequest marks these as [Required] via attributes
-    string? JiraApiToken { get; set; }
+    string? TicketPlatformApiToken { get; set; }
     string? ClaudeApiKey { get; set; }
 
     bool IsActive { get; set; }

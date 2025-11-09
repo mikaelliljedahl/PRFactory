@@ -20,7 +20,9 @@ public class TicketServiceTests
         var ticketId = Guid.NewGuid();
         var repositoryId = Guid.NewGuid();
 
-        var ticket = Ticket.Create(tenantId, "TICKET-123", "Test Ticket", "Description", repositoryId, WorkflowState.InProgress);
+        var ticket = Ticket.Create("TICKET-123", tenantId, repositoryId);
+        ticket.UpdateTicketInfo("Test Ticket", "Description");
+        ticket.TransitionTo(WorkflowState.Analyzing);
 
         var mockTicketAppService = new Mock<ITicketApplicationService>();
         mockTicketAppService
@@ -38,7 +40,7 @@ public class TicketServiceTests
         result.TicketKey.Should().Be("TICKET-123");
         result.Title.Should().Be("Test Ticket");
         result.Description.Should().Be("Description");
-        result.State.Should().Be(WorkflowState.InProgress);
+        result.State.Should().Be(WorkflowState.Analyzing);
     }
 
     [Fact]

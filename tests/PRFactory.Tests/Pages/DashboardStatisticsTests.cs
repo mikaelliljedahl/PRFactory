@@ -37,7 +37,7 @@ public class DashboardStatisticsTests
             CreateTicket(WorkflowState.Completed),
             CreateTicket(WorkflowState.Completed),
             CreateTicket(WorkflowState.Failed),
-            CreateTicket(WorkflowState.InProgress)
+            CreateTicket(WorkflowState.Analyzing)
         };
         var stats = new DashboardStatistics();
 
@@ -62,7 +62,7 @@ public class DashboardStatisticsTests
             CreateTicket(WorkflowState.AwaitingAnswers),
             CreateTicket(WorkflowState.PlanUnderReview),
             CreateTicket(WorkflowState.TicketUpdateUnderReview),
-            CreateTicket(WorkflowState.InProgress)
+            CreateTicket(WorkflowState.Analyzing)
         };
         var stats = new DashboardStatistics();
 
@@ -81,7 +81,7 @@ public class DashboardStatisticsTests
         var tickets = new List<Ticket>
         {
             CreateTicket(WorkflowState.Cancelled),
-            CreateTicket(WorkflowState.InProgress),
+            CreateTicket(WorkflowState.Analyzing),
             CreateTicket(WorkflowState.Completed)
         };
         var stats = new DashboardStatistics();
@@ -181,13 +181,19 @@ public class DashboardStatisticsTests
 
     private static Ticket CreateTicket(WorkflowState state)
     {
-        return Ticket.Create(
-            Guid.NewGuid(),
+        var ticket = Ticket.Create(
             $"TICKET-{Guid.NewGuid().ToString().Substring(0, 8)}",
-            "Test Ticket",
-            "Test Description",
             Guid.NewGuid(),
-            state);
+            Guid.NewGuid());
+        ticket.UpdateTicketInfo("Test Ticket", "Test Description");
+
+        // Transition to desired state if not the default Triggered state
+        if (state != WorkflowState.Triggered)
+        {
+            ticket.TransitionTo(state);
+        }
+
+        return ticket;
     }
 
     private class DashboardStatistics

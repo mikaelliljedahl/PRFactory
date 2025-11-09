@@ -1,0 +1,78 @@
+@page "/tenants/{TenantId:guid}/edit"
+@using PRFactory.Web.Components.Tenants
+@using PRFactory.Web.UI.Alerts
+@using PRFactory.Web.UI.Display
+
+<PageTitle>Edit Tenant - PRFactory</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/tenants">Tenants</a></li>
+                    <li class="breadcrumb-item"><a href="/tenants/@TenantId">@(tenant?.Name ?? "Tenant")</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Edit</li>
+                </ol>
+            </nav>
+            <h1 class="display-6">
+                <i class="bi bi-pencil"></i> Edit Tenant
+            </h1>
+            @if (tenant != null)
+            {
+                <p class="text-muted">Update configuration for @tenant.Name</p>
+            }
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <LoadingSpinner IsLoading="true" Message="Loading tenant..." />
+    }
+    else if (errorMessage != null)
+    {
+        <AlertMessage Type="AlertType.Danger" Title="Error" Message="@errorMessage" Icon="exclamation-triangle-fill" Dismissible="true" OnDismiss="@(() => errorMessage = null)" />
+    }
+    else if (model != null)
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <TenantForm
+                    Model="@model"
+                    IsEditMode="true"
+                    IsSubmitting="@isSubmitting"
+                    OnValidSubmit="@HandleSubmitAsync"
+                    OnCancel="@HandleCancelAsync" />
+            </div>
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">
+                        <i class="bi bi-exclamation-triangle"></i> Important Notes
+                    </div>
+                    <div class="card-body">
+                        <h6>Credential Updates:</h6>
+                        <ul class="small">
+                            <li>Leave credential fields empty to keep existing values</li>
+                            <li>Only enter new credentials if you want to update them</li>
+                            <li>Updating credentials will affect all future operations</li>
+                        </ul>
+
+                        <h6 class="mt-3">Configuration Changes:</h6>
+                        <ul class="small">
+                            <li>Changes to auto-implement settings will apply to new tickets only</li>
+                            <li>Token and timeout changes take effect immediately</li>
+                            <li>Model changes require careful consideration</li>
+                        </ul>
+
+                        <h6 class="mt-3">Active Status:</h6>
+                        <ul class="small">
+                            <li>Deactivating will prevent new ticket processing</li>
+                            <li>Existing workflows will continue</li>
+                            <li>Reactivate anytime to resume operations</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

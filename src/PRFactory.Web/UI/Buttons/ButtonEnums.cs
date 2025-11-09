@@ -12,7 +12,10 @@ public enum ButtonVariant
     Dark,
     OutlinePrimary,
     OutlineSecondary,
-    OutlineDanger
+    OutlineSuccess,
+    OutlineDanger,
+    OutlineWarning,
+    OutlineInfo
 }
 
 public enum ButtonSize

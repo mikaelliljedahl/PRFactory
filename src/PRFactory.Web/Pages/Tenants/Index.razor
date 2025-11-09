@@ -1,0 +1,139 @@
+@page "/tenants"
+@using PRFactory.Web.Components.Tenants
+@using PRFactory.Web.UI.Display
+@using PRFactory.Web.UI.Alerts
+@using PRFactory.Web.UI.Buttons
+@using Radzen
+@using Radzen.Blazor
+
+<PageTitle>Tenants - PRFactory</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-6">
+                <i class="bi bi-building"></i> Tenants
+            </h1>
+            <p class="text-muted">Manage tenant organizations and their configurations</p>
+        </div>
+        <div class="col-auto align-self-center">
+            <a href="/tenants/create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Create New Tenant
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    @if (stats != null)
+    {
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">
+                            <i class="bi bi-check-circle-fill"></i> Active Tenants
+                        </h5>
+                        <h2 class="mb-0">@stats.Value.Active</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title text-secondary">
+                            <i class="bi bi-pause-circle-fill"></i> Inactive Tenants
+                        </h5>
+                        <h2 class="mb-0">@stats.Value.Inactive</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <input type="text"
+                           class="form-control"
+                           placeholder="Search tenants..."
+                           @bind="searchTerm"
+                           @bind:event="oninput"
+                           @onkeyup="OnSearchChanged" />
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" @bind="filterStatus" @onchange="LoadTenantsAsync">
+                        <option value="all">All Tenants</option>
+                        <option value="active">Active Only</option>
+                        <option value="inactive">Inactive Only</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <IconButton
+                        Icon="arrow-clockwise"
+                        Text="Refresh"
+                        Variant="ButtonVariant.OutlinePrimary"
+                        OnClick="@(async _ => await LoadTenantsAsync())"
+                        AdditionalClass="w-100" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    @if (isLoading)
+    {
+        <LoadingSpinner IsLoading="true" Message="Loading tenants..." />
+    }
+    else if (errorMessage != null)
+    {
+        <AlertMessage Type="AlertType.Danger" Title="Error" Message="@errorMessage" Icon="exclamation-triangle-fill">
+            <IconButton Icon="arrow-clockwise" Text="Retry" Variant="ButtonVariant.OutlineDanger" Size="ButtonSize.Small" AdditionalClass="ms-3" OnClick="@(async _ => await LoadTenantsAsync())" />
+        </AlertMessage>
+    }
+    else if (filteredTenants == null || !filteredTenants.Any())
+    {
+        <EmptyState Icon="building"
+                    Title="No tenants found"
+                    Message="Create your first tenant to get started"
+                    ActionUrl="/tenants/create"
+                    ActionText="Create New Tenant"
+                    ActionIcon="plus-circle" />
+    }
+    else
+    {
+        <!-- Tenants Grid -->
+        <div class="row">
+            @foreach (var tenant in filteredTenants)
+            {
+                <div class="col-12 mb-3">
+                    <TenantListItem
+                        Tenant="@tenant"
+                        OnView="@HandleViewAsync"
+                        OnEdit="@HandleEditAsync"
+                        OnActivate="@HandleActivateAsync"
+                        OnDeactivate="@HandleDeactivateAsync"
+                        OnDelete="@HandleDeleteAsync" />
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Success Message -->
+    @if (successMessage != null)
+    {
+        <div class="toast-container position-fixed bottom-0 end-0 p-3">
+            <div class="toast show" role="alert">
+                <div class="toast-header bg-success text-white">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <strong class="me-auto">Success</strong>
+                    <button type="button" class="btn-close btn-close-white" @onclick="@(() => successMessage = null)"></button>
+                </div>
+                <div class="toast-body">
+                    @successMessage
+                </div>
+            </div>
+        </div>
+    }
+</div>

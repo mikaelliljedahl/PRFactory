@@ -1,0 +1,42 @@
+@using Radzen.Blazor
+@using PRFactory.Web.UI.Buttons
+
+<div class="mb-3">
+    <label for="branch-selector" class="form-label">
+        Default Branch
+        @if (Required)
+        {
+            <span class="text-danger">*</span>
+        }
+    </label>
+
+    <div class="input-group">
+        <RadzenDropDown @bind-Value="@SelectedBranch"
+                       Data="@AvailableBranches"
+                       Placeholder="Select a branch"
+                       Style="width: 100%"
+                       AllowClear="false"
+                       Disabled="@(!AvailableBranches.Any() || IsLoading)"
+                       Change="@OnBranchChanged" />
+
+        <LoadingButton IsLoading="@IsLoading"
+                      Icon="arrow-clockwise"
+                      OnClick="@HandleRefreshBranches"
+                      Disabled="@(RepositoryId == Guid.Empty)"
+                      AdditionalClass="btn-outline-secondary">
+            Refresh
+        </LoadingButton>
+    </div>
+
+    @if (!string.IsNullOrEmpty(HelpText))
+    {
+        <small class="form-text text-muted d-block mt-1">@HelpText</small>
+    }
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="invalid-feedback d-block">
+            @ErrorMessage
+        </div>
+    }
+</div>

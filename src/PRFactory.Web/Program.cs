@@ -1,3 +1,4 @@
+using PRFactory.Infrastructure;
 using PRFactory.Web.Hubs;
 using PRFactory.Web.Services;
 using Serilog;
@@ -18,6 +19,9 @@ builder.Host.UseSerilog();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
+// Add Radzen components
+builder.Services.AddRadzenComponents();
+
 // Add SignalR
 builder.Services.AddSignalR();
 
@@ -25,17 +29,16 @@ builder.Services.AddSignalR();
 builder.Services.AddScoped<PRFactory.Infrastructure.Events.IEventBroadcaster,
     SignalREventBroadcaster>();
 
-// Configure HttpClient for PRFactory.Api
-var apiBaseUrl = builder.Configuration.GetValue<string>("ApiSettings:BaseUrl") ?? "http://localhost:5000";
-builder.Services.AddHttpClient("PRFactoryApi", client =>
-{
-    client.BaseAddress = new Uri(apiBaseUrl);
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
+// Register Infrastructure services (repositories, application services, agents, etc.)
+builder.Services.AddInfrastructure(builder.Configuration);
 
-// Register application services
+// Register web layer facade services
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<IRepositoryService, RepositoryService>();
+builder.Services.AddScoped<IWorkflowEventService, WorkflowEventService>();
+builder.Services.AddScoped<IAgentPromptService, AgentPromptService>();
+builder.Services.AddScoped<ITenantService, TenantService>();
+builder.Services.AddScoped<IErrorService, ErrorService>();
 
 var app = builder.Build();
 

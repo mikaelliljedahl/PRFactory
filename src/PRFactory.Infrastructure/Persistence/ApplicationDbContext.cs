@@ -44,6 +44,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<WorkflowStateEntity> WorkflowStates => Set<WorkflowStateEntity>();
     public DbSet<Checkpoint> Checkpoints => Set<Checkpoint>();
     public DbSet<AgentPromptTemplate> AgentPromptTemplates => Set<AgentPromptTemplate>();
+    public DbSet<ErrorLog> ErrorLogs => Set<ErrorLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -116,6 +117,25 @@ public class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<WorkflowEvent>()
             .HasIndex(e => e.EventType);
+
+        // ErrorLog indexes
+        modelBuilder.Entity<ErrorLog>()
+            .HasIndex(e => e.TenantId);
+
+        modelBuilder.Entity<ErrorLog>()
+            .HasIndex(e => e.Severity);
+
+        modelBuilder.Entity<ErrorLog>()
+            .HasIndex(e => e.IsResolved);
+
+        modelBuilder.Entity<ErrorLog>()
+            .HasIndex(e => e.CreatedAt);
+
+        modelBuilder.Entity<ErrorLog>()
+            .HasIndex(e => new { e.EntityType, e.EntityId });
+
+        modelBuilder.Entity<ErrorLog>()
+            .HasIndex(e => new { e.TenantId, e.IsResolved, e.Severity });
     }
 
     private void ConfigureEnumConversions(ModelBuilder modelBuilder)
@@ -141,6 +161,14 @@ public class ApplicationDbContext : DbContext
             .HasConversion(
                 v => v.ToString(),
                 v => (WorkflowState)Enum.Parse(typeof(WorkflowState), v)
+            );
+
+        // ErrorLog enum conversion
+        modelBuilder.Entity<ErrorLog>()
+            .Property(e => e.Severity)
+            .HasConversion(
+                v => v.ToString(),
+                v => (ErrorSeverity)Enum.Parse(typeof(ErrorSeverity), v)
             );
     }
 

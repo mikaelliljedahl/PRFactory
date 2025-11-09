@@ -1,0 +1,88 @@
+@using PRFactory.Web.Models
+
+<div class="card border-@SeverityBorderClass mb-3">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+                <div class="d-flex align-items-center mb-2">
+                    <span class="badge bg-@Error.SeverityClass me-2">
+                        <i class="bi bi-@Error.SeverityIcon me-1"></i>
+                        @Error.Severity
+                    </span>
+                    @if (Error.IsResolved)
+                    {
+                        <span class="badge bg-success">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Resolved
+                        </span>
+                    }
+                </div>
+
+                <h5 class="card-title mb-2">@Error.Message</h5>
+
+                <div class="text-muted small mb-2">
+                    <i class="bi bi-clock me-1"></i>
+                    @Error.FormattedCreatedAt
+                    @if (!string.IsNullOrEmpty(Error.EntityType))
+                    {
+                        <span class="ms-3">
+                            <i class="bi bi-tag me-1"></i>
+                            @Error.EntityType
+                        </span>
+                    }
+                </div>
+
+                @if (Error.IsResolved && !string.IsNullOrEmpty(Error.ResolvedBy))
+                {
+                    <div class="text-success small">
+                        <i class="bi bi-person-check me-1"></i>
+                        Resolved by @Error.ResolvedBy on @Error.FormattedResolvedAt
+                    </div>
+                }
+            </div>
+
+            @if (ShowActions)
+            {
+                <div class="ms-3">
+                    @if (OnViewDetails.HasDelegate)
+                    {
+                        <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => OnViewDetails.InvokeAsync(Error.Id)">
+                            <i class="bi bi-eye"></i>
+                            Details
+                        </button>
+                    }
+                    @if (!Error.IsResolved && OnResolve.HasDelegate)
+                    {
+                        <button class="btn btn-sm btn-outline-success" @onclick="() => OnResolve.InvokeAsync(Error.Id)">
+                            <i class="bi bi-check-circle"></i>
+                            Resolve
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public ErrorDto Error { get; set; } = null!;
+
+    [Parameter]
+    public bool ShowActions { get; set; } = true;
+
+    [Parameter]
+    public EventCallback<Guid> OnViewDetails { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid> OnResolve { get; set; }
+
+    private string SeverityBorderClass => Error.Severity switch
+    {
+        Domain.ValueObjects.ErrorSeverity.Critical => "danger",
+        Domain.ValueObjects.ErrorSeverity.High => "warning",
+        Domain.ValueObjects.ErrorSeverity.Medium => "info",
+        Domain.ValueObjects.ErrorSeverity.Low => "secondary",
+        _ => "secondary"
+    };
+}

@@ -1,0 +1,43 @@
+@page "/agent-prompts/create"
+@using PRFactory.Web.Components.AgentPrompts
+@using PRFactory.Web.Models
+@using PRFactory.Web.UI.Cards
+@using PRFactory.Web.UI.Alerts
+
+<PageTitle>Create Agent Prompt Template</PageTitle>
+
+<div class="container-fluid">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/agent-prompts">Agent Prompts</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Create</li>
+        </ol>
+    </nav>
+
+    <h1 class="mb-4">
+        <i class="bi bi-plus-circle"></i> Create Agent Prompt Template
+    </h1>
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <AlertMessage Message="@ErrorMessage" Type="AlertType.Danger" />
+    }
+
+    <div class="row">
+        <div class="col-lg-8">
+            <Card Title="Template Details" Icon="file-earmark-text">
+                <PromptTemplateForm
+                    Model="@Model"
+                    OnValidSubmit="@HandleSubmit"
+                    OnCancel="@HandleCancel"
+                    IsSubmitting="@IsSubmitting"
+                    SubmitButtonText="Create Template"
+                    IsNewTemplate="true" />
+            </Card>
+        </div>
+
+        <div class="col-lg-4">
+            <PromptVariableReference OnVariableSelected="@HandleVariableSelected" />
+        </div>
+    </div>
+</div>

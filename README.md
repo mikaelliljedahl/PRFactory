@@ -1,13 +1,13 @@
 # PRFactory
 
-> AI-powered automation that transforms ideas into GitHub pull requests using Claude AI
+> AI-powered automation that transforms ideas into GitHub pull requests using AI agents via CLI adapters
 
 PRFactory is an intelligent automation system that streamlines the development workflow by:
 - **Capturing** requirements directly in its Web UI or syncing from external systems (Jira, Azure DevOps, GitHub Issues)
 - **Analyzing** requirements and your codebase
 - **Clarifying** requirements through AI-generated questions
 - **Planning** detailed implementations for developer review
-- **Creating** pull requests with implemented code (optional)
+- **Optionally implementing** code and creating pull requests (can be disabled per tenant)
 - **Syncing** completed work back to external systems (Jira, Azure DevOps, etc.) for final storage
 
 **Key Principle:** AI assists, humans decide. Every step requires human approval - no automatic deployments.
@@ -118,7 +118,7 @@ flowchart TB
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) or later
 - [Docker](https://www.docker.com/get-started) (optional, for containerized deployment)
 - GitHub/GitLab/Azure DevOps account with Personal Access Token
-- Anthropic API key for Claude
+- AI CLI tool installed (e.g., Claude Code CLI, Codex CLI, or Gemini CLI)
 - (Optional) Jira/Azure DevOps account for syncing completed work
 
 ### Installation
@@ -141,9 +141,10 @@ flowchart TB
        "BaseUrl": "https://yourcompany.atlassian.net",
        "WebhookSecret": "your-webhook-secret"
      },
-     "Claude": {
-       "ApiKey": "sk-ant-...",
-       "Model": "claude-sonnet-4-5-20250929"
+     "ClaudeDesktopCli": {
+       "ExecutablePath": "claude",
+       "DefaultTimeoutSeconds": 120,
+       "ProjectContextTimeoutSeconds": 300
      },
      "GitHub": {
        "Token": "ghp_..."
@@ -351,7 +352,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture docum
 - **Entity Framework Core 10** - ORM
 
 ### Key Libraries
-- **Anthropic SDK** - Claude AI integration
+- **CLI Agent Adapters** - AI integration via command-line interfaces (Claude Code CLI, Codex CLI, Gemini CLI, etc.)
 - **LibGit2Sharp** - Git operations
 - **Octokit** - GitHub API client
 - **Polly** - Resilience and retry policies

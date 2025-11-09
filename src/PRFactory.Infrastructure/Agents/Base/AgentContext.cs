@@ -122,6 +122,10 @@ public class CodebaseAnalysis
     public List<string> TechnicalConsiderations { get; set; } = new();
     public string Architecture { get; set; } = string.Empty;
     public DateTime AnalyzedAt { get; set; } = DateTime.UtcNow;
+    public List<string> Patterns { get; set; } = new();
+    public List<string> Dependencies { get; set; } = new();
+    public List<string> RelevantFiles { get; set; } = new();
+    public Dictionary<string, string> FileContents { get; set; } = new();
 }
 
 /// <summary>

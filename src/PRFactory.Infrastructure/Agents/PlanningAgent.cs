@@ -1,31 +1,30 @@
 using Microsoft.Extensions.Logging;
+using PRFactory.Core.Application.Services;
 using PRFactory.Domain.Interfaces;
 using PRFactory.Domain.ValueObjects;
 using PRFactory.Infrastructure.Agents.Base;
-using PRFactory.Infrastructure.Claude;
-using PRFactory.Infrastructure.Claude.Models;
 
 namespace PRFactory.Infrastructure.Agents;
 
 /// <summary>
-/// Generates a detailed implementation plan using Claude AI.
+/// Generates a detailed implementation plan using a CLI-based AI agent.
 /// Uses the full context (ticket, answers, analysis) to create a comprehensive plan.
 /// </summary>
 public class PlanningAgent : BaseAgent
 {
-    private readonly IClaudeClient _claudeClient;
+    private readonly ICliAgent _cliAgent;
     private readonly ITicketRepository _ticketRepository;
 
     public override string Name => "PlanningAgent";
-    public override string Description => "Generate detailed implementation plan with Claude AI";
+    public override string Description => "Generate detailed implementation plan with AI";
 
     public PlanningAgent(
         ILogger<PlanningAgent> logger,
-        IClaudeClient claudeClient,
+        ICliAgent cliAgent,
         ITicketRepository ticketRepository)
         : base(logger)
     {
-        _claudeClient = claudeClient ?? throw new ArgumentNullException(nameof(claudeClient));
+        _cliAgent = cliAgent ?? throw new ArgumentNullException(nameof(cliAgent));
         _ticketRepository = ticketRepository ?? throw new ArgumentNullException(nameof(ticketRepository));
     }
 
@@ -69,8 +68,10 @@ public class PlanningAgent : BaseAgent
 
             await _ticketRepository.UpdateAsync(context.Ticket, cancellationToken);
 
-            // Prepare system prompt
-            var systemPrompt = @"You are an expert software architect creating a detailed implementation plan.
+            // Build combined prompt for CLI agent
+            var contextMessage = BuildContextMessage(context);
+
+            var prompt = $@"You are an expert software architect creating a detailed implementation plan.
 
 Based on the ticket requirements, codebase analysis, and user answers, create a comprehensive implementation plan.
 
@@ -83,23 +84,30 @@ The plan should be in Markdown format and include:
 6. Dependencies and prerequisites
 7. Rollback plan
 
-Be specific and actionable. Reference actual file names and code patterns from the codebase.";
+Be specific and actionable. Reference actual file names and code patterns from the codebase.
 
-            // Build context message
-            var contextMessage = BuildContextMessage(context);
+{contextMessage}";
 
-            var messages = new List<Message>
-            {
-                new Message("user", contextMessage)
-            };
+            Logger.LogInformation("Executing {AgentName} to generate implementation plan", _cliAgent.AgentName);
 
-            // Call Claude
-            var planMarkdown = await _claudeClient.SendMessageAsync(
-                systemPrompt,
-                messages,
-                maxTokens: 8000,
-                ct: cancellationToken
+            // Call CLI agent with project context for full codebase access
+            var cliResponse = await _cliAgent.ExecuteWithProjectContextAsync(
+                prompt,
+                context.RepositoryPath!,
+                cancellationToken
             );
+
+            if (!cliResponse.Success)
+            {
+                Logger.LogError("CLI agent execution failed: {Error}", cliResponse.ErrorMessage);
+                return new AgentResult
+                {
+                    Status = AgentStatus.Failed,
+                    Error = $"CLI agent execution failed: {cliResponse.ErrorMessage}"
+                };
+            }
+
+            var planMarkdown = cliResponse.Content;
 
             // Store plan in context
             context.ImplementationPlan = planMarkdown;

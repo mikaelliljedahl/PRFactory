@@ -1,21 +1,20 @@
 using Microsoft.Extensions.Logging;
+using PRFactory.Core.Application.Services;
 using PRFactory.Domain.Entities;
 using PRFactory.Domain.Interfaces;
 using PRFactory.Domain.ValueObjects;
 using PRFactory.Infrastructure.Agents.Base;
-using PRFactory.Infrastructure.Claude;
-using PRFactory.Infrastructure.Claude.Models;
 using System.Text.Json;
 
 namespace PRFactory.Infrastructure.Agents;
 
 /// <summary>
 /// Generates refined ticket updates based on codebase analysis and Q&A session.
-/// Uses Claude AI to create comprehensive ticket descriptions with SMART success criteria.
+/// Uses a CLI-based AI agent to create comprehensive ticket descriptions with SMART success criteria.
 /// </summary>
 public class TicketUpdateGenerationAgent : BaseAgent
 {
-    private readonly IClaudeClient _claudeClient;
+    private readonly ICliAgent _cliAgent;
     private readonly ITicketUpdateRepository _ticketUpdateRepository;
     private readonly ITicketRepository _ticketRepository;
 
@@ -24,12 +23,12 @@ public class TicketUpdateGenerationAgent : BaseAgent
 
     public TicketUpdateGenerationAgent(
         ILogger<TicketUpdateGenerationAgent> logger,
-        IClaudeClient claudeClient,
+        ICliAgent cliAgent,
         ITicketUpdateRepository ticketUpdateRepository,
         ITicketRepository ticketRepository)
         : base(logger)
     {
-        _claudeClient = claudeClient ?? throw new ArgumentNullException(nameof(claudeClient));
+        _cliAgent = cliAgent ?? throw new ArgumentNullException(nameof(cliAgent));
         _ticketUpdateRepository = ticketUpdateRepository ?? throw new ArgumentNullException(nameof(ticketUpdateRepository));
         _ticketRepository = ticketRepository ?? throw new ArgumentNullException(nameof(ticketRepository));
     }
@@ -95,23 +94,33 @@ Please address the rejection feedback in this updated version.";
                 }
             }
 
-            // Build comprehensive prompt
+            // Build comprehensive prompt for CLI agent
             var systemPrompt = BuildSystemPrompt();
             var userPrompt = BuildUserPrompt(context, rejectionContext);
 
-            var messages = new List<Message>
-            {
-                new Message("user", userPrompt)
-            };
+            var prompt = $@"{systemPrompt}
 
-            // Call Claude for ticket update generation
-            Logger.LogDebug("Calling Claude to generate ticket update (version {Version})", nextVersion);
-            var response = await _claudeClient.SendMessageAsync(
-                systemPrompt,
-                messages,
-                maxTokens: 4000,
-                ct: cancellationToken
+{userPrompt}";
+
+            // Call CLI agent for ticket update generation
+            Logger.LogDebug("Calling {AgentName} to generate ticket update (version {Version})", _cliAgent.AgentName, nextVersion);
+
+            var cliResponse = await _cliAgent.ExecutePromptAsync(
+                prompt,
+                cancellationToken
             );
+
+            if (!cliResponse.Success)
+            {
+                Logger.LogError("CLI agent execution failed: {Error}", cliResponse.ErrorMessage);
+                return new AgentResult
+                {
+                    Status = AgentStatus.Failed,
+                    Error = $"CLI agent execution failed: {cliResponse.ErrorMessage}"
+                };
+            }
+
+            var response = cliResponse.Content;
 
             // Parse JSON response
             var jsonResponse = ExtractJsonFromResponse(response);

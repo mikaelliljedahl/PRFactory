@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.Extensions.Logging;
 using PRFactory.Core.Application.Services;
+using PRFactory.Infrastructure.Agents.Base;
 
 namespace PRFactory.Infrastructure.Claude;
 

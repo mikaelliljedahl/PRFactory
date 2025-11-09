@@ -39,7 +39,7 @@ public partial class Create
                 Name = r.Name
             }).ToList();
         }
-        catch (Exception ex)
+        catch
         {
             errorMessage = "Failed to load repositories. Please refresh the page.";
             ToastService.ShowError("Failed to load repositories. Please refresh the page.");

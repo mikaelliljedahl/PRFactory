@@ -7,8 +7,12 @@ public interface ITenantRequest
 {
     string Name { get; set; }
     string JiraUrl { get; set; }
+
+    // Nullable to support UpdateTenantRequest where these are optional
+    // CreateTenantRequest marks these as [Required] via attributes
     string? JiraApiToken { get; set; }
     string? ClaudeApiKey { get; set; }
+
     bool IsActive { get; set; }
     bool AutoImplementAfterPlanApproval { get; set; }
     int MaxRetries { get; set; }

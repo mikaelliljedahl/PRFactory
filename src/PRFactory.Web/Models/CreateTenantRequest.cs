@@ -17,11 +17,11 @@ public class CreateTenantRequest : ITenantRequest
 
     [Required(ErrorMessage = "Jira API Token is required")]
     [StringLength(500, MinimumLength = 10, ErrorMessage = "API token appears to be invalid")]
-    public string JiraApiToken { get; set; } = string.Empty;
+    public string? JiraApiToken { get; set; }
 
     [Required(ErrorMessage = "Claude API Key is required")]
     [StringLength(500, MinimumLength = 10, ErrorMessage = "API key appears to be invalid")]
-    public string ClaudeApiKey { get; set; } = string.Empty;
+    public string? ClaudeApiKey { get; set; }
 
     public bool IsActive { get; set; } = true;
 

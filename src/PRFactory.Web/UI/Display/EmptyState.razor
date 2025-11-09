@@ -21,6 +21,16 @@
             @ActionText
         </a>
     }
+    else if (OnActionClick.HasDelegate && !string.IsNullOrEmpty(ActionText))
+    {
+        <button @onclick="OnActionClick" class="btn btn-primary mt-3">
+            @if (!string.IsNullOrEmpty(ActionIcon))
+            {
+                <i class="bi bi-@ActionIcon me-2"></i>
+            }
+            @ActionText
+        </button>
+    }
     @ChildContent
 </div>
 
@@ -31,6 +41,7 @@
     [Parameter] public string? ActionUrl { get; set; }
     [Parameter] public string? ActionText { get; set; }
     [Parameter] public string? ActionIcon { get; set; }
+    [Parameter] public EventCallback OnActionClick { get; set; }
     [Parameter] public bool Centered { get; set; } = true;
     [Parameter] public RenderFragment? ChildContent { get; set; }
 

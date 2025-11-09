@@ -1412,12 +1412,18 @@ Before committing and pushing any code changes, you **MUST** verify:
 - [ ] Check for compilation warnings and address critical ones
 - [ ] Verify no new test failures introduced by changes
 - [ ] Ensure new code has appropriate test coverage
+- [ ] **Update existing documentation** to reflect code changes
+- [ ] **Remove irrelevant or temporary documents** created during the session
+- [ ] **Verify implementation matches documentation** - no deviation between what's documented and what's built
 
 ❌ **NEVER** push:
 - Code that doesn't compile
 - Code that causes existing tests to fail
 - Code that breaks the build
 - Untested code to production branches (without documented reason)
+- **Documentation that's out of sync with implementation**
+- **Temporary or work-in-progress documents** without cleaning them up
+- **Features that deviate from their documentation** without updating docs first
 
 **Why This Matters:**
 - **CI/CD Pipeline**: Broken builds block the entire team
@@ -1426,16 +1432,64 @@ Before committing and pushing any code changes, you **MUST** verify:
 - **Professional Standards**: Non-compiling code should never reach version control
 - **Automated Workflows**: PRFactory's agents depend on a working codebase
 
-**Exceptions:**
-- Work-in-progress branches (clearly marked as WIP)
-- Draft pull requests (marked as draft)
-- Experimental feature branches (documented as such)
-
 **If Tests Fail After Your Changes:**
 1. **Fix the tests or the code** - Don't commit broken code
 2. **Investigate root cause** - Did your change break existing functionality?
 3. **Update tests if needed** - If behavior intentionally changed, update test expectations
 4. **Ask for help** - If unable to resolve, document the issue and ask for guidance
+
+**Documentation Maintenance (CRITICAL):**
+
+Before pushing any feature or code change, ensure documentation is synchronized:
+
+1. **Update Existing Documentation**
+   - Update `/docs/IMPLEMENTATION_STATUS.md` if feature status changed
+   - Update `/docs/ARCHITECTURE.md` if architectural patterns changed
+   - Update `/docs/WORKFLOW.md` if workflow behavior changed
+   - Update `README.md` if setup or usage changed
+   - Update `CLAUDE.md` if AI agent guidelines changed
+   - Update inline code comments if implementation logic changed
+
+2. **Remove Temporary/Irrelevant Documents**
+   - Delete session-specific notes (e.g., `plan-draft-2024-11-09.md`)
+   - Remove work-in-progress documents that are no longer relevant
+   - Archive valuable session notes to `/docs/archive/` if they contain lessons learned
+   - Delete duplicate or superseded documentation
+   - Remove any `.tmp`, `.draft`, or similar temporary files
+
+3. **Verify Implementation Matches Documentation**
+   - **Code reflects what's documented**: If docs say "Feature X does Y", verify code actually does Y
+   - **Documentation reflects what's coded**: If code implements Z, ensure docs describe Z
+   - **No feature drift**: Don't let implementation deviate from design without updating design docs
+   - **API contracts match**: If docs describe an API endpoint, ensure it exists and works as documented
+   - **Configuration examples work**: If docs show config examples, verify they're valid
+
+**Common Documentation Mistakes to Avoid:**
+
+❌ **DON'T**:
+- Push code without updating affected documentation
+- Leave session-specific notes (e.g., "TODO: Test this tomorrow") in committed docs
+- Document features that aren't actually implemented yet (unless clearly marked as "Planned")
+- Let documentation describe old behavior after changing implementation
+- Create duplicate documentation in multiple places
+- Leave temporary planning documents in the repository
+
+✅ **DO**:
+- Treat documentation as part of the deliverable (code + docs = complete)
+- Update docs in the same commit as the code change
+- Remove draft/planning documents once feature is complete
+- Keep one authoritative source for each piece of information
+- Archive valuable session insights to `/docs/archive/`
+- Ensure future developers can understand the system from docs alone
+
+**Documentation Verification Questions:**
+
+Before pushing, ask yourself:
+1. If a new developer reads the docs, will they understand what I just built?
+2. Are there any temporary files or notes I created during this session that should be removed?
+3. Does the documentation accurately describe the current implementation?
+4. Did I update all affected documentation files (not just one)?
+5. Are there any docs that now contain outdated or incorrect information?
 
 **Quick Verification Command:**
 ```bash

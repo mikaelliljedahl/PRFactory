@@ -43,7 +43,7 @@ PRFactory uses an **LLM-agnostic CLI agent architecture** that abstracts AI oper
        │
        ▼
 ┌──────────────────────────────┐
-│   Claude Desktop CLI         │
+│   Claude Code CLI         │
 │   (claude --headless ...)    │
 └──────────────────────────────┘
 ```
@@ -62,7 +62,7 @@ PRFactory uses an **LLM-agnostic CLI agent architecture** that abstracts AI oper
 public interface ICliAgent
 {
     /// <summary>
-    /// Name of the CLI agent (e.g., "Claude Desktop CLI", "Codex CLI")
+    /// Name of the CLI agent (e.g., "Claude Code CLI", "Codex CLI")
     /// </summary>
     string AgentName { get; }
 
@@ -151,16 +151,16 @@ public class CliAgentCapabilities
 
 ---
 
-## 2. ClaudeDesktopCliAdapter (Production Implementation)
+## 2. ClaudeCodeCliAdapter (Production Implementation)
 
-**Location**: `/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Adapters/ClaudeDesktopCliAdapter.cs`
+**Location**: `/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Adapters/ClaudeCodeCliAdapter.cs`
 
 **Status**: ✅ **Fully Implemented**
 
 ### Configuration
 
 ```csharp
-public class ClaudeDesktopCliOptions
+public class ClaudeCodeCliOptions
 {
     public string ExecutablePath { get; set; } = "claude";
     public int DefaultTimeoutSeconds { get; set; } = 300; // 5 minutes
@@ -536,16 +536,16 @@ public static IServiceCollection AddInfrastructure(
     services.AddScoped<IProcessExecutor, ProcessExecutor>();
 
     // Configuration
-    services.Configure<ClaudeDesktopCliOptions>(
-        configuration.GetSection("ClaudeDesktopCli"));
+    services.Configure<ClaudeCodeCliOptions>(
+        configuration.GetSection("ClaudeCodeCli"));
 
     // CLI Adapters
-    services.AddScoped<ClaudeDesktopCliAdapter>();
+    services.AddScoped<ClaudeCodeCliAdapter>();
     services.AddScoped<CodexCliAdapter>();
 
     // Default CLI agent (Claude Desktop)
     services.AddScoped<ICliAgent>(sp =>
-        sp.GetRequiredService<ClaudeDesktopCliAdapter>());
+        sp.GetRequiredService<ClaudeCodeCliAdapter>());
 
     // Agent prompt service
     services.AddScoped<IAgentPromptService, AgentPromptService>();
@@ -559,7 +559,7 @@ public static IServiceCollection AddInfrastructure(
 
 ```json
 {
-  "ClaudeDesktopCli": {
+  "ClaudeCodeCli": {
     "ExecutablePath": "claude",
     "DefaultTimeoutSeconds": 300,
     "ProjectContextTimeoutSeconds": 600,
@@ -580,7 +580,7 @@ To switch from Claude to Codex (once implemented):
 ```csharp
 // Change ONE LINE in DependencyInjection.cs:
 services.AddScoped<ICliAgent>(sp =>
-    sp.GetRequiredService<CodexCliAdapter>()); // Changed from ClaudeDesktopCliAdapter
+    sp.GetRequiredService<CodexCliAdapter>()); // Changed from ClaudeCodeCliAdapter
 ```
 
 **No other code changes needed** - all workflow agents use `ICliAgent` abstraction.
@@ -597,9 +597,9 @@ services.AddScoped<ICliAgent>(sp =>
 
     return tenant.PreferredLlmProvider switch
     {
-        "Claude" => sp.GetRequiredService<ClaudeDesktopCliAdapter>(),
+        "Claude" => sp.GetRequiredService<ClaudeCodeCliAdapter>(),
         "Codex" => sp.GetRequiredService<CodexCliAdapter>(),
-        _ => sp.GetRequiredService<ClaudeDesktopCliAdapter>()
+        _ => sp.GetRequiredService<ClaudeCodeCliAdapter>()
     };
 });
 ```
@@ -650,16 +650,16 @@ public async Task TicketUpdateGenerationAgent_Should_Generate_Update()
 ```csharp
 [Fact]
 [Trait("Category", "Integration")]
-public async Task ClaudeDesktopCliAdapter_Should_Execute_Real_Prompt()
+public async Task ClaudeCodeCliAdapter_Should_Execute_Real_Prompt()
 {
     // Arrange
-    var options = new ClaudeDesktopCliOptions
+    var options = new ClaudeCodeCliOptions
     {
         ExecutablePath = "claude",
         DefaultTimeoutSeconds = 60
     };
     var processExecutor = new ProcessExecutor(logger);
-    var adapter = new ClaudeDesktopCliAdapter(options, processExecutor, logger);
+    var adapter = new ClaudeCodeCliAdapter(options, processExecutor, logger);
 
     // Act
     var response = await adapter.ExecutePromptAsync(
@@ -859,7 +859,7 @@ process.StartInfo.ArgumentList.Add(userPrompt); // Automatically escaped
 PRFactory's CLI agent integration is **production-ready and fully LLM-agnostic**:
 
 ✅ **Clean Abstraction**: `ICliAgent` interface decouples workflows from LLM providers
-✅ **Production Adapter**: `ClaudeDesktopCliAdapter` fully implemented and tested
+✅ **Production Adapter**: `ClaudeCodeCliAdapter` fully implemented and tested
 ✅ **Safe Execution**: No shell injection, timeout/cancellation support
 ✅ **Extensible**: Add new providers by implementing `ICliAgent`
 ✅ **Testable**: Mock `ICliAgent` for unit tests, integration tests with real CLI

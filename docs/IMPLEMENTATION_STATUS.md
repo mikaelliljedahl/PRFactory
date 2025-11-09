@@ -527,7 +527,7 @@ Planned components (not yet implemented):
 | Integration | Status | Completeness | Notes |
 |-------------|--------|--------------|-------|
 | **Jira** | ⚠️ PARTIAL | 60% | Client interface defined, impl unclear |
-| **CLI Agent (LLM-Agnostic)** | ✅ COMPLETE | 95% | ICliAgent, ClaudeDesktopCliAdapter, prompts ✨ |
+| **CLI Agent (LLM-Agnostic)** | ✅ COMPLETE | 95% | ICliAgent, ClaudeCodeCliAdapter, prompts ✨ |
 | **GitHub Issues** | 📋 PLANNED | 0% | Not started |
 | **Azure DevOps Work Items** | 📋 PLANNED | 0% | Not started |
 
@@ -542,7 +542,7 @@ Planned components (not yet implemented):
 
 **CLI Agent Integration** (LLM-Agnostic Architecture):
 - ✅ **`ICliAgent` interface** - LLM-agnostic abstraction layer
-- ✅ **`ClaudeDesktopCliAdapter`** - Production implementation for Claude Desktop CLI
+- ✅ **`ClaudeCodeCliAdapter`** - Production implementation for Claude Code CLI
 - ✅ **`CodexCliAdapter`** - Stub for future OpenAI Codex support
 - ✅ **`IProcessExecutor`** - Safe CLI process execution with timeout/cancellation
 - ✅ **Agent prompt templates** - Reusable prompts loaded from `.claude/agents/*.md`

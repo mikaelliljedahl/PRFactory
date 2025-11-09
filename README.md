@@ -246,7 +246,7 @@ Detailed technical documentation for specific components:
 
 - **[CLI Agent Integration](docs/architecture/cli-agent-integration.md)** - LLM-agnostic AI integration ✨ **NEW**
   - ICliAgent abstraction layer (LLM-agnostic)
-  - ClaudeDesktopCliAdapter (production implementation)
+  - ClaudeCodeCliAdapter (production implementation)
   - Agent prompt management and customization
   - Process execution with timeout and cancellation
 

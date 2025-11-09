@@ -30,8 +30,25 @@ def handle_connect(client_socket, target_host, target_port):
         # Actually, let's use a simpler approach: use Python's socket to connect
         # through the proxy using CONNECT method
 
-        outer_proxy = ('21.0.0.113', 15004)
+        # Parse outer proxy from environment
+        import os
+        import re
+        proxy_url = os.environ.get('HTTPS_PROXY', '')
+
+        # Claude Code proxy format: http://container_name:jwt_TOKEN@HOST:PORT
+        # Extract host:port from the end
+        match = re.search(r'@([^@:]+):(\d+)', proxy_url)
+        if match:
+            proxy_host = match.group(1)
+            proxy_port = int(match.group(2))
+        else:
+            # Fallback to default
+            proxy_host = '21.0.0.115'
+            proxy_port = 15004
+
+        outer_proxy = (proxy_host, proxy_port)
         proxy_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        proxy_socket.settimeout(30)
         proxy_socket.connect(outer_proxy)
 
         # Send CONNECT to outer proxy
@@ -39,14 +56,13 @@ def handle_connect(client_socket, target_host, target_port):
         connect_request += f'Host: {target_host}:{target_port}\r\n'
 
         # Add proxy authentication from environment
-        import os
-        proxy_url = os.environ.get('HTTPS_PROXY', '')
+        # Claude Code uses format: http://user:jwt_TOKEN@host:port
         if '@' in proxy_url:
-            # Extract credentials
+            # Extract credentials (format: container_name:jwt_TOKEN)
             import base64
             auth_part = proxy_url.split('//')[1].split('@')[0]
-            user, password = auth_part.split(':', 1)
-            credentials = base64.b64encode(f'{user}:{password}'.encode()).decode()
+            # auth_part is like: container_container_...:jwt_eyJ...
+            credentials = base64.b64encode(auth_part.encode()).decode()
             connect_request += f'Proxy-Authorization: Basic {credentials}\r\n'
 
         connect_request += '\r\n'

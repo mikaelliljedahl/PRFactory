@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using PRFactory.Domain.ValueObjects;
 using PRFactory.Web.Models;
 using PRFactory.Web.Services;
+using PRFactory.Web.UI.Navigation;
 
 namespace PRFactory.Web.Pages.Workflows;
 
@@ -17,6 +18,12 @@ public partial class Index
     private int awaitingInputCount;
     private int completedTodayCount;
     private int failedCount;
+
+    private List<BreadcrumbItem> breadcrumbItems = new()
+    {
+        new BreadcrumbItem { Text = "Dashboard", Href = "/", Icon = "house" },
+        new BreadcrumbItem { Text = "Workflows", Icon = "diagram-3" }
+    };
 
     [Inject]
     private ITicketService TicketService { get; set; } = null!;

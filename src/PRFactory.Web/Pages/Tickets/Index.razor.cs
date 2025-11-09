@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 using PRFactory.Domain.ValueObjects;
 using PRFactory.Web.Models;
+using PRFactory.Web.UI.Navigation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,6 +28,12 @@ public partial class Index : IAsyncDisposable
 
     private bool isLoading = true;
     private string? errorMessage;
+
+    private List<BreadcrumbItem> breadcrumbItems = new()
+    {
+        new BreadcrumbItem { Text = "Dashboard", Href = "/", Icon = "house" },
+        new BreadcrumbItem { Text = "Tickets", Icon = "ticket-detailed" }
+    };
 
     [Inject]
     private ITicketService TicketService { get; set; } = null!;

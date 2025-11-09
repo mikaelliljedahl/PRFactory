@@ -1,0 +1,130 @@
+@using PRFactory.Web.UI.Dialogs
+
+@if (IsVisible)
+{
+    <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog" aria-labelledby="modalTitle" aria-hidden="false">
+        <div class="modal-dialog @GetSizeClass() @(Centered ? "modal-dialog-centered" : "")" role="document">
+            <div class="modal-content">
+                @if (!string.IsNullOrEmpty(Title) || ShowCloseButton)
+                {
+                    <div class="modal-header @GetHeaderClass()">
+                        <h5 class="modal-title" id="modalTitle">
+                            @if (!string.IsNullOrEmpty(Icon))
+                            {
+                                <i class="bi bi-@Icon me-2"></i>
+                            }
+                            @Title
+                        </h5>
+                        @if (ShowCloseButton)
+                        {
+                            <button type="button" class="btn-close @(Variant != ModalVariant.Default ? "btn-close-white" : "")" @onclick="Close" aria-label="Close"></button>
+                        }
+                    </div>
+                }
+                <div class="modal-body">
+                    @if (BodyContent != null)
+                    {
+                        @BodyContent
+                    }
+                    else if (!string.IsNullOrEmpty(Message))
+                    {
+                        <p>@Message</p>
+                    }
+                </div>
+                @if (FooterContent != null || ShowDefaultButtons)
+                {
+                    <div class="modal-footer">
+                        @if (FooterContent != null)
+                        {
+                            @FooterContent
+                        }
+                        else if (ShowDefaultButtons)
+                        {
+                            @if (ShowCancelButton)
+                            {
+                                <button type="button" class="btn btn-secondary" @onclick="Cancel">@CancelButtonText</button>
+                            }
+                            <button type="button" class="btn @GetConfirmButtonClass()" @onclick="Confirm">@ConfirmButtonText</button>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Message { get; set; }
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public ModalSize Size { get; set; } = ModalSize.Medium;
+    [Parameter] public ModalVariant Variant { get; set; } = ModalVariant.Default;
+    [Parameter] public bool Centered { get; set; } = true;
+    [Parameter] public bool ShowCloseButton { get; set; } = true;
+    [Parameter] public bool ShowDefaultButtons { get; set; } = false;
+    [Parameter] public bool ShowCancelButton { get; set; } = true;
+    [Parameter] public string ConfirmButtonText { get; set; } = "OK";
+    [Parameter] public string CancelButtonText { get; set; } = "Cancel";
+    [Parameter] public EventCallback OnConfirm { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public RenderFragment? BodyContent { get; set; }
+    [Parameter] public RenderFragment? FooterContent { get; set; }
+
+    private string GetSizeClass()
+    {
+        return Size switch
+        {
+            ModalSize.Small => "modal-sm",
+            ModalSize.Large => "modal-lg",
+            ModalSize.ExtraLarge => "modal-xl",
+            _ => ""
+        };
+    }
+
+    private string GetHeaderClass()
+    {
+        return Variant switch
+        {
+            ModalVariant.Primary => "bg-primary text-white",
+            ModalVariant.Success => "bg-success text-white",
+            ModalVariant.Danger => "bg-danger text-white",
+            ModalVariant.Warning => "bg-warning text-dark",
+            ModalVariant.Info => "bg-info text-white",
+            _ => ""
+        };
+    }
+
+    private string GetConfirmButtonClass()
+    {
+        return Variant switch
+        {
+            ModalVariant.Primary => "btn-primary",
+            ModalVariant.Success => "btn-success",
+            ModalVariant.Danger => "btn-danger",
+            ModalVariant.Warning => "btn-warning",
+            ModalVariant.Info => "btn-info",
+            _ => "btn-primary"
+        };
+    }
+
+    private async Task Close()
+    {
+        IsVisible = false;
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task Confirm()
+    {
+        await OnConfirm.InvokeAsync();
+        await Close();
+    }
+
+    private async Task Cancel()
+    {
+        await OnCancel.InvokeAsync();
+        await Close();
+    }
+}

@@ -40,6 +40,9 @@ builder.Services.AddScoped<IAgentPromptService, AgentPromptService>();
 builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<IErrorService, ErrorService>();
 
+// Register Toast notification service
+builder.Services.AddScoped<IToastService, ToastService>();
+
 var app = builder.Build();
 
 // Seed demo data in Development environment

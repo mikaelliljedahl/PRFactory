@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using PRFactory.Web.Models;
 using PRFactory.Web.Services;
+using PRFactory.Web.UI.Navigation;
 
 namespace PRFactory.Web.Pages.Tickets;
 
@@ -16,12 +17,17 @@ public partial class Detail : IAsyncDisposable
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
+    [Inject]
+    private IToastService ToastService { get; set; } = null!;
+
     private TicketDto? ticket;
     private List<QuestionDto>? questions;
     private List<WorkflowEventDto>? events;
     private HubConnection? hubConnection;
     private bool isLoading = true;
     private string? errorMessage;
+    private HubConnectionState connectionState = HubConnectionState.Disconnected;
+    private List<BreadcrumbItem> breadcrumbItems = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -44,31 +50,12 @@ public partial class Detail : IAsyncDisposable
 
             if (Guid.TryParse(Id, out var ticketId))
             {
-                // TODO: Replace with proper API call that returns TicketDto
-                // For now, get the Ticket entity and map to TicketDto
-                var ticketEntity = await TicketService.GetTicketByIdAsync(ticketId);
+                ticket = await TicketService.GetTicketDtoByIdAsync(ticketId);
 
-                if (ticketEntity != null)
+                if (ticket != null)
                 {
-                    ticket = new TicketDto
-                    {
-                        Id = ticketEntity.Id,
-                        TicketKey = ticketEntity.TicketKey,
-                        Title = ticketEntity.Title,
-                        Description = ticketEntity.Description,
-                        State = ticketEntity.State,
-                        Source = ticketEntity.Source,
-                        RepositoryId = ticketEntity.RepositoryId,
-                        RepositoryName = ticketEntity.Repository?.Name,
-                        CreatedAt = ticketEntity.CreatedAt,
-                        UpdatedAt = ticketEntity.UpdatedAt,
-                        CompletedAt = ticketEntity.CompletedAt,
-                        PullRequestUrl = ticketEntity.PullRequestUrl,
-                        PullRequestNumber = ticketEntity.PullRequestNumber,
-                        PlanBranchName = ticketEntity.PlanBranchName,
-                        PlanMarkdownPath = ticketEntity.PlanMarkdownPath,
-                        LastError = ticketEntity.LastError
-                    };
+                    // Build breadcrumbs after ticket is loaded
+                    BuildBreadcrumbs();
                 }
             }
             else
@@ -79,6 +66,7 @@ public partial class Detail : IAsyncDisposable
         catch (Exception ex)
         {
             errorMessage = $"Error loading ticket: {ex.Message}";
+            ToastService.ShowError($"Failed to load ticket: {ex.Message}");
         }
         finally
         {
@@ -134,57 +122,149 @@ public partial class Detail : IAsyncDisposable
     {
         try
         {
-            // TODO: Set up SignalR connection for real-time ticket updates
-            // hubConnection = new HubConnectionBuilder()
-            //     .WithUrl(NavigationManager.ToAbsoluteUri("/hubs/tickets"))
-            //     .Build();
-            //
-            // hubConnection.On<TicketDto>("TicketUpdated", async (updatedTicket) =>
-            // {
-            //     if (updatedTicket.Id == ticket?.Id)
-            //     {
-            //         ticket = updatedTicket;
-            //         await InvokeAsync(StateHasChanged);
-            //     }
-            // });
-            //
-            // await hubConnection.StartAsync();
+            connectionState = HubConnectionState.Connecting;
+            StateHasChanged();
+
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(NavigationManager.ToAbsoluteUri("/hubs/tickets"))
+                .WithAutomaticReconnect()
+                .Build();
+
+            hubConnection.On<Guid, string>("TicketUpdated", async (ticketId, state) =>
+            {
+                if (ticketId == ticket?.Id)
+                {
+                    await LoadTicket();
+                    await LoadQuestions();
+                    await LoadEvents();
+                    await InvokeAsync(StateHasChanged);
+                }
+            });
+
+            hubConnection.Reconnecting += error =>
+            {
+                connectionState = HubConnectionState.Reconnecting;
+                InvokeAsync(StateHasChanged);
+                return Task.CompletedTask;
+            };
+
+            hubConnection.Reconnected += connectionId =>
+            {
+                connectionState = HubConnectionState.Connected;
+                InvokeAsync(StateHasChanged);
+                return Task.CompletedTask;
+            };
+
+            hubConnection.Closed += error =>
+            {
+                connectionState = HubConnectionState.Disconnected;
+                InvokeAsync(StateHasChanged);
+                return Task.CompletedTask;
+            };
+
+            await hubConnection.StartAsync();
+            connectionState = HubConnectionState.Connected;
+            StateHasChanged();
         }
         catch (Exception ex)
         {
-            // Log but don't fail the page load
+            connectionState = HubConnectionState.Disconnected;
             Console.WriteLine($"Error initializing SignalR: {ex.Message}");
+            StateHasChanged();
         }
     }
 
     private async Task HandleAnswersSubmitted()
     {
+        ToastService.ShowSuccess("Your answers have been submitted successfully!");
         await LoadTicket();
         await LoadEvents();
     }
 
     private async Task HandleTicketUpdateApproved()
     {
+        ToastService.ShowSuccess("Ticket update has been approved!");
         await LoadTicket();
         await LoadEvents();
     }
 
     private async Task HandleTicketUpdateRejected()
     {
+        ToastService.ShowWarning("Ticket update has been rejected and will be regenerated.");
         await LoadTicket();
         await LoadEvents();
     }
 
     private async Task HandlePlanApproved()
     {
+        ToastService.ShowSuccess("Implementation plan has been approved!");
         await LoadTicket();
         await LoadEvents();
     }
 
     private async Task HandlePlanRejected()
     {
+        ToastService.ShowWarning("Plan has been rejected and will be regenerated.");
         await LoadTicket();
         await LoadEvents();
+    }
+
+    private enum HubConnectionState
+    {
+        Disconnected,
+        Connecting,
+        Connected,
+        Reconnecting
+    }
+
+    private string GetConnectionAlertClass()
+    {
+        return connectionState switch
+        {
+            HubConnectionState.Connected => "alert-success",
+            HubConnectionState.Connecting => "alert-info",
+            HubConnectionState.Reconnecting => "alert-warning",
+            HubConnectionState.Disconnected => "alert-danger",
+            _ => "alert-secondary"
+        };
+    }
+
+    private string GetConnectionIcon()
+    {
+        return connectionState switch
+        {
+            HubConnectionState.Connected => "bi-wifi",
+            HubConnectionState.Connecting => "bi-wifi",
+            HubConnectionState.Reconnecting => "bi-wifi",
+            HubConnectionState.Disconnected => "bi-wifi-off",
+            _ => "bi-wifi-off"
+        };
+    }
+
+    private string GetConnectionStatusText()
+    {
+        return connectionState switch
+        {
+            HubConnectionState.Connected => "Connected",
+            HubConnectionState.Connecting => "Connecting...",
+            HubConnectionState.Reconnecting => "Reconnecting...",
+            HubConnectionState.Disconnected => "Disconnected",
+            _ => "Unknown"
+        };
+    }
+
+    private void BuildBreadcrumbs()
+    {
+        breadcrumbItems = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem { Text = "Dashboard", Href = "/", Icon = "house" },
+            new BreadcrumbItem { Text = "Tickets", Href = "/tickets", Icon = "ticket-detailed" },
+            new BreadcrumbItem
+            {
+                Text = ticket?.TicketKey ?? Id,
+                Icon = "file-text"
+            }
+        };
     }
 
     public async ValueTask DisposeAsync()

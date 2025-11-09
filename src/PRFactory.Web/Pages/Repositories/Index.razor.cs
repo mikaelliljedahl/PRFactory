@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using PRFactory.Web.Models;
 using PRFactory.Web.UI.Dialogs;
+using PRFactory.Web.UI.Navigation;
 using Radzen;
 
 namespace PRFactory.Web.Pages.Repositories;
@@ -10,6 +11,12 @@ public partial class Index
     private List<RepositoryDto>? repositories;
     private bool isLoading = true;
     private string? errorMessage;
+
+    private List<BreadcrumbItem> breadcrumbItems = new()
+    {
+        new BreadcrumbItem { Text = "Dashboard", Href = "/", Icon = "house" },
+        new BreadcrumbItem { Text = "Repositories", Icon = "folder" }
+    };
 
     [Inject]
     private IRepositoryService RepositoryService { get; set; } = null!;

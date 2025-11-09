@@ -3,9 +3,15 @@
 @using PRFactory.Web.UI.Alerts
 @using PRFactory.Web.UI.Display
 @using PRFactory.Web.UI.Buttons
+@using PRFactory.Web.UI.Navigation
 @using Radzen.Blazor
 
 <PageTitle>@(repository?.Name ?? "Repository") - PRFactory</PageTitle>
+
+@if (repository != null)
+{
+    <Breadcrumbs Items="@breadcrumbItems" AdditionalClass="mb-3" />
+}
 
 <div class="container-fluid">
     @if (isLoading)

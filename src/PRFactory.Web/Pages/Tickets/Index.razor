@@ -5,10 +5,13 @@
 @using PRFactory.Web.UI.Alerts
 @using PRFactory.Web.UI.Buttons
 @using PRFactory.Web.UI.Display
+@using PRFactory.Web.UI.Navigation
 @using PRFactory.Domain.ValueObjects
 @using static PRFactory.Web.Components.TicketFilters
 
 <PageTitle>Tickets - PRFactory</PageTitle>
+
+<Breadcrumbs Items="@breadcrumbItems" AdditionalClass="mb-3" />
 
 <div class="container-fluid">
     <div class="row mb-4">

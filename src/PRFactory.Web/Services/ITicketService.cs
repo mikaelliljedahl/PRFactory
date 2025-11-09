@@ -19,6 +19,11 @@ public interface ITicketService
     Task<Ticket?> GetTicketByIdAsync(Guid ticketId, CancellationToken ct = default);
 
     /// <summary>
+    /// Get a specific ticket by ID as DTO
+    /// </summary>
+    Task<TicketDto?> GetTicketDtoByIdAsync(Guid ticketId, CancellationToken ct = default);
+
+    /// <summary>
     /// Get tickets by repository
     /// </summary>
     Task<List<Ticket>> GetTicketsByRepositoryAsync(Guid repositoryId, CancellationToken ct = default);

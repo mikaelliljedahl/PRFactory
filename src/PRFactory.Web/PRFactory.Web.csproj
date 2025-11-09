@@ -14,7 +14,10 @@
     <PackageReference Include="Markdig" Version="0.40.0" />
 
     <!-- UI Components -->
-    <PackageReference Include="Radzen.Blazor" Version="5.8.5" />
+    <PackageReference Include="Radzen.Blazor" Version="5.9.0" />
+
+    <!-- Security: Override vulnerable transitive dependency from Radzen.Blazor -->
+    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.6.0" />
 
     <!-- Logging -->
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />

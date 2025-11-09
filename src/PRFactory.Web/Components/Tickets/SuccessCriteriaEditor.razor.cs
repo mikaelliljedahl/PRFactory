@@ -12,7 +12,7 @@ public partial class SuccessCriteriaEditor
     [Parameter]
     public EventCallback<List<SuccessCriterionDto>> SuccessCriteriaChanged { get; set; }
 
-    private void AddCriterion()
+    private async Task AddCriterion()
     {
         SuccessCriteria.Add(new SuccessCriterionDto
         {
@@ -21,15 +21,15 @@ public partial class SuccessCriteriaEditor
             IsTestable = true,
             Description = string.Empty
         });
-        NotifyChanged();
+        await NotifyChanged();
     }
 
-    private void RemoveCriterion(int index)
+    private async Task RemoveCriterion(int index)
     {
         if (index >= 0 && index < SuccessCriteria.Count)
         {
             SuccessCriteria.RemoveAt(index);
-            NotifyChanged();
+            await NotifyChanged();
         }
     }
 

@@ -123,7 +123,7 @@
                                             @repository.CreatedAt.ToLocalTime().ToString("g")
                                             <br />
                                             <small class="text-muted">
-                                                <RelativeTime DateTime="@repository.CreatedAt" />
+                                                <RelativeTime Timestamp="@repository.CreatedAt" />
                                             </small>
                                         </div>
                                     </div>
@@ -136,7 +136,7 @@
                                                 @repository.UpdatedAt.Value.ToLocalTime().ToString("g")
                                                 <br />
                                                 <small class="text-muted">
-                                                    <RelativeTime DateTime="@repository.UpdatedAt.Value" />
+                                                    <RelativeTime Timestamp="@repository.UpdatedAt.Value" />
                                                 </small>
                                             </div>
                                         </div>
@@ -150,7 +150,7 @@
                                                 @repository.LastAccessedAt.Value.ToLocalTime().ToString("g")
                                                 <br />
                                                 <small class="text-muted">
-                                                    <RelativeTime DateTime="@repository.LastAccessedAt.Value" />
+                                                    <RelativeTime Timestamp="@repository.LastAccessedAt.Value" />
                                                 </small>
                                             </div>
                                         </div>

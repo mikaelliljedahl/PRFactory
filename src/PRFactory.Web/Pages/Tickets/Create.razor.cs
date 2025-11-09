@@ -35,9 +35,10 @@ public partial class Create
                 Name = r.Name
             }).ToList();
         }
-        catch (Exception ex)
+        catch
         {
             // Log error but don't fail page load
+            // Repositories list will remain empty on error
         }
     }
 

@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- SignalR Client -->
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.0" />
+    <!-- SignalR Client - Using latest stable version compatible with .NET 10 -->
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.0" />
 
     <!-- Markdown Rendering -->
     <PackageReference Include="Markdig" Version="0.40.0" />

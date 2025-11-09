@@ -20,17 +20,20 @@ public class TicketApplicationService : ITicketApplicationService
     private readonly ITicketRepository _ticketRepository;
     private readonly IRepositoryRepository _repositoryRepository;
     private readonly IWorkflowOrchestrator _workflowOrchestrator;
+    private readonly ITenantContext _tenantContext;
 
     public TicketApplicationService(
         ILogger<TicketApplicationService> logger,
         ITicketRepository ticketRepository,
         IRepositoryRepository repositoryRepository,
-        IWorkflowOrchestrator workflowOrchestrator)
+        IWorkflowOrchestrator workflowOrchestrator,
+        ITenantContext tenantContext)
     {
         _logger = logger;
         _ticketRepository = ticketRepository;
         _repositoryRepository = repositoryRepository;
         _workflowOrchestrator = workflowOrchestrator;
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc/>
@@ -38,10 +41,15 @@ public class TicketApplicationService : ITicketApplicationService
     {
         _logger.LogDebug("Getting all tickets");
 
-        // TODO: Add tenant context to filter by current tenant
-        // For now, we'll need to get a tenantId somehow (from context, session, etc.)
-        // This is a placeholder - in a real implementation, you'd get this from the current user/session
-        throw new NotImplementedException("Tenant context not yet implemented. Need to filter tickets by current tenant.");
+        // Get current tenant ID from context
+        var tenantId = _tenantContext.GetCurrentTenantId();
+
+        // Get all tickets for the current tenant
+        var tickets = await _ticketRepository.GetByTenantIdAsync(tenantId, cancellationToken);
+
+        _logger.LogDebug("Found {TicketCount} tickets for tenant {TenantId}", tickets.Count, tenantId);
+
+        return tickets;
     }
 
     /// <inheritdoc/>

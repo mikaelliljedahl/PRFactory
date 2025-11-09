@@ -165,11 +165,8 @@ public class TicketTeamReviewTests
         ticket.AssignReviewers(newReviewers);
 
         // Assert
-        Assert.Equal(1, ticket.PlanReviews.Count);
-        Assert.All(ticket.PlanReviews, r =>
-        {
-            Assert.Equal(ReviewStatus.Pending, r.Status);
-        });
+        var single = Assert.Single(ticket.PlanReviews);
+        Assert.Equal(ReviewStatus.Pending, single.Status);
         Assert.Equal(1, ticket.RequiredApprovalCount);
     }
 

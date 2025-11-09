@@ -204,8 +204,8 @@ public class ReviewCommentTests
         comment.AddMention(userId);
 
         // Assert
-        Assert.Contains(userId, comment.MentionedUserIds);
-        Assert.Equal(1, comment.MentionedUserIds.Count);
+        var single = Assert.Single(comment.MentionedUserIds);
+        Assert.Equal(userId, single);
         Assert.NotNull(comment.UpdatedAt);
         Assert.True(Math.Abs((comment.UpdatedAt.Value - DateTime.UtcNow).TotalSeconds) < 1);
     }
@@ -226,7 +226,7 @@ public class ReviewCommentTests
         comment.AddMention(userId); // Try to add duplicate
 
         // Assert
-        Assert.Equal(1, comment.MentionedUserIds.Count);
+        Assert.Single(comment.MentionedUserIds);
         Assert.Equal(previousUpdatedAt, comment.UpdatedAt); // Should not change
     }
 

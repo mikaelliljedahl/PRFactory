@@ -108,8 +108,8 @@ public class TicketTests
         ticket.AddQuestion(question);
 
         // Assert
-        Assert.Equal(1, ticket.Questions.Count);
-        Assert.Equal(question, ticket.Questions.First());
+        var single = Assert.Single(ticket.Questions);
+        Assert.Equal(question, single);
     }
 
     [Fact]
@@ -135,9 +135,9 @@ public class TicketTests
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal(1, ticket.Answers.Count);
-        Assert.Equal(question.Id, ticket.Answers.First().QuestionId);
-        Assert.Equal("The expected behavior is X", ticket.Answers.First().Text);
+        var single = Assert.Single(ticket.Answers);
+        Assert.Equal(question.Id, single.QuestionId);
+        Assert.Equal("The expected behavior is X", single.Text);
     }
 
     [Fact]

@@ -1,31 +1,31 @@
 using Microsoft.Extensions.Logging;
+using PRFactory.Core.Application.Services;
 using PRFactory.Infrastructure.Agents.Base;
 using PRFactory.Infrastructure.Claude;
-using PRFactory.Infrastructure.Claude.Models;
 using System.Text.Json;
 
 namespace PRFactory.Infrastructure.Agents;
 
 /// <summary>
-/// Analyzes the codebase using Claude AI.
-/// Uses ClaudeClient and ContextBuilder to understand the repository structure
+/// Analyzes the codebase using a CLI-based AI agent.
+/// Uses ICliAgent and ContextBuilder to understand the repository structure
 /// and generate an analysis relevant to the ticket requirements.
 /// </summary>
 public class AnalysisAgent : BaseAgent
 {
-    private readonly IClaudeClient _claudeClient;
+    private readonly ICliAgent _cliAgent;
     private readonly IContextBuilder _contextBuilder;
 
     public override string Name => "AnalysisAgent";
-    public override string Description => "Analyze codebase with Claude AI to understand architecture and requirements";
+    public override string Description => "Analyze codebase with AI to understand architecture and requirements";
 
     public AnalysisAgent(
         ILogger<AnalysisAgent> logger,
-        IClaudeClient claudeClient,
+        ICliAgent cliAgent,
         IContextBuilder contextBuilder)
         : base(logger)
     {
-        _claudeClient = claudeClient ?? throw new ArgumentNullException(nameof(claudeClient));
+        _cliAgent = cliAgent ?? throw new ArgumentNullException(nameof(cliAgent));
         _contextBuilder = contextBuilder ?? throw new ArgumentNullException(nameof(contextBuilder));
     }
 
@@ -61,8 +61,8 @@ public class AnalysisAgent : BaseAgent
                 context.RepositoryPath!
             );
 
-            // Prepare system prompt for analysis
-            var systemPrompt = @"You are an expert software architect analyzing a codebase to understand how to implement a new feature.
+            // Build combined prompt for CLI agent
+            var prompt = $@"You are an expert software architect analyzing a codebase to understand how to implement a new feature.
 
 Your task is to analyze the provided codebase and ticket requirements, then provide:
 1. A summary of the codebase architecture
@@ -71,32 +71,40 @@ Your task is to analyze the provided codebase and ticket requirements, then prov
 4. Any potential risks or challenges
 
 Respond with JSON in this format:
-{
+{{
   ""summary"": ""Brief architecture summary"",
   ""affectedFiles"": [""file1.cs"", ""file2.cs""],
   ""technicalConsiderations"": [""consideration 1"", ""consideration 2""],
   ""architecture"": ""Detailed architecture description""
-}";
+}}
 
-            var messages = new List<Message>
-            {
-                new Message(
-                    "user",
-                    $@"Ticket: {context.Ticket.TicketKey}
+Ticket: {context.Ticket.TicketKey}
 Title: {context.Ticket.Title}
 Description: {context.Ticket.Description}
 
 Codebase Context:
-{codebaseContext}")
-            };
+{codebaseContext}";
 
-            // Call Claude for analysis
-            var response = await _claudeClient.SendMessageAsync(
-                systemPrompt,
-                messages,
-                maxTokens: 4000,
-                ct: cancellationToken
+            Logger.LogInformation("Executing {AgentName} analysis with project context", _cliAgent.AgentName);
+
+            // Call CLI agent with project context for full codebase access
+            var cliResponse = await _cliAgent.ExecuteWithProjectContextAsync(
+                prompt,
+                context.RepositoryPath!,
+                cancellationToken
             );
+
+            if (!cliResponse.Success)
+            {
+                Logger.LogError("CLI agent execution failed: {Error}", cliResponse.ErrorMessage);
+                return new AgentResult
+                {
+                    Status = AgentStatus.Failed,
+                    Error = $"CLI agent execution failed: {cliResponse.ErrorMessage}"
+                };
+            }
+
+            var response = cliResponse.Content;
 
             // Parse JSON response
             var analysisJson = ExtractJsonFromResponse(response);

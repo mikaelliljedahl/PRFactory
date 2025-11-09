@@ -1,30 +1,29 @@
 using Microsoft.Extensions.Logging;
+using PRFactory.Core.Application.Services;
 using PRFactory.Domain.ValueObjects;
 using PRFactory.Infrastructure.Agents.Base;
-using PRFactory.Infrastructure.Claude;
-using PRFactory.Infrastructure.Claude.Models;
 using System.Text.Json;
 
 namespace PRFactory.Infrastructure.Agents;
 
 /// <summary>
-/// Generates clarifying questions using Claude AI.
+/// Generates clarifying questions using a CLI-based AI agent.
 /// Analyzes the ticket and codebase to generate 3-7 questions that will help
 /// ensure the implementation meets requirements.
 /// </summary>
 public class QuestionGenerationAgent : BaseAgent
 {
-    private readonly IClaudeClient _claudeClient;
+    private readonly ICliAgent _cliAgent;
 
     public override string Name => "QuestionGenerationAgent";
     public override string Description => "Generate clarifying questions to ensure implementation requirements are clear";
 
     public QuestionGenerationAgent(
         ILogger<QuestionGenerationAgent> logger,
-        IClaudeClient claudeClient)
+        ICliAgent cliAgent)
         : base(logger)
     {
-        _claudeClient = claudeClient ?? throw new ArgumentNullException(nameof(claudeClient));
+        _cliAgent = cliAgent ?? throw new ArgumentNullException(nameof(cliAgent));
     }
 
     protected override async Task<AgentResult> ExecuteAsync(AgentContext context, CancellationToken cancellationToken)
@@ -53,8 +52,8 @@ public class QuestionGenerationAgent : BaseAgent
 
         try
         {
-            // Prepare system prompt
-            var systemPrompt = @"You are an expert software architect helping to clarify requirements for a software implementation.
+            // Build combined prompt for CLI agent
+            var prompt = $@"You are an expert software architect helping to clarify requirements for a software implementation.
 
 Based on the ticket description and codebase analysis, generate 3-7 clarifying questions that will help ensure the implementation meets the requirements.
 
@@ -66,20 +65,16 @@ Focus on:
 - Non-functional requirements (performance, security, etc.)
 
 Respond with JSON in this format:
-{
+{{
   ""questions"": [
-    {
+    {{
       ""text"": ""Question text here?"",
       ""category"": ""requirements|technical|testing""
-    }
+    }}
   ]
-}";
+}}
 
-            var messages = new List<Message>
-            {
-                new Message(
-                    "user",
-                    $@"Ticket: {context.Ticket.TicketKey}
+Ticket: {context.Ticket.TicketKey}
 Title: {context.Ticket.Title}
 Description: {context.Ticket.Description}
 
@@ -92,16 +87,27 @@ Affected Files:
 Technical Considerations:
 {string.Join("\n", context.Analysis.TechnicalConsiderations)}
 
-Please generate 3-7 clarifying questions to ensure the implementation is well-defined.")
-            };
+Please generate 3-7 clarifying questions to ensure the implementation is well-defined.";
 
-            // Call Claude
-            var response = await _claudeClient.SendMessageAsync(
-                systemPrompt,
-                messages,
-                maxTokens: 2000,
-                ct: cancellationToken
+            Logger.LogInformation("Executing {AgentName} to generate questions", _cliAgent.AgentName);
+
+            // Call CLI agent (doesn't need project context, just the analysis)
+            var cliResponse = await _cliAgent.ExecutePromptAsync(
+                prompt,
+                cancellationToken
             );
+
+            if (!cliResponse.Success)
+            {
+                Logger.LogError("CLI agent execution failed: {Error}", cliResponse.ErrorMessage);
+                return new AgentResult
+                {
+                    Status = AgentStatus.Failed,
+                    Error = $"CLI agent execution failed: {cliResponse.ErrorMessage}"
+                };
+            }
+
+            var response = cliResponse.Content;
 
             // Parse response
             var jsonResponse = ExtractJsonFromResponse(response);

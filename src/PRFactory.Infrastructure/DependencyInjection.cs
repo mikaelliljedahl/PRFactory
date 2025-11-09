@@ -98,6 +98,9 @@ public static class DependencyInjection
         services.AddScoped<Agents.Services.IAgentPromptService, Agents.Services.AgentPromptService>();
         services.AddScoped<Agents.Services.AgentPromptLoaderService>();
 
+        // Register context builder for AI agents
+        services.AddScoped<Claude.IContextBuilder, Claude.ContextBuilder>();
+
         // Register agents
         services.AddTransient<Agents.TriggerAgent>();
         services.AddTransient<Agents.RepositoryCloneAgent>();

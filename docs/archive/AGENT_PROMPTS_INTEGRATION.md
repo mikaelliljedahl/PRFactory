@@ -1,3 +1,11 @@
+> **ARCHIVED**: This implementation guide described the agent prompts system integration (now complete).
+> The agent prompts system is now implemented. See [ARCHITECTURE.md](../ARCHITECTURE.md) section on Agent Prompts for current documentation.
+>
+> **Date Archived**: 2025-11-08
+> **Implementation Date**: 2025-11-07
+
+---
+
 # Agent Prompts Integration
 
 This document describes the integration of customizable AI agent prompts from the ClaudeCodeSettings repository into PRFactory.

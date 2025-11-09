@@ -619,4 +619,3 @@ _logger.LogInformation("Jira webhook received: {Event} for {Key} in {Duration}ms
 
 Review the other integration documents:
 - [Git Integration](./git-integration.md) - Multi-platform git operations
-- [Claude AI Integration](./claude-integration.md) - AI orchestration

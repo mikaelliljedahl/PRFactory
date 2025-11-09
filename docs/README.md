@@ -49,8 +49,7 @@ PRFactory/
 │   ├── architecture/                  # Component-specific architecture docs
 │   │   ├── core-engine.md             # Core workflow engine details
 │   │   ├── jira-integration.md        # Jira integration details
-│   │   ├── git-integration.md         # Git integration details
-│   │   └── claude-integration.md      # Claude AI integration details
+│   │   └── git-integration.md         # Git integration details
 │   │
 │   └── archive/                       # Historical/outdated documents
 │       ├── ORIGINAL_PROPOSAL.md       # Initial Jira-first proposal (archived)
@@ -176,7 +175,6 @@ PRFactory/
 | **Workflow Engine** | [core-engine.md](architecture/core-engine.md) | State machine, transitions, checkpoints |
 | **Jira Integration** | [jira-integration.md](architecture/jira-integration.md) | Webhooks, HMAC validation, comments |
 | **Git Integration** | [git-integration.md](architecture/git-integration.md) | Multi-platform, LibGit2Sharp, PRs |
-| **Claude AI** | [claude-integration.md](architecture/claude-integration.md) | API client, prompts, context building |
 
 ### Component Documentation
 

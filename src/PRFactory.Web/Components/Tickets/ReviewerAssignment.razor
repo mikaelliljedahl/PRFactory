@@ -1,0 +1,107 @@
+@namespace PRFactory.Web.Components.Tickets
+@using PRFactory.Web.UI.Display
+@using PRFactory.Web.Models
+@using PRFactory.Domain.Entities
+
+<div class="card mb-3">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-people me-2"></i>
+            Assign Reviewers
+        </h5>
+    </div>
+    <div class="card-body">
+        @if (IsLoading)
+        {
+            <div class="text-center py-3">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        }
+        else if (ErrorMessage != null)
+        {
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                @ErrorMessage
+            </div>
+        }
+        else
+        {
+            <div class="mb-3">
+                <p class="text-muted">
+                    Assign team members to review this implementation plan. Required reviewers must all approve before the plan can proceed.
+                </p>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Required Reviewers *</label>
+                <p class="form-text small mb-2">All required reviewers must approve the plan</p>
+                @if (AvailableUsers.Any())
+                {
+                    @foreach (var user in AvailableUsers)
+                    {
+                        <div class="form-check mb-2">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   id="required-@user.Id"
+                                   checked="@SelectedRequiredReviewers.Contains(user.Id)"
+                                   @onchange="@(e => ToggleRequiredReviewer(user.Id, e))">
+                            <label class="form-check-label d-flex align-items-center" for="required-@user.Id">
+                                <ReviewerAvatar DisplayName="@user.DisplayName"
+                                              AvatarUrl="@user.AvatarUrl"
+                                              Size="ReviewerAvatar.AvatarSize.Small" />
+                                <span class="ms-2">@user.DisplayName (@user.Email)</span>
+                            </label>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted">No users available for assignment.</p>
+                }
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Optional Reviewers</label>
+                <p class="form-text small mb-2">Optional reviewers can provide feedback but are not required to approve</p>
+                @foreach (var user in AvailableUsers)
+                {
+                    @if (!SelectedRequiredReviewers.Contains(user.Id))
+                    {
+                        <div class="form-check mb-2">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   id="optional-@user.Id"
+                                   checked="@SelectedOptionalReviewers.Contains(user.Id)"
+                                   @onchange="@(e => ToggleOptionalReviewer(user.Id, e))">
+                            <label class="form-check-label d-flex align-items-center" for="optional-@user.Id">
+                                <ReviewerAvatar DisplayName="@user.DisplayName"
+                                              AvatarUrl="@user.AvatarUrl"
+                                              Size="ReviewerAvatar.AvatarSize.Small" />
+                                <span class="ms-2">@user.DisplayName (@user.Email)</span>
+                            </label>
+                        </div>
+                    }
+                }
+            </div>
+
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary" @onclick="HandleAssignReviewers" disabled="@IsSaving">
+                    @if (IsSaving)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    }
+                    <i class="bi bi-check-circle me-2"></i>
+                    Assign Reviewers
+                </button>
+                @if (OnCancel.HasDelegate)
+                {
+                    <button class="btn btn-secondary" @onclick="OnCancel" disabled="@IsSaving">
+                        Cancel
+                    </button>
+                }
+            </div>
+        }
+    </div>
+</div>

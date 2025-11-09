@@ -21,6 +21,8 @@ public class TicketService : ITicketService
     private readonly IPlanService _planService;
     private readonly ITenantContext _tenantContext;
     private readonly ITicketRepository _ticketRepository;
+    private readonly IPlanReviewService _planReviewService;
+    private readonly ICurrentUserService _currentUserService;
 
     public TicketService(
         ILogger<TicketService> logger,
@@ -30,7 +32,9 @@ public class TicketService : ITicketService
         IWorkflowEventApplicationService workflowEventApplicationService,
         IPlanService planService,
         ITenantContext tenantContext,
-        ITicketRepository ticketRepository)
+        ITicketRepository ticketRepository,
+        IPlanReviewService planReviewService,
+        ICurrentUserService currentUserService)
     {
         _logger = logger;
         _ticketApplicationService = ticketApplicationService;
@@ -40,6 +44,8 @@ public class TicketService : ITicketService
         _planService = planService;
         _tenantContext = tenantContext;
         _ticketRepository = ticketRepository;
+        _planReviewService = planReviewService;
+        _currentUserService = currentUserService;
     }
 
     public async Task<List<Ticket>> GetAllTicketsAsync(CancellationToken ct = default)
@@ -522,5 +528,130 @@ public class TicketService : ITicketService
             WorkflowState.AwaitingAnswers => EventSeverity.Warning,
             _ => EventSeverity.Info
         };
+    }
+
+    // Team Review methods
+
+    public async Task<List<ReviewerDto>> GetReviewersAsync(Guid ticketId, CancellationToken ct = default)
+    {
+        try
+        {
+            var reviews = await _planReviewService.GetReviewsByTicketIdAsync(ticketId, ct);
+            return reviews.Select(ReviewerDto.FromEntity).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching reviewers for ticket {TicketId}", ticketId);
+            throw;
+        }
+    }
+
+    public async Task AssignReviewersAsync(Guid ticketId, List<Guid> requiredReviewerIds, List<Guid>? optionalReviewerIds = null, CancellationToken ct = default)
+    {
+        try
+        {
+            await _planReviewService.AssignReviewersAsync(ticketId, requiredReviewerIds, optionalReviewerIds, ct);
+            _logger.LogInformation("Assigned reviewers to ticket {TicketId}", ticketId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error assigning reviewers to ticket {TicketId}", ticketId);
+            throw;
+        }
+    }
+
+    public async Task ApproveReviewAsync(Guid ticketId, Guid reviewerId, string? decision = null, CancellationToken ct = default)
+    {
+        try
+        {
+            // Find the review for this ticket and reviewer
+            var reviews = await _planReviewService.GetReviewsByTicketIdAsync(ticketId, ct);
+            var review = reviews.FirstOrDefault(r => r.ReviewerId == reviewerId);
+
+            if (review == null)
+            {
+                throw new InvalidOperationException($"No review found for ticket {ticketId} and reviewer {reviewerId}");
+            }
+
+            await _planReviewService.ApproveReviewAsync(review.Id, decision, ct);
+            _logger.LogInformation("Approved review for ticket {TicketId} by reviewer {ReviewerId}", ticketId, reviewerId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error approving review for ticket {TicketId}", ticketId);
+            throw;
+        }
+    }
+
+    public async Task RejectReviewAsync(Guid ticketId, Guid reviewerId, string reason, bool regenerateCompletely, CancellationToken ct = default)
+    {
+        try
+        {
+            // Find the review for this ticket and reviewer
+            var reviews = await _planReviewService.GetReviewsByTicketIdAsync(ticketId, ct);
+            var review = reviews.FirstOrDefault(r => r.ReviewerId == reviewerId);
+
+            if (review == null)
+            {
+                throw new InvalidOperationException($"No review found for ticket {ticketId} and reviewer {reviewerId}");
+            }
+
+            await _planReviewService.RejectReviewAsync(review.Id, reason, regenerateCompletely, ct);
+            _logger.LogInformation("Rejected review for ticket {TicketId} by reviewer {ReviewerId}", ticketId, reviewerId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error rejecting review for ticket {TicketId}", ticketId);
+            throw;
+        }
+    }
+
+    public async Task<List<ReviewCommentDto>> GetCommentsAsync(Guid ticketId, CancellationToken ct = default)
+    {
+        try
+        {
+            var comments = await _planReviewService.GetCommentsByTicketIdAsync(ticketId, ct);
+            return comments.Select(ReviewCommentDto.FromEntity).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching comments for ticket {TicketId}", ticketId);
+            throw;
+        }
+    }
+
+    public async Task<ReviewCommentDto> AddCommentAsync(Guid ticketId, string content, List<Guid>? mentionedUserIds = null, CancellationToken ct = default)
+    {
+        try
+        {
+            var currentUserId = await _currentUserService.GetCurrentUserIdAsync(ct);
+            if (!currentUserId.HasValue)
+            {
+                throw new InvalidOperationException("No authenticated user found");
+            }
+
+            var comment = await _planReviewService.AddCommentAsync(ticketId, currentUserId.Value, content, mentionedUserIds, ct);
+            _logger.LogInformation("Added comment to ticket {TicketId} by user {UserId}", ticketId, currentUserId.Value);
+
+            return ReviewCommentDto.FromEntity(comment);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding comment to ticket {TicketId}", ticketId);
+            throw;
+        }
+    }
+
+    public async Task<bool> HasSufficientApprovalsAsync(Guid ticketId, CancellationToken ct = default)
+    {
+        try
+        {
+            return await _planReviewService.HasSufficientApprovalsAsync(ticketId, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking approvals for ticket {TicketId}", ticketId);
+            throw;
+        }
     }
 }

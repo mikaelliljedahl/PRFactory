@@ -1,8 +1,9 @@
+@namespace PRFactory.Web.Components.Tickets
 @using PRFactory.Web.Models
-@inject ITicketService TicketService
-@inject IToastService ToastService
 
-<div class="card mb-3">
+<div class="row">
+    <div class="col-lg-8 mb-3">
+        <div class="card mb-3">
     <div class="card-header bg-primary text-white">
         <h4 class="mb-0">
             <i class="bi bi-file-earmark-text"></i> Implementation Plan Ready for Review
@@ -192,164 +193,44 @@
         }
     </div>
 </div>
+    </div>
 
-@code {
-    [Parameter]
-    public TicketDto Ticket { get; set; } = null!;
-
-    [Parameter]
-    public EventCallback OnPlanApproved { get; set; }
-
-    [Parameter]
-    public EventCallback OnPlanRejected { get; set; }
-
-    private bool showRefineForm;
-    private bool showRejectForm;
-    private bool isSubmitting;
-    private bool showRefineError;
-    private bool showRejectError;
-    private bool showExamples;
-    private string refinementInstructions = string.Empty;
-    private string rejectionReason = string.Empty;
-    private string? errorMessage;
-
-    private async Task HandleApprove()
-    {
-        try
+    <div class="col-lg-4">
+        @if (showReviewerAssignment)
         {
-            errorMessage = null;
-            isSubmitting = true;
-            StateHasChanged();
-
-            await TicketService.ApprovePlanAsync(Ticket.Id);
-
-            ToastService.ShowSuccess("Implementation plan approved successfully! Implementation will begin shortly.");
-
-            // Notify parent component
-            await OnPlanApproved.InvokeAsync();
+            <ReviewerAssignment TicketId="@Ticket.Id"
+                              OnAssigned="HandleReviewersAssigned"
+                              OnCancel="HideReviewerAssignment" />
         }
-        catch (Exception ex)
+        else
         {
-            errorMessage = $"Error approving plan: {ex.Message}";
-            ToastService.ShowError($"Failed to approve plan: {ex.Message}");
+            @if (reviewers.Any())
+            {
+                <PlanReviewStatus Reviewers="@reviewers" />
+            }
+            else if (!isLoadingReviewers)
+            {
+                <div class="card mb-3">
+                    <div class="card-body text-center">
+                        <p class="text-muted mb-3">
+                            <i class="bi bi-people me-2"></i>
+                            No team reviewers assigned yet.
+                        </p>
+                        <button class="btn btn-outline-primary btn-sm"
+                                @onclick="ShowReviewerAssignment">
+                            <i class="bi bi-person-plus me-2"></i>
+                            Assign Team Reviewers
+                        </button>
+                    </div>
+                </div>
+            }
+
+            <ReviewCommentThread TicketId="@Ticket.Id"
+                                Comments="@comments"
+                                OnCommentAdded="HandleCommentAdded" />
         }
-        finally
-        {
-            isSubmitting = false;
-            StateHasChanged();
-        }
-    }
-
-    private void ShowRefineForm()
-    {
-        showRefineForm = true;
-        showRefineError = false;
-        refinementInstructions = string.Empty;
-        errorMessage = null;
-    }
-
-    private void CancelRefine()
-    {
-        showRefineForm = false;
-        showRefineError = false;
-        refinementInstructions = string.Empty;
-        errorMessage = null;
-    }
-
-    private async Task ConfirmRefine()
-    {
-        if (string.IsNullOrWhiteSpace(refinementInstructions))
-        {
-            showRefineError = true;
-            StateHasChanged();
-            return;
-        }
-
-        try
-        {
-            errorMessage = null;
-            showRefineError = false;
-            isSubmitting = true;
-            StateHasChanged();
-
-            await TicketService.RefinePlanAsync(Ticket.Id, refinementInstructions);
-
-            ToastService.ShowInfo("Refinement instructions submitted. The plan will be updated based on your feedback.");
-
-            // Notify parent component
-            await OnPlanRejected.InvokeAsync();
-
-            // Reset form
-            showRefineForm = false;
-            refinementInstructions = string.Empty;
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Error refining plan: {ex.Message}";
-            ToastService.ShowError($"Failed to submit refinement: {ex.Message}");
-        }
-        finally
-        {
-            isSubmitting = false;
-            StateHasChanged();
-        }
-    }
-
-    private void ShowRejectForm()
-    {
-        showRejectForm = true;
-        showRejectError = false;
-        rejectionReason = string.Empty;
-        errorMessage = null;
-    }
-
-    private void CancelReject()
-    {
-        showRejectForm = false;
-        showRejectError = false;
-        rejectionReason = string.Empty;
-        errorMessage = null;
-    }
-
-    private async Task ConfirmReject()
-    {
-        if (string.IsNullOrWhiteSpace(rejectionReason))
-        {
-            showRejectError = true;
-            StateHasChanged();
-            return;
-        }
-
-        try
-        {
-            errorMessage = null;
-            showRejectError = false;
-            isSubmitting = true;
-            StateHasChanged();
-
-            await TicketService.RejectPlanAsync(Ticket.Id, rejectionReason, regenerateCompletely: true);
-
-            ToastService.ShowInfo("Plan rejected. A completely new plan will be generated from scratch based on your feedback.");
-
-            // Notify parent component
-            await OnPlanRejected.InvokeAsync();
-
-            // Reset form
-            showRejectForm = false;
-            rejectionReason = string.Empty;
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Error rejecting plan: {ex.Message}";
-            ToastService.ShowError($"Failed to reject plan: {ex.Message}");
-        }
-        finally
-        {
-            isSubmitting = false;
-            StateHasChanged();
-        }
-    }
-}
+    </div>
+</div>
 
 <style>
     .plan-actions-container {

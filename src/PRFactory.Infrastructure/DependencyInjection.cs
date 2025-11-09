@@ -72,6 +72,11 @@ public static class DependencyInjection
         services.AddScoped<IAgentPromptTemplateRepository, AgentPromptTemplateRepository>();
         services.AddScoped<IErrorRepository, ErrorRepository>();
 
+        // Team Review repositories
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IPlanReviewRepository, PlanReviewRepository>();
+        services.AddScoped<IReviewCommentRepository, ReviewCommentRepository>();
+
         // Register checkpoint store adapter
         services.AddScoped<WorkflowCheckpointStore, GraphCheckpointStoreAdapter>();
 
@@ -97,6 +102,11 @@ public static class DependencyInjection
         services.AddScoped<IQuestionApplicationService, Application.QuestionApplicationService>();
         services.AddScoped<IWorkflowEventApplicationService, Application.WorkflowEventApplicationService>();
         services.AddScoped<IPlanService, Application.PlanService>();
+
+        // Team Review application services
+        services.AddScoped<IUserService, Application.UserService>();
+        services.AddScoped<IPlanReviewService, Application.PlanReviewService>();
+        services.AddScoped<ICurrentUserService, Application.StubCurrentUserService>();
 
         // Register agent prompt services
         services.AddScoped<Agents.Services.IAgentPromptService, Agents.Services.AgentPromptService>();

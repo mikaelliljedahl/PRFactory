@@ -11,6 +11,7 @@
   - [Multi-Platform Support](#2-multi-platform-support-is-core)
   - [LibGit2Sharp for Git Flexibility](#3-libgit2sharp-for-git-flexibility)
   - [Blazor UI Component Architecture](#4-blazor-ui-component-architecture)
+  - [Testing Strategy & Guidelines](#5-testing-strategy--guidelines)
 - [What NOT to Simplify](#what-not-to-simplify)
 - [What IS Overengineered](#what-is-overengineered)
 - [Architecture Overview](#architecture-overview)
@@ -679,6 +680,402 @@ Blazor Component
 
 ---
 
+### 5. Testing Strategy & Guidelines
+
+**Testing is CRITICAL - Use the right tools and test REAL code, not mocks.**
+
+PRFactory follows a disciplined testing approach with two distinct test projects and strict library restrictions.
+
+#### Test Project Structure
+
+```
+/PRFactory.Tests/
+├── PRFactory.UnitTests/              # Unit tests for business logic
+│   ├── Domain/
+│   │   ├── TicketTests.cs
+│   │   ├── TenantTests.cs
+│   │   └── RepositoryTests.cs
+│   ├── Infrastructure/
+│   │   ├── Agents/
+│   │   │   ├── RefinementGraphTests.cs
+│   │   │   ├── PlanningGraphTests.cs
+│   │   │   └── WorkflowOrchestratorTests.cs
+│   │   ├── Git/
+│   │   │   ├── LocalGitServiceTests.cs
+│   │   │   └── Providers/
+│   │   │       ├── GitHubProviderTests.cs
+│   │   │       └── BitbucketProviderTests.cs
+│   │   └── Application/
+│   │       ├── TicketUpdateServiceTests.cs
+│   │       └── JiraServiceTests.cs
+│   └── Api/
+│       └── Controllers/
+│           └── TicketsControllerTests.cs
+│
+└── PRFactory.ComponentTests/         # Blazor component tests
+    ├── UI/
+    │   ├── Alerts/
+    │   │   └── AlertMessageTests.cs
+    │   ├── Buttons/
+    │   │   └── LoadingButtonTests.cs
+    │   └── Cards/
+    │       └── CardTests.cs
+    ├── Components/
+    │   └── Tickets/
+    │       ├── TicketHeaderTests.cs
+    │       └── QuestionAnswerFormTests.cs
+    └── Pages/
+        └── Tickets/
+            ├── IndexTests.cs
+            └── DetailTests.cs
+```
+
+#### Approved Testing Libraries
+
+**ONLY use these testing libraries:**
+
+1. **xUnit** - Test framework (built-in)
+   - NuGet: `xunit`, `xunit.runner.visualstudio`
+   - Use for all unit tests
+   - Supports theories, fixtures, and parallel execution
+
+2. **bUnit** - Blazor component testing
+   - NuGet: `bunit`, `bunit.web`
+   - Use for ALL Blazor component tests
+   - Documentation: https://bunit.dev/
+
+3. **Moq** - Mocking framework (when absolutely necessary)
+   - NuGet: `Moq`
+   - Use SPARINGLY - prefer testing real implementations
+   - Only mock external dependencies (HTTP clients, file system, etc.)
+
+4. **Microsoft.EntityFrameworkCore.InMemory** - In-memory database
+   - NuGet: `Microsoft.EntityFrameworkCore.InMemory`
+   - Use for repository tests
+   - Better than mocking DbContext
+
+**NEVER use these libraries:**
+- ❌ **FluentAssertions** - Not approved (xUnit assertions are sufficient)
+- ❌ **NUnit** - Not approved (we use xUnit)
+- ❌ **MSTest** - Not approved (we use xUnit)
+- ❌ **Shouldly** - Not approved (xUnit assertions are sufficient)
+- ❌ **NSubstitute** - Not approved (we use Moq when needed)
+- ❌ **FakeItEasy** - Not approved (we use Moq when needed)
+
+**Why these restrictions matter:**
+- **Consistency**: One testing style across entire codebase
+- **Learning Curve**: Developers only learn xUnit/bUnit patterns
+- **Maintenance**: Fewer dependencies = fewer breaking changes
+- **Simplicity**: xUnit assertions are clear and sufficient
+- **Bundle Size**: Test dependencies affect build/CI times
+
+#### Testing Principles
+
+**1. Test Real Code, Not Mocks**
+
+**❌ BAD** (testing mocks, not real logic):
+```csharp
+[Fact]
+public async Task ApproveUpdate_ShouldCallRepository()
+{
+    // Arrange
+    var mockRepo = new Mock<ITicketUpdateRepository>();
+    var mockOrchestrator = new Mock<IWorkflowOrchestrator>();
+    var service = new TicketUpdateService(mockRepo.Object, mockOrchestrator.Object);
+
+    // Act
+    await service.ApproveUpdateAsync(Guid.NewGuid(), "user@test.com");
+
+    // Assert
+    mockRepo.Verify(r => r.UpdateAsync(It.IsAny<TicketUpdate>()), Times.Once);
+    // ⚠️ This only tests that we called the mock - NOT the actual business logic!
+}
+```
+
+**✅ GOOD** (testing real behavior):
+```csharp
+[Fact]
+public async Task ApproveUpdate_ShouldSetApprovalFieldsAndTriggerWorkflow()
+{
+    // Arrange - Use in-memory database for REAL repository
+    var options = new DbContextOptionsBuilder<AppDbContext>()
+        .UseInMemoryDatabase(databaseName: "ApproveUpdateTest")
+        .Options;
+
+    using var context = new AppDbContext(options);
+    var repository = new TicketUpdateRepository(context);
+
+    // Mock only external dependencies we can't easily test (workflow orchestrator)
+    var mockOrchestrator = new Mock<IWorkflowOrchestrator>();
+    var service = new TicketUpdateService(repository, mockOrchestrator.Object);
+
+    // Create real test data
+    var ticketId = Guid.NewGuid();
+    var update = new TicketUpdate(ticketId, UpdateType.Plan, "Test content");
+    await repository.AddAsync(update);
+    await context.SaveChangesAsync();
+
+    // Act - Test REAL service logic
+    await service.ApproveUpdateAsync(update.Id, "user@test.com");
+
+    // Assert - Verify REAL state changes
+    var approvedUpdate = await repository.GetByIdAsync(update.Id);
+    Assert.NotNull(approvedUpdate);
+    Assert.True(approvedUpdate.IsApproved);
+    Assert.Equal("user@test.com", approvedUpdate.ApprovedBy);
+    Assert.NotNull(approvedUpdate.ApprovedAt);
+
+    // Verify workflow was triggered with correct parameters
+    mockOrchestrator.Verify(o => o.ResumeAsync(
+        ticketId,
+        It.Is<TicketUpdateApprovedMessage>(m => m.UpdateId == update.Id)
+    ), Times.Once);
+}
+```
+
+**2. Prefer In-Memory Database Over Mocking Repositories**
+
+**❌ AVOID** (mocking repositories):
+```csharp
+var mockRepo = new Mock<ITicketRepository>();
+mockRepo.Setup(r => r.GetByIdAsync(ticketId)).ReturnsAsync(ticket);
+```
+
+**✅ PREFER** (in-memory database with real repository):
+```csharp
+var options = new DbContextOptionsBuilder<AppDbContext>()
+    .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()) // Unique DB per test
+    .Options;
+
+using var context = new AppDbContext(options);
+var repository = new TicketRepository(context); // REAL repository!
+
+var ticket = new Ticket(...);
+await repository.AddAsync(ticket);
+await context.SaveChangesAsync();
+```
+
+**3. Component Tests Should Render and Interact**
+
+**✅ GOOD bUnit test** (tests real rendering and interaction):
+```csharp
+[Fact]
+public void LoadingButton_WhenClicked_ShouldShowSpinnerAndDisable()
+{
+    // Arrange
+    using var ctx = new TestContext();
+    var wasClicked = false;
+    var component = ctx.RenderComponent<LoadingButton>(parameters => parameters
+        .Add(p => p.OnClick, EventCallback.Factory.Create(this, () => wasClicked = true))
+        .Add(p => p.ChildContent, "Click Me")
+    );
+
+    // Assert initial state
+    var button = component.Find("button");
+    Assert.False(button.HasAttribute("disabled"));
+    Assert.DoesNotContain("spinner-border", button.InnerHtml);
+
+    // Act - Simulate click
+    button.Click();
+
+    // Assert - Button should be disabled and show spinner
+    Assert.True(wasClicked);
+    Assert.True(button.HasAttribute("disabled"));
+    Assert.Contains("spinner-border", button.InnerHtml);
+}
+```
+
+**4. Test Critical Paths First**
+
+Focus initial test coverage on:
+
+1. **Domain Logic** (highest priority)
+   - Ticket state transitions
+   - Validation rules
+   - Business rule enforcement
+
+2. **Workflow Orchestration**
+   - Graph transitions
+   - Suspension/resume logic
+   - Error handling and retries
+
+3. **Git Operations**
+   - Repository cloning
+   - Branch creation
+   - Pull request creation
+
+4. **Service Layer**
+   - TicketUpdateService
+   - JiraService
+   - Git platform providers
+
+5. **Critical UI Components**
+   - Ticket approval/rejection forms
+   - Question/answer forms
+   - Status displays
+
+**5. Test Naming Convention**
+
+Use descriptive test names that explain the scenario:
+
+```csharp
+// Format: MethodName_Scenario_ExpectedBehavior
+
+[Fact]
+public void Ticket_WhenAnswersProvided_ShouldTransitionToPlanning()
+
+[Fact]
+public void PlanningGraph_WhenPlanRejected_ShouldLoopWithRetryCount()
+
+[Fact]
+public void GitHubProvider_WhenRateLimited_ShouldRetryWithBackoff()
+
+[Theory]
+[InlineData(WorkflowState.Draft, WorkflowState.AwaitingRefinement, true)]
+[InlineData(WorkflowState.Draft, WorkflowState.Completed, false)]
+public void Ticket_StateTransition_ShouldValidateAllowedTransitions(
+    WorkflowState from, WorkflowState to, bool isValid)
+```
+
+#### What to Test
+
+**✅ DO TEST:**
+- Domain entity business logic (Ticket state transitions, validation)
+- Service layer business logic (orchestration, coordination)
+- Repository queries (using in-memory database)
+- Graph execution logic (state transitions, error handling)
+- Component rendering and user interactions
+- Git operations (using temporary directories)
+- Platform provider integrations (using mock HTTP clients)
+
+**❌ DON'T TEST:**
+- Simple property getters/setters
+- DTOs with no logic
+- Auto-mapper configurations (unless complex)
+- Third-party library code
+- Framework code (EF Core, ASP.NET, etc.)
+
+#### Mock Only External Dependencies
+
+**When to use mocks:**
+- ✅ External HTTP APIs (GitHub, Jira, Bitbucket)
+- ✅ File system operations (when testing in isolation)
+- ✅ Time-dependent code (use `ISystemClock` or similar)
+- ✅ Email/notification services
+- ✅ AI service calls (Claude API)
+
+**When NOT to use mocks:**
+- ❌ Database access (use in-memory database)
+- ❌ Your own repositories (use real implementations)
+- ❌ Your own services (test them directly)
+- ❌ Domain entities (always test real instances)
+
+#### Test Coverage Goals
+
+**Phase 1 (Critical Coverage):**
+- ✅ All domain entity state transitions
+- ✅ All workflow graphs (refinement, planning, implementation)
+- ✅ WorkflowOrchestrator graph transitions
+- ✅ Core service methods (approve, reject, suspend, resume)
+- ✅ Critical UI components (approval forms, status displays)
+
+**Phase 2 (Extended Coverage):**
+- Git platform providers (GitHub, Bitbucket, Azure DevOps)
+- Repository layer (all CRUD operations)
+- API controllers (integration tests)
+- All UI components (/UI/* library)
+
+**Phase 3 (Complete Coverage):**
+- Edge cases and error scenarios
+- Performance tests for large repositories
+- Integration tests with real git repositories
+- End-to-end workflow tests
+
+#### Example Test Structure
+
+```csharp
+// PRFactory.UnitTests/Infrastructure/Application/TicketUpdateServiceTests.cs
+
+using Xunit;
+using Moq;
+using Microsoft.EntityFrameworkCore;
+using PRFactory.Domain.Entities;
+using PRFactory.Infrastructure.Application;
+using PRFactory.Infrastructure.Persistence;
+
+namespace PRFactory.UnitTests.Infrastructure.Application;
+
+public class TicketUpdateServiceTests : IDisposable
+{
+    private readonly AppDbContext _context;
+    private readonly TicketUpdateRepository _repository;
+    private readonly Mock<IWorkflowOrchestrator> _mockOrchestrator;
+    private readonly TicketUpdateService _service;
+
+    public TicketUpdateServiceTests()
+    {
+        // Setup in-memory database
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        _context = new AppDbContext(options);
+        _repository = new TicketUpdateRepository(_context);
+
+        // Mock only external dependencies
+        _mockOrchestrator = new Mock<IWorkflowOrchestrator>();
+
+        // Real service under test
+        _service = new TicketUpdateService(_repository, _mockOrchestrator.Object);
+    }
+
+    [Fact]
+    public async Task ApproveUpdate_ShouldSetApprovalFieldsAndTriggerWorkflow()
+    {
+        // Test implementation here...
+    }
+
+    [Fact]
+    public async Task RejectUpdate_WithRegenerateFlag_ShouldTriggerRegeneration()
+    {
+        // Test implementation here...
+    }
+
+    public void Dispose()
+    {
+        _context.Database.EnsureDeleted();
+        _context.Dispose();
+    }
+}
+```
+
+#### Key Files
+
+**Test Projects:**
+- `/home/user/PRFactory/tests/PRFactory.UnitTests/` - Business logic tests
+- `/home/user/PRFactory/tests/PRFactory.ComponentTests/` - Blazor component tests
+
+**Test Configuration:**
+- `/home/user/PRFactory/tests/PRFactory.UnitTests/PRFactory.UnitTests.csproj`
+- `/home/user/PRFactory/tests/PRFactory.ComponentTests/PRFactory.ComponentTests.csproj`
+
+**DO NOT:**
+- Add FluentAssertions or other assertion libraries
+- Mock your own repositories/services unnecessarily
+- Write tests that only verify mocks were called
+- Skip testing business logic in favor of testing infrastructure
+- Use different testing frameworks (stick to xUnit)
+
+**DO:**
+- Test real behavior with real implementations
+- Use in-memory database for repository tests
+- Focus on critical business logic first
+- Write clear, descriptive test names
+- Test component rendering and interactions with bUnit
+- Keep tests simple and maintainable
+
+---
+
 ## What NOT to Simplify
 
 These architectural decisions should be **PRESERVED**:
@@ -734,6 +1131,15 @@ These architectural decisions should be **PRESERVED**:
 - **Keep approved libraries only**: Blazor + Radzen only (NO MudBlazor, Telerik, etc.)
 
 **Rationale**: Eliminates bootstrap spaghetti code, ensures UI consistency, maintains clean separation of concerns.
+
+### 7. Testing Strategy
+
+- **Keep xUnit + bUnit only**: Standard testing stack for all tests
+- **Keep two test projects**: PRFactory.UnitTests (business logic) and PRFactory.ComponentTests (UI)
+- **Keep "test real code" principle**: Use in-memory database, avoid excessive mocking
+- **Keep test coverage for critical paths**: Domain logic, workflows, services, UI components
+
+**Rationale**: Ensures code quality, prevents regressions, enables confident refactoring, documents expected behavior.
 
 ---
 
@@ -1316,6 +1722,7 @@ var repo = new Repository
 5. ✅ State machine pattern with checkpointing
 6. ✅ Clean Architecture separation
 7. ✅ UI Component Library structure (/UI/* for pure components, code-behind pattern)
+8. ✅ Testing strategy (xUnit + bUnit only, test real code not mocks, two test projects)
 
 **SIMPLIFY OR REMOVE:**
 1. ❌ OpenTelemetry / Jaeger tracing (keep structured logging)

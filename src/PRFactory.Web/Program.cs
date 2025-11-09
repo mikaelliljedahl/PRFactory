@@ -42,6 +42,14 @@ builder.Services.AddScoped<IErrorService, ErrorService>();
 
 var app = builder.Build();
 
+// Seed demo data in Development environment
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var dbSeeder = scope.ServiceProvider.GetRequiredService<PRFactory.Infrastructure.Persistence.DbSeeder>();
+    await dbSeeder.SeedAsync();
+}
+
 // Configure the HTTP request pipeline
 if (!app.Environment.IsDevelopment())
 {

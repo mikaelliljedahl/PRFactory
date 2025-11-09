@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using PRFactory.Web.Models;
+using PRFactory.Web.UI.Dialogs;
+using Radzen;
 
 namespace PRFactory.Web.Pages.Repositories;
 
@@ -17,6 +19,9 @@ public partial class Index
 
     [Inject]
     private ILogger<Index> Logger { get; set; } = null!;
+
+    [Inject]
+    private DialogService DialogService { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -73,7 +78,16 @@ public partial class Index
                 return;
             }
 
-            // Simple confirmation - in a real app, you'd want a proper confirmation dialog
+            bool confirmed = await ConfirmDialogHelper.ShowDeleteRepositoryAsync(
+                DialogService,
+                repository.Name,
+                repository.TicketCount);
+
+            if (!confirmed)
+            {
+                return;
+            }
+
             Logger.LogInformation("Deleting repository: {RepositoryId} - {Name}", repositoryId, repository.Name);
 
             await RepositoryService.DeleteRepositoryAsync(repositoryId);

@@ -67,4 +67,24 @@ public interface ITicketService
     /// Reject a ticket update
     /// </summary>
     Task RejectTicketUpdateAsync(Guid ticketUpdateId, string rejectionReason, CancellationToken ct = default);
+
+    /// <summary>
+    /// Get questions with their answers for a ticket
+    /// </summary>
+    Task<List<QuestionDto>> GetQuestionsAsync(Guid ticketId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Get workflow events for a ticket
+    /// </summary>
+    Task<List<WorkflowEventDto>> GetEventsAsync(Guid ticketId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Get the implementation plan for a ticket
+    /// </summary>
+    Task<PlanDto?> GetPlanAsync(Guid ticketId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Create a new ticket
+    /// </summary>
+    Task<Ticket> CreateTicketAsync(string ticketKey, string title, string description, Guid repositoryId, CancellationToken ct = default);
 }

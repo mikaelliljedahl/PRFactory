@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
-using PRFactory.Api.Models;
 using PRFactory.Web.Models;
+using PRFactory.Web.Services;
 
 namespace PRFactory.Web.Pages.Tickets;
 
@@ -12,9 +12,6 @@ public partial class Detail : IAsyncDisposable
 
     [Inject]
     private ITicketService TicketService { get; set; } = null!;
-
-    [Inject]
-    private IHttpClientFactory HttpClientFactory { get; set; } = null!;
 
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
@@ -93,11 +90,15 @@ public partial class Detail : IAsyncDisposable
     {
         try
         {
-            // TODO: Implement API endpoint GET /api/tickets/{id}/questions
-            // For now, return empty list
-            var client = HttpClientFactory.CreateClient("PRFactoryApi");
-            var response = await client.GetFromJsonAsync<QuestionsResponse>($"/api/tickets/{Id}/questions");
-            questions = response?.Questions ?? new List<QuestionDto>();
+            if (Guid.TryParse(Id, out var ticketId))
+            {
+                // Use TicketService directly (Blazor Server architecture - NO HTTP calls)
+                questions = await TicketService.GetQuestionsAsync(ticketId);
+            }
+            else
+            {
+                questions = new List<QuestionDto>();
+            }
         }
         catch (Exception ex)
         {
@@ -111,11 +112,15 @@ public partial class Detail : IAsyncDisposable
     {
         try
         {
-            // TODO: Implement API endpoint GET /api/tickets/{id}/events
-            // For now, return empty list
-            var client = HttpClientFactory.CreateClient("PRFactoryApi");
-            events = await client.GetFromJsonAsync<List<WorkflowEventDto>>($"/api/tickets/{Id}/events");
-            events ??= new List<WorkflowEventDto>();
+            if (Guid.TryParse(Id, out var ticketId))
+            {
+                // Use TicketService directly (Blazor Server architecture - NO HTTP calls)
+                events = await TicketService.GetEventsAsync(ticketId);
+            }
+            else
+            {
+                events = new List<WorkflowEventDto>();
+            }
         }
         catch (Exception ex)
         {

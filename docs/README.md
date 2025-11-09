@@ -50,7 +50,24 @@ PRFactory/
 │   │   ├── core-engine.md             # Core workflow engine details
 │   │   ├── jira-integration.md        # Jira integration details
 │   │   ├── git-integration.md         # Git integration details
-│   │   └── claude-integration.md      # Claude AI integration details
+│   │   ├── claude-integration.md      # Claude AI integration details
+│   │   ├── cli-oauth-integration-analysis.md # CLI/OAuth integration analysis
+│   │   ├── WORKFLOW_EXECUTION_ARCHITECTURE.md # Workflow execution deep-dive
+│   │   ├── WORKFLOW_EXECUTION_CRITICAL_GAPS.md # Blocking implementation gaps
+│   │   ├── WORKFLOW_EXECUTION_SUMMARY.md # Workflow execution summary
+│   │   └── OAUTH_INTEGRATION_SOLUTION.md # OAuth integration solution (OrchestratorChat port)
+│   │
+│   ├── design/                        # Design documents
+│   │   ├── team-review-design.md      # Team review feature design
+│   │   ├── implementation-quality-loop.md # Quality loop design
+│   │   └── implementation-quality-loop-addendum.md # Quality loop addendum
+│   │
+│   ├── reviews/                       # Architecture and code reviews
+│   │   └── ARCHITECTURE_REVIEW.md     # 2025-11-09 Comprehensive architecture review ⚠️
+│   │
+│   ├── security/                      # Security documentation
+│   │   ├── SECURITY_REVIEW.md         # Security vulnerability analysis
+│   │   └── SECURITY_CHECKLIST.md      # Actionable security fixes
 │   │
 │   └── archive/                       # Historical/outdated documents
 │       ├── ORIGINAL_PROPOSAL.md       # Initial Jira-first proposal (archived)
@@ -91,6 +108,23 @@ PRFactory/
 |----------|--------|-------------|
 | **[ROADMAP.md](ROADMAP.md)** | 📋 Planning | Future enhancements (3, 6, 12 month vision) |
 | [REFINEMENT_ENHANCEMENT_PLAN.md](REFINEMENT_ENHANCEMENT_PLAN.md) | 📋 Planning | Planned refinement workflow improvements |
+
+### Architecture Reviews & Analysis
+
+| Document | Status | Description |
+|----------|--------|-------------|
+| **[reviews/ARCHITECTURE_REVIEW.md](reviews/ARCHITECTURE_REVIEW.md)** | ⚠️ **CRITICAL** | 2025-11-09 Comprehensive architecture review |
+| [architecture/WORKFLOW_EXECUTION_ARCHITECTURE.md](architecture/WORKFLOW_EXECUTION_ARCHITECTURE.md) | 📋 Analysis | Workflow execution deep-dive |
+| [architecture/WORKFLOW_EXECUTION_CRITICAL_GAPS.md](architecture/WORKFLOW_EXECUTION_CRITICAL_GAPS.md) | ⚠️ Gaps | Blocking implementation gaps |
+| [architecture/OAUTH_INTEGRATION_SOLUTION.md](architecture/OAUTH_INTEGRATION_SOLUTION.md) | ✅ Solution | OAuth integration via OrchestratorChat port |
+| [architecture/cli-oauth-integration-analysis.md](architecture/cli-oauth-integration-analysis.md) | 📋 Analysis | CLI/OAuth integration analysis |
+
+### Security Documentation
+
+| Document | Status | Description |
+|----------|--------|-------------|
+| **[security/SECURITY_REVIEW.md](security/SECURITY_REVIEW.md)** | 🔴 **CRITICAL** | Security vulnerability analysis (16 vulnerabilities) |
+| [security/SECURITY_CHECKLIST.md](security/SECURITY_CHECKLIST.md) | ✅ Actionable | Security fixes with time estimates |
 
 ### AI Agent Guidance
 

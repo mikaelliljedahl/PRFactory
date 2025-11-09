@@ -244,6 +244,12 @@ Detailed technical documentation for specific components:
   - Application services and background jobs
   - Error handling and resilience patterns
 
+- **[CLI Agent Integration](docs/architecture/cli-agent-integration.md)** - LLM-agnostic AI integration ✨ **NEW**
+  - ICliAgent abstraction layer (LLM-agnostic)
+  - ClaudeDesktopCliAdapter (production implementation)
+  - Agent prompt management and customization
+  - Process execution with timeout and cancellation
+
 - **[Jira Integration](docs/architecture/jira-integration.md)** - Bidirectional Jira communication
   - Webhook handling and validation
   - Comment parsing and @claude mentions

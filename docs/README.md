@@ -49,7 +49,8 @@ PRFactory/
 │   ├── architecture/                  # Component-specific architecture docs
 │   │   ├── core-engine.md             # Core workflow engine details
 │   │   ├── jira-integration.md        # Jira integration details
-│   │   └── git-integration.md         # Git integration details
+│   │   ├── git-integration.md         # Git integration details
+│   │   └── cli-agent-integration.md   # LLM-agnostic CLI agent architecture ✨
 │   │
 │   └── archive/                       # Historical/outdated documents
 │       ├── ORIGINAL_PROPOSAL.md       # Initial Jira-first proposal (archived)
@@ -173,6 +174,7 @@ PRFactory/
 | Component | Document | Description |
 |-----------|----------|-------------|
 | **Workflow Engine** | [core-engine.md](architecture/core-engine.md) | State machine, transitions, checkpoints |
+| **CLI Agent Integration** | [cli-agent-integration.md](architecture/cli-agent-integration.md) | LLM-agnostic adapter pattern, ICliAgent interface ✨ |
 | **Jira Integration** | [jira-integration.md](architecture/jira-integration.md) | Webhooks, HMAC validation, comments |
 | **Git Integration** | [git-integration.md](architecture/git-integration.md) | Multi-platform, LibGit2Sharp, PRs |
 

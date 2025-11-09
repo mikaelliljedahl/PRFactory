@@ -131,7 +131,11 @@ namespace PRFactory.Infrastructure.Agents.Graphs
             {
                 var branchBuilder = new GraphBuilder($"{_graphId}_parallel_{parallelNode.Branches.Count}", _serviceProvider);
                 branch(branchBuilder);
-                parallelNode.Branches.Add(branchBuilder.BuildNodes());
+                var branchNode = branchBuilder.BuildNodes();
+                if (branchNode != null)
+                {
+                    parallelNode.Branches.Add(branchNode);
+                }
             }
 
             _currentNode = parallelNode;
@@ -258,6 +262,11 @@ namespace PRFactory.Infrastructure.Agents.Graphs
             GraphContext context,
             CancellationToken cancellationToken)
         {
+            if (ServiceProvider == null)
+            {
+                throw new InvalidOperationException("ServiceProvider is not set on AgentNode");
+            }
+
             var agentExecutor = ServiceProvider.GetRequiredService<IAgentExecutor>();
 
             for (int attempt = 0; attempt < MaxRetries; attempt++)
@@ -294,7 +303,7 @@ namespace PRFactory.Infrastructure.Agents.Graphs
     public class ConditionalNode : GraphNode
     {
         public Func<GraphContext, IAgentMessage, bool> Condition { get; set; } = null!;
-        public GraphNode TrueBranch { get; set; } = null!;
+        public GraphNode? TrueBranch { get; set; }
         public GraphNode? FalseBranch { get; set; }
 
         public override async Task<IAgentMessage> ExecuteAsync(
@@ -348,6 +357,11 @@ namespace PRFactory.Infrastructure.Agents.Graphs
             GraphContext context,
             CancellationToken cancellationToken)
         {
+            if (ServiceProvider == null)
+            {
+                throw new InvalidOperationException("ServiceProvider is not set on CheckpointNode");
+            }
+
             var checkpointStore = ServiceProvider.GetRequiredService<ICheckpointStore>();
 
             context.State["checkpoint_name"] = CheckpointName;

@@ -61,7 +61,7 @@ public class WorkflowStateStore : IWorkflowStateStore
     /// <summary>
     /// Get workflow state by ticket ID
     /// </summary>
-    public async Task<WorkflowState> GetByTicketIdAsync(Guid ticketId)
+    public async Task<WorkflowState?> GetByTicketIdAsync(Guid ticketId)
     {
         var entity = await _context.WorkflowStates
             .Where(w => w.TicketId == ticketId)
@@ -80,7 +80,7 @@ public class WorkflowStateStore : IWorkflowStateStore
     /// <summary>
     /// Get workflow state by workflow ID
     /// </summary>
-    public async Task<WorkflowState> GetByWorkflowIdAsync(Guid workflowId)
+    public async Task<WorkflowState?> GetByWorkflowIdAsync(Guid workflowId)
     {
         var entity = await _context.WorkflowStates
             .FirstOrDefaultAsync(w => w.WorkflowId == workflowId);

@@ -393,8 +393,8 @@ namespace PRFactory.Infrastructure.Agents.Graphs
     public interface IWorkflowStateStore
     {
         Task SaveStateAsync(WorkflowState state);
-        Task<WorkflowState> GetByTicketIdAsync(Guid ticketId);
-        Task<WorkflowState> GetByWorkflowIdAsync(Guid workflowId);
+        Task<WorkflowState?> GetByTicketIdAsync(Guid ticketId);
+        Task<WorkflowState?> GetByWorkflowIdAsync(Guid workflowId);
         Task UpdateStatusAsync(Guid workflowId, WorkflowStatus status, string? error = null);
     }
 

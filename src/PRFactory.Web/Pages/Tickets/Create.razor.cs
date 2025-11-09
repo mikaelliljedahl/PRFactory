@@ -15,9 +15,13 @@ public partial class Create
     [Inject]
     private ITicketService TicketService { get; set; } = null!;
 
+    [Inject]
+    private IToastService ToastService { get; set; } = null!;
+
     private CreateTicketModel model = new();
     private List<RepositoryDto> repositories = new();
     private bool isSubmitting = false;
+    private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -37,14 +41,16 @@ public partial class Create
         }
         catch
         {
-            // Log error but don't fail page load
-            // Repositories list will remain empty on error
+            errorMessage = "Failed to load repositories. Please refresh the page.";
+            ToastService.ShowError("Failed to load repositories. Please refresh the page.");
         }
     }
 
     private async Task HandleSubmit()
     {
         isSubmitting = true;
+        errorMessage = null;
+
         try
         {
             // Use TicketService directly (Blazor Server architecture - NO HTTP calls)
@@ -54,13 +60,16 @@ public partial class Create
                 description: model.Description,
                 repositoryId: model.RepositoryId);
 
+            // Show success toast
+            ToastService.ShowSuccess($"Ticket '{ticket.TicketKey}' created successfully!");
+
             // Navigate to the ticket detail page
             NavigationManager.NavigateTo($"/tickets/{ticket.Id}");
         }
         catch (Exception ex)
         {
-            // TODO: Show error message to user
-            Console.WriteLine($"Error creating ticket: {ex.Message}");
+            errorMessage = $"Failed to create ticket: {ex.Message}";
+            ToastService.ShowError($"Failed to create ticket: {ex.Message}");
         }
         finally
         {

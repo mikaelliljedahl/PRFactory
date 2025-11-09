@@ -28,6 +28,11 @@ public interface IUserRepository
     Task<List<User>> GetByTenantIdAsync(Guid tenantId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets multiple users by their IDs
+    /// </summary>
+    Task<List<User>> GetByIdsAsync(List<Guid> userIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets all users
     /// </summary>
     Task<List<User>> GetAllAsync(CancellationToken cancellationToken = default);

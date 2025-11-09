@@ -12,6 +12,9 @@ public partial class Create
     [Inject]
     private NavigationManager Navigation { get; set; } = null!;
 
+    [Inject]
+    private IToastService ToastService { get; set; } = null!;
+
     private CreateTenantRequest model = new();
     private bool isSubmitting;
     private string? errorMessage;
@@ -24,11 +27,16 @@ public partial class Create
         try
         {
             var tenant = await TenantService.CreateTenantAsync(model);
+
+            // Show success toast
+            ToastService.ShowSuccess($"Tenant '{tenant.Name}' created successfully!");
+
             Navigation.NavigateTo($"/tenants/{tenant.Id}");
         }
         catch (Exception ex)
         {
             errorMessage = $"Failed to create tenant: {ex.Message}";
+            ToastService.ShowError($"Failed to create tenant: {ex.Message}");
         }
         finally
         {

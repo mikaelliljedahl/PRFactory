@@ -1,8 +1,17 @@
 @page "/tickets/create"
 @using PRFactory.Web.Models
 @using PRFactory.Web.UI.Forms
+@using PRFactory.Web.UI.Alerts
 
 <h1>Create New Ticket</h1>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
+        <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
+    </div>
+}
 
 <EditForm Model="@model" OnValidSubmit="@HandleSubmit">
     <DataAnnotationsValidator />

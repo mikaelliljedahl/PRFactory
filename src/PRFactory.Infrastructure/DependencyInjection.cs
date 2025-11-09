@@ -93,6 +93,10 @@ public static class DependencyInjection
         services.AddScoped<IRepositoryApplicationService, Application.RepositoryApplicationService>();
         services.AddScoped<ITenantApplicationService, Application.TenantApplicationService>();
         services.AddScoped<IErrorApplicationService, Application.ErrorApplicationService>();
+        services.AddScoped<ITenantContext, Application.TenantContext>();
+        services.AddScoped<IQuestionApplicationService, Application.QuestionApplicationService>();
+        services.AddScoped<IWorkflowEventApplicationService, Application.WorkflowEventApplicationService>();
+        services.AddScoped<IPlanService, Application.PlanService>();
 
         // Register agent prompt services
         services.AddScoped<Agents.Services.IAgentPromptService, Agents.Services.AgentPromptService>();
@@ -130,6 +134,9 @@ public static class DependencyInjection
 
         // Register default CLI agent (Claude Desktop)
         services.AddScoped<ICliAgent>(sp => sp.GetRequiredService<ClaudeDesktopCliAdapter>());
+
+        // Register database seeder
+        services.AddScoped<DbSeeder>();
 
         return services;
     }

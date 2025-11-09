@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Components;
 using PRFactory.Web.Models;
 using PRFactory.Web.Services;
+using PRFactory.Web.UI.Dialogs;
+using Radzen;
 
 namespace PRFactory.Web.Pages.AgentPrompts;
 
@@ -11,6 +13,9 @@ public partial class Index
 
     [Inject]
     private NavigationManager Navigation { get; set; } = null!;
+
+    [Inject]
+    private DialogService DialogService { get; set; } = null!;
 
     private List<AgentPromptTemplateDto> AllTemplates { get; set; } = new();
     private List<AgentPromptTemplateDto> FilteredTemplates { get; set; } = new();
@@ -113,13 +118,16 @@ public partial class Index
 
     private async Task HandleDelete(AgentPromptTemplateDto template)
     {
-        if (template.IsSystemTemplate)
+        bool confirmed = await ConfirmDialogHelper.ShowDeletePromptTemplateAsync(
+            DialogService,
+            template.Name,
+            template.IsSystemTemplate);
+
+        if (!confirmed)
         {
-            ErrorMessage = "System templates cannot be deleted";
             return;
         }
 
-        // TODO: Add confirmation dialog
         try
         {
             await AgentPromptService.DeleteTemplateAsync(template.Id);

@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using PRFactory.Web.Models;
+using PRFactory.Web.UI.Dialogs;
+using Radzen;
 
 namespace PRFactory.Web.Pages.Repositories;
 
@@ -20,6 +22,9 @@ public partial class Detail
 
     [Inject]
     private ILogger<Detail> Logger { get; set; } = null!;
+
+    [Inject]
+    private DialogService DialogService { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -61,6 +66,16 @@ public partial class Detail
     private async Task HandleDeleteAsync()
     {
         if (repository == null)
+        {
+            return;
+        }
+
+        bool confirmed = await ConfirmDialogHelper.ShowDeleteRepositoryAsync(
+            DialogService,
+            repository.Name,
+            repository.TicketCount);
+
+        if (!confirmed)
         {
             return;
         }

@@ -1260,6 +1260,64 @@ var repo = new Repository
 
 ### For AI Agents Working on This Codebase
 
+#### .NET Development Environment Setup (CRITICAL - Claude Code Web Only)
+
+**IMPORTANT: This section applies ONLY to Claude Code on the web, not local Claude Code.**
+
+**Before running any `dotnet restore` or `dotnet build` commands in Claude Code web sessions, you MUST configure the NuGet proxy.**
+
+PRFactory uses .NET 10, which is automatically installed by the SessionStart hook. However, .NET HttpClient cannot handle Claude Code web's JWT-based proxy authentication directly. A local NuGet proxy is started automatically to handle this.
+
+**Note:** Local Claude Code environments don't have this proxy requirement and can run `dotnet` commands directly.
+
+**Required Setup Before Any `dotnet` Commands:**
+
+```bash
+# Source the helper script created by SessionStart hook
+source /tmp/dotnet-proxy-setup.sh
+
+# Now you can run dotnet commands
+dotnet restore
+dotnet build
+```
+
+**What the helper script does:**
+- Unsets Claude Code's proxy environment variables that .NET can't handle
+- Sets HTTP_PROXY and HTTPS_PROXY to the local NuGet proxy (http://127.0.0.1:8888)
+
+**One-liner for convenience:**
+```bash
+source /tmp/dotnet-proxy-setup.sh && dotnet restore && dotnet build
+```
+
+**Why This Is Required:**
+- .NET HttpClient doesn't support the JWT authentication format used by Claude Code's container proxy
+- Without proper proxy configuration, `dotnet restore` fails with HTTP 401 errors
+- The NuGet proxy (running on port 8888) handles the outer proxy authentication transparently
+- This proxy is automatically started by the SessionStart hook
+
+**For New Claude Sessions:**
+- The SessionStart hook automatically:
+  1. Installs .NET SDK 10 to `/root/.dotnet`
+  2. Starts the NuGet proxy on port 8888
+  3. Creates `/tmp/dotnet-proxy-setup.sh` helper script
+- You still need to source the helper script before each `dotnet` command
+
+**Files Involved:**
+- `/home/user/PRFactory/.claude/scripts/session-start.sh` - SessionStart hook
+- `/home/user/PRFactory/.claude/scripts/nuget-proxy.py` - NuGet proxy implementation
+- `/tmp/dotnet-proxy-setup.sh` - Helper script to configure environment (created at session start)
+
+**DO:**
+- Always source `/tmp/dotnet-proxy-setup.sh` before running `dotnet` commands
+- Check that the NuGet proxy is running: `pgrep -f nuget-proxy.py`
+- Check proxy logs if issues occur: `tail -f /tmp/nuget-proxy.log`
+
+**DON'T:**
+- Run `dotnet restore` or `dotnet build` without sourcing the helper script (in Claude Code web)
+- Modify proxy environment variables manually (use the helper script)
+- Try to use .NET without the NuGet proxy in Claude Code web sessions
+
 #### When Reviewing Code
 
 **ASK YOURSELF:**

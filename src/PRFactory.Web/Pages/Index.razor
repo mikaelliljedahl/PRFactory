@@ -1,6 +1,4 @@
 @page "/"
-@inject ITicketService TicketService
-@inject NavigationManager Navigation
 
 <PageTitle>PRFactory - Dashboard</PageTitle>
 
@@ -118,50 +116,3 @@
         </div>
     </div>
 </div>
-
-@code {
-    private List<Ticket> tickets = new();
-    private bool isLoading = true;
-    private string? errorMessage;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadTickets();
-    }
-
-    private async Task LoadTickets()
-    {
-        isLoading = true;
-        errorMessage = null;
-        try
-        {
-            tickets = await TicketService.GetAllTicketsAsync();
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Error loading tickets: {ex.Message}";
-        }
-        finally
-        {
-            isLoading = false;
-        }
-    }
-
-    private void ViewTicket(Guid ticketId)
-    {
-        Navigation.NavigateTo($"/tickets/{ticketId}");
-    }
-
-    private string GetStatusBadgeColor(WorkflowState state)
-    {
-        return state switch
-        {
-            WorkflowState.Completed => "success",
-            WorkflowState.Failed => "danger",
-            WorkflowState.Cancelled => "secondary",
-            WorkflowState.SuspendedAwaitingRefinementAnswers => "warning",
-            WorkflowState.SuspendedAwaitingPlanApproval => "info",
-            _ => "primary"
-        };
-    }
-}

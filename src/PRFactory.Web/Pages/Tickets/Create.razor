@@ -1,7 +1,5 @@
 @page "/tickets/create"
 @using PRFactory.Web.Models
-@inject IHttpClientFactory HttpClientFactory
-@inject NavigationManager NavigationManager
 
 <h1>Create New Ticket</h1>
 
@@ -64,44 +62,3 @@
         <a href="/tickets" class="btn btn-secondary ms-2">Cancel</a>
     </div>
 </EditForm>
-
-@code {
-    private CreateTicketModel model = new();
-    private List<RepositoryDto> repositories = new();
-    private bool isSubmitting = false;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadRepositories();
-    }
-
-    private async Task LoadRepositories()
-    {
-        // TODO: Load from API
-        repositories = new List<RepositoryDto>();
-    }
-
-    private async Task HandleSubmit()
-    {
-        isSubmitting = true;
-        try
-        {
-            // TODO: POST to API /api/tickets
-            // var httpClient = HttpClientFactory.CreateClient("PRFactoryAPI");
-            // var response = await httpClient.PostAsJsonAsync("/api/tickets", model);
-            // if (response.IsSuccessStatusCode)
-            // {
-            //     var ticket = await response.Content.ReadFromJsonAsync<TicketDto>();
-            //     NavigationManager.NavigateTo($"/tickets/{ticket.Id}");
-            // }
-
-            // Mock navigation for now
-            await Task.Delay(1000);
-            NavigationManager.NavigateTo("/tickets");
-        }
-        finally
-        {
-            isSubmitting = false;
-        }
-    }
-}

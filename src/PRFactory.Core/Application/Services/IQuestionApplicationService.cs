@@ -1,4 +1,5 @@
-using PRFactory.Domain.ValueObjects;
+using DomainQuestion = PRFactory.Domain.ValueObjects.Question;
+using DomainAnswer = PRFactory.Domain.ValueObjects.Answer;
 
 namespace PRFactory.Core.Application.Services;
 
@@ -25,12 +26,12 @@ public class QuestionWithAnswer
     /// <summary>
     /// The question
     /// </summary>
-    public required Question Question { get; init; }
+    public required DomainQuestion Question { get; init; }
 
     /// <summary>
     /// The answer (if provided)
     /// </summary>
-    public Answer? Answer { get; init; }
+    public DomainAnswer? Answer { get; init; }
 
     /// <summary>
     /// Whether the question has been answered

@@ -1,32 +1,32 @@
 using Microsoft.Extensions.Logging;
+using PRFactory.Core.Application.Services;
 using PRFactory.Domain.Interfaces;
 using PRFactory.Infrastructure.Agents.Base;
 using PRFactory.Infrastructure.Claude;
-using PRFactory.Infrastructure.Claude.Models;
 
 namespace PRFactory.Infrastructure.Agents;
 
 /// <summary>
-/// (Optional) Generates code implementation using Claude AI based on the approved plan.
+/// (Optional) Generates code implementation using a CLI-based AI agent based on the approved plan.
 /// This agent is only executed if the tenant configuration enables auto-implementation.
 /// </summary>
 public class ImplementationAgent : BaseAgent
 {
-    private readonly IClaudeClient _claudeClient;
+    private readonly ICliAgent _cliAgent;
     private readonly IContextBuilder _contextBuilder;
     private readonly ITicketRepository _ticketRepository;
 
     public override string Name => "ImplementationAgent";
-    public override string Description => "Generate code implementation using Claude AI based on approved plan";
+    public override string Description => "Generate code implementation using AI based on approved plan";
 
     public ImplementationAgent(
         ILogger<ImplementationAgent> logger,
-        IClaudeClient claudeClient,
+        ICliAgent cliAgent,
         IContextBuilder contextBuilder,
         ITicketRepository ticketRepository)
         : base(logger)
     {
-        _claudeClient = claudeClient ?? throw new ArgumentNullException(nameof(claudeClient));
+        _cliAgent = cliAgent ?? throw new ArgumentNullException(nameof(cliAgent));
         _contextBuilder = contextBuilder ?? throw new ArgumentNullException(nameof(contextBuilder));
         _ticketRepository = ticketRepository ?? throw new ArgumentNullException(nameof(ticketRepository));
     }
@@ -71,8 +71,14 @@ public class ImplementationAgent : BaseAgent
 
         try
         {
-            // Prepare system prompt
-            var systemPrompt = @"You are an expert software developer implementing code based on an approved plan.
+            // Build full context
+            var codebaseContext = await _contextBuilder.BuildImplementationContextAsync(
+                context.Ticket,
+                context.RepositoryPath!
+            );
+
+            // Build combined prompt for CLI agent
+            var prompt = $@"You are an expert software developer implementing code based on an approved plan.
 
 Generate the actual code implementation following the plan exactly. For each file:
 1. Provide the complete file path
@@ -82,43 +88,45 @@ Generate the actual code implementation following the plan exactly. For each fil
 5. Add inline comments for complex logic
 
 Respond with JSON in this format:
-{
+{{
   ""files"": [
-    {
+    {{
       ""path"": ""src/Example.cs"",
       ""content"": ""// file contents here"",
       ""action"": ""create|modify""
-    }
+    }}
   ]
-}";
+}}
 
-            // Build full context
-            var codebaseContext = await _contextBuilder.BuildImplementationContextAsync(
-                context.Ticket,
-                context.RepositoryPath!
-            );
-
-            var messages = new List<Message>
-            {
-                new Message(
-                    "user",
-                    $@"Please implement the following plan:
+Please implement the following plan:
 
 {context.ImplementationPlan}
 
 Codebase Context:
 {codebaseContext}
 
-Generate complete, production-ready code for all files mentioned in the plan.")
-            };
+Generate complete, production-ready code for all files mentioned in the plan.";
 
-            // Call Claude
-            var response = await _claudeClient.SendMessageAsync(
-                systemPrompt,
-                messages,
-                maxTokens: 16000,
-                ct: cancellationToken
+            Logger.LogInformation("Executing {AgentName} to generate code implementation", _cliAgent.AgentName);
+
+            // Call CLI agent with project context for full codebase access
+            var cliResponse = await _cliAgent.ExecuteWithProjectContextAsync(
+                prompt,
+                context.RepositoryPath!,
+                cancellationToken
             );
+
+            if (!cliResponse.Success)
+            {
+                Logger.LogError("CLI agent execution failed: {Error}", cliResponse.ErrorMessage);
+                return new AgentResult
+                {
+                    Status = AgentStatus.Failed,
+                    Error = $"CLI agent execution failed: {cliResponse.ErrorMessage}"
+                };
+            }
+
+            var response = cliResponse.Content;
 
             // Parse response
             var jsonResponse = ExtractJsonFromResponse(response);

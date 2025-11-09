@@ -6,6 +6,9 @@ using PRFactory.Domain.Interfaces;
 using PRFactory.Infrastructure.Git;
 using PRFactory.Infrastructure.Persistence.Encryption;
 
+// Type alias to resolve ambiguity between PRFactory.Domain.Entities.Repository and LibGit2Sharp.Repository
+using GitRepository = LibGit2Sharp.Repository;
+
 namespace PRFactory.Infrastructure.Application;
 
 /// <summary>
@@ -183,7 +186,7 @@ public class RepositoryApplicationService : IRepositoryApplicationService
             var branches = new List<string>();
             try
             {
-                using var repo = new Repository(localPath);
+                using var repo = new GitRepository(localPath);
                 branches = repo.Branches
                     .Where(b => !b.IsRemote)
                     .Select(b => b.FriendlyName)

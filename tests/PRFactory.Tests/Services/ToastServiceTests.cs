@@ -19,11 +19,11 @@ public class ToastServiceTests
         // Assert
         Assert.True(eventFired);
         var toasts = service.GetToasts();
-        Assert.Equal(1, toasts.Count);
-        Assert.Equal(ToastType.Success, toasts[0].Type);
-        Assert.Equal("Test title", toasts[0].Title);
-        Assert.Equal("Test message", toasts[0].Message);
-        Assert.Equal("check-circle", toasts[0].Icon);
+        var toast = Assert.Single(toasts);
+        Assert.Equal(ToastType.Success, toast.Type);
+        Assert.Equal("Test title", toast.Title);
+        Assert.Equal("Test message", toast.Message);
+        Assert.Equal("check-circle", toast.Icon);
     }
 
     [Fact]
@@ -37,9 +37,9 @@ public class ToastServiceTests
 
         // Assert
         var toasts = service.GetToasts();
-        Assert.Equal(1, toasts.Count);
-        Assert.Equal(ToastType.Error, toasts[0].Type);
-        Assert.Equal("exclamation-triangle", toasts[0].Icon);
+        var toast = Assert.Single(toasts);
+        Assert.Equal(ToastType.Error, toast.Type);
+        Assert.Equal("exclamation-triangle", toast.Icon);
     }
 
     [Fact]
@@ -87,8 +87,8 @@ public class ToastServiceTests
 
         // Assert
         var remainingToasts = service.GetToasts();
-        Assert.Equal(1, remainingToasts.Count);
-        Assert.DoesNotContain(remainingToasts, t => t.Id == toastToRemove.Id);
+        var remainingToast = Assert.Single(remainingToasts);
+        Assert.NotEqual(toastToRemove.Id, remainingToast.Id);
     }
 
     [Fact]

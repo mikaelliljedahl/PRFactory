@@ -123,7 +123,9 @@ namespace PRFactory.Infrastructure.Agents.Messages
 
     public record PlanRejectedMessage(
         Guid TicketId,
-        string Reason
+        string Reason,
+        string? RefinementInstructions = null,
+        bool RegenerateCompletely = false
     ) : IAgentMessage
     {
         public DateTime Timestamp { get; init; } = DateTime.UtcNow;

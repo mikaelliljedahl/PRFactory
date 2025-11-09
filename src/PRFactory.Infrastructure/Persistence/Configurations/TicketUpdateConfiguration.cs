@@ -64,7 +64,7 @@ public class TicketUpdateConfiguration : IEntityTypeConfiguration<TicketUpdate>
 
         // Relationships
         builder.HasOne(tu => tu.Ticket)
-            .WithMany()
+            .WithMany(t => t.TicketUpdates)
             .HasForeignKey(tu => tu.TicketId)
             .OnDelete(DeleteBehavior.Cascade);
 

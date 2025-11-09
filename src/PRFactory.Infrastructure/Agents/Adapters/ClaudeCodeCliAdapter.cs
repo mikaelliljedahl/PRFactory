@@ -9,10 +9,10 @@ using PRFactory.Infrastructure.Execution;
 namespace PRFactory.Infrastructure.Agents.Adapters;
 
 /// <summary>
-/// Adapter for Claude Desktop CLI running in headless mode.
+/// Adapter for Claude Code CLI running in headless mode.
 ///
-/// <para><strong>Claude Desktop CLI Interface Assumptions:</strong></para>
-/// <para>This adapter assumes the Claude Desktop CLI supports the following interface:</para>
+/// <para><strong>Claude Code CLI Interface Assumptions:</strong></para>
+/// <para>This adapter assumes the Claude Code CLI supports the following interface:</para>
 ///
 /// <code>
 /// claude --headless --prompt "Your prompt here"
@@ -50,26 +50,26 @@ namespace PRFactory.Infrastructure.Agents.Adapters;
 /// </summary>
 /// <remarks>
 /// <para>
-/// This is a hypothetical CLI interface. If the actual Claude Desktop CLI has a different interface,
+/// This is a hypothetical CLI interface. If the actual Claude Code CLI has a different interface,
 /// this adapter will need to be updated to match the actual CLI command structure.
 /// </para>
 /// <para>
-/// For production use, verify the Claude Desktop CLI documentation and update this adapter accordingly.
+/// For production use, verify the Claude Code CLI documentation and update this adapter accordingly.
 /// </para>
 /// </remarks>
-public class ClaudeDesktopCliAdapter : ICliAgent
+public class ClaudeCodeCliAdapter : ICliAgent
 {
     private readonly IProcessExecutor _processExecutor;
-    private readonly ILogger<ClaudeDesktopCliAdapter> _logger;
-    private readonly ClaudeDesktopCliOptions _options;
+    private readonly ILogger<ClaudeCodeCliAdapter> _logger;
+    private readonly ClaudeCodeCliOptions _options;
 
-    public string AgentName => "Claude Desktop CLI";
+    public string AgentName => "Claude Code CLI";
     public bool SupportsStreaming => true;
 
-    public ClaudeDesktopCliAdapter(
+    public ClaudeCodeCliAdapter(
         IProcessExecutor processExecutor,
-        ILogger<ClaudeDesktopCliAdapter> logger,
-        IOptions<ClaudeDesktopCliOptions> options)
+        ILogger<ClaudeCodeCliAdapter> logger,
+        IOptions<ClaudeCodeCliOptions> options)
     {
         _processExecutor = processExecutor ?? throw new ArgumentNullException(nameof(processExecutor));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -77,15 +77,15 @@ public class ClaudeDesktopCliAdapter : ICliAgent
     }
 
     /// <summary>
-    /// Gets the capabilities of Claude Desktop CLI
+    /// Gets the capabilities of Claude Code CLI
     /// </summary>
     public CliAgentCapabilities GetCapabilities()
     {
-        return CliAgentCapabilities.ForClaudeDesktop();
+        return CliAgentCapabilities.ForClaudeCode();
     }
 
     /// <summary>
-    /// Executes a prompt using Claude Desktop CLI in headless mode
+    /// Executes a prompt using Claude Code CLI in headless mode
     /// </summary>
     public async Task<CliAgentResponse> ExecutePromptAsync(
         string prompt,
@@ -96,12 +96,12 @@ public class ClaudeDesktopCliAdapter : ICliAgent
 
         if (_options.EnableVerboseLogging)
         {
-            _logger.LogInformation("Executing prompt with Claude Desktop CLI");
+            _logger.LogInformation("Executing prompt with Claude Code CLI");
             _logger.LogDebug("Prompt: {Prompt}", prompt);
         }
         else
         {
-            _logger.LogInformation("Executing prompt with Claude Desktop CLI");
+            _logger.LogInformation("Executing prompt with Claude Code CLI");
         }
 
         // Build arguments for headless mode
@@ -136,7 +136,7 @@ public class ClaudeDesktopCliAdapter : ICliAgent
             throw new DirectoryNotFoundException($"Project path not found: {projectPath}");
 
         _logger.LogInformation(
-            "Executing prompt with Claude Desktop CLI with project context: {ProjectPath}",
+            "Executing prompt with Claude Code CLI with project context: {ProjectPath}",
             projectPath);
 
         // Build arguments with project context
@@ -167,7 +167,7 @@ public class ClaudeDesktopCliAdapter : ICliAgent
         if (onOutputReceived == null)
             throw new ArgumentNullException(nameof(onOutputReceived));
 
-        _logger.LogInformation("Executing streaming prompt with Claude Desktop CLI");
+        _logger.LogInformation("Executing streaming prompt with Claude Code CLI");
 
         var arguments = BuildArguments(prompt, projectPath: null);
 
@@ -246,7 +246,7 @@ public class ClaudeDesktopCliAdapter : ICliAgent
         response.Content = result.Output;
 
         // Try to extract file operations from the output
-        // Claude Desktop CLI may output file operations in a specific format
+        // Claude Code CLI may output file operations in a specific format
         response.FileOperations = ExtractFileOperations(result.Output);
 
         // Extract metadata if available

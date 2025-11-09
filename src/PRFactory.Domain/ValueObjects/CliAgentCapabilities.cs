@@ -71,9 +71,9 @@ public class CliAgentCapabilities
     }
 
     /// <summary>
-    /// Creates capabilities for Claude Desktop CLI agent
+    /// Creates capabilities for Claude Code CLI agent
     /// </summary>
-    public static CliAgentCapabilities ForClaudeDesktop()
+    public static CliAgentCapabilities ForClaudeCode()
     {
         return new CliAgentCapabilities
         {

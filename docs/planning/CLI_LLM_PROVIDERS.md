@@ -70,7 +70,7 @@ Agents (Analysis/Planning/Implementation)
   ↓
 ICliAgent Interface
   ↓
-Provider-Specific Adapter (ClaudeDesktopCliAdapter, GeminiCliAdapter, CodexCliAdapter)
+Provider-Specific Adapter (ClaudeCodeCliAdapter, GeminiCliAdapter, CodexCliAdapter)
   ↓
 ProcessExecutor (secure subprocess execution)
   ↓
@@ -96,8 +96,8 @@ All CLI invocations use `ProcessExecutor` for secure subprocess execution:
 
 ### Status: ✅ Implemented
 
-**Implementation**: `ClaudeDesktopCliAdapter`
-**File**: `/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Adapters/ClaudeDesktopCliAdapter.cs`
+**Implementation**: `ClaudeCodeCliAdapter`
+**File**: `/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Adapters/ClaudeCodeCliAdapter.cs`
 
 ### Installation
 
@@ -174,10 +174,10 @@ claude --headless --stream "Write a REST API controller for tickets"
 ### Current Implementation
 
 ```csharp
-public class ClaudeDesktopCliAdapter : ICliAgent
+public class ClaudeCodeCliAdapter : ICliAgent
 {
     private readonly ProcessExecutor _processExecutor;
-    private readonly ClaudeDesktopCliOptions _options;
+    private readonly ClaudeCodeCliOptions _options;
 
     public async Task<CliAgentResponse> ExecutePromptAsync(
         string prompt,
@@ -436,7 +436,7 @@ public class CliAgentFactory : ICliAgentFactory
     {
         return providerName switch
         {
-            "ClaudeCodeCli" => _serviceProvider.GetRequiredService<ClaudeDesktopCliAdapter>(),
+            "ClaudeCodeCli" => _serviceProvider.GetRequiredService<ClaudeCodeCliAdapter>(),
             "GeminiCli" => _serviceProvider.GetRequiredService<GeminiCliAdapter>(),
             "CodexCli" => _serviceProvider.GetRequiredService<CodexCliAdapter>(),
             _ => throw new NotSupportedException($"Provider '{providerName}' not supported")
@@ -475,7 +475,7 @@ public class Repository
 **Current Status**: Basic implementation exists
 
 **Tasks**:
-1. Add streaming support to ClaudeDesktopCliAdapter
+1. Add streaming support to ClaudeCodeCliAdapter
 2. Implement project context handling
 3. Add retry logic for transient failures
 4. Create comprehensive integration tests

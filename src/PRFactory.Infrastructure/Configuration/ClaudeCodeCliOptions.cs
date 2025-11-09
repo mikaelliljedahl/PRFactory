@@ -1,12 +1,12 @@
 namespace PRFactory.Infrastructure.Configuration;
 
 /// <summary>
-/// Configuration options for Claude Desktop CLI adapter
+/// Configuration options for Claude Code CLI adapter
 /// </summary>
-public class ClaudeDesktopCliOptions
+public class ClaudeCodeCliOptions
 {
     /// <summary>
-    /// Path to the Claude Desktop CLI executable.
+    /// Path to the Claude Code CLI executable.
     /// Defaults to "claude" (assumes it's in PATH).
     /// </summary>
     public string ExecutablePath { get; set; } = "claude";

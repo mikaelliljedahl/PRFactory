@@ -62,7 +62,7 @@ Scopes: org:create, user:*:profile, inference:*
 
 PRFactory needs to authenticate with Claude to run AI workflows, but:
 - ❌ Cannot use personal developer OAuth tokens (multi-tenant system)
-- ❌ ClaudeDesktopCliAdapter authentication mechanism unclear
+- ❌ ClaudeCodeCliAdapter authentication mechanism unclear
 - ❌ No OAuth infrastructure in PRFactory
 
 ### Solution
@@ -301,7 +301,7 @@ public async Task<CliAgentResponse> ExecuteWithProjectContextAsync(
 
 **Option B: CLI with OAuth** (3 days if successful)
 1. Research: Test Claude Code CLI with OAuth tokens
-2. Update `ClaudeDesktopCliAdapter` to pass OAuth token
+2. Update `ClaudeCodeCliAdapter` to pass OAuth token
 3. Update `ProcessExecutor` to support environment variables
 4. Test end-to-end workflows
 
@@ -347,7 +347,7 @@ public async Task<CliAgentResponse> ExecuteWithProjectContextAsync(
       "TimeoutSeconds": 300
     }
   },
-  "ClaudeDesktopCli": {
+  "ClaudeCodeCli": {
     "ExecutablePath": "claude",
     "UseOAuthTokens": true  // Use OAuth instead of API keys
   }

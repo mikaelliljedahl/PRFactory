@@ -18,6 +18,26 @@ This document outlines planned enhancements beyond the current MVP implementatio
 
 ---
 
+## Recently Completed ✅
+
+### Multi-LLM Provider Support (PR #48 - Nov 10, 2025)
+- ✅ TenantLlmProvider entity with support for 6 provider types:
+  - Anthropic Native (OAuth), Z.ai, Minimax M2, OpenRouter, Together AI, Custom
+- ✅ OAuth vs API key authentication modes
+- ✅ Encrypted token storage
+- ✅ Model overrides and environment variable configuration
+- ✅ ProcessExecutor service for safe CLI process execution
+- ✅ ClaudeCodeCliAdapter enhancements with tenant-specific LLM configuration
+- ✅ Ticket-level provider selection
+
+### Test Coverage Expansion (PR #46 - Nov 9, 2025)
+- ✅ **606 passing tests** (from 151) - 302% increase
+- ✅ 88% code coverage achieved (exceeded 80% target)
+- ✅ Domain entities, repositories, graphs, services, and DI tested
+- ⚠️ Remaining gaps: TenantLlmProvider tests, ProcessExecutor tests, UI component tests
+
+---
+
 ## Short Term (Next 3 Months)
 
 ### 🔐 Authentication & User Management (CRITICAL PRIORITY)
@@ -41,19 +61,25 @@ This document outlines planned enhancements beyond the current MVP implementatio
 
 ---
 
-### 🧪 Testing & Quality (CRITICAL PRIORITY)
+### 🧪 Testing & Quality
 
-**Goal**: Achieve production-ready confidence through comprehensive testing
+**Goal**: Complete remaining test coverage gaps for production readiness
 
-- [ ] **Unit Test Suite**
-  - [ ] Target: 80% code coverage
-  - [ ] All agents have unit tests
-  - [ ] All graphs have unit tests
-  - [ ] All providers have unit tests
+- [x] **Unit Test Suite** ✅ **COMPLETED** (PR #46)
+  - [x] Target: 80% code coverage → **88% achieved**
+  - [x] 606 passing tests across all layers
+  - [x] Domain entities tested
+  - [x] Graphs tested
+  - [x] Git providers tested
+  - [ ] TenantLlmProvider tests (new entity from PR #48)
+  - [ ] ProcessExecutor tests (new service from PR #48)
   - [ ] Encryption service tests
-  - [ ] Multi-tenant isolation tests
+  - [ ] Remaining agent unit tests
 
-- [ ] **Integration Tests**
+- [x] **Integration Tests** ✅ **MOSTLY COMPLETE** (PR #46)
+  - [x] Repository integration tests
+  - [x] Service integration tests
+  - [x] Dependency injection validation tests
   - [ ] End-to-end workflow tests (Refinement → Planning → Implementation)
   - [ ] Checkpoint resume tests
   - [ ] Multi-tenant isolation verification
@@ -66,7 +92,7 @@ This document outlines planned enhancements beyond the current MVP implementatio
   - [ ] Plan rejection and retry flows
   - [ ] Suspension and resume flows
 
-**Success Criteria**: All workflows tested, 80% coverage, CI/CD pipeline green
+**Success Criteria**: All workflows tested, 90% coverage, CI/CD pipeline green
 
 ---
 
@@ -303,12 +329,14 @@ This document outlines planned enhancements beyond the current MVP implementatio
   - [ ] GCP deployment templates
   - [ ] Terraform modules
 
-- [ ] **Custom LLM Provider Support**
-  - [ ] Abstraction layer for LLM providers
-  - [ ] OpenAI (GPT-4) integration
-  - [ ] Azure OpenAI integration
-  - [ ] Self-hosted LLMs (Ollama, vLLM)
-  - [ ] Custom LLM endpoint configuration
+- [x] **Custom LLM Provider Support** ✅ **COMPLETED** (PR #48 - Nov 10, 2025)
+  - [x] Abstraction layer for LLM providers (TenantLlmProvider entity)
+  - [x] Multi-provider support (Anthropic, Z.ai, Minimax M2, OpenRouter, Together AI)
+  - [x] Custom LLM endpoint configuration
+  - [ ] OpenAI (GPT-4) integration (supported via OpenRouter or Z.ai)
+  - [ ] Azure OpenAI integration (supported via OpenRouter or Z.ai)
+  - [ ] Self-hosted LLMs (Ollama, vLLM) - can be configured as Custom provider
+  - [ ] Admin UI for managing tenant LLM providers
 
 **Success Criteria**: Customers can deploy in any environment
 

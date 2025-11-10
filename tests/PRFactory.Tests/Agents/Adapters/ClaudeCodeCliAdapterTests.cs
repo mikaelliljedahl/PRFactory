@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -46,9 +47,12 @@ public class ClaudeCodeCliAdapterTests : IDisposable
         var mockDbContextEncryptionService = new Mock<IEncryptionService>();
         var mockDbContextLogger = new Mock<ILogger<ApplicationDbContext>>();
 
-        // Create in-memory database for testing
+        // Create in-memory database for testing with dedicated service provider root for isolation
         var dbOptions = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(databaseName: $"TestDb_{Guid.NewGuid()}")
+            .UseInMemoryDatabase(
+                databaseName: $"ClaudeCodeCliAdapterTestDb_{Guid.NewGuid()}",
+                new InMemoryDatabaseRoot()) // Dedicated root ensures complete isolation
+            .EnableSensitiveDataLogging()
             .Options;
 
         _dbContext = new ApplicationDbContext(

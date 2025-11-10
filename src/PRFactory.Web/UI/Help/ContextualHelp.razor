@@ -1,0 +1,38 @@
+@namespace PRFactory.Web.UI.Help
+
+<span class="contextual-help-wrapper">
+    <i class="bi bi-question-circle-fill contextual-help-icon contextual-help-icon-@IconSize"></i>
+    <div class="contextual-help-tooltip contextual-help-tooltip-@Position">
+        @if (!string.IsNullOrEmpty(Title))
+        {
+            <div class="contextual-help-tooltip-title">@Title</div>
+        }
+        <div class="contextual-help-tooltip-body">@HelpText</div>
+        @if (!string.IsNullOrEmpty(LearnMoreUrl))
+        {
+            <div class="contextual-help-tooltip-footer">
+                <a href="@LearnMoreUrl" target="_blank" rel="noopener noreferrer">
+                    Learn More <i class="bi bi-box-arrow-up-right"></i>
+                </a>
+            </div>
+        }
+        <div class="contextual-help-tooltip-arrow"></div>
+    </div>
+</span>
+
+@code {
+    [Parameter, EditorRequired]
+    public string HelpText { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? Title { get; set; }
+
+    [Parameter]
+    public string? LearnMoreUrl { get; set; }
+
+    [Parameter]
+    public string Position { get; set; } = "top";
+
+    [Parameter]
+    public string IconSize { get; set; } = "medium";
+}

@@ -3,6 +3,30 @@
 /* Import app.css for core styles */
 @import url('app.css');
 
+/* Demo Mode Banner */
+.demo-mode-banner {
+    border-radius: 0;
+    border: none;
+    border-bottom: 2px solid #ffc107;
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+}
+
+.demo-mode-banner .container-fluid {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.demo-mode-banner .btn-close {
+    position: absolute;
+    right: 1rem;
+}
+
 /* Additional site-specific overrides */
 .navbar-brand {
     font-weight: bold;

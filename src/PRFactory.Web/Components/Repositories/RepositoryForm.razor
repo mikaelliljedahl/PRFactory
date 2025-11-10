@@ -12,6 +12,7 @@
                           Placeholder="my-awesome-project"
                           Required="true"
                           HelpText="A friendly name for this repository"
+                          HelpTooltipText="A friendly name to identify this repository in PRFactory (doesn't need to match Git repo name)."
                           For="@(() => Model.Name)" />
         </div>
 
@@ -20,6 +21,7 @@
                             Label="Git Platform"
                             Required="true"
                             HelpText="Select your Git hosting platform"
+                            HelpTooltipText="Select your Git hosting provider. This determines how PRFactory creates branches and pull requests."
                             For="@(() => Model.GitPlatform)">
                 <option value="">-- Select Platform --</option>
                 <option value="GitHub">GitHub</option>
@@ -37,6 +39,7 @@
                           Placeholder="https://github.com/username/repository.git"
                           Required="true"
                           HelpText="The HTTPS clone URL of your repository"
+                          HelpTooltipText="The full HTTPS URL for cloning your repository. Find this in your Git platform's clone/download section."
                           For="@(() => Model.CloneUrl)" />
         </div>
     </div>
@@ -67,6 +70,7 @@
                           Placeholder="main"
                           Required="true"
                           HelpText="The default branch to use (usually 'main' or 'master')"
+                          HelpTooltipText="The main branch that PRFactory will create feature branches from. Typically 'main' or 'master'."
                           For="@(() => Model.DefaultBranch)" />
         </div>
 
@@ -77,6 +81,8 @@
                           Placeholder="Enter access token"
                           Required="@(!IsEditMode)"
                           HelpText="@(IsEditMode ? "Leave blank to keep existing token" : "Personal access token for Git operations")"
+                          HelpTooltipText="GitHub: Settings → Developer Settings → Personal Access Tokens. Bitbucket: Account Settings → App Passwords. Azure DevOps: User Settings → Personal Access Tokens. Token needs repo read/write permissions."
+                          HelpTooltipLearnMoreUrl="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token"
                           For="@(() => Model.AccessToken)" />
         </div>
     </div>

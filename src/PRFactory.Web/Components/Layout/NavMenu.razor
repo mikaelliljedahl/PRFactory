@@ -2,6 +2,10 @@
     <div class="container-fluid">
         <a class="navbar-brand" href="">
             <i class="bi bi-robot"></i> PRFactory
+            @if (IsDemoMode)
+            {
+                <span class="badge bg-warning text-dark ms-2">Demo</span>
+            }
         </a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
@@ -16,6 +20,15 @@
                 <i class="bi bi-speedometer2"></i> Dashboard
             </NavLink>
         </div>
+        @if (ShouldShowGettingStarted)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="getting-started">
+                    <i class="bi bi-rocket-takeoff"></i> Getting Started
+                    <span class="badge bg-success ms-2">New</span>
+                </NavLink>
+            </div>
+        }
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="tickets">
                 <i class="bi bi-ticket-detailed"></i> Tickets

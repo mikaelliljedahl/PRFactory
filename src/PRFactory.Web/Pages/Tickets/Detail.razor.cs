@@ -267,6 +267,52 @@ public partial class Detail : IAsyncDisposable
         };
     }
 
+    private string GetWorkflowStateHelpText()
+    {
+        if (ticket == null) return string.Empty;
+
+        return ticket.State switch
+        {
+            PRFactory.Domain.ValueObjects.WorkflowState.AwaitingAnswers =>
+                "The AI has posted clarifying questions to help better understand your requirements. Please review and answer them to continue the workflow.",
+
+            PRFactory.Domain.ValueObjects.WorkflowState.TicketUpdateUnderReview =>
+                "The AI has generated a refined ticket description based on the analysis. Review the changes and approve or reject them.",
+
+            PRFactory.Domain.ValueObjects.WorkflowState.PlanUnderReview =>
+                "The AI has created an implementation plan. Review the plan details and decide whether to approve, refine, or reject it.",
+
+            PRFactory.Domain.ValueObjects.WorkflowState.PRCreated =>
+                "The AI has implemented the code and created a pull request. Review the changes in your repository and merge when ready.",
+
+            PRFactory.Domain.ValueObjects.WorkflowState.InReview =>
+                "The pull request is currently under review. Check your repository for the latest status.",
+
+            PRFactory.Domain.ValueObjects.WorkflowState.Completed =>
+                "The ticket has been completed and the pull request has been merged successfully.",
+
+            PRFactory.Domain.ValueObjects.WorkflowState.Failed =>
+                "The workflow encountered an error and could not complete. Check the error details below.",
+
+            PRFactory.Domain.ValueObjects.WorkflowState.Cancelled =>
+                "This ticket has been cancelled and will not be processed.",
+
+            PRFactory.Domain.ValueObjects.WorkflowState.Triggered =>
+                "The workflow has been triggered and is starting the initial analysis.",
+
+            PRFactory.Domain.ValueObjects.WorkflowState.Analyzing =>
+                "The AI is analyzing your codebase to understand the context and requirements.",
+
+            PRFactory.Domain.ValueObjects.WorkflowState.Planning =>
+                "The AI is creating an implementation plan based on your requirements.",
+
+            PRFactory.Domain.ValueObjects.WorkflowState.Implementing =>
+                "The AI is implementing the code based on the approved plan.",
+
+            _ => "The workflow is processing. Current state: " + ticket.StateDisplay
+        };
+    }
+
     public async ValueTask DisposeAsync()
     {
         if (hubConnection != null)

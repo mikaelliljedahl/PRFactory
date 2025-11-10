@@ -1,4 +1,5 @@
 @using System.Linq.Expressions
+@using PRFactory.Web.UI.Help
 
 <div class="mb-3 form-check">
     <input
@@ -15,6 +16,13 @@
         @if (Required)
         {
             <span class="text-danger">*</span>
+        }
+        @if (!string.IsNullOrEmpty(HelpTooltipText))
+        {
+            <ContextualHelp HelpText="@HelpTooltipText"
+                           Title="@HelpTooltipTitle"
+                           LearnMoreUrl="@HelpTooltipLearnMoreUrl"
+                           Position="@HelpTooltipPosition" />
         }
     </label>
 
@@ -56,6 +64,18 @@
 
     [Parameter]
     public bool IsInvalid { get; set; }
+
+    [Parameter]
+    public string? HelpTooltipText { get; set; }
+
+    [Parameter]
+    public string? HelpTooltipTitle { get; set; }
+
+    [Parameter]
+    public string? HelpTooltipLearnMoreUrl { get; set; }
+
+    [Parameter]
+    public string HelpTooltipPosition { get; set; } = "top";
 
     private string FieldId => Id ?? $"field-{Label.Replace(" ", "-").ToLower()}";
 

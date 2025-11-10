@@ -15,6 +15,7 @@ namespace PRFactory.Tests.Agents.Adapters;
 /// <summary>
 /// Tests for ClaudeCodeCliAdapter, focusing on environment variable building for tenant LLM providers
 /// </summary>
+[Collection("Database")]
 public class ClaudeCodeCliAdapterTests : IDisposable
 {
     private readonly Mock<IProcessExecutor> _mockProcessExecutor;

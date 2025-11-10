@@ -34,18 +34,17 @@ public class CheckpointRepository : ICheckpointRepository
 
         if (existingCheckpoint != null)
         {
-            // Update existing checkpoint
-            _context.Entry(existingCheckpoint).CurrentValues.SetValues(checkpoint);
-            _logger.LogDebug("Updated checkpoint {CheckpointId} for ticket {TicketId} in graph {GraphId}",
-                checkpoint.CheckpointId, checkpoint.TicketId, checkpoint.GraphId);
+            // Mark existing checkpoint as deleted and create new one
+            existingCheckpoint.MarkAsDeleted();
+
+            _logger.LogDebug("Marked old checkpoint {CheckpointId} as deleted for ticket {TicketId} in graph {GraphId}",
+                existingCheckpoint.CheckpointId, checkpoint.TicketId, checkpoint.GraphId);
         }
-        else
-        {
-            // Create new checkpoint
-            _context.Checkpoints.Add(checkpoint);
-            _logger.LogDebug("Created checkpoint {CheckpointId} for ticket {TicketId} in graph {GraphId}",
-                checkpoint.CheckpointId, checkpoint.TicketId, checkpoint.GraphId);
-        }
+
+        // Add new checkpoint
+        _context.Checkpoints.Add(checkpoint);
+        _logger.LogDebug("Created checkpoint {CheckpointId} for ticket {TicketId} in graph {GraphId}",
+            checkpoint.CheckpointId, checkpoint.TicketId, checkpoint.GraphId);
 
         await _context.SaveChangesAsync(cancellationToken);
         return checkpoint;

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using PRFactory.Infrastructure.Git;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace PRFactory.Tests.Git;
 
@@ -16,9 +17,11 @@ public class LocalGitServiceTests : IDisposable
     private readonly Mock<ILogger<LocalGitService>> _mockLogger;
     private readonly string _testWorkspacePath;
     private readonly List<string> _pathsToCleanup;
+    private readonly ITestOutputHelper _testOutputHelper;
 
-    public LocalGitServiceTests()
+    public LocalGitServiceTests(ITestOutputHelper testOutputHelper)
     {
+        _testOutputHelper = testOutputHelper;
         _mockConfiguration = new Mock<IConfiguration>();
         _mockLogger = new Mock<ILogger<LocalGitService>>();
         _testWorkspacePath = Path.Combine(Path.GetTempPath(), "prfactory-tests", Guid.NewGuid().ToString());
@@ -626,12 +629,32 @@ public class LocalGitServiceTests : IDisposable
 
         // Assert
         using var repo = new Repository(repoPath);
-        var commits = repo.Commits.ToList();
 
-        Assert.Equal(4, commits.Count); // Initial commit + 3 new commits
-        Assert.Equal("Third commit", commits[0].Message.TrimEnd('\n'));
-        Assert.Equal("Second commit", commits[1].Message.TrimEnd('\n'));
-        Assert.Equal("First commit", commits[2].Message.TrimEnd('\n'));
+        // Verify files exist on the feature branch
+        Assert.True(File.Exists(Path.Combine(repoPath, "file1.txt")));
+        Assert.True(File.Exists(Path.Combine(repoPath, "file2.txt")));
+        Assert.True(File.Exists(Path.Combine(repoPath, "file3.txt")));
+
+        // Verify we're on the correct branch
+        Assert.Equal(branchName, repo.Head.FriendlyName);
+
+        // Get commits from HEAD
+        var commits = repo.Head.Commits.ToList();
+
+        // Verify commit history - should have initial commit + 3 new commits
+        Assert.Equal(4, commits.Count);
+
+        // Get commit messages
+        var messages = commits.Select(c => c.Message.TrimEnd('\n')).ToList();
+
+        // Verify all expected commits exist in history
+        Assert.Contains("Initial commit", messages);
+        Assert.Contains("First commit", messages);
+        Assert.Contains("Second commit", messages);
+        Assert.Contains("Third commit", messages);
+
+        // Verify most recent commit is "Third commit"
+        Assert.Equal("Third commit", messages[0]);
     }
 
     #endregion

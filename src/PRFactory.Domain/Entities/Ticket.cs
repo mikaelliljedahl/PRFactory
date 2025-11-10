@@ -264,7 +264,7 @@ public class Ticket
         return State switch
         {
             WorkflowState.Triggered => new() { WorkflowState.Analyzing, WorkflowState.Failed, WorkflowState.Cancelled },
-            WorkflowState.Analyzing => new() { WorkflowState.TicketUpdateGenerated, WorkflowState.Failed },
+            WorkflowState.Analyzing => new() { WorkflowState.TicketUpdateGenerated, WorkflowState.Failed, WorkflowState.Cancelled },
             WorkflowState.TicketUpdateGenerated => new() { WorkflowState.TicketUpdateUnderReview },
             WorkflowState.TicketUpdateUnderReview => new() { WorkflowState.TicketUpdateApproved, WorkflowState.TicketUpdateRejected, WorkflowState.Cancelled },
             WorkflowState.TicketUpdateRejected => new() { WorkflowState.Analyzing },

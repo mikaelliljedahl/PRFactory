@@ -17,12 +17,8 @@ public class GitPlatformServiceRegistrationTests : DIValidationTestBase
     private IServiceCollection CreateGitPlatformServiceCollection()
     {
         var services = CreateServiceCollection();
-        var config = TestConfigurationBuilder.CreateTestConfiguration();
 
-        // Register infrastructure (required for memory cache)
-        services.AddInfrastructure(config);
-
-        // Register Git platform integration
+        // Register Git platform integration (includes memory cache)
         services.AddGitPlatformIntegration();
 
         return services;

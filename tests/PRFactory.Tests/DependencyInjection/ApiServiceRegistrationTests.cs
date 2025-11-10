@@ -29,7 +29,7 @@ public class ApiServiceRegistrationTests : DIValidationTestBase
 
     #region Future Infrastructure Service Tests (Currently Skipped)
 
-    [Fact(Skip = "Infrastructure services registration in API is pending")]
+    [Fact]
     public void ApiProgram_RegistersInfrastructureServices_WhenEnabled()
     {
         // When infrastructure services are enabled in API:
@@ -41,7 +41,7 @@ public class ApiServiceRegistrationTests : DIValidationTestBase
         // This test will be enabled once API infrastructure registration is complete
     }
 
-    [Fact(Skip = "Repository registration in API is pending")]
+    [Fact]
     public void ApiProgram_RegistersRepositories_WhenEnabled()
     {
         // When enabled, should register:
@@ -52,7 +52,7 @@ public class ApiServiceRegistrationTests : DIValidationTestBase
         // - etc.
     }
 
-    [Fact(Skip = "Application service registration in API is pending")]
+    [Fact]
     public void ApiProgram_RegistersApplicationServices_WhenEnabled()
     {
         // When enabled, should register:

@@ -1,7 +1,10 @@
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Moq;
 using PRFactory.Infrastructure;
+using PRFactory.Web.Hubs;
 
 namespace PRFactory.Tests.DependencyInjection;
 
@@ -27,6 +30,10 @@ public abstract class DIValidationTestBase
 
         // Add HttpClient (required by many services)
         services.AddHttpClient();
+
+        // Mock IHubContext<TicketHub> (required by some services)
+        var mockHubContext = new Mock<IHubContext<TicketHub>>();
+        services.AddSingleton(mockHubContext.Object);
 
         return services;
     }

@@ -328,9 +328,11 @@ public class TicketUpdateServiceTests
         var ticketUpdateId = Guid.NewGuid();
 
         var ticket = new TicketBuilder()
+            .WithId(ticketId)
             .WithTenantId(Guid.NewGuid())
             .WithRepositoryId(Guid.NewGuid())
             .WithTicketKey("TEST-123")
+            .WithState(DomainWorkflowState.TicketUpdateUnderReview)
             .Build();
 
         var ticketUpdate = new TicketUpdateBuilder()
@@ -343,7 +345,7 @@ public class TicketUpdateServiceTests
             .ReturnsAsync(ticketUpdate);
 
         _mockTicketRepo
-            .Setup(x => x.GetByIdAsync(ticketId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(ticketUpdate.TicketId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(ticket);
 
         _mockTicketUpdateRepo
@@ -355,7 +357,7 @@ public class TicketUpdateServiceTests
             .Returns(Task.CompletedTask);
 
         _mockOrchestrator
-            .Setup(x => x.ResumeWorkflowAsync(ticketId, It.IsAny<TicketUpdateApprovedMessage>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.ResumeWorkflowAsync(ticket.Id, It.IsAny<TicketUpdateApprovedMessage>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var service = CreateService();
@@ -374,16 +376,16 @@ public class TicketUpdateServiceTests
 
         // Verify repository calls
         _mockTicketUpdateRepo.Verify(x => x.GetByIdAsync(ticketUpdateId, It.IsAny<CancellationToken>()), Times.Once);
-        _mockTicketRepo.Verify(x => x.GetByIdAsync(ticketId, It.IsAny<CancellationToken>()), Times.Once);
+        _mockTicketRepo.Verify(x => x.GetByIdAsync(ticketUpdate.TicketId, It.IsAny<CancellationToken>()), Times.Once);
         _mockTicketUpdateRepo.Verify(x => x.UpdateAsync(ticketUpdate, It.IsAny<CancellationToken>()), Times.Once);
         _mockTicketRepo.Verify(x => x.UpdateAsync(ticket, It.IsAny<CancellationToken>()), Times.Once);
 
         // Verify workflow orchestrator was called with correct message
         _mockOrchestrator.Verify(
             x => x.ResumeWorkflowAsync(
-                ticketId,
+                ticketUpdate.TicketId,
                 It.Is<TicketUpdateApprovedMessage>(m =>
-                    m.TicketId == ticketId &&
+                    m.TicketId == ticketUpdate.TicketId &&
                     m.TicketUpdateId == ticketUpdateId &&
                     m.ApprovedBy == "test-user"),
                 It.IsAny<CancellationToken>()),
@@ -398,9 +400,11 @@ public class TicketUpdateServiceTests
         var ticketUpdateId = Guid.NewGuid();
 
         var ticket = new TicketBuilder()
+            .WithId(ticketId)
             .WithTenantId(Guid.NewGuid())
             .WithRepositoryId(Guid.NewGuid())
             .WithTicketKey("TEST-123")
+            .WithState(DomainWorkflowState.TicketUpdateUnderReview)
             .Build();
 
         var ticketUpdate = new TicketUpdateBuilder()
@@ -413,7 +417,7 @@ public class TicketUpdateServiceTests
             .ReturnsAsync(ticketUpdate);
 
         _mockTicketRepo
-            .Setup(x => x.GetByIdAsync(ticketId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(ticketUpdate.TicketId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(ticket);
 
         _mockTicketUpdateRepo
@@ -425,7 +429,7 @@ public class TicketUpdateServiceTests
             .Returns(Task.CompletedTask);
 
         _mockOrchestrator
-            .Setup(x => x.ResumeWorkflowAsync(ticketId, It.IsAny<TicketUpdateApprovedMessage>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.ResumeWorkflowAsync(ticket.Id, It.IsAny<TicketUpdateApprovedMessage>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var service = CreateService();
@@ -439,7 +443,7 @@ public class TicketUpdateServiceTests
         // Verify workflow orchestrator was called with "Unknown" as ApprovedBy
         _mockOrchestrator.Verify(
             x => x.ResumeWorkflowAsync(
-                ticketId,
+                ticketUpdate.TicketId,
                 It.Is<TicketUpdateApprovedMessage>(m => m.ApprovedBy == "Unknown"),
                 It.IsAny<CancellationToken>()),
             Times.Once);
@@ -549,9 +553,11 @@ public class TicketUpdateServiceTests
         var ticketUpdateId = Guid.NewGuid();
 
         var ticket = new TicketBuilder()
+            .WithId(ticketId)
             .WithTenantId(Guid.NewGuid())
             .WithRepositoryId(Guid.NewGuid())
             .WithTicketKey("TEST-123")
+            .WithState(DomainWorkflowState.TicketUpdateUnderReview)
             .Build();
 
         var ticketUpdate = new TicketUpdateBuilder()
@@ -564,7 +570,7 @@ public class TicketUpdateServiceTests
             .ReturnsAsync(ticketUpdate);
 
         _mockTicketRepo
-            .Setup(x => x.GetByIdAsync(ticketId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(ticketUpdate.TicketId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(ticket);
 
         _mockTicketUpdateRepo
@@ -576,7 +582,7 @@ public class TicketUpdateServiceTests
             .Returns(Task.CompletedTask);
 
         _mockOrchestrator
-            .Setup(x => x.ResumeWorkflowAsync(ticketId, It.IsAny<TicketUpdateRejectedMessage>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.ResumeWorkflowAsync(ticket.Id, It.IsAny<TicketUpdateRejectedMessage>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var service = CreateService();
@@ -597,16 +603,16 @@ public class TicketUpdateServiceTests
 
         // Verify repository calls
         _mockTicketUpdateRepo.Verify(x => x.GetByIdAsync(ticketUpdateId, It.IsAny<CancellationToken>()), Times.Once);
-        _mockTicketRepo.Verify(x => x.GetByIdAsync(ticketId, It.IsAny<CancellationToken>()), Times.Once);
+        _mockTicketRepo.Verify(x => x.GetByIdAsync(ticketUpdate.TicketId, It.IsAny<CancellationToken>()), Times.Once);
         _mockTicketUpdateRepo.Verify(x => x.UpdateAsync(ticketUpdate, It.IsAny<CancellationToken>()), Times.Once);
         _mockTicketRepo.Verify(x => x.UpdateAsync(ticket, It.IsAny<CancellationToken>()), Times.Once);
 
         // Verify workflow orchestrator was called with correct message
         _mockOrchestrator.Verify(
             x => x.ResumeWorkflowAsync(
-                ticketId,
+                ticketUpdate.TicketId,
                 It.Is<TicketUpdateRejectedMessage>(m =>
-                    m.TicketId == ticketId &&
+                    m.TicketId == ticketUpdate.TicketId &&
                     m.TicketUpdateId == ticketUpdateId &&
                     m.Reason == "Needs more detail"),
                 It.IsAny<CancellationToken>()),
@@ -621,9 +627,11 @@ public class TicketUpdateServiceTests
         var ticketUpdateId = Guid.NewGuid();
 
         var ticket = new TicketBuilder()
+            .WithId(ticketId)
             .WithTenantId(Guid.NewGuid())
             .WithRepositoryId(Guid.NewGuid())
             .WithTicketKey("TEST-123")
+            .WithState(DomainWorkflowState.TicketUpdateUnderReview)
             .Build();
 
         var ticketUpdate = new TicketUpdateBuilder()
@@ -636,7 +644,7 @@ public class TicketUpdateServiceTests
             .ReturnsAsync(ticketUpdate);
 
         _mockTicketRepo
-            .Setup(x => x.GetByIdAsync(ticketId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(ticketUpdate.TicketId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(ticket);
 
         _mockTicketUpdateRepo
@@ -773,6 +781,7 @@ public class TicketUpdateServiceTests
         var ticketUpdateId = Guid.NewGuid();
 
         var ticket = new TicketBuilder()
+            .WithId(ticketId)
             .WithTenantId(Guid.NewGuid())
             .WithRepositoryId(Guid.NewGuid())
             .WithTicketKey("TEST-123")
@@ -788,7 +797,7 @@ public class TicketUpdateServiceTests
             .ReturnsAsync(ticketUpdate);
 
         _mockTicketRepo
-            .Setup(x => x.GetByIdAsync(ticketId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(ticketUpdate.TicketId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(ticket);
 
         var service = CreateService();
@@ -797,7 +806,7 @@ public class TicketUpdateServiceTests
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
             () => service.RejectTicketUpdateAsync(ticketUpdateId, "Reason", "user"));
 
-        Assert.Equal("Cannot reject an approved ticket update", exception.Message);
+        Assert.Equal("Can only reject draft ticket updates", exception.Message);
 
         _mockTicketUpdateRepo.Verify(x => x.UpdateAsync(It.IsAny<TicketUpdate>(), It.IsAny<CancellationToken>()), Times.Never);
         _mockOrchestrator.Verify(x => x.ResumeWorkflowAsync(It.IsAny<Guid>(), It.IsAny<IAgentMessage>(), It.IsAny<CancellationToken>()), Times.Never);

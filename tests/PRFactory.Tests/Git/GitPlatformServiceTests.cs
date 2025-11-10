@@ -32,6 +32,25 @@ public class GitPlatformServiceTests
         _mockGitHubProvider.Setup(p => p.PlatformName).Returns("GitHub");
         _mockBitbucketProvider.Setup(p => p.PlatformName).Returns("Bitbucket");
         _mockAzureDevOpsProvider.Setup(p => p.PlatformName).Returns("AzureDevOps");
+
+        // Setup default cache entry mock for all cache operations
+        SetupDefaultCacheEntry();
+    }
+
+    private void SetupDefaultCacheEntry()
+    {
+        var mockCacheEntry = new Mock<ICacheEntry>();
+        mockCacheEntry.SetupProperty(e => e.Value);
+        mockCacheEntry.SetupProperty(e => e.AbsoluteExpiration);
+        mockCacheEntry.SetupProperty(e => e.AbsoluteExpirationRelativeToNow);
+        mockCacheEntry.SetupProperty(e => e.SlidingExpiration);
+        mockCacheEntry.SetupProperty(e => e.Priority);
+        mockCacheEntry.SetupProperty(e => e.Size);
+        mockCacheEntry.Setup(e => e.Dispose()).Verifiable();
+
+        _mockCache
+            .Setup(c => c.CreateEntry(It.IsAny<object>()))
+            .Returns(mockCacheEntry.Object);
     }
 
     #region CreatePullRequestAsync Tests
@@ -516,9 +535,7 @@ public class GitPlatformServiceTests
             .Setup(c => c.TryGetValue(It.IsAny<object>(), out cachedValue))
             .Returns(false);
 
-        _mockCache
-            .Setup(c => c.CreateEntry(It.IsAny<object>()))
-            .Returns(Mock.Of<ICacheEntry>());
+        // Cache entry is already set up in constructor via SetupDefaultCacheEntry()
 
         var service = CreateService(repositoryGetter);
 
@@ -600,9 +617,7 @@ public class GitPlatformServiceTests
             .Setup(s => s.CloneAsync(repository.CloneUrl, repository.AccessToken, It.IsAny<CancellationToken>()))
             .ReturnsAsync(newPath);
 
-        _mockCache
-            .Setup(c => c.CreateEntry(It.IsAny<object>()))
-            .Returns(Mock.Of<ICacheEntry>());
+        // Cache entry is already set up in constructor via SetupDefaultCacheEntry()
 
         var service = CreateService(repositoryGetter);
 
@@ -1070,6 +1085,9 @@ public class GitPlatformServiceTests
 
     private void SetupCachedRepository(Guid repositoryId, string repoPath)
     {
+        // Create a temporary directory for the test
+        Directory.CreateDirectory(repoPath);
+
         object? cacheValue = repoPath;
         _mockCache
             .Setup(c => c.TryGetValue($"repo:path:{repositoryId}", out cacheValue))

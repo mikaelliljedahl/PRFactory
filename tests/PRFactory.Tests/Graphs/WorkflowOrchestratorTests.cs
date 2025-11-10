@@ -4,8 +4,9 @@ using PRFactory.Infrastructure.Agents;
 using PRFactory.Infrastructure.Agents.Base;
 using PRFactory.Infrastructure.Agents.Graphs;
 using PRFactory.Infrastructure.Agents.Messages;
+using PRFactory.Infrastructure.Configuration;
 using Xunit;
-using ICheckpointStore = PRFactory.Infrastructure.Agents.ICheckpointStore;
+using ICheckpointStore = PRFactory.Infrastructure.Agents.Base.ICheckpointStore;
 
 namespace PRFactory.Tests.Graphs;
 
@@ -44,10 +45,12 @@ public class WorkflowOrchestratorTests
             mockAgentExecutor.Object);
 
         var mockImplementationLogger = new Mock<ILogger<ImplementationGraph>>();
+        var mockTenantConfigService = new Mock<ITenantConfigurationService>();
         _mockImplementationGraph = new Mock<ImplementationGraph>(
             mockImplementationLogger.Object,
             mockCheckpointStore.Object,
-            mockAgentExecutor.Object);
+            mockAgentExecutor.Object,
+            mockTenantConfigService.Object);
     }
 
     #region StartWorkflowAsync Tests
@@ -263,6 +266,20 @@ public class WorkflowOrchestratorTests
             .Setup(x => x.ExecuteAsync(It.IsAny<IAgentMessage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(planningResult);
 
+        // Capture all saved states
+        var savedStates = new List<WorkflowState>();
+        _mockStateStore
+            .Setup(x => x.SaveStateAsync(It.IsAny<WorkflowState>()))
+            .Callback<WorkflowState>(state => savedStates.Add(new WorkflowState
+            {
+                WorkflowId = state.WorkflowId,
+                TicketId = state.TicketId,
+                CurrentGraph = state.CurrentGraph,
+                Status = state.Status,
+                CurrentState = state.CurrentState
+            }))
+            .Returns(Task.CompletedTask);
+
         // Act
         await orchestrator.StartWorkflowAsync(message);
 
@@ -271,11 +288,9 @@ public class WorkflowOrchestratorTests
             x => x.ExecuteAsync(refinementCompleteEvent, It.IsAny<CancellationToken>()),
             Times.Once);
 
-        _mockStateStore.Verify(
-            x => x.SaveStateAsync(It.Is<WorkflowState>(s =>
-                s.CurrentGraph == "PlanningGraph" &&
-                s.Status == WorkflowStatus.Running)),
-            Times.AtLeastOnce);
+        Assert.Contains(savedStates, s =>
+            s.CurrentGraph == "PlanningGraph" &&
+            s.Status == WorkflowStatus.Running);
     }
 
     [Fact]
@@ -318,6 +333,20 @@ public class WorkflowOrchestratorTests
             .Setup(x => x.ExecuteAsync(It.IsAny<IAgentMessage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(implementationResult);
 
+        // Capture all saved states
+        var savedStates = new List<WorkflowState>();
+        _mockStateStore
+            .Setup(x => x.SaveStateAsync(It.IsAny<WorkflowState>()))
+            .Callback<WorkflowState>(state => savedStates.Add(new WorkflowState
+            {
+                WorkflowId = state.WorkflowId,
+                TicketId = state.TicketId,
+                CurrentGraph = state.CurrentGraph,
+                Status = state.Status,
+                CurrentState = state.CurrentState
+            }))
+            .Returns(Task.CompletedTask);
+
         // Act
         await orchestrator.ResumeWorkflowAsync(ticketId, planApprovedMessage);
 
@@ -326,11 +355,9 @@ public class WorkflowOrchestratorTests
             x => x.ExecuteAsync(It.Is<PlanApprovedMessage>(m => m.TicketId == ticketId), It.IsAny<CancellationToken>()),
             Times.Once);
 
-        _mockStateStore.Verify(
-            x => x.SaveStateAsync(It.Is<WorkflowState>(s =>
-                s.CurrentGraph == "ImplementationGraph" &&
-                s.Status == WorkflowStatus.Running)),
-            Times.AtLeastOnce);
+        Assert.Contains(savedStates, s =>
+            s.CurrentGraph == "ImplementationGraph" &&
+            s.Status == WorkflowStatus.Running);
     }
 
     [Fact]
@@ -865,14 +892,25 @@ public class WorkflowOrchestratorTests
             .Setup(x => x.ResumeAsync(ticketId, message, It.IsAny<CancellationToken>()))
             .ReturnsAsync(result);
 
+        // Capture all saved states
+        var savedStates = new List<WorkflowState>();
+        _mockStateStore
+            .Setup(x => x.SaveStateAsync(It.IsAny<WorkflowState>()))
+            .Callback<WorkflowState>(state => savedStates.Add(new WorkflowState
+            {
+                WorkflowId = state.WorkflowId,
+                TicketId = state.TicketId,
+                CurrentGraph = state.CurrentGraph,
+                Status = state.Status,
+                CurrentState = state.CurrentState
+            }))
+            .Returns(Task.CompletedTask);
+
         // Act
         await orchestrator.ResumeWorkflowAsync(ticketId, message);
 
-        // Assert
-        _mockStateStore.Verify(
-            x => x.SaveStateAsync(It.Is<WorkflowState>(s =>
-                s.Status == WorkflowStatus.Running)),
-            Times.AtLeastOnce);
+        // Assert - Should have saved with Running status at least once
+        Assert.Contains(savedStates, s => s.Status == WorkflowStatus.Running);
     }
 
     #endregion

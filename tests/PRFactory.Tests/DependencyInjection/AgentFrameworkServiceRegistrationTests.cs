@@ -177,7 +177,7 @@ public class AgentFrameworkServiceRegistrationTests : DIValidationTestBase
         var services = CreateAgentFrameworkServiceCollection(enableErrorHandling: true);
 
         // Assert
-        var descriptor = services.FirstOrDefault(d => d.ImplementationType == typeof(ErrorHandlingMiddleware));
+        var descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(ErrorHandlingMiddleware));
         Assert.NotNull(descriptor);
         Assert.Equal(ServiceLifetime.Singleton, descriptor!.Lifetime);
     }
@@ -213,7 +213,7 @@ public class AgentFrameworkServiceRegistrationTests : DIValidationTestBase
         var services = CreateAgentFrameworkServiceCollection(enableRetry: true);
 
         // Assert
-        var descriptor = services.FirstOrDefault(d => d.ImplementationType == typeof(RetryMiddleware));
+        var descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(RetryMiddleware));
         Assert.NotNull(descriptor);
         Assert.Equal(ServiceLifetime.Singleton, descriptor!.Lifetime);
     }

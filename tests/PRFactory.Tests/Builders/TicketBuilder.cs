@@ -1,3 +1,4 @@
+using System.Reflection;
 using PRFactory.Domain.Entities;
 using PRFactory.Domain.ValueObjects;
 
@@ -8,6 +9,7 @@ namespace PRFactory.Tests.Builders;
 /// </summary>
 public class TicketBuilder
 {
+    private Guid? _id;
     private string _ticketKey = "TEST-123";
     private Guid _tenantId = Guid.NewGuid();
     private Guid _repositoryId = Guid.NewGuid();
@@ -28,6 +30,12 @@ public class TicketBuilder
 
     public TicketBuilder()
     {
+    }
+
+    public TicketBuilder WithId(Guid id)
+    {
+        _id = id;
+        return this;
     }
 
     public TicketBuilder WithTicketKey(string ticketKey)
@@ -139,6 +147,14 @@ public class TicketBuilder
     {
         var ticket = Ticket.Create(_ticketKey, _tenantId, _repositoryId, _ticketSystem, _source);
 
+        // Set custom ID if provided (for test scenarios where we need a specific ID)
+        if (_id.HasValue)
+        {
+            // Access the private setter using reflection
+            var idProperty = typeof(Ticket).GetProperty("Id");
+            idProperty?.SetValue(ticket, _id.Value);
+        }
+
         if (!string.IsNullOrEmpty(_title) || !string.IsNullOrEmpty(_description))
         {
             ticket.UpdateTicketInfo(_title ?? "Default Title", _description ?? "Default Description");
@@ -189,7 +205,11 @@ public class TicketBuilder
         {
             if (ticket.State != state)
             {
-                ticket.TransitionTo(state);
+                var result = ticket.TransitionTo(state);
+                if (!result.IsSuccess)
+                {
+                    throw new InvalidOperationException($"Failed to transition ticket to {state}: {result.ErrorMessage}. Current state: {ticket.State}");
+                }
             }
         }
     }

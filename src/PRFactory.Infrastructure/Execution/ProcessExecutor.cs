@@ -73,6 +73,28 @@ public class ProcessExecutor : IProcessExecutor
         int? timeoutSeconds = null,
         CancellationToken cancellationToken = default)
     {
+        return await ExecuteAsync(fileName, argumentList, workingDirectory, environmentVariables: null, timeoutSeconds, cancellationToken);
+    }
+
+    /// <summary>
+    /// Executes a command with an argument list, environment variables, and captures the complete output.
+    /// This is safer than string concatenation as it properly handles escaping.
+    /// </summary>
+    /// <param name="fileName">The executable to run</param>
+    /// <param name="argumentList">Command line arguments as a list</param>
+    /// <param name="workingDirectory">Working directory for the process</param>
+    /// <param name="environmentVariables">Environment variables to set for the process</param>
+    /// <param name="timeoutSeconds">Timeout in seconds (null for no timeout)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Process execution result</returns>
+    public async Task<ProcessExecutionResult> ExecuteAsync(
+        string fileName,
+        IEnumerable<string> argumentList,
+        string? workingDirectory = null,
+        Dictionary<string, string>? environmentVariables = null,
+        int? timeoutSeconds = null,
+        CancellationToken cancellationToken = default)
+    {
         if (string.IsNullOrWhiteSpace(fileName))
             throw new ArgumentException("File name cannot be empty", nameof(fileName));
 
@@ -99,6 +121,15 @@ public class ProcessExecutor : IProcessExecutor
         foreach (var arg in argumentList)
         {
             startInfo.ArgumentList.Add(arg);
+        }
+
+        // Set environment variables if provided
+        if (environmentVariables != null)
+        {
+            foreach (var (key, value) in environmentVariables)
+            {
+                startInfo.Environment[key] = value;
+            }
         }
 
         return await ExecuteCoreAsync(startInfo, timeoutSeconds, cancellationToken);
@@ -486,6 +517,18 @@ public interface IProcessExecutor
         string fileName,
         IEnumerable<string> argumentList,
         string? workingDirectory = null,
+        int? timeoutSeconds = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Executes a command with an argument list, environment variables, and captures the complete output.
+    /// This is safer than string concatenation as it properly handles escaping.
+    /// </summary>
+    Task<ProcessExecutionResult> ExecuteAsync(
+        string fileName,
+        IEnumerable<string> argumentList,
+        string? workingDirectory = null,
+        Dictionary<string, string>? environmentVariables = null,
         int? timeoutSeconds = null,
         CancellationToken cancellationToken = default);
 

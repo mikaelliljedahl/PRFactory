@@ -16,6 +16,7 @@ using AgentPromptTemplateConfig = PRFactory.Infrastructure.Persistence.Configura
 using UserConfig = PRFactory.Infrastructure.Persistence.Configurations.UserConfiguration;
 using PlanReviewConfig = PRFactory.Infrastructure.Persistence.Configurations.PlanReviewConfiguration;
 using ReviewCommentConfig = PRFactory.Infrastructure.Persistence.Configurations.ReviewCommentConfiguration;
+using TenantLlmProviderConfig = PRFactory.Infrastructure.Persistence.Configurations.TenantLlmProviderConfiguration;
 
 namespace PRFactory.Infrastructure.Persistence;
 
@@ -54,6 +55,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<PlanReview> PlanReviews => Set<PlanReview>();
     public DbSet<ReviewComment> ReviewComments => Set<ReviewComment>();
 
+    // LLM Provider DbSets
+    public DbSet<TenantLlmProvider> TenantLlmProviders => Set<TenantLlmProvider>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -72,6 +76,9 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new UserConfig());
         modelBuilder.ApplyConfiguration(new PlanReviewConfig());
         modelBuilder.ApplyConfiguration(new ReviewCommentConfig());
+
+        // LLM Provider configuration
+        modelBuilder.ApplyConfiguration(new TenantLlmProviderConfig(_encryptionService));
 
         // Add indexes for common queries
         AddIndexes(modelBuilder);

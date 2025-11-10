@@ -1,10 +1,15 @@
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PRFactory.Core.Application.Services;
+using PRFactory.Core.Repositories;
+using PRFactory.Domain.Entities;
 using PRFactory.Domain.ValueObjects;
 using PRFactory.Infrastructure.Configuration;
 using PRFactory.Infrastructure.Execution;
+using PRFactory.Infrastructure.Persistence.Encryption;
 
 namespace PRFactory.Infrastructure.Agents.Adapters;
 
@@ -62,6 +67,8 @@ public class ClaudeCodeCliAdapter : ICliAgent
     private readonly IProcessExecutor _processExecutor;
     private readonly ILogger<ClaudeCodeCliAdapter> _logger;
     private readonly ClaudeCodeCliOptions _options;
+    private readonly IEncryptionService _encryptionService;
+    private readonly IServiceProvider _serviceProvider;
 
     public string AgentName => "Claude Code CLI";
     public bool SupportsStreaming => true;
@@ -69,11 +76,15 @@ public class ClaudeCodeCliAdapter : ICliAgent
     public ClaudeCodeCliAdapter(
         IProcessExecutor processExecutor,
         ILogger<ClaudeCodeCliAdapter> logger,
-        IOptions<ClaudeCodeCliOptions> options)
+        IOptions<ClaudeCodeCliOptions> options,
+        IEncryptionService encryptionService,
+        IServiceProvider serviceProvider)
     {
         _processExecutor = processExecutor ?? throw new ArgumentNullException(nameof(processExecutor));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
     }
 
     /// <summary>
@@ -91,12 +102,30 @@ public class ClaudeCodeCliAdapter : ICliAgent
         string prompt,
         CancellationToken cancellationToken = default)
     {
+        return await ExecutePromptWithTenantAsync(prompt, tenantId: null, llmProviderId: null, cancellationToken);
+    }
+
+    /// <summary>
+    /// Executes a prompt using Claude Code CLI with tenant-specific LLM provider configuration
+    /// </summary>
+    /// <param name="prompt">The prompt to execute</param>
+    /// <param name="tenantId">The tenant ID</param>
+    /// <param name="llmProviderId">Optional specific provider ID (null = use tenant default)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The agent's response</returns>
+    public async Task<CliAgentResponse> ExecutePromptWithTenantAsync(
+        string prompt,
+        Guid? tenantId,
+        Guid? llmProviderId = null,
+        CancellationToken cancellationToken = default)
+    {
         if (string.IsNullOrWhiteSpace(prompt))
             throw new ArgumentException("Prompt cannot be empty", nameof(prompt));
 
         if (_options.EnableVerboseLogging)
         {
-            _logger.LogInformation("Executing prompt with Claude Code CLI");
+            _logger.LogInformation("Executing prompt with Claude Code CLI (Tenant: {TenantId}, Provider: {ProviderId})",
+                tenantId, llmProviderId);
             _logger.LogDebug("Prompt: {Prompt}", prompt);
         }
         else
@@ -107,11 +136,19 @@ public class ClaudeCodeCliAdapter : ICliAgent
         // Build arguments for headless mode
         var arguments = BuildArguments(prompt, projectPath: null);
 
-        // Execute the CLI command
+        // Build tenant-specific environment variables
+        Dictionary<string, string>? envVars = null;
+        if (tenantId.HasValue)
+        {
+            envVars = await BuildLlmEnvironmentVariablesAsync(tenantId.Value, llmProviderId);
+        }
+
+        // Execute the CLI command with environment variables
         var result = await _processExecutor.ExecuteAsync(
             _options.ExecutablePath,
             arguments,
             workingDirectory: null,
+            environmentVariables: envVars,
             timeoutSeconds: _options.DefaultTimeoutSeconds,
             cancellationToken: cancellationToken);
 
@@ -126,6 +163,25 @@ public class ClaudeCodeCliAdapter : ICliAgent
         string projectPath,
         CancellationToken cancellationToken = default)
     {
+        return await ExecuteWithProjectContextAndTenantAsync(prompt, projectPath, tenantId: null, llmProviderId: null, cancellationToken);
+    }
+
+    /// <summary>
+    /// Executes a prompt with full project context and tenant-specific LLM provider configuration
+    /// </summary>
+    /// <param name="prompt">The prompt to execute</param>
+    /// <param name="projectPath">Path to the project directory</param>
+    /// <param name="tenantId">The tenant ID</param>
+    /// <param name="llmProviderId">Optional specific provider ID (null = use tenant default)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The agent's response</returns>
+    public async Task<CliAgentResponse> ExecuteWithProjectContextAndTenantAsync(
+        string prompt,
+        string projectPath,
+        Guid? tenantId,
+        Guid? llmProviderId = null,
+        CancellationToken cancellationToken = default)
+    {
         if (string.IsNullOrWhiteSpace(prompt))
             throw new ArgumentException("Prompt cannot be empty", nameof(prompt));
 
@@ -136,17 +192,27 @@ public class ClaudeCodeCliAdapter : ICliAgent
             throw new DirectoryNotFoundException($"Project path not found: {projectPath}");
 
         _logger.LogInformation(
-            "Executing prompt with Claude Code CLI with project context: {ProjectPath}",
-            projectPath);
+            "Executing prompt with Claude Code CLI with project context: {ProjectPath} (Tenant: {TenantId}, Provider: {ProviderId})",
+            projectPath,
+            tenantId,
+            llmProviderId);
 
         // Build arguments with project context
         var arguments = BuildArguments(prompt, projectPath);
 
-        // Execute the CLI command
+        // Build tenant-specific environment variables
+        Dictionary<string, string>? envVars = null;
+        if (tenantId.HasValue)
+        {
+            envVars = await BuildLlmEnvironmentVariablesAsync(tenantId.Value, llmProviderId);
+        }
+
+        // Execute the CLI command with environment variables
         var result = await _processExecutor.ExecuteAsync(
             _options.ExecutablePath,
             arguments,
             workingDirectory: projectPath,
+            environmentVariables: envVars,
             timeoutSeconds: _options.ProjectContextTimeoutSeconds,
             cancellationToken: cancellationToken);
 
@@ -342,6 +408,100 @@ public class ClaudeCodeCliAdapter : ICliAgent
         {
             _logger.LogWarning(ex, "Error extracting metadata from output");
         }
+    }
+
+    /// <summary>
+    /// Builds environment variables for Claude Code CLI based on tenant's LLM provider configuration
+    /// </summary>
+    /// <param name="tenantId">The tenant ID</param>
+    /// <param name="llmProviderId">Optional specific provider ID (null = use tenant default)</param>
+    /// <returns>Dictionary of environment variables to set</returns>
+    private async Task<Dictionary<string, string>> BuildLlmEnvironmentVariablesAsync(
+        Guid tenantId,
+        Guid? llmProviderId = null)
+    {
+        var envVars = new Dictionary<string, string>();
+
+        try
+        {
+            // Get database context from service provider
+            var dbContext = _serviceProvider.GetService(typeof(PRFactory.Infrastructure.Persistence.ApplicationDbContext))
+                as PRFactory.Infrastructure.Persistence.ApplicationDbContext;
+
+            if (dbContext == null)
+            {
+                _logger.LogWarning("Unable to resolve ApplicationDbContext from service provider");
+                return envVars;
+            }
+
+            // Get LLM provider configuration
+            TenantLlmProvider? provider = null;
+
+            if (llmProviderId.HasValue)
+            {
+                // Use specified provider
+                provider = await dbContext.TenantLlmProviders
+                    .FirstOrDefaultAsync(p => p.Id == llmProviderId.Value && p.TenantId == tenantId);
+            }
+            else
+            {
+                // Use tenant's default provider
+                provider = await dbContext.TenantLlmProviders
+                    .FirstOrDefaultAsync(p => p.TenantId == tenantId && p.IsDefault && p.IsActive);
+            }
+
+            if (provider == null)
+            {
+                _logger.LogWarning(
+                    "No LLM provider found for tenant {TenantId} (ProviderId: {ProviderId}). Using default Claude Code CLI auth.",
+                    tenantId,
+                    llmProviderId);
+                return envVars;
+            }
+
+            // Decrypt API token if present
+            if (!string.IsNullOrEmpty(provider.EncryptedApiToken))
+            {
+                var decryptedToken = _encryptionService.Decrypt(provider.EncryptedApiToken);
+                envVars["ANTHROPIC_AUTH_TOKEN"] = decryptedToken;
+            }
+
+            // Set base URL if overridden (Z.ai, Minimax, etc.)
+            if (!string.IsNullOrEmpty(provider.ApiBaseUrl))
+            {
+                envVars["ANTHROPIC_BASE_URL"] = provider.ApiBaseUrl;
+            }
+
+            // Set timeout
+            envVars["API_TIMEOUT_MS"] = provider.TimeoutMs.ToString();
+
+            // Disable non-essential traffic if requested (useful for proxies)
+            if (provider.DisableNonEssentialTraffic)
+            {
+                envVars["CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC"] = "1";
+            }
+
+            // Add model overrides (Minimax M2 uses this)
+            if (provider.ModelOverrides != null && provider.ModelOverrides.Count > 0)
+            {
+                foreach (var (key, value) in provider.ModelOverrides)
+                {
+                    envVars[key] = value;
+                }
+            }
+
+            _logger.LogInformation(
+                "Using LLM provider '{ProviderName}' (Type: {ProviderType}) for tenant {TenantId}",
+                provider.Name,
+                provider.ProviderType,
+                tenantId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error building LLM environment variables for tenant {TenantId}", tenantId);
+        }
+
+        return envVars;
     }
 
     /// <summary>

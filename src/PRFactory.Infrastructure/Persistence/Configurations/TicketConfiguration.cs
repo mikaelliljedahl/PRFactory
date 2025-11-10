@@ -104,7 +104,15 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
             .IsRequired()
             .HasDefaultValue(1);
 
+        // LLM provider property
+        builder.Property(t => t.LlmProviderId);
+
         // Relationships
+        builder.HasOne(t => t.LlmProvider)
+            .WithMany()
+            .HasForeignKey(t => t.LlmProviderId)
+            .OnDelete(DeleteBehavior.SetNull); // If provider deleted, set to null (use tenant default)
+
         builder.HasOne(t => t.Repository)
             .WithMany(r => r.Tickets)
             .HasForeignKey(t => t.RepositoryId)

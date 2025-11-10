@@ -158,19 +158,11 @@ public class JiraProvider : ITicketPlatformProvider
         if (content == null || content.Content == null)
             return string.Empty;
 
-        var textParts = new List<string>();
-
-        foreach (var node in content.Content)
-        {
-            if (node.Content != null)
-            {
-                foreach (var textNode in node.Content)
-                {
-                    if (textNode.Text != null)
-                        textParts.Add(textNode.Text);
-                }
-            }
-        }
+        var textParts = content.Content
+            .Where(node => node.Content != null)
+            .SelectMany(node => node.Content!)
+            .Where(textNode => textNode.Text != null)
+            .Select(textNode => textNode.Text!);
 
         return string.Join(" ", textParts);
     }

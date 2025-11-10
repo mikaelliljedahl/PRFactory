@@ -370,7 +370,7 @@ public class AgentHostService : BackgroundService
 
         // Wait for all current executions to complete
         var timeout = TimeSpan.FromSeconds(_options.GracefulShutdownTimeoutSeconds);
-        var cts = new CancellationTokenSource(timeout);
+        using var cts = new CancellationTokenSource(timeout);
 
         try
         {

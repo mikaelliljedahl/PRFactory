@@ -42,9 +42,8 @@ public class TokenStore : ITokenStore
             _logger.LogInformation("OAuth tokens saved for user {UserId}. Expires at: {ExpiresAt}",
                 userId, tokens.ExpiresAt);
         }
-        catch (Exception ex)
+        catch
         {
-            _logger.LogError(ex, "Failed to save OAuth tokens for user {UserId}", userId);
             throw;
         }
     }
@@ -98,9 +97,8 @@ public class TokenStore : ITokenStore
 
             _logger.LogInformation("OAuth tokens cleared for user {UserId}", userId);
         }
-        catch (Exception ex)
+        catch
         {
-            _logger.LogError(ex, "Failed to clear OAuth tokens for user {UserId}", userId);
             throw;
         }
     }

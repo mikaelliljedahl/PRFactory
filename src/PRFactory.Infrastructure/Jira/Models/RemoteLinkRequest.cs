@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
 namespace PRFactory.Infrastructure.Jira.Models;
@@ -61,7 +62,7 @@ public class RemoteLinkRequest
                 Summary = repositoryName != null ? $"Pull Request in {repositoryName}" : "Pull Request",
                 Icon = new RemoteLinkIcon
                 {
-                    Url16x16 = "https://github.com/favicon.ico",
+                    Url16x16 = GetGitHubFaviconUrl(),
                     Title = "GitHub"
                 },
                 Status = new RemoteLinkStatus
@@ -69,7 +70,7 @@ public class RemoteLinkRequest
                     Resolved = false,
                     Icon = new RemoteLinkIcon
                     {
-                        Url16x16 = "https://github.com/favicon.ico",
+                        Url16x16 = GetGitHubFaviconUrl(),
                         Title = "Open"
                     }
                 }
@@ -95,6 +96,16 @@ public class RemoteLinkRequest
                 Summary = summary
             }
         };
+    }
+
+    /// <summary>
+    /// Gets the GitHub favicon URL for remote link icons.
+    /// </summary>
+    /// <returns>GitHub's favicon URL.</returns>
+    [SuppressMessage("csharpsquid", "S1075", Justification = "External third-party favicon URL from GitHub")]
+    private static string GetGitHubFaviconUrl()
+    {
+        return "https://github.com/favicon.ico";
     }
 }
 

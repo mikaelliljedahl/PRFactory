@@ -190,7 +190,7 @@ public class JiraCommentParser : IJiraCommentParser
 
         _logger.LogDebug("Found {MatchCount} numbered answers", matches.Count);
 
-        foreach (Match match in matches)
+        foreach (Match match in matches.Cast<Match>().Where(m => m.Success && m.Groups.Count >= 3))
         {
             var questionNumber = int.Parse(match.Groups[1].Value);
             var answerText = match.Groups[2].Value.Trim();
@@ -226,7 +226,7 @@ public class JiraCommentParser : IJiraCommentParser
 
         _logger.LogDebug("Found {MatchCount} Q&A pairs", matches.Count);
 
-        foreach (Match match in matches)
+        foreach (Match match in matches.Cast<Match>().Where(m => m.Success && m.Groups.Count >= 3))
         {
             var questionSnippet = match.Groups[1].Value.Trim();
             var answerText = match.Groups[2].Value.Trim();

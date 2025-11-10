@@ -1318,6 +1318,77 @@ source /tmp/dotnet-proxy-setup.sh && dotnet restore && dotnet build
 - Modify proxy environment variables manually (use the helper script)
 - Try to use .NET without the NuGet proxy in Claude Code web sessions
 
+#### File Encoding (CRITICAL)
+
+**IMPORTANT: All source files MUST be UTF-8 without BOM (Byte Order Mark).**
+
+The `.editorconfig` enforces `charset = utf-8` (without BOM), and CI will fail if files contain a BOM.
+
+**Problem:**
+- UTF-8 BOM is an invisible character (`﻿`) at the start of a file
+- Some editors add it automatically when saving files
+- The `dotnet format` tool will fail CI checks if BOM is present
+- Error message: `Fix file encoding` from the CHARSET formatter
+
+**How to Detect BOM Issues:**
+
+```bash
+# Run dotnet format to check for encoding issues
+export PATH="/root/.dotnet:$PATH" && source /tmp/dotnet-proxy-setup.sh
+dotnet format PRFactory.sln --verify-no-changes --verbosity diagnostic
+```
+
+If you see an error like:
+```
+/path/to/file.cs(1,1): error CHARSET: Fix file encoding.
+```
+
+This means the file has a UTF-8 BOM that needs to be removed.
+
+**How to Fix BOM Issues:**
+
+When using the Edit tool, if you see an invisible character before the first line (like `﻿using System;`), remove it:
+
+```csharp
+// BEFORE (has BOM - note the invisible character):
+﻿using System;
+
+// AFTER (correct - no BOM):
+using System;
+```
+
+**Prevention:**
+
+1. **Always use the Edit tool correctly**: When editing the first line of a file, ensure you don't preserve any BOM character
+2. **Check after editing**: If you modify migration files or any .cs files, verify encoding:
+   ```bash
+   dotnet format PRFactory.sln --verify-no-changes
+   ```
+3. **Files most at risk**: Entity Framework migrations, auto-generated files, files created by external tools
+
+**DO:**
+- Remove BOM characters when detected
+- Verify encoding with `dotnet format --verify-no-changes` before pushing
+- Use the Edit tool to replace the first line without the BOM character
+
+**DON'T:**
+- Preserve invisible BOM characters when editing files
+- Skip the `dotnet format` verification step
+- Assume files are correctly encoded just because they compile
+
+**Quick Fix Pattern:**
+
+If `dotnet format` reports a CHARSET error:
+
+1. Read the file and identify the BOM (invisible `﻿` character at start)
+2. Use the Edit tool to replace the first line:
+   ```
+   old_string: ﻿using System;
+   new_string: using System;
+   ```
+3. Verify: `dotnet format --verify-no-changes`
+4. Commit: "fix: Remove UTF-8 BOM from [filename] to satisfy dotnet format"
+
 #### When Reviewing Code
 
 **ASK YOURSELF:**
@@ -1457,7 +1528,7 @@ Assert.InRange(actual, low, high);
 
 #### Before Committing and Pushing Code
 
-**CRITICAL: NEVER push code that doesn't compile or has failing tests.**
+**CRITICAL: NEVER push code that doesn't compile, has failing tests, or fails formatting checks.**
 
 Before committing and pushing any code changes, you **MUST** verify:
 
@@ -1478,11 +1549,21 @@ Before committing and pushing any code changes, you **MUST** verify:
    - No skipped tests without explicit reason documented in code
    - Test output must show 0 failures
 
+3. **Code Formatting is Correct**
+   ```bash
+   source /tmp/dotnet-proxy-setup.sh && dotnet format PRFactory.sln --verify-no-changes
+   ```
+   - No formatting issues (indentation, spacing, etc.)
+   - No encoding issues (UTF-8 BOM will cause failures)
+   - CI will fail if this check fails locally
+   - **This is mandatory** - format checks are enforced in CI/CD
+
 **Pre-Push Checklist:**
 
 ✅ **DO** verify before every push:
 - [ ] Run `dotnet build` - confirms code compiles
 - [ ] Run `dotnet test` - confirms all tests pass
+- [ ] Run `dotnet format --verify-no-changes` - confirms formatting is correct
 - [ ] Check for compilation warnings and address critical ones
 - [ ] Verify no new test failures introduced by changes
 - [ ] Ensure new code has appropriate test coverage
@@ -1493,17 +1574,20 @@ Before committing and pushing any code changes, you **MUST** verify:
 ❌ **NEVER** push:
 - Code that doesn't compile
 - Code that causes existing tests to fail
+- Code that fails `dotnet format --verify-no-changes`
 - Code that breaks the build
+- Files with UTF-8 BOM encoding issues
 - Untested code to production branches (without documented reason)
 - **Documentation that's out of sync with implementation**
 - **Temporary or work-in-progress documents** without cleaning them up
 - **Features that deviate from their documentation** without updating docs first
 
 **Why This Matters:**
-- **CI/CD Pipeline**: Broken builds block the entire team
+- **CI/CD Pipeline**: Broken builds, failing tests, or formatting issues block the entire team
 - **Quality Assurance**: Failing tests indicate bugs or regressions
+- **Code Consistency**: Format checks ensure consistent code style across the team
 - **Developer Productivity**: Other developers pulling broken code lose time debugging
-- **Professional Standards**: Non-compiling code should never reach version control
+- **Professional Standards**: Non-compiling or incorrectly formatted code should never reach version control
 - **Automated Workflows**: PRFactory's agents depend on a working codebase
 
 **If Tests Fail After Your Changes:**
@@ -1568,13 +1652,21 @@ Before pushing, ask yourself:
 **Quick Verification Command:**
 ```bash
 # Run this before every git push
-source /tmp/dotnet-proxy-setup.sh && dotnet build && dotnet test
+source /tmp/dotnet-proxy-setup.sh && \
+  dotnet build && \
+  dotnet test && \
+  dotnet format PRFactory.sln --verify-no-changes
 
-# Only push if both build and test succeed
+# Only push if build, test, and format checks ALL succeed
 git push
 ```
 
-**Remember:** The quality bar for committed code is that it **always** compiles and **all tests pass**. This is non-negotiable for professional software development.
+**Remember:** The quality bar for committed code is that it **always**:
+1. Compiles successfully
+2. Passes all tests
+3. Passes format checks (including UTF-8 encoding without BOM)
+
+This is non-negotiable for professional software development.
 
 #### When Writing Documentation
 

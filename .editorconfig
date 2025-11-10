@@ -1,0 +1,46 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# Top-most EditorConfig file
+root = true
+
+# All files
+[*]
+charset = utf-8
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Code files
+[*.{cs,csx,vb,vbx}]
+indent_size = 4
+
+# C# files
+[*.cs]
+
+# CA1873: Logging performance - Suppress false positives for Serilog structured logging
+# Justification: Serilog only serializes log parameters when the log level is enabled.
+# The codebase uses structured logging correctly with named placeholders.
+# Guarding 500+ log statements would add unnecessary boilerplate without measurable performance benefit.
+# The I/O cost of logging (file/console) far exceeds parameter evaluation cost.
+dotnet_diagnostic.CA1873.severity = none
+
+# S107: Too many parameters - Consider refactoring to parameter objects
+# Note: Currently 5 methods exceed the 7-parameter limit
+# These are in interfaces and would require significant refactoring
+dotnet_diagnostic.S107.severity = suggestion
+
+# XML files
+[*.{xml,csproj,props,targets}]
+indent_size = 2
+
+# JSON files
+[*.json]
+indent_size = 2
+
+# YAML files
+[*.{yml,yaml}]
+indent_size = 2
+
+# Markdown files
+[*.md]
+trim_trailing_whitespace = false

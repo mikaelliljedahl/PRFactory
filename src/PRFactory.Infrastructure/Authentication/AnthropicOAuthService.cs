@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
@@ -21,9 +22,16 @@ public class AnthropicOAuthService : IAnthropicOAuthService
 
     // Anthropic OAuth configuration
     private const string CLIENT_ID = "9d1c250a-e61b-44d9-88ed-5944d1962f5e";
+
+    [SuppressMessage("csharpsquid", "S1075", Justification = "Anthropic's official OAuth authorization endpoint")]
     private const string AUTH_URL = "https://claude.ai/oauth/authorize";
+
+    [SuppressMessage("csharpsquid", "S1075", Justification = "Anthropic's official OAuth token endpoint")]
     private const string TOKEN_URL = "https://console.anthropic.com/v1/oauth/token";
+
+    [SuppressMessage("csharpsquid", "S1075", Justification = "Anthropic's official OAuth redirect callback endpoint")]
     private const string REDIRECT_URI = "https://console.anthropic.com/oauth/code/callback";
+
     private const string SCOPES = "org:create_api_key user:profile user:inference";
 
     public AnthropicOAuthService(
@@ -86,9 +94,8 @@ public class AnthropicOAuthService : IAnthropicOAuthService
                 State = state
             };
         }
-        catch (Exception ex)
+        catch
         {
-            _logger.LogError(ex, "Failed to start Anthropic OAuth flow for user {UserId}", userId);
             throw;
         }
     }
@@ -332,9 +339,8 @@ public class AnthropicOAuthService : IAnthropicOAuthService
                 Scopes = scopes
             };
         }
-        catch (Exception ex)
+        catch
         {
-            _logger.LogError(ex, "Failed to get Anthropic status for user {UserId}", userId);
             throw;
         }
     }
@@ -346,9 +352,8 @@ public class AnthropicOAuthService : IAnthropicOAuthService
             await _tokenStore.ClearTokensAsync(userId);
             _logger.LogInformation("Successfully logged out user {UserId} from Anthropic OAuth", userId);
         }
-        catch (Exception ex)
+        catch
         {
-            _logger.LogError(ex, "Failed to logout from Anthropic OAuth for user {UserId}", userId);
             throw;
         }
     }

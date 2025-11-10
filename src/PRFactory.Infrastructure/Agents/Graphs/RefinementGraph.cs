@@ -247,7 +247,6 @@ namespace PRFactory.Infrastructure.Agents.Graphs
                         await Task.Delay(delay, cancellationToken);
                     }
 
-                    context.State["analysis_retry_count"] = attempt;
                     var result = await ExecuteAgentAsync<AnalysisAgent>(
                         inputMessage, context, "analysis", cancellationToken);
 

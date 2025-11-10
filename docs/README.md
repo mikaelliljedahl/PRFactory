@@ -99,19 +99,17 @@ PRFactory/
 
 | Document | Status | Description |
 |----------|--------|-------------|
-| **[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)** | ⭐ **PRIMARY** | Single source of truth for what's built vs. planned |
+| **[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)** | ⭐ **PRIMARY** | Single source of truth for what's built vs. planned (includes production blockers) |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | ✅ Current | System architecture and design patterns |
 | [WORKFLOW.md](WORKFLOW.md) | ✅ Current | How workflows execute end-to-end |
 | [SETUP.md](SETUP.md) | ✅ Current | Installation and configuration |
 | [database-schema.md](database-schema.md) | ✅ Current | Database structure and entities |
-| [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) | ✅ Current | Recent implementation summary |
 
 ### Future Vision & Planning
 
 | Document | Status | Description |
 |----------|--------|-------------|
 | **[ROADMAP.md](ROADMAP.md)** | 📋 Planning | Future enhancements (3, 6, 12 month vision) |
-| [REFINEMENT_ENHANCEMENT_PLAN.md](REFINEMENT_ENHANCEMENT_PLAN.md) | 📋 Planning | Planned refinement workflow improvements |
 
 ### Architecture Reviews & Analysis
 

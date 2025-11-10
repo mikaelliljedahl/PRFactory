@@ -15,7 +15,7 @@ public static class DemoTicketData
         int RepositoryIndex,
         TicketSource Source = TicketSource.WebUI);
 
-    public static readonly List<DemoTicket> Tickets = new()
+    public static readonly IReadOnlyList<DemoTicket> Tickets = new List<DemoTicket>
     {
         // 1. Triggered state
         new DemoTicket(

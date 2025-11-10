@@ -45,9 +45,8 @@ public class OAuthStateStore : IOAuthStateStore
                 state, data.UserId, expiration.TotalMinutes);
             return Task.CompletedTask;
         }
-        catch (Exception ex)
+        catch
         {
-            _logger.LogError(ex, "Failed to store OAuth state data for state: {State}, UserId: {UserId}", state, data.UserId);
             throw;
         }
     }
@@ -100,9 +99,8 @@ public class OAuthStateStore : IOAuthStateStore
             _logger.LogInformation("SECURITY: OAuth state explicitly removed for cleanup. State: {State}", state);
             return Task.CompletedTask;
         }
-        catch (Exception ex)
+        catch
         {
-            _logger.LogError(ex, "Failed to remove OAuth state data for state: {State}", state);
             throw;
         }
     }

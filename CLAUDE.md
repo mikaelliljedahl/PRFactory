@@ -1674,20 +1674,28 @@ This is non-negotiable for professional software development.
 
 All documentation in the `/docs` directory and root-level `.md` files should be written for **newcomers and future developers**, not for tracking specific work sessions.
 
+**CRITICAL: Think of newcomers to the project - they don't care about older sessions.**
+
 **DO**:
+- **UPDATE existing documents** instead of creating new ones
+  - Update `IMPLEMENTATION_STATUS.md` with what's built/planned
+  - Update `ROADMAP.md` with future plans
+  - Update `ARCHITECTURE.md` with design decisions
 - Write documentation that explains **what exists today** and **why it was designed this way**
 - Focus on concepts, architecture, and current implementation status
 - Use present tense ("The system uses X" not "We built X in session Y")
 - Include code examples, diagrams, and references to actual file paths
-- Update documentation to reflect the current state of the codebase
-- Archive session-specific implementation notes to `/docs/archive/` after extracting lessons learned
+- Keep documentation minimal and focused - fewer documents is better
+- Archive session-specific notes to `/docs/archive/YYYY-MM-DD/` if historically valuable
 
 **DON'T**:
-- Reference specific Claude sessions, branch names, or temporary identifiers in permanent documentation
-- Use past tense descriptions of "what was built when" (save for changelog/release notes)
-- Include phrases like "Completed: November 8, 2025" or "Branch: claude/xyz-session-123" in core documentation
-- Write documentation as a "work log" or "session summary" - these belong in `/docs/archive/`
-- Say "we decided", "we implemented", "in this session" - focus on **what** exists, not **when/how** it was built
+- ❌ **Create new documents** like "audit summaries", "proposals", "analyses", "restructure plans"
+- ❌ Reference specific Claude sessions, branch names, or temporary identifiers in permanent documentation
+- ❌ Use past tense descriptions of "what was built when" (save for changelog/release notes)
+- ❌ Include phrases like "Completed: November 8, 2025" or "Branch: claude/xyz-session-123" in core documentation
+- ❌ Write documentation as a "work log" or "session summary"
+- ❌ Say "we decided", "we implemented", "in this session" - focus on **what** exists, not **when/how** it was built
+- ❌ Create documents with dates in the filename (e.g., "DOCUMENTATION_RESTRUCTURE_PROPOSAL_2025-11-09.md")
 
 **Documentation Categories**:
 

@@ -5,6 +5,18 @@
 
 ---
 
+## Quick Status
+
+- ✅ **Architecture**: 95% complete (4/4 graphs, 3/4 providers, 17+ agents)
+- ✅ **Features**: 90% complete (core workflows, team review, multi-tenant)
+- 🚧 **Testing**: 10% complete (framework ready, 151 tests pass but limited coverage)
+- 🔴 **Production Blockers**:
+  - No authentication (StubCurrentUserService)
+  - Agent execution requires Claude Code CLI (incompatible with server-side)
+  - Test coverage insufficient for production confidence
+
+---
+
 ## Status Legend
 
 - ✅ **COMPLETE** - Fully implemented, functional, and tested
@@ -28,11 +40,12 @@
 - Event-driven state machine with 24 workflow states
 - **Team Review FULLY IMPLEMENTED** (multi-reviewer plan approval - all 3 phases complete) ✨
 
-### Key Gaps 🚧
-- Comprehensive test suite (0% coverage) ⚠️ **CRITICAL**
-- User authentication integration (OAuth with Anthropic)
-- GitLab provider integration
-- Production deployment configuration
+### What's Missing 🚧
+- **Authentication** - StubCurrentUserService needs OAuth/OpenID Connect replacement
+- **Testing** - 151 tests pass but coverage ~10% (need agent, graph, provider tests)
+- **Agent Execution** - Claude Code CLI requires interactive auth, need Claude API integration
+- **GitLab Support** - 4th platform provider (GitHub, Bitbucket, Azure DevOps done)
+- **Admin UI** - Tenant/repository configuration pages missing
 
 ---
 
@@ -576,13 +589,13 @@ Implemented components:
 **Details**:
 
 **Test Infrastructure** (`/tests/PRFactory.Tests/`):
-- ✅ xUnit framework configured
+- ✅ xUnit framework configured (primary testing framework)
 - ✅ Moq for mocking
-- ✅ FluentAssertions
+- ❌ FluentAssertions (FORBIDDEN per CLAUDE.md - use xUnit Assert only)
 - ✅ Microsoft.AspNetCore.Mvc.Testing
 - ✅ EF Core InMemory for integration tests
 - ✅ References to all source projects
-- ❌ NO actual test files (*.cs) exist
+- ⚠️ 151 tests exist and pass (but coverage unclear - estimated 10%)
 
 **Testing Gaps** (CRITICAL):
 - ❌ No graph execution tests

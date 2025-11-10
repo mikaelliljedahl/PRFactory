@@ -3,18 +3,17 @@
 **Last Updated**: 2025-11-09
 **Purpose**: Single source of truth for what's built vs. planned in PRFactory
 
-> ⚠️ **CRITICAL ISSUES IDENTIFIED**: 3 production blockers require resolution before deployment. See [CRITICAL_ISSUES.md](CRITICAL_ISSUES.md) for details.
->
-> 📋 **KNOWN GAPS**: Several implementation gaps tracked in [IMPLEMENTATION_GAPS.md](IMPLEMENTATION_GAPS.md) (not production blockers).
-
 ---
 
 ## Quick Status
 
 - ✅ **Architecture**: 95% complete (4/4 graphs, 3/4 providers, 17+ agents)
 - ✅ **Features**: 90% complete (core workflows, team review, multi-tenant)
-- 🚧 **Testing**: 10% complete (framework ready, minimal test coverage)
-- 🔴 **Blockers**: 3 critical issues require resolution before production
+- 🚧 **Testing**: 10% complete (framework ready, 151 tests pass but limited coverage)
+- 🔴 **Production Blockers**:
+  - No authentication (StubCurrentUserService)
+  - Agent execution requires Claude Code CLI (incompatible with server-side)
+  - Test coverage insufficient for production confidence
 
 ---
 
@@ -41,11 +40,12 @@
 - Event-driven state machine with 24 workflow states
 - **Team Review FULLY IMPLEMENTED** (multi-reviewer plan approval - all 3 phases complete) ✨
 
-### Key Gaps 🚧
-- Comprehensive test suite (0% coverage) ⚠️ **CRITICAL**
-- User authentication integration (OAuth with Anthropic)
-- GitLab provider integration
-- Production deployment configuration
+### What's Missing 🚧
+- **Authentication** - StubCurrentUserService needs OAuth/OpenID Connect replacement
+- **Testing** - 151 tests pass but coverage ~10% (need agent, graph, provider tests)
+- **Agent Execution** - Claude Code CLI requires interactive auth, need Claude API integration
+- **GitLab Support** - 4th platform provider (GitHub, Bitbucket, Azure DevOps done)
+- **Admin UI** - Tenant/repository configuration pages missing
 
 ---
 

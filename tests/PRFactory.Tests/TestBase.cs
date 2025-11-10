@@ -1,5 +1,11 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using PRFactory.Domain.Interfaces;
+using PRFactory.Infrastructure;
+using PRFactory.Infrastructure.Agents.Graphs;
+using PRFactory.Infrastructure.Git;
 using PRFactory.Infrastructure.Persistence;
 
 namespace PRFactory.Tests;
@@ -11,17 +17,59 @@ public abstract class TestBase : IDisposable
 {
     protected IServiceProvider ServiceProvider { get; }
     protected ApplicationDbContext DbContext { get; }
+    protected IConfiguration Configuration { get; }
 
     protected TestBase()
     {
         var services = new ServiceCollection();
 
+        // Configure test configuration
+        Configuration = CreateTestConfiguration();
+        services.AddSingleton(Configuration);
+
+        // Add logging
+        services.AddLogging(builder => builder
+            .AddConsole()
+            .SetMinimumLevel(LogLevel.Warning));
+
+        // Add HttpClient
+        services.AddHttpClient();
+
         // Configure in-memory database
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}"));
 
+        // Add infrastructure services
+        services.AddInfrastructure(Configuration);
+
+        // Add Git platform integration
+        services.AddGitPlatformIntegration();
+
+        // Add agent graphs
+        services.AddAgentGraphs();
+
         ServiceProvider = services.BuildServiceProvider();
         DbContext = ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    }
+
+    /// <summary>
+    /// Creates a test configuration with required settings
+    /// </summary>
+    protected virtual IConfiguration CreateTestConfiguration()
+    {
+        var configDict = new Dictionary<string, string?>
+        {
+            { "Encryption:Key", "dGVzdC1lbmNyeXB0aW9uLWtleS12YWxpZC1iYXNlNjQ=" },
+            { "ConnectionStrings:DefaultConnection", "Data Source=:memory:" },
+            { "Logging:EnableSensitiveDataLogging", "false" },
+            { "Logging:EnableDetailedErrors", "false" },
+            { "AgentHost:Enabled", "true" },
+            { "ClaudeCodeCli:Path", "/usr/local/bin/claude" }
+        };
+
+        return new ConfigurationBuilder()
+            .AddInMemoryCollection(configDict)
+            .Build();
     }
 
     public virtual void Dispose()

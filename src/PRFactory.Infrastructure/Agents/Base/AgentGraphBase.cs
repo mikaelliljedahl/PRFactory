@@ -27,7 +27,7 @@ namespace PRFactory.Infrastructure.Agents.Base
             ActivitySource = new ActivitySource($"PRFactory.{GraphId}");
         }
 
-        public async Task<GraphExecutionResult> ExecuteAsync(IAgentMessage inputMessage, CancellationToken cancellationToken = default)
+        public virtual async Task<GraphExecutionResult> ExecuteAsync(IAgentMessage inputMessage, CancellationToken cancellationToken = default)
         {
             using var activity = ActivitySource.StartActivity($"{GraphId}.Execute");
             activity?.SetTag("ticket_id", inputMessage.TicketId);
@@ -62,7 +62,7 @@ namespace PRFactory.Infrastructure.Agents.Base
             }
         }
 
-        public async Task<GraphExecutionResult> ResumeAsync(Guid ticketId, IAgentMessage resumeMessage, CancellationToken cancellationToken = default)
+        public virtual async Task<GraphExecutionResult> ResumeAsync(Guid ticketId, IAgentMessage resumeMessage, CancellationToken cancellationToken = default)
         {
             using var activity = ActivitySource.StartActivity($"{GraphId}.Resume");
             activity?.SetTag("ticket_id", ticketId);

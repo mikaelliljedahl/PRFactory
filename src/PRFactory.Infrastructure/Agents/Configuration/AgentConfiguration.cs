@@ -10,7 +10,7 @@ public class AgentConfiguration
     /// <summary>
     /// Configuration section name in appsettings.json.
     /// </summary>
-    public const string SectionName = "AgentFramework";
+    public const string SectionName = "Agent";
 
     /// <summary>
     /// Enable or disable the agent framework.

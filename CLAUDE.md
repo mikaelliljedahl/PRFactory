@@ -1548,6 +1548,8 @@ Before committing and pushing any code changes, you **MUST** verify:
    - All integration tests must pass
    - No skipped tests without explicit reason documented in code
    - Test output must show 0 failures
+   - **NEW CODE MUST HAVE 80% TEST COVERAGE MINIMUM**
+   - Write tests for new classes, methods, and critical paths before pushing
 
 3. **Code Formatting is Correct**
    ```bash
@@ -1566,7 +1568,7 @@ Before committing and pushing any code changes, you **MUST** verify:
 - [ ] Run `dotnet format --verify-no-changes` - confirms formatting is correct
 - [ ] Check for compilation warnings and address critical ones
 - [ ] Verify no new test failures introduced by changes
-- [ ] Ensure new code has appropriate test coverage
+- [ ] **Ensure new code has 80% test coverage minimum** - Write unit tests for new classes, methods, and logic
 - [ ] **Update existing documentation** to reflect code changes
 - [ ] **Remove irrelevant or temporary documents** created during the session
 - [ ] **Verify implementation matches documentation** - no deviation between what's documented and what's built
@@ -1577,6 +1579,7 @@ Before committing and pushing any code changes, you **MUST** verify:
 - Code that fails `dotnet format --verify-no-changes`
 - Code that breaks the build
 - Files with UTF-8 BOM encoding issues
+- **New code without 80% test coverage** (write tests first!)
 - Untested code to production branches (without documented reason)
 - **Documentation that's out of sync with implementation**
 - **Temporary or work-in-progress documents** without cleaning them up

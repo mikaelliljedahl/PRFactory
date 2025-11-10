@@ -83,8 +83,9 @@ public class TicketUpdatesController : ControllerBase
 
             return Ok(response);
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Unexpected error while retrieving latest ticket update for ticket {TicketId}", ticketId);
             throw;
         }
     }
@@ -141,8 +142,9 @@ public class TicketUpdatesController : ControllerBase
             _logger.LogWarning(ex, "Invalid operation for ticket update {TicketUpdateId}", ticketUpdateId);
             return BadRequest(new { error = ex.Message });
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Unexpected error while updating ticket update {TicketUpdateId}", ticketUpdateId);
             throw;
         }
     }
@@ -205,8 +207,9 @@ public class TicketUpdatesController : ControllerBase
             _logger.LogWarning(ex, "Invalid operation for ticket update {TicketUpdateId}", ticketUpdateId);
             return BadRequest(new { error = ex.Message });
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Unexpected error while approving ticket update {TicketUpdateId}", ticketUpdateId);
             throw;
         }
     }
@@ -277,8 +280,9 @@ public class TicketUpdatesController : ControllerBase
             _logger.LogWarning(ex, "Invalid operation for ticket update {TicketUpdateId}", ticketUpdateId);
             return BadRequest(new { error = ex.Message });
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Unexpected error while rejecting ticket update {TicketUpdateId}", ticketUpdateId);
             throw;
         }
     }

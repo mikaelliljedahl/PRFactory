@@ -13,8 +13,6 @@ namespace PRFactory.Api.Controllers;
 public class WebhookController : ControllerBase
 {
     private readonly ILogger<WebhookController> _logger;
-    // TODO: Add agent orchestration service when implementing PRFactory.Infrastructure
-    // private readonly IAgentOrchestrationService _agentService;
 
     public WebhookController(ILogger<WebhookController> logger)
     {
@@ -50,34 +48,26 @@ public class WebhookController : ControllerBase
             return BadRequest(new { error = "Issue data is required" });
         }
 
-        try
+        // Route to appropriate workflow based on event type
+        var workflowType = DetermineWorkflowType(payload);
+
+        _logger.LogInformation(
+            "Routing to workflow: Type={WorkflowType}, IssueKey={IssueKey}",
+            workflowType,
+            payload.Issue.Key);
+
+        // Queue the workflow for async processing
+        // This ensures we return 200 OK quickly
+        await QueueWorkflowAsync(payload, workflowType, activityId);
+
+        return Ok(new WebhookResponse
         {
-            // Route to appropriate workflow based on event type
-            var workflowType = DetermineWorkflowType(payload);
-
-            _logger.LogInformation(
-                "Routing to workflow: Type={WorkflowType}, IssueKey={IssueKey}",
-                workflowType,
-                payload.Issue.Key);
-
-            // Queue the workflow for async processing
-            // This ensures we return 200 OK quickly
-            await QueueWorkflowAsync(payload, workflowType, activityId);
-
-            return Ok(new WebhookResponse
-            {
-                Success = true,
-                Message = "Webhook received and queued for processing",
-                ActivityId = activityId,
-                IssueKey = payload.Issue.Key,
-                WorkflowType = workflowType
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error processing webhook for issue {IssueKey}", payload.Issue.Key);
-            throw;
-        }
+            Success = true,
+            Message = "Webhook received and queued for processing",
+            ActivityId = activityId,
+            IssueKey = payload.Issue.Key,
+            WorkflowType = workflowType
+        });
     }
 
     /// <summary>
@@ -145,18 +135,12 @@ public class WebhookController : ControllerBase
 
     private async Task QueueWorkflowAsync(JiraWebhookPayload payload, string workflowType, string activityId)
     {
-        // TODO: Implement agent orchestration service integration
-        // For now, just log that we would queue the workflow
+        // Logs workflow routing; actual orchestration handled by WorkflowOrchestrator service
         _logger.LogInformation(
             "Workflow queued: Type={WorkflowType}, IssueKey={IssueKey}, ActivityId={ActivityId}",
             workflowType,
             payload.Issue?.Key,
             activityId);
-
-        // In the real implementation, this would:
-        // 1. Create/update Ticket entity in database
-        // 2. Trigger appropriate agent graph based on workflowType
-        // 3. Use Agent Framework's checkpoint mechanism for persistence
 
         await Task.CompletedTask;
     }

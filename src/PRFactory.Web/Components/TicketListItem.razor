@@ -72,7 +72,7 @@
     [Parameter]
     public TicketDto Ticket { get; set; } = null!;
 
-    private string FormatRelativeTime(DateTime dateTime)
+    private static string FormatRelativeTime(DateTime dateTime)
     {
         var timeSpan = DateTime.UtcNow - dateTime;
 

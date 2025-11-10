@@ -9,7 +9,7 @@ public partial class TicketHeader
     [Parameter, EditorRequired]
     public TicketDto Ticket { get; set; } = null!;
 
-    private string FormatDescription(string description)
+    private static string FormatDescription(string description)
     {
         // Simple markdown-like formatting
         // Convert newlines to <br> and preserve paragraphs

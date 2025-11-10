@@ -164,4 +164,11 @@ public partial class TicketUpdatePreview
             return System.Web.HttpUtility.HtmlEncode(markdown);
         }
     }
+
+    private string GetPriorityLabel(int priority) => priority switch
+    {
+        0 => "Must-Have",
+        1 => "Should-Have",
+        _ => "Nice-to-Have"
+    };
 }

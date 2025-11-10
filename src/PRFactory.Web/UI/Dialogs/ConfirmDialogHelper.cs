@@ -8,6 +8,8 @@ namespace PRFactory.Web.UI.Dialogs;
 /// </summary>
 public static class ConfirmDialogHelper
 {
+    private const string DefaultCancelText = "Cancel";
+    private const string DefaultDangerButtonClass = "btn-danger";
     /// <summary>
     /// Shows a confirmation dialog and returns true if confirmed, false if cancelled
     /// </summary>
@@ -16,8 +18,8 @@ public static class ConfirmDialogHelper
         string title,
         string message,
         string confirmText = "Confirm",
-        string? cancelText = "Cancel",
-        string confirmButtonClass = "btn-danger",
+        string? cancelText = DefaultCancelText,
+        string confirmButtonClass = DefaultDangerButtonClass,
         string? icon = null)
     {
         var options = new ConfirmOptions
@@ -51,8 +53,8 @@ public static class ConfirmDialogHelper
             "Confirm Delete",
             message,
             "Delete",
-            "Cancel",
-            "btn-danger",
+            DefaultCancelText,
+            DefaultDangerButtonClass,
             "trash");
     }
 
@@ -71,7 +73,7 @@ public static class ConfirmDialogHelper
             "Confirm Deactivation",
             message,
             "Deactivate",
-            "Cancel",
+            DefaultCancelText,
             "btn-warning",
             "pause-circle");
     }
@@ -90,7 +92,7 @@ public static class ConfirmDialogHelper
             "Confirm Activation",
             message,
             "Activate",
-            "Cancel",
+            DefaultCancelText,
             "btn-success",
             "play-circle");
     }
@@ -118,8 +120,8 @@ public static class ConfirmDialogHelper
             "Delete Repository",
             message,
             "Delete Repository",
-            "Cancel",
-            "btn-danger",
+            DefaultCancelText,
+            DefaultDangerButtonClass,
             "exclamation-triangle");
     }
 
@@ -156,8 +158,8 @@ public static class ConfirmDialogHelper
             "Delete Prompt Template",
             message,
             "Delete Template",
-            "Cancel",
-            "btn-danger",
+            DefaultCancelText,
+            DefaultDangerButtonClass,
             "exclamation-triangle");
     }
 }

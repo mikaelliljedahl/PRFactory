@@ -22,6 +22,7 @@ public partial class NavMenu : IDisposable
     private int UnresolvedErrorCount { get; set; }
     private int TicketCount { get; set; }
     private System.Threading.Timer? _refreshTimer;
+    private bool _disposed;
 
     // For demo purposes - in real app, get from auth/session
     private Guid TenantId { get; set; } = Guid.Parse("00000000-0000-0000-0000-000000000001");
@@ -79,6 +80,19 @@ public partial class NavMenu : IDisposable
 
     public void Dispose()
     {
-        _refreshTimer?.Dispose();
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)
+            {
+                _refreshTimer?.Dispose();
+            }
+            _disposed = true;
+        }
     }
 }

@@ -4,7 +4,7 @@
     <ol class="breadcrumb @AdditionalClass">
         @foreach (var item in Items)
         {
-            @if (item == Items.Last())
+            @if (item == Items[^1])
             {
                 <li class="breadcrumb-item active" aria-current="page">
                     @if (!string.IsNullOrEmpty(item.Icon))

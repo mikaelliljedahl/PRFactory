@@ -8,9 +8,9 @@ public partial class EventStatistics
     [Parameter, EditorRequired]
     public EventStatisticsDto Statistics { get; set; } = new();
 
-    private string FormatDuration(double seconds)
+    private static string FormatDuration(double seconds)
     {
-        if (seconds == 0) return "N/A";
+        if (Math.Abs(seconds) < 0.001) return "N/A";
 
         var timeSpan = TimeSpan.FromSeconds(seconds);
 
@@ -26,7 +26,7 @@ public partial class EventStatistics
         return $"{(int)timeSpan.TotalDays} days";
     }
 
-    private string GetEventTypeProgressColor(string eventType)
+    private static string GetEventTypeProgressColor(string eventType)
     {
         return eventType switch
         {

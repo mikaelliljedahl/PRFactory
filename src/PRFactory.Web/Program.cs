@@ -69,7 +69,7 @@ app.MapFallbackToPage("/_Host");
 try
 {
     Log.Information("Starting PRFactory Web UI");
-    app.Run();
+    await app.RunAsync();
 }
 catch (Exception ex)
 {
@@ -77,5 +77,5 @@ catch (Exception ex)
 }
 finally
 {
-    Log.CloseAndFlush();
+    await Log.CloseAndFlushAsync();
 }

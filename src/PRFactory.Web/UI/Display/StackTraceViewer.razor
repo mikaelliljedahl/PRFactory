@@ -16,7 +16,7 @@
         </div>
 
         <div class="bg-dark text-light p-3 rounded" style="font-family: monospace; font-size: 0.875rem; max-height: 500px; overflow-y: auto;">
-            @foreach (var frame in FilteredFrames)
+            @foreach (var frame in GetFilteredFrames())
             {
                 <div class="@(frame.IsInternal ? "text-muted" : "")">
                     @frame.Text
@@ -41,9 +41,11 @@ else
     public bool ShowInternalFrames { get; set; } = false;
 
     private List<StackTraceFrame> ParsedFrames => ParseStackTrace();
-    private List<StackTraceFrame> FilteredFrames => ShowInternalFrames
-        ? ParsedFrames
-        : ParsedFrames.Where(f => !f.IsInternal).ToList();
+
+    private List<StackTraceFrame> GetFilteredFrames() =>
+        ShowInternalFrames
+            ? ParsedFrames
+            : ParsedFrames.Where(f => !f.IsInternal).ToList();
 
     private void ToggleInternalFrames()
     {
@@ -91,7 +93,7 @@ else
         return internalPatterns.Any(pattern => frame.Contains(pattern, StringComparison.OrdinalIgnoreCase));
     }
 
-    private class StackTraceFrame
+    private sealed class StackTraceFrame
     {
         public string Text { get; set; } = string.Empty;
         public bool IsInternal { get; set; }

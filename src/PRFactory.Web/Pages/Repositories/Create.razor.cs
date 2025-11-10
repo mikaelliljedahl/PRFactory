@@ -12,7 +12,6 @@ public partial class Create
     private bool isSubmitting;
     private bool connectionTested;
     private string? errorMessage;
-    private RepositoryConnectionTestResult? testResult;
 
     [Inject]
     private IRepositoryService RepositoryService { get; set; } = null!;
@@ -69,7 +68,6 @@ public partial class Create
 
     private void HandleTestCompleted(RepositoryConnectionTestResult result)
     {
-        testResult = result;
         connectionTested = result.Success;
 
         if (result.Success && result.AvailableBranches.Any())

@@ -89,10 +89,10 @@
     [Parameter]
     public EventCallback OnAnswersSubmitted { get; set; }
 
-    private AnswerFormModel answerModel = new();
+    private readonly AnswerFormModel answerModel = new();
     private bool isSubmitting;
     private string? errorMessage;
-    private HashSet<string> validationErrors = new();
+    private readonly HashSet<string> validationErrors = new();
 
     protected override void OnParametersSet()
     {
@@ -161,7 +161,7 @@
         return validationErrors.Contains(questionId) ? "is-invalid" : string.Empty;
     }
 
-    private class AnswerFormModel
+    private sealed class AnswerFormModel
     {
         public Dictionary<string, string> Answers { get; set; } = new();
     }

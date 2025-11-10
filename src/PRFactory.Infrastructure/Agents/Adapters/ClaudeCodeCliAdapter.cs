@@ -277,29 +277,28 @@ public class ClaudeCodeCliAdapter : ICliAgent
         {
             // Try to find JSON-formatted file operations
             var lines = output.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-            foreach (var line in lines)
+            var validLines = lines.Where(line => line.TrimStart().StartsWith("{") && line.Contains("\"operation\"")).ToList();
+
+            validLines.ForEach(line =>
             {
-                if (line.TrimStart().StartsWith("{") && line.Contains("\"operation\""))
+                try
                 {
-                    try
+                    var operation = JsonSerializer.Deserialize<FileOperationDto>(line);
+                    if (operation != null && !string.IsNullOrWhiteSpace(operation.Operation))
                     {
-                        var operation = JsonSerializer.Deserialize<FileOperationDto>(line);
-                        if (operation != null && !string.IsNullOrWhiteSpace(operation.Operation))
+                        operations.Add(new FileOperation
                         {
-                            operations.Add(new FileOperation
-                            {
-                                OperationType = operation.Operation,
-                                FilePath = operation.FilePath ?? string.Empty,
-                                Content = operation.Content
-                            });
-                        }
-                    }
-                    catch
-                    {
-                        // Ignore parsing errors for individual lines
+                            OperationType = operation.Operation,
+                            FilePath = operation.FilePath ?? string.Empty,
+                            Content = operation.Content
+                        });
                     }
                 }
-            }
+                catch
+                {
+                    // Ignore parsing errors for individual lines
+                }
+            });
         }
         catch (Exception ex)
         {

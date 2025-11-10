@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace PRFactory.Infrastructure.Persistence.DemoData;
 
 /// <summary>
@@ -18,6 +20,7 @@ public static class DemoTenantData
     /// <summary>
     /// Demo Jira URL
     /// </summary>
+    [SuppressMessage("csharpsquid", "S1075", Justification = "Demo/test data for offline development and testing")]
     public const string JiraUrl = "https://demo.atlassian.net";
 
     /// <summary>

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PRFactory.Domain.Entities;
@@ -170,19 +171,11 @@ public class DbSeeder
 
     private async Task TransitionTicketToState(Ticket ticket, WorkflowState targetState)
     {
-        var currentState = WorkflowState.Triggered;
-
         // Define the path to reach target state
         var statePath = GetStateTransitionPath(targetState);
 
-        foreach (var state in statePath)
-        {
-            if (state != currentState)
-            {
-                ticket.TransitionTo(state);
-                currentState = state;
-            }
-        }
+        // Skip the first state (Triggered) as ticket starts in that state
+        statePath.Skip(1).ToList().ForEach(state => ticket.TransitionTo(state));
     }
 
     private List<WorkflowState> GetStateTransitionPath(WorkflowState targetState)
@@ -336,7 +329,7 @@ public class DbSeeder
         if (targetState >= WorkflowState.PRCreated)
         {
             var prNumber = Random.Shared.Next(100, 999);
-            var prUrl = $"https://github.com/demo/repo/pull/{prNumber}";
+            var prUrl = GetDemoPullRequestUrl(prNumber);
             ticket.SetPullRequest(prUrl, prNumber);
         }
 
@@ -365,5 +358,16 @@ public class DbSeeder
             _logger.LogInformation("Seeded prompt template: {TemplateName} ({Category})",
                 template.Name, template.Category);
         }
+    }
+
+    /// <summary>
+    /// Gets a demo pull request URL for testing purposes.
+    /// </summary>
+    /// <param name="prNumber">The pull request number.</param>
+    /// <returns>A demo PR URL.</returns>
+    [SuppressMessage("csharpsquid", "S1075", Justification = "Demo/test data for offline development - demo PR URLs")]
+    private static string GetDemoPullRequestUrl(int prNumber)
+    {
+        return $"https://github.com/demo/repo/pull/{prNumber}";
     }
 }

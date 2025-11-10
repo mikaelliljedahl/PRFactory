@@ -13,7 +13,7 @@ public static class DemoPromptData
         string? RecommendedModel = null,
         string? Color = null);
 
-    public static readonly List<PromptTemplate> Templates = new()
+    public static readonly IReadOnlyList<PromptTemplate> Templates = new List<PromptTemplate>
     {
         new PromptTemplate(
             Name: "ticket-analyzer",

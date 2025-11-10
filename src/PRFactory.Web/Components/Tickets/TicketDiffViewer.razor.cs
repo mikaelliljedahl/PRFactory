@@ -21,7 +21,7 @@ public partial class TicketDiffViewer
         return !string.Equals(OriginalTicket.Description, TicketUpdate.UpdatedDescription, StringComparison.Ordinal);
     }
 
-    private string RenderMarkdown(string markdown)
+    private static string RenderMarkdown(string markdown)
     {
         if (string.IsNullOrWhiteSpace(markdown))
         {

@@ -13,7 +13,7 @@ public class ApprovePlanRequest
     /// </summary>
     [Required]
     [JsonPropertyName("approved")]
-    public bool Approved { get; set; }
+    public required bool Approved { get; set; }
 
     /// <summary>
     /// Optional comments from the user
@@ -50,7 +50,7 @@ public class RejectPlanRequest
     /// Whether to restart the planning process
     /// </summary>
     [JsonPropertyName("restartPlanning")]
-    public bool RestartPlanning { get; set; }
+    public bool? RestartPlanning { get; set; }
 }
 
 /// <summary>

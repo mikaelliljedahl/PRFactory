@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace PRFactory.Infrastructure.Persistence.DemoData;
 
 /// <summary>
@@ -5,7 +7,8 @@ namespace PRFactory.Infrastructure.Persistence.DemoData;
 /// </summary>
 public static class DemoRepositoryData
 {
-    public static readonly List<(string Name, string Platform, string CloneUrl, string Token, string DefaultBranch)> Repositories = new()
+    [SuppressMessage("csharpsquid", "S1075", Justification = "Demo/test data for offline development and testing")]
+    public static readonly IReadOnlyList<(string Name, string Platform, string CloneUrl, string Token, string DefaultBranch)> Repositories = new List<(string Name, string Platform, string CloneUrl, string Token, string DefaultBranch)>
     {
         (
             Name: "prfactory-demo",

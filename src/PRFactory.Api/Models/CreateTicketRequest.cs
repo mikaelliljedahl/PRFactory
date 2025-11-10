@@ -27,13 +27,13 @@ public class CreateTicketRequest
     /// </summary>
     [Required]
     [JsonPropertyName("repositoryId")]
-    public Guid RepositoryId { get; set; }
+    public required Guid RepositoryId { get; set; }
 
     /// <summary>
     /// Whether to enable synchronization with external ticket systems (e.g., Jira)
     /// </summary>
     [JsonPropertyName("enableExternalSync")]
-    public bool EnableExternalSync { get; set; } = false;
+    public bool? EnableExternalSync { get; set; }
 
     /// <summary>
     /// External system name (e.g., "Jira", "AzureDevOps") - optional

@@ -144,20 +144,6 @@ public partial class Index
         };
     }
 
-    private string GetStateColor(WorkflowState state)
-    {
-        return state switch
-        {
-            WorkflowState.Completed => "success",
-            WorkflowState.Failed or WorkflowState.ImplementationFailed => "danger",
-            WorkflowState.Cancelled => "secondary",
-            WorkflowState.AwaitingAnswers or WorkflowState.PlanUnderReview or WorkflowState.TicketUpdateUnderReview or WorkflowState.InReview => "warning",
-            WorkflowState.PRCreated => "info",
-            WorkflowState.Triggered => "secondary",
-            _ => "primary"
-        };
-    }
-
     private string GetDuration(TicketDto workflow)
     {
         if (workflow.CompletedAt.HasValue)

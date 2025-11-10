@@ -9,13 +9,20 @@ public partial class PlanReviewStatus
     [Parameter, EditorRequired]
     public List<ReviewerDto> Reviewers { get; set; } = new();
 
-    private List<ReviewerDto> RequiredReviewers => Reviewers.Where(r => r.IsRequired).ToList();
-    private List<ReviewerDto> OptionalReviewers => Reviewers.Where(r => !r.IsRequired).ToList();
+    private List<ReviewerDto> GetRequiredReviewers() => Reviewers.Where(r => r.IsRequired).ToList();
+    private List<ReviewerDto> GetOptionalReviewers() => Reviewers.Where(r => !r.IsRequired).ToList();
 
-    private int ApprovedRequiredCount => RequiredReviewers.Count(r => r.Status == ReviewStatus.Approved);
-    private int ApprovedOptionalCount => OptionalReviewers.Count(r => r.Status == ReviewStatus.Approved);
+    private int ApprovedRequiredCount => GetRequiredReviewers().Count(r => r.Status == ReviewStatus.Approved);
+    private int ApprovedOptionalCount => GetOptionalReviewers().Count(r => r.Status == ReviewStatus.Approved);
 
-    private bool AllRequiredApproved => RequiredReviewers.Any() && RequiredReviewers.All(r => r.Status == ReviewStatus.Approved);
+    private bool AllRequiredApproved
+    {
+        get
+        {
+            var requiredReviewers = GetRequiredReviewers();
+            return requiredReviewers.Any() && requiredReviewers.All(r => r.Status == ReviewStatus.Approved);
+        }
+    }
     private bool HasRejections => Reviewers.Any(r => r.Status == ReviewStatus.RejectedForRefinement || r.Status == ReviewStatus.RejectedForRegeneration);
 
     private string GetStatusColor(ReviewStatus status)
@@ -30,7 +37,7 @@ public partial class PlanReviewStatus
         };
     }
 
-    private string GetStatusText(ReviewStatus status)
+    private static string GetStatusText(ReviewStatus status)
     {
         return status switch
         {
@@ -42,7 +49,7 @@ public partial class PlanReviewStatus
         };
     }
 
-    private string? GetStatusBadgeColor(ReviewStatus status)
+    private static string? GetStatusBadgeColor(ReviewStatus status)
     {
         return status switch
         {
@@ -53,7 +60,7 @@ public partial class PlanReviewStatus
         };
     }
 
-    private string? GetStatusBadgeText(ReviewStatus status)
+    private static string? GetStatusBadgeText(ReviewStatus status)
     {
         return status switch
         {

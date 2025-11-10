@@ -5,51 +5,20 @@ namespace PRFactory.Web.Components.Errors;
 
 public partial class ErrorListFilter
 {
-    private string _selectedSeverity = string.Empty;
-    private string _entityType = string.Empty;
-    private string _resolvedStatus = string.Empty;
-    private DateTime? _fromDate;
-    private DateTime? _toDate;
-    private string _searchTerm = string.Empty;
-
     [Parameter]
     public EventCallback<FilterChangedArgs> OnFiltersChanged { get; set; }
 
-    public string SelectedSeverity
-    {
-        get => _selectedSeverity;
-        set => _selectedSeverity = value;
-    }
+    public string SelectedSeverity { get; set; } = string.Empty;
 
-    public string EntityType
-    {
-        get => _entityType;
-        set => _entityType = value;
-    }
+    public string EntityType { get; set; } = string.Empty;
 
-    public string ResolvedStatus
-    {
-        get => _resolvedStatus;
-        set => _resolvedStatus = value;
-    }
+    public string ResolvedStatus { get; set; } = string.Empty;
 
-    public DateTime? FromDate
-    {
-        get => _fromDate;
-        set => _fromDate = value;
-    }
+    public DateTime? FromDate { get; set; }
 
-    public DateTime? ToDate
-    {
-        get => _toDate;
-        set => _toDate = value;
-    }
+    public DateTime? ToDate { get; set; }
 
-    public string SearchTerm
-    {
-        get => _searchTerm;
-        set => _searchTerm = value;
-    }
+    public string SearchTerm { get; set; } = string.Empty;
 
     private async Task OnFilterChanged()
     {

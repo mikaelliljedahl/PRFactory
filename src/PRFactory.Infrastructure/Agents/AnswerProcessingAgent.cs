@@ -153,9 +153,10 @@ public class AnswerProcessingAgent : BaseAgent
         var pattern = @"Q?(\d+)[\.\:]\s*(.+?)(?=Q?\d+[\.\:]|$)";
         var matches = Regex.Matches(answerText, pattern, RegexOptions.Singleline | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(2));
 
-        foreach (Match match in matches)
-        {
-            if (match.Groups.Count >= 3)
+        matches.Cast<Match>()
+            .Where(m => m.Groups.Count >= 3)
+            .ToList()
+            .ForEach(match =>
             {
                 var questionNumber = match.Groups[1].Value;
                 var answer = match.Groups[2].Value.Trim();
@@ -164,8 +165,7 @@ public class AnswerProcessingAgent : BaseAgent
                 {
                     answers[$"Q{questionNumber}"] = answer;
                 }
-            }
-        }
+            });
 
         // If the pattern above didn't work, try a simpler line-by-line approach
         if (!answers.Any())

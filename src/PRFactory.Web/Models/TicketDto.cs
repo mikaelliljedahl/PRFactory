@@ -7,6 +7,13 @@ namespace PRFactory.Web.Models;
 /// </summary>
 public class TicketDto
 {
+    // CSS class constants for state badge styling
+    private const string BadgeBgInfo = "badge bg-info";
+    private const string BadgeBgPrimary = "badge bg-primary";
+    private const string BadgeBgDanger = "badge bg-danger";
+    private const string BadgeBgSuccess = "badge bg-success";
+    private const string BadgeBgSecondary = "badge bg-secondary";
+    private const string BadgeBgWarning = "badge bg-warning";
     /// <summary>
     /// Unique identifier for the ticket in PRFactory
     /// </summary>
@@ -92,29 +99,29 @@ public class TicketDto
     /// </summary>
     public string StateBadgeClass => State switch
     {
-        WorkflowState.Triggered => "badge bg-secondary",
-        WorkflowState.Analyzing => "badge bg-info",
-        WorkflowState.TicketUpdateGenerated => "badge bg-info",
-        WorkflowState.TicketUpdateUnderReview => "badge bg-primary",
-        WorkflowState.TicketUpdateRejected => "badge bg-danger",
-        WorkflowState.TicketUpdateApproved => "badge bg-success",
-        WorkflowState.TicketUpdatePosted => "badge bg-success",
-        WorkflowState.QuestionsPosted => "badge bg-warning",
-        WorkflowState.AwaitingAnswers => "badge bg-warning",
-        WorkflowState.AnswersReceived => "badge bg-info",
-        WorkflowState.Planning => "badge bg-info",
-        WorkflowState.PlanPosted => "badge bg-primary",
-        WorkflowState.PlanUnderReview => "badge bg-primary",
-        WorkflowState.PlanApproved => "badge bg-success",
-        WorkflowState.PlanRejected => "badge bg-danger",
-        WorkflowState.Implementing => "badge bg-info",
-        WorkflowState.ImplementationFailed => "badge bg-danger",
-        WorkflowState.PRCreated => "badge bg-success",
-        WorkflowState.InReview => "badge bg-primary",
-        WorkflowState.Completed => "badge bg-success",
-        WorkflowState.Cancelled => "badge bg-secondary",
-        WorkflowState.Failed => "badge bg-danger",
-        _ => "badge bg-secondary"
+        WorkflowState.Triggered => BadgeBgSecondary,
+        WorkflowState.Analyzing => BadgeBgInfo,
+        WorkflowState.TicketUpdateGenerated => BadgeBgInfo,
+        WorkflowState.TicketUpdateUnderReview => BadgeBgPrimary,
+        WorkflowState.TicketUpdateRejected => BadgeBgDanger,
+        WorkflowState.TicketUpdateApproved => BadgeBgSuccess,
+        WorkflowState.TicketUpdatePosted => BadgeBgSuccess,
+        WorkflowState.QuestionsPosted => BadgeBgWarning,
+        WorkflowState.AwaitingAnswers => BadgeBgWarning,
+        WorkflowState.AnswersReceived => BadgeBgInfo,
+        WorkflowState.Planning => BadgeBgInfo,
+        WorkflowState.PlanPosted => BadgeBgPrimary,
+        WorkflowState.PlanUnderReview => BadgeBgPrimary,
+        WorkflowState.PlanApproved => BadgeBgSuccess,
+        WorkflowState.PlanRejected => BadgeBgDanger,
+        WorkflowState.Implementing => BadgeBgInfo,
+        WorkflowState.ImplementationFailed => BadgeBgDanger,
+        WorkflowState.PRCreated => BadgeBgSuccess,
+        WorkflowState.InReview => BadgeBgPrimary,
+        WorkflowState.Completed => BadgeBgSuccess,
+        WorkflowState.Cancelled => BadgeBgSecondary,
+        WorkflowState.Failed => BadgeBgDanger,
+        _ => BadgeBgSecondary
     };
 
     /// <summary>

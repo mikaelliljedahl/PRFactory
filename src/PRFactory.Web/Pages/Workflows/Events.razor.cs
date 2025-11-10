@@ -31,6 +31,7 @@ public partial class Events : IDisposable
     // Auto-refresh
     private bool autoRefresh = false;
     private System.Timers.Timer? refreshTimer;
+    private bool _disposed;
 
     [Inject]
     private IWorkflowEventService WorkflowEventService { get; set; } = null!;
@@ -289,7 +290,20 @@ public partial class Events : IDisposable
 
     public void Dispose()
     {
-        refreshTimer?.Stop();
-        refreshTimer?.Dispose();
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)
+            {
+                refreshTimer?.Stop();
+                refreshTimer?.Dispose();
+            }
+            _disposed = true;
+        }
     }
 }

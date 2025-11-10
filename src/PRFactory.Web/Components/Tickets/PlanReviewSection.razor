@@ -1,5 +1,6 @@
 @namespace PRFactory.Web.Components.Tickets
 @using PRFactory.Web.Models
+@using PRFactory.Web.UI.Help
 
 <div class="row">
     <div class="col-lg-8 mb-3">
@@ -167,12 +168,15 @@
                             }
                             <i class="bi bi-check-circle me-2"></i> Approve Plan
                         </button>
+                        <ContextualHelp HelpText="The plan is good. Proceed to implementation (auto or manual based on your settings)." Position="top" />
                         <button class="btn btn-primary btn-lg" @onclick="ShowRefineForm" disabled="@isSubmitting" title="Request specific changes to improve the plan">
                             <i class="bi bi-arrow-repeat me-2"></i> Request Refinements
                         </button>
+                        <ContextualHelp HelpText="The plan is mostly good but needs specific improvements. Provide instructions to adjust it while keeping its structure." Position="top" />
                         <button class="btn btn-outline-danger btn-lg" @onclick="ShowRejectForm" disabled="@isSubmitting" title="Reject this plan and start over with new feedback">
                             <i class="bi bi-x-circle me-2"></i> Reject & Regenerate
                         </button>
+                        <ContextualHelp HelpText="The plan misses the mark entirely. Start over from scratch with your feedback." Position="top" />
                     </div>
                 }
             </div>

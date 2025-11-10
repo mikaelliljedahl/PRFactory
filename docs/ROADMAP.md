@@ -1,6 +1,6 @@
 # PRFactory Roadmap
 
-**Last Updated**: 2025-11-08
+**Last Updated**: 2025-11-10
 **Purpose**: Clear future vision separated from current implementation
 
 This document outlines planned enhancements beyond the current MVP implementation.
@@ -19,6 +19,27 @@ This document outlines planned enhancements beyond the current MVP implementatio
 ---
 
 ## Short Term (Next 3 Months)
+
+### 🔐 Authentication & User Management (CRITICAL PRIORITY)
+
+**Goal**: Replace StubCurrentUserService with production-ready authentication
+
+- [ ] **OAuth 2.0 SSO Integration**
+  - [ ] Google OAuth provider
+  - [ ] Microsoft OAuth provider
+  - [ ] User profile management (display name, avatar)
+  - [ ] Session management and token refresh
+  - [ ] Replace StubCurrentUserService with real implementation
+
+- [ ] **User Management UI**
+  - [ ] User profile page
+  - [ ] Team member management
+  - [ ] User search and assignment
+  - [ ] User roles and permissions (basic RBAC)
+
+**Success Criteria**: Users can sign in with Google/Microsoft, StubCurrentUserService removed
+
+---
 
 ### 🧪 Testing & Quality (CRITICAL PRIORITY)
 
@@ -173,12 +194,13 @@ This document outlines planned enhancements beyond the current MVP implementatio
 
 **Goal**: Production-ready for large enterprise deployments
 
-- [ ] **Authentication & Authorization**
-  - [ ] SSO/SAML authentication
-  - [ ] Role-based access control (RBAC)
+- [ ] **Enterprise Authentication & Authorization**
+  - [ ] SAML 2.0 authentication (enterprise SSO)
+  - [ ] Advanced role-based access control (RBAC)
   - [ ] Tenant admin roles
   - [ ] Repository-level permissions
   - [ ] API key management
+  - [ ] Multi-factor authentication (MFA)
 
 - [ ] **Audit & Compliance**
   - [ ] Comprehensive audit logging

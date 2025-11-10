@@ -36,15 +36,12 @@ PRFactory/
 │   │
 │   ├── IMPLEMENTATION_STATUS.md       # ⭐ Single source of truth: What's built vs. planned
 │   ├── ROADMAP.md                     # Future enhancements and vision
+│   ├── UI_NAVIGATION_QUICK_REFERENCE.md # UI navigation shortcuts and patterns
 │   │
 │   ├── SETUP.md                       # Installation and configuration guide
 │   ├── ARCHITECTURE.md                # System architecture and design patterns
 │   ├── WORKFLOW.md                    # Detailed workflow explanation
 │   ├── database-schema.md             # Database schema documentation
-│   │
-│   ├── IMPLEMENTATION_SUMMARY.md      # Recent implementation summary
-│   ├── REFINEMENT_ENHANCEMENT_PLAN.md # Refinement workflow enhancements
-│   ├── DOCUMENTATION_RESTRUCTURE_PLAN.md # This restructuring plan
 │   │
 │   ├── architecture/                  # Component-specific architecture docs
 │   │   ├── core-engine.md             # Core workflow engine details
@@ -62,12 +59,17 @@ PRFactory/
 │   │   ├── implementation-quality-loop.md # Quality loop design
 │   │   └── implementation-quality-loop-addendum.md # Quality loop addendum
 │   │
-│   ├── planning/                      # Planning documents
-│   │   ├── CLI_LLM_PROVIDERS.md       # CLI LLM providers planning
-│   │   └── MICROSOFT_AGENT_FRAMEWORK_INTEGRATION.md # Microsoft Agent Framework integration
+│   ├── planning/                      # Epic planning and feature designs
+│   │   ├── EPIC_01_TEAM_REVIEW.md     # Team collaboration feature
+│   │   ├── EPIC_02_MULTI_LLM.md       # Multi-LLM provider support
+│   │   ├── EPIC_03_DEEP_PLANNING.md   # Enhanced planning capabilities
+│   │   ├── EPIC_04_DIFF_VIEWER.md     # Code diff visualization
+│   │   ├── EPIC_05_AGENT_FRAMEWORK.md # Agent framework enhancements
+│   │   └── EPIC_BACKLOG.md            # Backlog and future epics
 │   │
-│   ├── reviews/                       # Architecture and code reviews
-│   │   └── ARCHITECTURE_REVIEW.md     # 2025-11-09 Comprehensive architecture review ⚠️
+│   ├── reviews/                       # Architecture and UX reviews
+│   │   ├── ARCHITECTURE_REVIEW.md     # 2025-11-09 Architecture assessment ⚠️
+│   │   └── UX_UI_AUDIT_REPORT.md      # UX/UI audit findings
 │   │
 │   ├── security/                      # Security documentation
 │   │   ├── SECURITY_REVIEW.md         # Security vulnerability analysis
@@ -76,6 +78,7 @@ PRFactory/
 │   └── archive/                       # Historical/outdated documents
 │       ├── ORIGINAL_PROPOSAL.md       # Initial Jira-first proposal (archived)
 │       ├── IMPLEMENTATION_PLAN_WEB_UI.md # WebUI planning doc (archived)
+│       ├── IMPLEMENTATION_SUMMARY.md  # Historical implementation summary
 │       ├── ARCHITECTURE_REVIEW_2025-11-07.md # Point-in-time review (archived)
 │       └── AGENT_PROMPTS_INTEGRATION.md # Agent prompts impl guide (archived)
 │
@@ -110,12 +113,19 @@ PRFactory/
 | Document | Status | Description |
 |----------|--------|-------------|
 | **[ROADMAP.md](ROADMAP.md)** | 📋 Planning | Future enhancements (3, 6, 12 month vision) |
+| [planning/EPIC_01_TEAM_REVIEW.md](planning/EPIC_01_TEAM_REVIEW.md) | ✅ Complete | Team collaboration feature (implemented) |
+| [planning/EPIC_02_MULTI_LLM.md](planning/EPIC_02_MULTI_LLM.md) | 📋 Planned | Multi-LLM provider support |
+| [planning/EPIC_03_DEEP_PLANNING.md](planning/EPIC_03_DEEP_PLANNING.md) | 📋 Planned | Enhanced planning capabilities |
+| [planning/EPIC_04_DIFF_VIEWER.md](planning/EPIC_04_DIFF_VIEWER.md) | 📋 Planned | Code diff visualization |
+| [planning/EPIC_05_AGENT_FRAMEWORK.md](planning/EPIC_05_AGENT_FRAMEWORK.md) | 📋 Planned | Agent framework enhancements |
+| [planning/EPIC_BACKLOG.md](planning/EPIC_BACKLOG.md) | 📋 Backlog | Future epic ideas |
 
 ### Architecture Reviews & Analysis
 
 | Document | Status | Description |
 |----------|--------|-------------|
-| **[reviews/ARCHITECTURE_REVIEW.md](reviews/ARCHITECTURE_REVIEW.md)** | ⚠️ **CRITICAL** | 2025-11-09 Comprehensive architecture review |
+| **[reviews/ARCHITECTURE_REVIEW.md](reviews/ARCHITECTURE_REVIEW.md)** | ⚠️ **CRITICAL** | 2025-11-09 Comprehensive architecture assessment |
+| [reviews/UX_UI_AUDIT_REPORT.md](reviews/UX_UI_AUDIT_REPORT.md) | ✅ Reference | UX/UI improvement recommendations |
 | [architecture/WORKFLOW_EXECUTION_ARCHITECTURE.md](architecture/WORKFLOW_EXECUTION_ARCHITECTURE.md) | 📋 Analysis | Workflow execution deep-dive |
 | [architecture/WORKFLOW_EXECUTION_CRITICAL_GAPS.md](architecture/WORKFLOW_EXECUTION_CRITICAL_GAPS.md) | ⚠️ Gaps | Blocking implementation gaps |
 | [architecture/OAUTH_INTEGRATION_SOLUTION.md](architecture/OAUTH_INTEGRATION_SOLUTION.md) | ✅ Solution | OAuth integration via OrchestratorChat port |
@@ -133,7 +143,7 @@ PRFactory/
 | Document | Status | Description |
 |----------|--------|-------------|
 | **[CLAUDE.md](../CLAUDE.md)** | ⭐ **ESSENTIAL** | Architecture vision, what to preserve vs. simplify |
-| [DOCUMENTATION_RESTRUCTURE_PLAN.md](DOCUMENTATION_RESTRUCTURE_PLAN.md) | 📋 Plan | This documentation reorganization plan |
+| [UI_NAVIGATION_QUICK_REFERENCE.md](UI_NAVIGATION_QUICK_REFERENCE.md) | ✅ Reference | UI navigation patterns and shortcuts |
 
 ### Historical (Archived)
 
@@ -141,6 +151,7 @@ PRFactory/
 |----------|--------------|-------------|
 | [ORIGINAL_PROPOSAL.md](archive/ORIGINAL_PROPOSAL.md) | 2025-11-08 | Initial Jira-first proposal (now WebUI-first) |
 | [IMPLEMENTATION_PLAN_WEB_UI.md](archive/IMPLEMENTATION_PLAN_WEB_UI.md) | 2025-11-08 | WebUI transition plan (now implemented) |
+| [IMPLEMENTATION_SUMMARY.md](archive/IMPLEMENTATION_SUMMARY.md) | 2025-11-08 | Historical implementation summary |
 | [ARCHITECTURE_REVIEW_2025-11-07.md](archive/ARCHITECTURE_REVIEW_2025-11-07.md) | 2025-11-08 | Point-in-time architecture review |
 | [AGENT_PROMPTS_INTEGRATION.md](archive/AGENT_PROMPTS_INTEGRATION.md) | 2025-11-08 | Agent prompts system guide (now complete) |
 
@@ -330,7 +341,7 @@ When a document becomes outdated:
 
 ## 📊 Documentation Health
 
-**Last Major Update**: 2025-11-08
+**Last Major Update**: 2025-11-10
 
 ### Coverage Status
 
@@ -354,8 +365,8 @@ When a document becomes outdated:
 
 **Maintained By**: PRFactory Development Team
 **Review Frequency**: Weekly
-**Last Reviewed**: 2025-11-08
-**Next Review**: 2025-11-15
+**Last Reviewed**: 2025-11-10
+**Next Review**: 2025-11-17
 
 ---
 

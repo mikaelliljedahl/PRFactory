@@ -34,8 +34,8 @@
     <!-- Integration Testing -->
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.0" />
 
-    <!-- Entity Framework Core In-Memory -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.0" />
+    <!-- Entity Framework Core In-Memory - must match Infrastructure EF Core version -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.10" />
   </ItemGroup>
 
   <ItemGroup>

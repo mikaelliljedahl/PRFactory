@@ -74,48 +74,38 @@ public class WorkflowEventConfiguration : IEntityTypeConfiguration<WorkflowEvent
 
     private void ConfigureAnswerAdded(EntityTypeBuilder<WorkflowEvent> builder)
     {
-        builder.Property<string>("QuestionId")
-            .HasMaxLength(50);
-
-        builder.Property<string>("AnswerText")
-            .HasMaxLength(5000);
+        // AnswerAdded has real properties QuestionId and AnswerText - EF Core will discover them
+        // No configuration needed - properties will be auto-mapped
     }
 
     private void ConfigurePlanCreated(EntityTypeBuilder<WorkflowEvent> builder)
     {
-        builder.Property<string>("BranchName")
-            .HasMaxLength(200);
+        // PlanCreated has real property BranchName - EF Core will discover it
+        // No configuration needed - property will be auto-mapped
     }
 
     private void ConfigurePullRequestCreated(EntityTypeBuilder<WorkflowEvent> builder)
     {
-        builder.Property<string>("PullRequestUrl")
-            .HasMaxLength(1000);
-
-        builder.Property<int>("PullRequestNumber");
+        // PullRequestCreated has real properties PullRequestUrl and PullRequestNumber - EF Core will discover them
+        // No configuration needed - properties will be auto-mapped
     }
 
     private void ConfigureWorkflowSuspended(EntityTypeBuilder<WorkflowEvent> builder)
     {
-        builder.Property<string>("GraphId")
-            .HasMaxLength(100);
-
-        builder.Property<string>("State")
-            .HasMaxLength(200);
+        // WorkflowSuspended has real properties GraphId and State - EF Core will discover them
+        // No configuration needed - properties will be auto-mapped
     }
 
     private void ConfigureWorkflowCompleted(EntityTypeBuilder<WorkflowEvent> builder)
     {
-        builder.Property<TimeSpan>("Duration");
+        // WorkflowCompleted has real property Duration - EF Core will discover it
+        // No configuration needed - property will be auto-mapped
     }
 
     private void ConfigureWorkflowFailed(EntityTypeBuilder<WorkflowEvent> builder)
     {
-        builder.Property<string>("GraphId")
-            .HasMaxLength(100);
-
-        builder.Property<string?>("Error")
-            .HasMaxLength(2000);
+        // WorkflowFailed has real properties GraphId and Error - EF Core will discover them
+        // No configuration needed - properties will be auto-mapped
     }
 
     private void ConfigureWorkflowCancelled(EntityTypeBuilder<WorkflowEvent> builder)

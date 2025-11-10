@@ -1745,6 +1745,74 @@ The system uses three specialized agents:
 
 **When in doubt**: Ask yourself "Will a developer in 6 months care about which session this was built in?" If no, don't include session-specific details in permanent documentation.
 
+#### Updating Documentation After Merges
+
+**CRITICAL: When a feature branch is merged, both IMPLEMENTATION_STATUS.md and ROADMAP.md must be updated.**
+
+This prevents confusion about what's planned vs. what's completed, and ensures documentation accurately reflects the current state.
+
+**Required Updates After Merge:**
+
+1. **IMPLEMENTATION_STATUS.md** (Source of truth for what's built):
+   - Update "Quick Status" section with new features/capabilities
+   - Update "What Works Today" with new features (include PR number)
+   - Add detailed sections for new components/entities/services
+   - Update "What's Missing" to remove completed items, add new gaps
+   - Update test coverage numbers if tests were added
+   - Include file paths and line counts for new implementations
+
+2. **ROADMAP.md** (Future vision with recent completions):
+   - Add new items to "Recently Completed" section (max 2-3 most recent)
+   - Mark completed items with ✅ and checkboxes [x] in their original sections
+   - Update progress on partially completed features
+   - Remove very old items from "Recently Completed" (archive after 2-3 releases)
+   - Keep focus on future work - completed items should be brief
+
+**Pattern for "Recently Completed" Section in ROADMAP.md:**
+
+```markdown
+## Recently Completed ✅
+
+### Feature Name (PR #XX - YYYY-MM-DD)
+- ✅ Brief summary of what was implemented
+- ✅ Key capabilities added
+- ⚠️ Remaining gaps (if any)
+```
+
+**Why "Recently Completed" in ROADMAP:**
+- Prevents confusion when planned items are suddenly missing
+- Shows progress and momentum
+- Provides context for prioritizing remaining work
+- Helps readers understand what just changed
+
+**Example Workflow:**
+
+```bash
+# After branch claude/add-feature-XYZ is merged:
+
+# 1. Update IMPLEMENTATION_STATUS.md
+- Add feature to "What Works Today"
+- Add technical details in relevant component sections
+- Update test counts
+- Update "What's Missing" if new gaps identified
+
+# 2. Update ROADMAP.md
+- Add to "Recently Completed" section
+- Mark related items as [x] completed in their original sections
+- Update any affected future work items
+
+# 3. Commit with clear message
+git add docs/IMPLEMENTATION_STATUS.md docs/ROADMAP.md
+git commit -m "docs: Update documentation to reflect PR #XX (feature name)"
+git push
+```
+
+**DON'T:**
+- ❌ Update only IMPLEMENTATION_STATUS.md and forget ROADMAP.md
+- ❌ Leave planned items in ROADMAP.md without marking them completed
+- ❌ Add detailed implementation summaries to ROADMAP.md (keep brief)
+- ❌ Let "Recently Completed" grow indefinitely (archive old completions)
+
 ---
 
 ## Quick Reference

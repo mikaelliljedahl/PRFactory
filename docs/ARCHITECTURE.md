@@ -232,18 +232,21 @@ public enum WorkflowState
 ### 1. API Layer (`PRFactory.Api`)
 
 **Responsibilities:**
-- Expose REST endpoints for external systems
+- Expose REST endpoints for external webhook integrations ONLY
 - Validate incoming webhooks (HMAC)
 - Handle HTTP concerns (CORS, authentication)
-- Serialize/deserialize requests
+- Serialize/deserialize external system requests
+
+**Important**: API Controllers are used ONLY for external webhooks (Jira, Azure DevOps). The Blazor Server Web UI (`PRFactory.Web`) injects services directly and does NOT make HTTP calls to these controllers.
 
 **Key Components:**
-- `Web UI` - Primary user interface for ticket management (Blazor or React)
-- `TicketController` - CRUD operations for tickets
-- `WebhookController` - Receives webhooks from external systems (optional)
-- `TenantController` - Tenant management
-- `RepositoryController` - Repository configuration
-- `SyncController` - Sync tickets to/from external systems
+- `TicketUpdatesController` - Webhook endpoints for Jira/Azure DevOps ticket updates
+- `WebhookController` - Receives webhooks from external systems (@claude mentions)
+- Webhook signature validation (HMAC)
+
+**Not Used For:**
+- ❌ General API access (Blazor components inject services directly)
+- ❌ Internal application communication (use dependency injection)
 
 ### 2. Domain Layer (`PRFactory.Domain`)
 
@@ -308,6 +311,53 @@ public enum WorkflowState
 - `AgentFactory` - Creates appropriate agent instances
 - `CheckpointService` - Save/restore workflow state
 - `14 Agent Implementations` - One per workflow step
+
+### 5. Web Layer (`PRFactory.Web`)
+
+**Responsibilities:**
+- Blazor Server UI for ticket management and workflow monitoring
+- User onboarding and contextual help
+- Real-time status updates via SignalR
+- Service facades for direct dependency injection (no HTTP calls within Blazor Server)
+
+**Architecture Pattern**: Blazor Server (NOT Blazor WebAssembly)
+- Server-side rendering with SignalR connection
+- Components inject services directly (no internal HTTP/API calls)
+- API Controllers used ONLY for external webhooks (Jira, Azure DevOps)
+
+**Key Components:**
+
+**Pages** (`/Pages/`):
+- `Tickets/Index.razor` - Ticket list with filtering
+- `Tickets/Detail.razor` - Ticket detail with workflow timeline
+- `GettingStarted.razor` - Onboarding page with sample templates (PR #45)
+
+**Pure UI Components** (`/UI/`):
+- `DemoModeBanner.razor` - Demo mode indicator with dismissible banner (PR #45)
+- `ContextualHelp.razor` - Pure CSS tooltip help system (PR #45)
+- `StatusBadge.razor` - Workflow state badges with user-friendly names (PR #45)
+- `AlertMessage.razor`, `LoadingButton.razor`, `Card.razor`, etc. - Reusable UI components
+
+**Business Components** (`/Components/`):
+- `TicketHeader.razor` - Ticket detail header
+- `PlanReviewSection.razor` - Team review UI with multi-reviewer support
+- `QuestionAnswerForm.razor` - Answer clarifying questions
+- `WorkflowTimeline.razor` - Visual workflow progress
+
+**Services** (`/Services/`):
+- `TicketService` - Facade for ticket operations (injects ITicketRepository, ITicketUpdateService)
+- Service facades convert between DTOs and domain entities
+
+**Recent Enhancements** (PR #45 - Nov 10, 2025):
+- ✅ Getting Started page with bug fix, feature, and refactoring templates
+- ✅ Demo Mode indicators (banner + navigation badge)
+- ✅ Contextual Help system (tooltips on all form fields, pure CSS, no JavaScript)
+- ✅ User-friendly workflow state names ("Reviewing Plan" vs "PlanUnderReview")
+- ✅ 50+ SonarCloud code quality fixes (IDisposable, async/await, static methods)
+
+For detailed UI architecture guidelines, see [CLAUDE.md](../CLAUDE.md) section "Blazor UI Component Architecture".
+
+---
 
 ## Agent System
 

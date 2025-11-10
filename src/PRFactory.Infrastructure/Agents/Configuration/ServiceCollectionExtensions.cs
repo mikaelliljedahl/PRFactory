@@ -45,14 +45,14 @@ public static class ServiceCollectionExtensions
 
         if (agentConfig.Middleware.EnableErrorHandling)
         {
-            services.AddSingleton(sp => new ErrorHandlingMiddleware(
+            services.AddSingleton<ErrorHandlingMiddleware>(sp => new ErrorHandlingMiddleware(
                 sp.GetRequiredService<ILogger<ErrorHandlingMiddleware>>(),
                 agentConfig.ErrorHandling.ToErrorHandlingOptions()));
         }
 
         if (agentConfig.Middleware.EnableRetry)
         {
-            services.AddSingleton(sp => new RetryMiddleware(
+            services.AddSingleton<RetryMiddleware>(sp => new RetryMiddleware(
                 sp.GetRequiredService<ILogger<RetryMiddleware>>(),
                 agentConfig.Retry.ToRetryOptions()));
         }
@@ -104,14 +104,14 @@ public static class ServiceCollectionExtensions
 
         if (config.Middleware.EnableErrorHandling)
         {
-            services.AddSingleton(sp => new ErrorHandlingMiddleware(
+            services.AddSingleton<ErrorHandlingMiddleware>(sp => new ErrorHandlingMiddleware(
                 sp.GetRequiredService<ILogger<ErrorHandlingMiddleware>>(),
                 config.ErrorHandling.ToErrorHandlingOptions()));
         }
 
         if (config.Middleware.EnableRetry)
         {
-            services.AddSingleton(sp => new RetryMiddleware(
+            services.AddSingleton<RetryMiddleware>(sp => new RetryMiddleware(
                 sp.GetRequiredService<ILogger<RetryMiddleware>>(),
                 config.Retry.ToRetryOptions()));
         }

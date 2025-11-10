@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -6,8 +7,10 @@ using PRFactory.Core.Application.Services;
 using PRFactory.Domain.Interfaces;
 using PRFactory.Infrastructure.Agents.Adapters;
 using PRFactory.Infrastructure.Agents.Base;
+using PRFactory.Infrastructure.Agents.Configuration;
 using PRFactory.Infrastructure.Configuration;
 using PRFactory.Infrastructure.Execution;
+using PRFactory.Infrastructure.Git;
 using PRFactory.Infrastructure.Persistence;
 using PRFactory.Infrastructure.Persistence.Encryption;
 using PRFactory.Infrastructure.Persistence.Repositories;
@@ -77,8 +80,9 @@ public static class DependencyInjection
         services.AddScoped<IPlanReviewRepository, PlanReviewRepository>();
         services.AddScoped<IReviewCommentRepository, ReviewCommentRepository>();
 
-        // Register checkpoint store adapter
+        // Register checkpoint store adapters
         services.AddScoped<WorkflowCheckpointStore, GraphCheckpointStoreAdapter>();
+        services.AddScoped<Agents.Base.ICheckpointStore, BaseCheckpointStoreAdapter>();
 
         // Register workflow state store
         services.AddScoped<Agents.Graphs.IWorkflowStateStore, WorkflowStateStore>();
@@ -147,6 +151,50 @@ public static class DependencyInjection
 
         // Register default CLI agent (Claude Code)
         services.AddScoped<ICliAgent>(sp => sp.GetRequiredService<ClaudeCodeCliAdapter>());
+
+        // Register Git platform integration (LocalGitService, providers, and GitPlatformService)
+        services.AddGitPlatformIntegration(sp =>
+        {
+            var repoRepository = sp.GetRequiredService<IRepositoryRepository>();
+
+            // Create repository getter function
+            return async (Guid repositoryId, CancellationToken ct) =>
+            {
+                var repo = await repoRepository.GetByIdAsync(repositoryId, ct);
+                if (repo == null)
+                    throw new InvalidOperationException($"Repository {repositoryId} not found");
+
+                return new Git.Providers.RepositoryEntity
+                {
+                    Id = repo.Id,
+                    Name = repo.Name,
+                    CloneUrl = repo.CloneUrl,
+                    AccessToken = repo.AccessToken,
+                    DefaultBranch = repo.DefaultBranch,
+                    GitPlatform = repo.GitPlatform
+                };
+            };
+        });
+
+        // Register agent framework (middleware, agent registry)
+        services.AddAgentFramework(configuration);
+
+        // Register workflow graphs
+        services.AddScoped<Agents.Graphs.RefinementGraph>();
+        services.AddScoped<Agents.Graphs.PlanningGraph>();
+        services.AddScoped<Agents.Graphs.ImplementationGraph>();
+
+        // Register workflow orchestrator
+        services.AddScoped<Agents.Graphs.IWorkflowOrchestrator, Agents.Graphs.WorkflowOrchestrator>();
+
+        // Register event broadcaster (stub for infrastructure layer)
+        // Note: The real implementation (SignalREventBroadcaster) should be registered in the Web layer
+        services.AddScoped<Events.IEventBroadcaster>(sp =>
+        {
+            // Return a stub implementation if Web layer hasn't registered one
+            // This allows Infrastructure tests to run without the Web layer
+            return new Events.StubEventBroadcaster();
+        });
 
         // Register database seeder
         services.AddScoped<DbSeeder>();

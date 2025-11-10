@@ -142,9 +142,20 @@ public class Ticket
     public int RequiredApprovalCount { get; private set; } = 1;
 
     /// <summary>
+    /// LLM provider configuration to use for this ticket
+    /// Null = use tenant's default provider
+    /// </summary>
+    public Guid? LlmProviderId { get; private set; }
+
+    /// <summary>
     /// Navigation property to the repository
     /// </summary>
     public Repository? Repository { get; private set; }
+
+    /// <summary>
+    /// Navigation property to the LLM provider configuration
+    /// </summary>
+    public TenantLlmProvider? LlmProvider { get; private set; }
 
     /// <summary>
     /// Navigation property to the tenant
@@ -546,6 +557,16 @@ public class Ticket
         }
 
         PlanApprovedAt = null; // Clear previous approval timestamp
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Sets the LLM provider to use for this ticket
+    /// </summary>
+    /// <param name="llmProviderId">The ID of the LLM provider, or null to use tenant default</param>
+    public void SetLlmProvider(Guid? llmProviderId)
+    {
+        LlmProviderId = llmProviderId;
         UpdatedAt = DateTime.UtcNow;
     }
 

@@ -71,16 +71,9 @@ PRFactory/
 │   │   ├── ARCHITECTURE_REVIEW.md     # 2025-11-09 Architecture assessment ⚠️
 │   │   └── UX_UI_AUDIT_REPORT.md      # UX/UI audit findings
 │   │
-│   ├── security/                      # Security documentation
-│   │   ├── SECURITY_REVIEW.md         # Security vulnerability analysis
-│   │   └── SECURITY_CHECKLIST.md      # Actionable security fixes
-│   │
-│   └── archive/                       # Historical/outdated documents
-│       ├── ORIGINAL_PROPOSAL.md       # Initial Jira-first proposal (archived)
-│       ├── IMPLEMENTATION_PLAN_WEB_UI.md # WebUI planning doc (archived)
-│       ├── IMPLEMENTATION_SUMMARY.md  # Historical implementation summary
-│       ├── ARCHITECTURE_REVIEW_2025-11-07.md # Point-in-time review (archived)
-│       └── AGENT_PROMPTS_INTEGRATION.md # Agent prompts impl guide (archived)
+│   └── security/                      # Security documentation
+│       ├── SECURITY_REVIEW.md         # Security vulnerability analysis
+│       └── SECURITY_CHECKLIST.md      # Actionable security fixes
 │
 └── src/
     ├── PRFactory.Api/README.md        # API component documentation
@@ -144,16 +137,6 @@ PRFactory/
 |----------|--------|-------------|
 | **[CLAUDE.md](../CLAUDE.md)** | ⭐ **ESSENTIAL** | Architecture vision, what to preserve vs. simplify |
 | [UI_NAVIGATION_QUICK_REFERENCE.md](UI_NAVIGATION_QUICK_REFERENCE.md) | ✅ Reference | UI navigation patterns and shortcuts |
-
-### Historical (Archived)
-
-| Document | Archive Date | Description |
-|----------|--------------|-------------|
-| [ORIGINAL_PROPOSAL.md](archive/ORIGINAL_PROPOSAL.md) | 2025-11-08 | Initial Jira-first proposal (now WebUI-first) |
-| [IMPLEMENTATION_PLAN_WEB_UI.md](archive/IMPLEMENTATION_PLAN_WEB_UI.md) | 2025-11-08 | WebUI transition plan (now implemented) |
-| [IMPLEMENTATION_SUMMARY.md](archive/IMPLEMENTATION_SUMMARY.md) | 2025-11-08 | Historical implementation summary |
-| [ARCHITECTURE_REVIEW_2025-11-07.md](archive/ARCHITECTURE_REVIEW_2025-11-07.md) | 2025-11-08 | Point-in-time architecture review |
-| [AGENT_PROMPTS_INTEGRATION.md](archive/AGENT_PROMPTS_INTEGRATION.md) | 2025-11-08 | Agent prompts system guide (now complete) |
 
 ---
 
@@ -325,17 +308,15 @@ A: Read [CLAUDE.md](../CLAUDE.md) - it explains what's INTENTIONAL vs. overengin
 - 📋 **PLANNED** - Designed but not started
 - ❌ **NOT PLANNED** - Not in roadmap
 
-### Archiving Documents
+### Removing Outdated Documents
 
 When a document becomes outdated:
 
-1. Move to `/docs/archive/`
-2. Add archive header with:
-   - Archive date
-   - Reason for archiving
-   - Link to current documentation
-3. Update references in other docs
-4. Update this README
+1. Delete the document file
+2. Remove all references from other docs (especially this README)
+3. If the information is still valuable, merge it into current documentation
+
+**Keep documentation lean**: Only maintain documents that are currently relevant.
 
 ---
 

@@ -1,0 +1,351 @@
+@page "/getting-started"
+@using PRFactory.Web.UI.Cards
+@using PRFactory.Web.UI.Alerts
+@using PRFactory.Web.UI.Buttons
+
+<PageTitle>Getting Started - PRFactory</PageTitle>
+
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h1 class="display-4">
+                <i class="bi bi-rocket-takeoff text-primary"></i>
+                Getting Started with PRFactory
+            </h1>
+            <p class="lead text-muted">
+                AI-powered workflow automation for software development teams
+            </p>
+        </div>
+    </div>
+
+    <!-- Overview Card -->
+    <Card Title="How PRFactory Works" Icon="lightbulb" Variant="CardVariant.Primary" AdditionalClass="mb-4">
+        <p>
+            PRFactory uses AI agents to help you refine requirements, plan implementations,
+            and optionally generate code - all while keeping you in control.
+        </p>
+        <div class="row mt-3">
+            <div class="col-md-4">
+                <div class="text-center p-3">
+                    <i class="bi bi-1-circle-fill text-primary" style="font-size: 2rem;"></i>
+                    <h5 class="mt-2">Ticket Refinement</h5>
+                    <p class="text-muted">AI analyzes and improves your requirements</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center p-3">
+                    <i class="bi bi-2-circle-fill text-success" style="font-size: 2rem;"></i>
+                    <h5 class="mt-2">Implementation Planning</h5>
+                    <p class="text-muted">AI creates detailed, reviewable plans</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center p-3">
+                    <i class="bi bi-3-circle-fill text-info" style="font-size: 2rem;"></i>
+                    <h5 class="mt-2">Code Implementation</h5>
+                    <p class="text-muted">AI generates code and creates PRs (optional)</p>
+                </div>
+            </div>
+        </div>
+    </Card>
+
+    <!-- Phase 1 Card -->
+    <Card Title="Phase 1: Ticket Refinement" Icon="ticket-detailed" Variant="CardVariant.Info" AdditionalClass="mb-4">
+        <h5>What Happens:</h5>
+        <ul>
+            <li>AI analyzes your ticket and codebase</li>
+            <li>Generates a refined ticket with clearer requirements</li>
+            <li>Asks clarifying questions about ambiguities</li>
+            <li>Posts the refined ticket and questions to your ticket system</li>
+        </ul>
+
+        <h5 class="mt-3">Your Action Required:</h5>
+        <ul>
+            <li>Review the refined ticket description</li>
+            <li>Answer AI's questions to provide context</li>
+            <li>Approve the refinement or request changes</li>
+        </ul>
+
+        <AlertMessage Type="AlertType.Info" Icon="info-circle" Title="Tip">
+            The more context you provide, the better the AI can refine your requirements.
+        </AlertMessage>
+    </Card>
+
+    <!-- Phase 2 Card -->
+    <Card Title="Phase 2: Implementation Planning" Icon="diagram-3" Variant="CardVariant.Success" AdditionalClass="mb-4">
+        <h5>What Happens:</h5>
+        <ul>
+            <li>AI generates a detailed implementation plan</li>
+            <li>Plan includes files to modify, tests to write, and step-by-step approach</li>
+            <li>Plan is committed to a git branch</li>
+            <li>Plan is posted to your ticket system for review</li>
+        </ul>
+
+        <h5 class="mt-3">Your Action Required:</h5>
+        <ul>
+            <li>Review the implementation plan carefully</li>
+            <li><strong>Approve</strong> the plan if it looks good</li>
+            <li><strong>Refine</strong> the plan with specific instructions</li>
+            <li><strong>Reject</strong> the plan to regenerate from scratch</li>
+        </ul>
+
+        <AlertMessage Type="AlertType.Warning" Icon="exclamation-triangle" Title="Important">
+            This is your last chance to guide the implementation before code is generated. Review thoroughly!
+        </AlertMessage>
+    </Card>
+
+    <!-- Phase 3 Card -->
+    <Card Title="Phase 3: Code Implementation (Optional)" Icon="code-slash" Variant="CardVariant.Primary" AdditionalClass="mb-4">
+        <h5>What Happens:</h5>
+        <ul>
+            <li>AI implements the approved plan</li>
+            <li>Code is committed to the git branch</li>
+            <li>A pull request is created for review</li>
+            <li>PR link is posted to your ticket system</li>
+        </ul>
+
+        <h5 class="mt-3">Your Action Required:</h5>
+        <ul>
+            <li>Review the generated code in the pull request</li>
+            <li>Run tests locally or in CI/CD</li>
+            <li>Request changes if needed</li>
+            <li>Merge the PR when satisfied</li>
+        </ul>
+
+        <AlertMessage Type="AlertType.Info" Icon="gear" Title="Note">
+            Phase 3 is optional and can be enabled/disabled per tenant. You can stop at the approved plan and implement manually.
+        </AlertMessage>
+    </Card>
+
+    <!-- Quick Start Steps -->
+    <Card Title="Quick Start Steps" Icon="list-check" Variant="CardVariant.Secondary" AdditionalClass="mb-4">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="d-flex align-items-start mb-3">
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-1-circle-fill text-primary" style="font-size: 1.5rem;"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h5>Add a Repository</h5>
+                        <p class="text-muted mb-2">Connect PRFactory to your Git repository (GitHub, Bitbucket, Azure DevOps)</p>
+                        <a href="/repositories/create" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-plus-circle"></i> Add Repository
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex align-items-start mb-3">
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-2-circle-fill text-success" style="font-size: 1.5rem;"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h5>Create a Ticket</h5>
+                        <p class="text-muted mb-2">Create your first ticket with a description of what you want to build</p>
+                        <a href="/tickets/create" class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-ticket"></i> Create Ticket
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex align-items-start mb-3">
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-3-circle-fill text-info" style="font-size: 1.5rem;"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h5>Review AI Updates</h5>
+                        <p class="text-muted mb-2">Check your ticket system for refined descriptions, questions, and plans</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex align-items-start mb-3">
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-4-circle-fill text-warning" style="font-size: 1.5rem;"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h5>Merge Pull Request</h5>
+                        <p class="text-muted mb-2">Review and merge the generated PR when satisfied</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Card>
+
+    <!-- Sample Ticket Templates -->
+    <Card Title="Sample Ticket Templates" Icon="file-earmark-code" Variant="CardVariant.Default" AdditionalClass="mb-4">
+        <p class="mb-3">Use these templates as starting points for your tickets. Copy and customize them to fit your needs.</p>
+
+        <h5 class="mt-4">
+            <i class="bi bi-bug text-danger"></i> Bug Fix Template
+        </h5>
+        <pre class="bg-light p-3 rounded"><code>**Title:** Fix login form validation error
+
+**Description:**
+The login form is not properly validating email addresses.
+Users can submit forms with invalid email formats.
+
+**Steps to Reproduce:**
+1. Go to /login page
+2. Enter "notanemail" in email field
+3. Click submit button
+4. Form submits without validation error
+
+**Expected Behavior:**
+Form should display "Invalid email format" error and prevent submission.
+
+**Actual Behavior:**
+Form submits with invalid email, backend returns 400 error.
+
+**Environment:**
+- Browser: Chrome 120
+- Environment: Production
+- User impact: High - blocking user registration
+
+**Additional Context:**
+The validation should use standard RFC 5322 email validation.
+Consider adding client-side validation before server-side check.</code></pre>
+
+        <h5 class="mt-4">
+            <i class="bi bi-stars text-success"></i> Feature Request Template
+        </h5>
+        <pre class="bg-light p-3 rounded"><code>**Title:** Add dark mode theme toggle
+
+**User Story:**
+As a user, I want to toggle between light and dark themes
+so that I can reduce eye strain during night-time usage.
+
+**Acceptance Criteria:**
+- [ ] Theme toggle button in header/settings
+- [ ] Dark theme applies to all pages
+- [ ] User preference saved to localStorage
+- [ ] Theme preference persists across sessions
+- [ ] Smooth transition animation between themes
+
+**Technical Notes:**
+- Use CSS variables for theme colors
+- Consider system preference detection (prefers-color-scheme)
+- Ensure WCAG contrast ratios in both themes
+
+**Design References:**
+Link to Figma design: [URL here]
+
+**Priority:** Medium
+**Estimated Effort:** 2-3 days</code></pre>
+
+        <h5 class="mt-4">
+            <i class="bi bi-arrow-repeat text-primary"></i> Refactoring Template
+        </h5>
+        <pre class="bg-light p-3 rounded"><code>**Title:** Refactor user authentication service
+
+**Current Problem:**
+UserAuthService has grown to 800+ lines with multiple responsibilities.
+Makes it hard to test and maintain. Violates Single Responsibility Principle.
+
+**Proposed Solution:**
+Split UserAuthService into smaller, focused services:
+- AuthenticationService (login/logout)
+- AuthorizationService (permissions/roles)
+- TokenService (JWT generation/validation)
+- SessionService (session management)
+
+**Benefits:**
+- Improved testability (unit test each service independently)
+- Better separation of concerns
+- Easier to extend with new auth methods (OAuth, SAML)
+- Reduced complexity per class
+
+**Constraints:**
+- Must maintain backward compatibility with existing API
+- No breaking changes to public interfaces
+- Existing tests should continue to pass
+
+**Testing Strategy:**
+- Unit tests for each new service
+- Integration tests for auth flow
+- Regression tests for existing functionality
+
+**Estimated Effort:** 1 week</code></pre>
+    </Card>
+
+    <!-- Tips for Success -->
+    <Card Title="Tips for Success" Icon="lightbulb-fill" Variant="CardVariant.Warning" AdditionalClass="mb-4">
+        <div class="row">
+            <div class="col-md-6">
+                <h6><i class="bi bi-check2-circle text-success"></i> Be Specific</h6>
+                <p class="text-muted">
+                    Provide detailed descriptions, expected behavior, and acceptance criteria.
+                    The more context, the better the AI can help.
+                </p>
+
+                <h6 class="mt-3"><i class="bi bi-check2-circle text-success"></i> Include Context</h6>
+                <p class="text-muted">
+                    Reference related files, modules, or tickets. Explain why the change is needed.
+                </p>
+
+                <h6 class="mt-3"><i class="bi bi-check2-circle text-success"></i> Define Success Criteria</h6>
+                <p class="text-muted">
+                    What does "done" look like? What should be tested? What should not break?
+                </p>
+            </div>
+            <div class="col-md-6">
+                <h6><i class="bi bi-check2-circle text-success"></i> Review Carefully</h6>
+                <p class="text-muted">
+                    Take time to review refined tickets, plans, and code. Ask questions if unclear.
+                </p>
+
+                <h6 class="mt-3"><i class="bi bi-check2-circle text-success"></i> Iterate</h6>
+                <p class="text-muted">
+                    Don't hesitate to refine plans or reject them. AI improves with feedback.
+                </p>
+
+                <h6 class="mt-3"><i class="bi bi-check2-circle text-success"></i> Test Thoroughly</h6>
+                <p class="text-muted">
+                    Always test generated code locally. Run your test suite and check edge cases.
+                </p>
+            </div>
+        </div>
+    </Card>
+
+    <!-- Next Steps CTA -->
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h3 class="mb-4">Ready to Get Started?</h3>
+            <div class="d-inline-flex gap-3 flex-wrap justify-content-center">
+                <a href="/repositories/create" class="btn btn-primary btn-lg">
+                    <i class="bi bi-folder-plus"></i> Add Your First Repository
+                </a>
+                <a href="/tickets/create" class="btn btn-success btn-lg">
+                    <i class="bi bi-ticket-perforated"></i> Create Your First Ticket
+                </a>
+                <a href="/" class="btn btn-outline-secondary btn-lg">
+                    <i class="bi bi-speedometer2"></i> Go to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Need Help Card -->
+    <Card Title="Need Help?" Icon="question-circle" Variant="CardVariant.Default" AdditionalClass="mb-4">
+        <div class="row">
+            <div class="col-md-4">
+                <h6><i class="bi bi-book text-primary"></i> Documentation</h6>
+                <p class="text-muted">Check out our guides and API documentation</p>
+            </div>
+            <div class="col-md-4">
+                <h6><i class="bi bi-exclamation-triangle text-warning"></i> Error Logs</h6>
+                <p>
+                    <a href="/errors" class="text-decoration-none">View error logs</a> if something goes wrong
+                </p>
+            </div>
+            <div class="col-md-4">
+                <h6><i class="bi bi-diagram-3 text-success"></i> Workflows</h6>
+                <p>
+                    <a href="/workflows" class="text-decoration-none">View workflow status</a> for your tickets
+                </p>
+            </div>
+        </div>
+    </Card>
+</div>

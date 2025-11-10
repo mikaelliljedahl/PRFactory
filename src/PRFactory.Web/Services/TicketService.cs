@@ -13,6 +13,8 @@ namespace PRFactory.Web.Services;
 /// </summary>
 public class TicketService : ITicketService
 {
+    private const string CheckCircleIcon = "check-circle";
+
     private readonly ILogger<TicketService> _logger;
     private readonly ITicketApplicationService _ticketApplicationService;
     private readonly ITicketUpdateService _ticketUpdateService;
@@ -452,7 +454,7 @@ public class TicketService : ITicketService
 
             case AnswerAdded answerAdded:
                 dto.Description = "Answer provided";
-                dto.Icon = "check-circle";
+                dto.Icon = CheckCircleIcon;
                 dto.Severity = EventSeverity.Success;
                 break;
 
@@ -489,7 +491,7 @@ public class TicketService : ITicketService
             WorkflowState.Analyzing => "search",
             WorkflowState.TicketUpdateGenerated => "file-text",
             WorkflowState.TicketUpdateUnderReview => "eye",
-            WorkflowState.TicketUpdateApproved => "check-circle",
+            WorkflowState.TicketUpdateApproved => CheckCircleIcon,
             WorkflowState.TicketUpdateRejected => "x-circle",
             WorkflowState.QuestionsPosted => "help-circle",
             WorkflowState.AwaitingAnswers => "clock",
@@ -497,12 +499,12 @@ public class TicketService : ITicketService
             WorkflowState.Planning => "clipboard",
             WorkflowState.PlanPosted => "file-text",
             WorkflowState.PlanUnderReview => "eye",
-            WorkflowState.PlanApproved => "check-circle",
+            WorkflowState.PlanApproved => CheckCircleIcon,
             WorkflowState.PlanRejected => "x-circle",
             WorkflowState.Implementing => "code",
             WorkflowState.PRCreated => "git-pull-request",
             WorkflowState.InReview => "eye",
-            WorkflowState.Completed => "check-circle",
+            WorkflowState.Completed => CheckCircleIcon,
             WorkflowState.Cancelled => "x",
             WorkflowState.Failed => "alert-circle",
             _ => "circle"

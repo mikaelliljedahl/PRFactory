@@ -2,6 +2,7 @@
 @using PRFactory.Web.Models
 @using PRFactory.Web.UI.Forms
 @using PRFactory.Web.UI.Alerts
+@using PRFactory.Web.UI.Help
 
 <h1>Create New Ticket</h1>
 
@@ -22,14 +23,16 @@
         Id="title"
         @bind-Value="model.Title"
         Required="true"
-        For="@(() => model.Title)" />
+        For="@(() => model.Title)"
+        HelpTooltipText="Use a clear, concise title that describes what needs to be done. Example: 'Fix login validation error' or 'Add user avatar upload feature'." />
 
     <FormTextAreaField
         Label="Description"
         Id="description"
         @bind-Value="model.Description"
         Rows="5"
-        For="@(() => model.Description)" />
+        For="@(() => model.Description)"
+        HelpTooltipText="Include context, expected behavior, current behavior, and any constraints. The more detail you provide, the better the AI can understand your requirements." />
 
     <FormSelectField TValue="Guid"
                      Label="Repository"
@@ -37,7 +40,8 @@
                      @bind-Value="model.RepositoryId"
                      DefaultOptionText="Select a repository..."
                      Required="true"
-                     For="@(() => model.RepositoryId)">
+                     For="@(() => model.RepositoryId)"
+                     HelpTooltipText="Select the repository where the code will be implemented. This determines the codebase context for AI analysis.">
         @foreach (var repo in repositories)
         {
             <option value="@repo.Id">@repo.Name</option>
@@ -47,7 +51,8 @@
     <FormCheckboxField
         Label="Enable external system sync (Jira, Azure DevOps)"
         Id="enableSync"
-        @bind-Value="model.EnableExternalSync" />
+        @bind-Value="model.EnableExternalSync"
+        HelpTooltipText="Enable this to sync ticket status and updates with external systems like Jira or Azure DevOps." />
 
     @if (model.EnableExternalSync)
     {
@@ -55,7 +60,8 @@
                          Label="External System"
                          Id="externalSystem"
                          @bind-Value="model.ExternalSystem"
-                         DefaultOptionText="Select system...">
+                         DefaultOptionText="Select system..."
+                         HelpTooltipText="Choose the system where you track work items. PRFactory will post updates and plans to this system.">
             <option value="Jira">Jira</option>
             <option value="AzureDevOps">Azure DevOps</option>
             <option value="GitHubIssues">GitHub Issues</option>

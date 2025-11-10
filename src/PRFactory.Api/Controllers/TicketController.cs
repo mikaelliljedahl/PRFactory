@@ -83,7 +83,7 @@ public class TicketController : ControllerBase
             var response = new CreateTicketResponse
             {
                 TicketId = ticketId,
-                TicketKey = request.EnableExternalSync ? "MOCK-001" : $"WEB-{ticketId.ToString()[..8].ToUpper()}",
+                TicketKey = request.EnableExternalSync ?? false ? "MOCK-001" : $"WEB-{ticketId.ToString()[..8].ToUpper()}",
                 CurrentState = "pending",
                 CreatedAt = DateTime.UtcNow
             };
@@ -337,18 +337,18 @@ public class TicketController : ControllerBase
             var response = new ApprovalResponse
             {
                 Success = true,
-                Message = request.RestartPlanning
+                Message = request.RestartPlanning ?? false
                     ? "Plan rejected. Planning workflow will restart with the provided feedback."
                     : "Plan rejected. Workflow will be closed.",
                 TicketStatus = new TicketStatusResponse
                 {
                     TicketId = id,
-                    CurrentState = request.RestartPlanning ? "planning" : "rejected",
+                    CurrentState = request.RestartPlanning ?? false ? "planning" : "rejected",
                     TenantId = "default",
                     LastUpdated = DateTime.UtcNow,
                     Created = DateTime.UtcNow.AddHours(-2),
                     AwaitingHumanInput = false,
-                    ErrorMessage = request.RestartPlanning ? null : request.Reason
+                    ErrorMessage = request.RestartPlanning ?? false ? null : request.Reason
                 }
             };
 

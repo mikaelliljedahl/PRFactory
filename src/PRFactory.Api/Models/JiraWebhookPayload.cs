@@ -17,7 +17,7 @@ public class JiraWebhookPayload
     /// Timestamp of the event
     /// </summary>
     [JsonPropertyName("timestamp")]
-    public long Timestamp { get; set; }
+    public required long Timestamp { get; set; }
 
     /// <summary>
     /// The Jira issue involved in the event

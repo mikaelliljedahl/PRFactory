@@ -1,9 +1,12 @@
 @inherits LayoutComponentBase
 @using PRFactory.Web.UI.Notifications
+@using PRFactory.Web.UI.Alerts
+
+<DemoModeBanner ShowBanner="@IsDemoMode" />
 
 <div class="page">
     <div class="sidebar">
-        <NavMenu />
+        <NavMenu IsDemoMode="@IsDemoMode" />
     </div>
 
     <main>

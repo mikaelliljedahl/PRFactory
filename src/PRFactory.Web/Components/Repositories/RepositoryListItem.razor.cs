@@ -44,7 +44,7 @@ public partial class RepositoryListItem
         _ => "bi-git-branch"
     };
 
-    private string TruncateUrl(string url, int maxLength)
+    private static string TruncateUrl(string url, int maxLength)
     {
         return url.Length > maxLength ? url[..maxLength] + "..." : url;
     }

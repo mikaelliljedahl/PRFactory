@@ -106,6 +106,7 @@ public partial class Index
     {
         await LoadStatistics();
         await LoadErrors();
+        StateHasChanged();
     }
 
     private void ViewErrorDetails(Guid errorId)

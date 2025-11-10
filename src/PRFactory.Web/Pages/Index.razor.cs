@@ -151,7 +151,7 @@ public partial class Index
         Navigation.NavigateTo("/tickets");
     }
 
-    private class DashboardStatistics
+    private sealed class DashboardStatistics
     {
         public int TotalTickets { get; set; }
         public int CompletedTickets { get; set; }
@@ -162,13 +162,13 @@ public partial class Index
         public double FailureRate { get; set; }
     }
 
-    private class StateDistribution
+    private sealed class StateDistribution
     {
         public string State { get; set; } = string.Empty;
         public int Count { get; set; }
     }
 
-    private class WorkflowDurationStats
+    private sealed class WorkflowDurationStats
     {
         public string AverageDuration { get; set; } = string.Empty;
         public string FastestDuration { get; set; } = string.Empty;

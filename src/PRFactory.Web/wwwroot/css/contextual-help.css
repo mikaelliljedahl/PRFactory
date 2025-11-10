@@ -1,0 +1,259 @@
+/* Contextual Help Component Styles */
+/* Pure CSS tooltips (no JavaScript required) */
+
+.contextual-help-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    margin-left: 0.25rem;
+}
+
+.contextual-help-icon {
+    color: #6c757d;
+    cursor: help;
+    transition: color 0.2s ease;
+}
+
+.contextual-help-icon:hover {
+    color: #0d6efd;
+}
+
+/* Icon size classes */
+.contextual-help-icon-small {
+    font-size: 0.875rem;
+}
+
+.contextual-help-icon-medium {
+    font-size: 1rem;
+}
+
+.contextual-help-icon-large {
+    font-size: 1.25rem;
+}
+
+/* Tooltip container */
+.contextual-help-tooltip {
+    position: absolute;
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    padding: 0.75rem;
+    min-width: 250px;
+    max-width: 350px;
+    z-index: 1060;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    text-align: left;
+
+    /* Hidden by default */
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    /* Smooth transition */
+    transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+}
+
+/* Show tooltip on hover */
+.contextual-help-wrapper:hover .contextual-help-tooltip {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+/* Tooltip title */
+.contextual-help-tooltip-title {
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+/* Tooltip body */
+.contextual-help-tooltip-body {
+    color: #495057;
+}
+
+/* Tooltip footer (for Learn More links) */
+.contextual-help-tooltip-footer {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.contextual-help-tooltip-footer a {
+    color: #0d6efd;
+    text-decoration: none;
+    font-size: 0.8125rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.contextual-help-tooltip-footer a:hover {
+    text-decoration: underline;
+}
+
+/* Tooltip arrow (using CSS borders trick) */
+.contextual-help-tooltip-arrow {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-style: solid;
+}
+
+/* Position: Top (default) */
+.contextual-help-tooltip-top {
+    bottom: calc(100% + 0.5rem);
+    left: 50%;
+    transform: translateX(-50%) translateY(5px);
+}
+
+.contextual-help-wrapper:hover .contextual-help-tooltip-top {
+    transform: translateX(-50%) translateY(0);
+}
+
+.contextual-help-tooltip-top .contextual-help-tooltip-arrow {
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 0.5rem 0.5rem 0 0.5rem;
+    border-color: #ffffff transparent transparent transparent;
+}
+
+.contextual-help-tooltip-top .contextual-help-tooltip-arrow::before {
+    content: '';
+    position: absolute;
+    top: -0.5rem;
+    left: -0.5rem;
+    border-width: 0.5rem 0.5rem 0 0.5rem;
+    border-style: solid;
+    border-color: #dee2e6 transparent transparent transparent;
+}
+
+/* Position: Bottom */
+.contextual-help-tooltip-bottom {
+    top: calc(100% + 0.5rem);
+    left: 50%;
+    transform: translateX(-50%) translateY(-5px);
+}
+
+.contextual-help-wrapper:hover .contextual-help-tooltip-bottom {
+    transform: translateX(-50%) translateY(0);
+}
+
+.contextual-help-tooltip-bottom .contextual-help-tooltip-arrow {
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 0 0.5rem 0.5rem 0.5rem;
+    border-color: transparent transparent #ffffff transparent;
+}
+
+.contextual-help-tooltip-bottom .contextual-help-tooltip-arrow::before {
+    content: '';
+    position: absolute;
+    bottom: -0.5625rem;
+    left: -0.5rem;
+    border-width: 0 0.5rem 0.5625rem 0.5rem;
+    border-style: solid;
+    border-color: transparent transparent #dee2e6 transparent;
+}
+
+/* Position: Left */
+.contextual-help-tooltip-left {
+    right: calc(100% + 0.5rem);
+    top: 50%;
+    transform: translateY(-50%) translateX(5px);
+}
+
+.contextual-help-wrapper:hover .contextual-help-tooltip-left {
+    transform: translateY(-50%) translateX(0);
+}
+
+.contextual-help-tooltip-left .contextual-help-tooltip-arrow {
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: 0.5rem 0 0.5rem 0.5rem;
+    border-color: transparent transparent transparent #ffffff;
+}
+
+.contextual-help-tooltip-left .contextual-help-tooltip-arrow::before {
+    content: '';
+    position: absolute;
+    left: -0.5625rem;
+    top: -0.5rem;
+    border-width: 0.5rem 0 0.5rem 0.5625rem;
+    border-style: solid;
+    border-color: transparent transparent transparent #dee2e6;
+}
+
+/* Position: Right */
+.contextual-help-tooltip-right {
+    left: calc(100% + 0.5rem);
+    top: 50%;
+    transform: translateY(-50%) translateX(-5px);
+}
+
+.contextual-help-wrapper:hover .contextual-help-tooltip-right {
+    transform: translateY(-50%) translateX(0);
+}
+
+.contextual-help-tooltip-right .contextual-help-tooltip-arrow {
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: 0.5rem 0.5rem 0.5rem 0;
+    border-color: transparent #ffffff transparent transparent;
+}
+
+.contextual-help-tooltip-right .contextual-help-tooltip-arrow::before {
+    content: '';
+    position: absolute;
+    right: -0.5625rem;
+    top: -0.5rem;
+    border-width: 0.5rem 0.5625rem 0.5rem 0;
+    border-style: solid;
+    border-color: transparent #dee2e6 transparent transparent;
+}
+
+/* Responsive adjustments for small screens */
+@media (max-width: 768px) {
+    .contextual-help-tooltip {
+        max-width: 280px;
+        min-width: 200px;
+    }
+
+    /* On mobile, prefer bottom positioning to avoid viewport overflow */
+    .contextual-help-tooltip-top,
+    .contextual-help-tooltip-left,
+    .contextual-help-tooltip-right {
+        bottom: auto;
+        top: calc(100% + 0.5rem);
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%) translateY(-5px);
+    }
+
+    .contextual-help-wrapper:hover .contextual-help-tooltip-top,
+    .contextual-help-wrapper:hover .contextual-help-tooltip-left,
+    .contextual-help-wrapper:hover .contextual-help-tooltip-right {
+        transform: translateX(-50%) translateY(0);
+    }
+
+    .contextual-help-tooltip-top .contextual-help-tooltip-arrow,
+    .contextual-help-tooltip-left .contextual-help-tooltip-arrow,
+    .contextual-help-tooltip-right .contextual-help-tooltip-arrow {
+        bottom: 100%;
+        left: 50%;
+        top: auto;
+        right: auto;
+        transform: translateX(-50%);
+        border-width: 0 0.5rem 0.5rem 0.5rem;
+        border-color: transparent transparent #ffffff transparent;
+    }
+}

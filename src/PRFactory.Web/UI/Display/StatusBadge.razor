@@ -12,8 +12,38 @@
     [Parameter] public WorkflowState State { get; set; }
     [Parameter] public string? CustomText { get; set; }
     [Parameter] public string? Icon { get; set; }
+    [Parameter] public bool UseFriendlyNames { get; set; } = true;
 
-    private string DisplayText => CustomText ?? State switch
+    private string DisplayText => CustomText ?? (UseFriendlyNames ? GetFriendlyStateName(State) : GetTechnicalStateName(State));
+
+    private static string GetFriendlyStateName(WorkflowState state) => state switch
+    {
+        WorkflowState.Triggered => "Getting Started",
+        WorkflowState.Analyzing => "Analyzing Code",
+        WorkflowState.TicketUpdateGenerated => "Update Ready",
+        WorkflowState.TicketUpdateUnderReview => "Reviewing AI Update",
+        WorkflowState.TicketUpdateRejected => "Update Rejected",
+        WorkflowState.TicketUpdateApproved => "Update Approved",
+        WorkflowState.TicketUpdatePosted => "Update Posted",
+        WorkflowState.QuestionsPosted => "Questions Asked",
+        WorkflowState.AwaitingAnswers => "Awaiting Your Answers",
+        WorkflowState.AnswersReceived => "Answers Received",
+        WorkflowState.Planning => "Creating Plan",
+        WorkflowState.PlanPosted => "Plan Ready",
+        WorkflowState.PlanUnderReview => "Reviewing Plan",
+        WorkflowState.PlanApproved => "Plan Approved",
+        WorkflowState.PlanRejected => "Plan Rejected",
+        WorkflowState.Implementing => "Building Code",
+        WorkflowState.ImplementationFailed => "Build Failed",
+        WorkflowState.PRCreated => "PR Created",
+        WorkflowState.InReview => "In Code Review",
+        WorkflowState.Completed => "Completed",
+        WorkflowState.Failed => "Failed",
+        WorkflowState.Cancelled => "Cancelled",
+        _ => state.ToString()
+    };
+
+    private static string GetTechnicalStateName(WorkflowState state) => state switch
     {
         WorkflowState.Triggered => "Triggered",
         WorkflowState.Analyzing => "Analyzing Repository",
@@ -37,7 +67,7 @@
         WorkflowState.Completed => "Completed",
         WorkflowState.Failed => "Failed",
         WorkflowState.Cancelled => "Cancelled",
-        _ => State.ToString()
+        _ => state.ToString()
     };
 
     private string BadgeClass => $"badge {GetBadgeColor()}";

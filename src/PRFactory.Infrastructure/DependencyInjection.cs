@@ -68,6 +68,12 @@ public static class DependencyInjection
                 {
                     options.EnableDetailedErrors();
                 }
+
+                // Suppress EF Core service provider warning in test scenarios
+                // This warning occurs when running 700+ tests that each create a new DbContext
+                options.EnableServiceProviderCaching(false);
+                options.ConfigureWarnings(warnings =>
+                    warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.CoreEventId.ManyServiceProvidersCreatedWarning));
             });
         }
 

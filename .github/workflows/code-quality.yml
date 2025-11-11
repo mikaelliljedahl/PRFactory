@@ -22,7 +22,6 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
-        dotnet-quality: 'preview'
 
     - name: Restore dependencies
       run: dotnet restore PRFactory.sln
@@ -49,7 +48,6 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
-        dotnet-quality: 'preview'
 
     - name: Restore dependencies
       run: dotnet restore PRFactory.sln
@@ -86,7 +84,6 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
-        dotnet-quality: 'preview'
 
     - name: Analyze dependencies
       run: |

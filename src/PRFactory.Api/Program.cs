@@ -6,6 +6,9 @@ using Serilog;
 using Serilog.Events;
 using System.Reflection;
 
+// Default allowed CORS origins (static to avoid repeated allocations)
+var defaultAllowedOrigins = new[] { "http://localhost:3000", "http://localhost:5173" };
+
 var builder = WebApplication.CreateBuilder(args);
 
 // ============================================================================
@@ -85,7 +88,7 @@ builder.Services.AddCors(options =>
     {
         // Get allowed origins from configuration
         var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-            ?? new[] { "http://localhost:3000", "http://localhost:5173" };
+            ?? defaultAllowedOrigins;
 
         policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
@@ -122,7 +125,6 @@ builder.Services.AddAuthentication()
         options.Scope.Add("profile");
         options.Scope.Add("email");
         options.SaveTokens = true;
-        // Note: MapJsonKey for custom claims (hd) can be added if needed
     })
     .AddMicrosoftAccount(options =>
     {
@@ -135,63 +137,12 @@ builder.Services.AddAuthentication()
         options.Scope.Add("profile");
         options.Scope.Add("email");
         options.SaveTokens = true;
-        // Note: MapJsonKey for custom claims (tid) can be added if needed
     });
-
-// ============================================================================
-// Configure Entity Framework Core
-// ============================================================================
-// TODO: Add DbContext registration when PRFactory.Infrastructure is implemented
-// builder.Services.AddDbContext<ApplicationDbContext>(options =>
-// {
-//     var connectionString = builder.Configuration.GetConnectionString("Database");
-//     options.UseSqlite(connectionString);
-//
-//     if (builder.Environment.IsDevelopment())
-//     {
-//         options.EnableSensitiveDataLogging();
-//         options.EnableDetailedErrors();
-//     }
-// });
-
-// ============================================================================
-// Configure HTTP Clients (Refit)
-// ============================================================================
-// TODO: Add Refit clients when PRFactory.Infrastructure is implemented
-// builder.Services.AddRefitClient<IJiraClient>()
-//     .ConfigureHttpClient(c =>
-//     {
-//         c.BaseAddress = new Uri(builder.Configuration["Jira:BaseUrl"]!);
-//         c.DefaultRequestHeaders.Add("Authorization", $"Bearer {builder.Configuration["Jira:ApiToken"]}");
-//     });
-
-// ============================================================================
-// Configure Agent Framework
-// ============================================================================
-// TODO: Add Microsoft.Agents.AI configuration when PRFactory.Infrastructure is implemented
-// builder.Services.AddAgents(options =>
-// {
-//     options.UseCheckpointing = true;
-//     options.CheckpointDirectory = Path.Combine(builder.Configuration["Workspace:BasePath"]!, "checkpoints");
-// });
 
 // ============================================================================
 // Configure Health Checks
 // ============================================================================
 builder.Services.AddHealthChecks();
-// TODO: Add health check for database and external services
-// .AddDbContextCheck<ApplicationDbContext>()
-// .AddCheck<JiraHealthCheck>("jira")
-// .AddCheck<ClaudeHealthCheck>("claude");
-
-// ============================================================================
-// Register Application Services
-// ============================================================================
-// TODO: Register repositories and services when PRFactory.Infrastructure is implemented
-// builder.Services.AddScoped<ITicketRepository, TicketRepository>();
-// builder.Services.AddScoped<IRepositoryRepository, RepositoryRepository>();
-// builder.Services.AddScoped<ITenantRepository, TenantRepository>();
-// builder.Services.AddScoped<IAgentOrchestrationService, AgentOrchestrationService>();
 
 // ============================================================================
 // Build Application
@@ -251,24 +202,13 @@ app.MapControllers();
 app.MapHealthChecks("/health");
 
 // ============================================================================
-// Database Migration (Development only)
-// ============================================================================
-if (app.Environment.IsDevelopment())
-{
-    // TODO: Auto-migrate database in development
-    // using var scope = app.Services.CreateScope();
-    // var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    // await dbContext.Database.MigrateAsync();
-}
-
-// ============================================================================
 // Start Application
 // ============================================================================
 try
 {
-    Log.Information("Starting PRFactory.Api");
-    Log.Information("Environment: {Environment}", app.Environment.EnvironmentName);
-    Log.Information("Configuration loaded from: {ConfigurationSource}",
+    Log.Information(
+        "Starting PRFactory.Api - Environment: {Environment}, Configuration: {ConfigurationSource}",
+        app.Environment.EnvironmentName,
         builder.Configuration.GetDebugView());
 
     await app.RunAsync();

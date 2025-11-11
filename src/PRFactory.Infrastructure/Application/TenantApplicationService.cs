@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using PRFactory.Core.Application.Services;
 using PRFactory.Domain.Entities;
 using PRFactory.Domain.Interfaces;
+using PRFactory.Domain.ValueObjects;
 
 namespace PRFactory.Infrastructure.Application;
 
@@ -103,55 +104,49 @@ public class TenantApplicationService : ITenantApplicationService
     }
 
     public async Task<Tenant> UpdateTenantAsync(
-        Guid id,
-        string name,
-        string ticketPlatformUrl,
-        string? ticketPlatformApiToken = null,
-        string? claudeApiKey = null,
-        string? ticketPlatform = null,
-        TenantConfiguration? configuration = null,
+        UpdateTenantRequest request,
         CancellationToken ct = default)
     {
-        _logger.LogInformation("Updating tenant {TenantId}", id);
+        _logger.LogInformation("Updating tenant {TenantId}", request.Id);
 
-        var tenant = await _tenantRepository.GetByIdAsync(id, ct);
+        var tenant = await _tenantRepository.GetByIdAsync(request.Id, ct);
         if (tenant == null)
         {
-            throw new InvalidOperationException($"Tenant with ID '{id}' not found");
+            throw new InvalidOperationException($"Tenant with ID '{request.Id}' not found");
         }
 
         // Check if name is changing and if new name is available
-        if (tenant.Name != name)
+        if (tenant.Name != request.Name)
         {
-            var existingTenant = await _tenantRepository.GetByNameAsync(name, ct);
-            if (existingTenant != null && existingTenant.Id != id)
+            var existingTenant = await _tenantRepository.GetByNameAsync(request.Name, ct);
+            if (existingTenant != null && existingTenant.Id != request.Id)
             {
-                throw new InvalidOperationException($"A tenant with the name '{name}' already exists");
+                throw new InvalidOperationException($"A tenant with the name '{request.Name}' already exists");
             }
         }
 
         // Update platform settings if provided
-        if (!string.IsNullOrEmpty(ticketPlatform) || !string.IsNullOrEmpty(ticketPlatformUrl))
+        if (!string.IsNullOrEmpty(request.TicketPlatform) || !string.IsNullOrEmpty(request.TicketPlatformUrl))
         {
-            tenant.UpdatePlatformSettings(ticketPlatform, ticketPlatformUrl);
+            tenant.UpdatePlatformSettings(request.TicketPlatform, request.TicketPlatformUrl);
         }
 
         // Update credentials if provided
-        if (!string.IsNullOrEmpty(ticketPlatformApiToken) || !string.IsNullOrEmpty(claudeApiKey))
+        if (!string.IsNullOrEmpty(request.TicketPlatformApiToken) || !string.IsNullOrEmpty(request.ClaudeApiKey))
         {
-            tenant.UpdateCredentials(ticketPlatformApiToken, claudeApiKey);
+            tenant.UpdateCredentials(request.TicketPlatformApiToken, request.ClaudeApiKey);
         }
 
         // Update configuration if provided
-        if (configuration != null)
+        if (request.Configuration != null)
         {
-            tenant.UpdateConfiguration(configuration);
+            tenant.UpdateConfiguration(request.Configuration);
         }
 
         // Save changes
         await _tenantRepository.UpdateAsync(tenant, ct);
 
-        _logger.LogInformation("Successfully updated tenant {TenantId}", id);
+        _logger.LogInformation("Successfully updated tenant {TenantId}", request.Id);
 
         return tenant;
     }

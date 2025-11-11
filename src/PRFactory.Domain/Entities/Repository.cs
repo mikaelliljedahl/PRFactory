@@ -68,7 +68,7 @@ public class Repository
     /// <summary>
     /// Navigation property to tenant
     /// </summary>
-    public Tenant? Tenant { get; private set; }
+    public Tenant? Tenant { get; }
 
     /// <summary>
     /// Tickets associated with this repository

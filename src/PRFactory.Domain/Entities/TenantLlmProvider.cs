@@ -1,3 +1,5 @@
+using PRFactory.Domain.ValueObjects;
+
 namespace PRFactory.Domain.Entities;
 
 /// <summary>
@@ -95,52 +97,28 @@ public class TenantLlmProvider
     /// <summary>
     /// Navigation property to tenant
     /// </summary>
-    public Tenant? Tenant { get; private set; }
+    public Tenant? Tenant { get; }
 
     private TenantLlmProvider() { }
 
     /// <summary>
     /// Creates a new API key-based provider configuration (Z.ai, Minimax, OpenRouter, etc.)
     /// </summary>
-    public static TenantLlmProvider CreateApiKeyProvider(
-        Guid tenantId,
-        string name,
-        LlmProviderType providerType,
-        string apiBaseUrl,
-        string encryptedApiToken,
-        string defaultModel,
-        int timeoutMs = 300000,
-        bool disableNonEssentialTraffic = false,
-        Dictionary<string, string>? modelOverrides = null)
+    public static TenantLlmProvider CreateApiKeyProvider(ApiKeyProviderConfiguration config)
     {
-        if (tenantId == Guid.Empty)
-            throw new ArgumentException("Tenant ID cannot be empty", nameof(tenantId));
-
-        if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Name cannot be empty", nameof(name));
-
-        if (string.IsNullOrWhiteSpace(apiBaseUrl))
-            throw new ArgumentException("API base URL cannot be empty", nameof(apiBaseUrl));
-
-        if (string.IsNullOrWhiteSpace(encryptedApiToken))
-            throw new ArgumentException("API token cannot be empty", nameof(encryptedApiToken));
-
-        if (string.IsNullOrWhiteSpace(defaultModel))
-            throw new ArgumentException("Default model cannot be empty", nameof(defaultModel));
-
         return new TenantLlmProvider
         {
             Id = Guid.NewGuid(),
-            TenantId = tenantId,
-            Name = name,
-            ProviderType = providerType,
+            TenantId = config.TenantId,
+            Name = config.Name,
+            ProviderType = config.ProviderType,
             UsesOAuth = false,
-            EncryptedApiToken = encryptedApiToken,
-            ApiBaseUrl = apiBaseUrl,
-            TimeoutMs = timeoutMs,
-            DefaultModel = defaultModel,
-            DisableNonEssentialTraffic = disableNonEssentialTraffic,
-            ModelOverrides = modelOverrides,
+            EncryptedApiToken = config.EncryptedApiToken,
+            ApiBaseUrl = config.ApiBaseUrl,
+            TimeoutMs = config.TimeoutMs,
+            DefaultModel = config.DefaultModel,
+            DisableNonEssentialTraffic = config.DisableNonEssentialTraffic,
+            ModelOverrides = config.ModelOverrides,
             IsActive = true,
             IsDefault = false,
             CreatedAt = DateTime.UtcNow

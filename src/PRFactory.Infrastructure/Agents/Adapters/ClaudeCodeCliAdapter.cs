@@ -229,8 +229,7 @@ public class ClaudeCodeCliAdapter : ICliAgent
         if (string.IsNullOrWhiteSpace(prompt))
             throw new ArgumentException("Prompt cannot be empty", nameof(prompt));
 
-        if (onOutputReceived == null)
-            throw new ArgumentNullException(nameof(onOutputReceived));
+        ArgumentNullException.ThrowIfNull(onOutputReceived);
 
         _logger.LogInformation("Executing streaming prompt with Claude Code CLI");
 
@@ -256,7 +255,7 @@ public class ClaudeCodeCliAdapter : ICliAgent
     /// <param name="prompt">The prompt to send to Claude</param>
     /// <param name="projectPath">Optional project path for context</param>
     /// <returns>List of command line arguments (no escaping needed)</returns>
-    private IEnumerable<string> BuildArguments(string prompt, string? projectPath)
+    private static List<string> BuildArguments(string prompt, string? projectPath)
     {
         var args = new List<string>();
 
@@ -342,7 +341,7 @@ public class ClaudeCodeCliAdapter : ICliAgent
         {
             // Try to find JSON-formatted file operations
             var lines = output.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-            var validLines = lines.Where(line => line.TrimStart().StartsWith("{") && line.Contains("\"operation\"")).ToList();
+            var validLines = lines.Where(line => line.TrimStart().StartsWith('{') && line.Contains("\"operation\"")).ToList();
 
             validLines.ForEach(line =>
             {
@@ -506,10 +505,10 @@ public class ClaudeCodeCliAdapter : ICliAgent
     /// <summary>
     /// DTO for deserializing file operations from JSON
     /// </summary>
-    private class FileOperationDto
+    private sealed class FileOperationDto
     {
-        public string? Operation { get; set; }
-        public string? FilePath { get; set; }
-        public string? Content { get; set; }
+        public string? Operation { get; init; }
+        public string? FilePath { get; init; }
+        public string? Content { get; init; }
     }
 }

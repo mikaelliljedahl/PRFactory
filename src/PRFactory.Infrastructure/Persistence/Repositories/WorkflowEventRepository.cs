@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PRFactory.Domain.Entities;
 using PRFactory.Domain.Interfaces;
+using PRFactory.Domain.ValueObjects;
 
 namespace PRFactory.Infrastructure.Persistence.Repositories;
 
@@ -36,36 +37,30 @@ public class WorkflowEventRepository : IWorkflowEventRepository
     }
 
     public async Task<(List<WorkflowEvent> Events, int TotalCount)> GetPagedAsync(
-        int pageNumber,
-        int pageSize,
-        Guid? ticketId = null,
-        string? eventType = null,
-        DateTime? startDate = null,
-        DateTime? endDate = null,
-        string? searchText = null,
+        WorkflowEventQueryParameters queryParameters,
         CancellationToken cancellationToken = default)
     {
         var query = _context.WorkflowEvents.AsQueryable();
 
         // Apply filters
-        if (ticketId.HasValue)
+        if (queryParameters.TicketId.HasValue)
         {
-            query = query.Where(e => e.TicketId == ticketId.Value);
+            query = query.Where(e => e.TicketId == queryParameters.TicketId.Value);
         }
 
-        if (!string.IsNullOrWhiteSpace(eventType))
+        if (!string.IsNullOrWhiteSpace(queryParameters.EventType))
         {
-            query = query.Where(e => e.EventType == eventType);
+            query = query.Where(e => e.EventType == queryParameters.EventType);
         }
 
-        if (startDate.HasValue)
+        if (queryParameters.StartDate.HasValue)
         {
-            query = query.Where(e => e.OccurredAt >= startDate.Value);
+            query = query.Where(e => e.OccurredAt >= queryParameters.StartDate.Value);
         }
 
-        if (endDate.HasValue)
+        if (queryParameters.EndDate.HasValue)
         {
-            query = query.Where(e => e.OccurredAt <= endDate.Value);
+            query = query.Where(e => e.OccurredAt <= queryParameters.EndDate.Value);
         }
 
         // Get total count before search text filtering (for efficiency)
@@ -74,20 +69,20 @@ public class WorkflowEventRepository : IWorkflowEventRepository
         // Apply pagination and materialize before text search (pattern matching not supported in SQL)
         var events = await query
             .OrderByDescending(e => e.OccurredAt)
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((queryParameters.PageNumber - 1) * queryParameters.PageSize)
+            .Take(queryParameters.PageSize)
             .ToListAsync(cancellationToken);
 
         // Apply text search in memory (pattern matching requires materialized data)
-        if (!string.IsNullOrWhiteSpace(searchText))
+        if (!string.IsNullOrWhiteSpace(queryParameters.SearchText))
         {
             events = events.Where(e =>
-                e.EventType.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
-                (e is WorkflowStateChanged wsc && wsc.Reason != null && wsc.Reason.Contains(searchText, StringComparison.OrdinalIgnoreCase)) ||
-                (e is QuestionAdded qa && qa.Question.Text.Contains(searchText, StringComparison.OrdinalIgnoreCase)) ||
-                (e is AnswerAdded aa && aa.AnswerText.Contains(searchText, StringComparison.OrdinalIgnoreCase)) ||
-                (e is PlanCreated pc && pc.BranchName.Contains(searchText, StringComparison.OrdinalIgnoreCase)) ||
-                (e is PullRequestCreated prc && prc.PullRequestUrl.Contains(searchText, StringComparison.OrdinalIgnoreCase)))
+                e.EventType.Contains(queryParameters.SearchText, StringComparison.OrdinalIgnoreCase) ||
+                (e is WorkflowStateChanged wsc && wsc.Reason != null && wsc.Reason.Contains(queryParameters.SearchText, StringComparison.OrdinalIgnoreCase)) ||
+                (e is QuestionAdded qa && qa.Question.Text.Contains(queryParameters.SearchText, StringComparison.OrdinalIgnoreCase)) ||
+                (e is AnswerAdded aa && aa.AnswerText.Contains(queryParameters.SearchText, StringComparison.OrdinalIgnoreCase)) ||
+                (e is PlanCreated pc && pc.BranchName.Contains(queryParameters.SearchText, StringComparison.OrdinalIgnoreCase)) ||
+                (e is PullRequestCreated prc && prc.PullRequestUrl.Contains(queryParameters.SearchText, StringComparison.OrdinalIgnoreCase)))
                 .ToList();
         }
 

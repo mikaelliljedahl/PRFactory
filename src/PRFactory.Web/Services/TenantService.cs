@@ -130,14 +130,17 @@ public class TenantService : ITenantService
                 AllowedRepositories = request.AllowedRepositories
             };
 
-            var tenant = await _tenantApplicationService.UpdateTenantAsync(
+            var updateRequest = new PRFactory.Domain.ValueObjects.UpdateTenantRequest(
                 request.Id,
                 request.Name,
                 request.TicketPlatformUrl,
                 request.TicketPlatformApiToken,
                 request.ClaudeApiKey,
                 request.TicketPlatform,
-                configuration,
+                configuration);
+
+            var tenant = await _tenantApplicationService.UpdateTenantAsync(
+                updateRequest,
                 ct);
 
             _logger.LogInformation("Updated tenant {TenantId}", request.Id);

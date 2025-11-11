@@ -219,4 +219,55 @@ namespace PRFactory.Infrastructure.Agents.Messages
     {
         public DateTime Timestamp { get; init; } = DateTime.UtcNow;
     }
+
+    // Code review messages
+    public record ReviewCodeMessage(
+        Guid TicketId,
+        int PullRequestNumber,
+        string PullRequestUrl,
+        string BranchName,
+        string? PlanPath = null
+    ) : IAgentMessage
+    {
+        public DateTime Timestamp { get; init; } = DateTime.UtcNow;
+    }
+
+    public record CodeReviewCompleteMessage(
+        Guid TicketId,
+        Guid CodeReviewResultId,
+        bool HasCriticalIssues,
+        List<string> CriticalIssues,
+        List<string> Suggestions,
+        DateTime ReviewedAt
+    ) : IAgentMessage
+    {
+        public DateTime Timestamp { get; init; } = DateTime.UtcNow;
+    }
+
+    public record FixCodeIssuesMessage(
+        Guid TicketId,
+        List<string> Issues,
+        string ReviewFeedback
+    ) : IAgentMessage
+    {
+        public DateTime Timestamp { get; init; } = DateTime.UtcNow;
+    }
+
+    public record PostCommentsMessage(
+        Guid TicketId,
+        Guid CodeReviewResultId,
+        List<string> Comments
+    ) : IAgentMessage
+    {
+        public DateTime Timestamp { get; init; } = DateTime.UtcNow;
+    }
+
+    public record ApprovalMessage(
+        Guid TicketId,
+        Guid CodeReviewResultId,
+        string ApprovalComment
+    ) : IAgentMessage
+    {
+        public DateTime Timestamp { get; init; } = DateTime.UtcNow;
+    }
 }

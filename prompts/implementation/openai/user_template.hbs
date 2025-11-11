@@ -1,0 +1,51 @@
+# Implementation Task
+
+## Ticket
+- **ID:** {{ticket_number}}
+- **Title:** {{ticket_title}}
+- **URL:** {{ticket_url}}
+
+## Plan
+**Location:** {{plan_path}}
+
+{{plan_content}}
+
+## Codebase
+
+### Structure
+{{codebase_structure}}
+
+### Existing Files
+{{#each existing_files}}
+**{{this.path}}**{{#if this.description}} - {{this.description}}{{/if}}
+```{{this.language}}
+{{this.content}}
+```
+{{/each}}
+
+{{#if technology_stack}}
+### Stack
+- Framework: {{technology_stack.framework}}
+- Database: {{technology_stack.database}}
+- Testing: {{technology_stack.testing_framework}}
+{{/if}}
+
+---
+
+Implement according to the plan. For each file:
+
+```
+FILE: /path/to/file.cs
+ACTION: Create | Modify
+[Complete code]
+```
+
+Requirements:
+- Complete, working code (no TODOs)
+- Error handling and logging
+- Follow existing patterns
+- Include tests
+- C# .NET 8 conventions
+
+**Repo:** {{repository_name}}
+**Branch:** {{branch_name}}

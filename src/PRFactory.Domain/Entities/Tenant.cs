@@ -218,7 +218,7 @@ public class TenantConfiguration
     public bool EnableVerboseLogging { get; set; } = false;
 
     /// <summary>
-    /// Whether to enable code review workflow for this tenant
+    /// Whether to enable code review workflow for this tenant (DEPRECATED - use EnableAutoCodeReview)
     /// </summary>
     public bool EnableCodeReview { get; set; } = false;
 
@@ -231,4 +231,46 @@ public class TenantConfiguration
     /// Custom prompt templates for this tenant (optional)
     /// </summary>
     public Dictionary<string, string> CustomPromptTemplates { get; set; } = new();
+
+    // --- Multi-LLM Configuration (Epic 02) ---
+
+    /// <summary>
+    /// Whether to automatically trigger code review after PR creation
+    /// </summary>
+    public bool EnableAutoCodeReview { get; set; } = false;
+
+    /// <summary>
+    /// LLM provider ID to use for code review (null = use tenant default)
+    /// </summary>
+    public Guid? CodeReviewLlmProviderId { get; set; }
+
+    /// <summary>
+    /// LLM provider ID to use for code implementation (null = use tenant default)
+    /// </summary>
+    public Guid? ImplementationLlmProviderId { get; set; }
+
+    /// <summary>
+    /// LLM provider ID to use for planning (null = use tenant default)
+    /// </summary>
+    public Guid? PlanningLlmProviderId { get; set; }
+
+    /// <summary>
+    /// LLM provider ID to use for ticket analysis and refinement (null = use tenant default)
+    /// </summary>
+    public Guid? AnalysisLlmProviderId { get; set; }
+
+    /// <summary>
+    /// Maximum number of code review iterations before completing with warnings (default: 3)
+    /// </summary>
+    public int MaxCodeReviewIterations { get; set; } = 3;
+
+    /// <summary>
+    /// Whether to automatically post approval comment if code review finds no issues
+    /// </summary>
+    public bool AutoApproveIfNoIssues { get; set; } = false;
+
+    /// <summary>
+    /// Whether to require human approval after code review before merging (future use)
+    /// </summary>
+    public bool RequireHumanApprovalAfterReview { get; set; } = true;
 }

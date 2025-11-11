@@ -1,0 +1,81 @@
+# Code Review Request
+
+## Ticket Context
+**Ticket:** {{ticket_number}} - {{ticket_title}}
+**URL:** {{ticket_url}}
+
+**Description:**
+{{ticket_description}}
+
+## Implementation Plan
+**Location:** {{plan_path}}
+**Summary:**
+{{plan_summary}}
+
+## Pull Request Information
+- **URL:** {{pull_request_url}}
+- **Branch:** {{branch_name}} → {{target_branch}}
+- **Changes:** {{files_changed_count}} files (+{{lines_added}} / -{{lines_deleted}} lines)
+- **Commits:** {{commits_count}}
+
+## Changed Files
+
+{{#each file_changes}}
+### File: {{this.file_path}}
+- **Status:** {{this.change_type}}{{#if this.is_test_file}} (Test File){{/if}}
+- **Language:** {{this.language}}
+- **Lines:** +{{this.lines_added}} -{{this.lines_deleted}}
+
+```{{this.language}}
+{{this.diff}}
+```
+
+{{/each}}
+
+## Project Context
+
+### Directory Structure
+{{codebase_structure}}
+
+### Related Files
+{{#each related_files}}
+- `{{this.path}}` - {{this.description}}
+{{/each}}
+
+## Test Information
+- **Test Files Modified:** {{tests_added}}
+- **Code Coverage:** {{test_coverage_percentage}}%
+
+{{#if test_files}}
+**Test Files:**
+{{#each test_files}}
+- {{this.path}}
+{{/each}}
+{{/if}}
+
+---
+
+## Review Checklist
+
+Please review this pull request and provide feedback on:
+
+1. **Security**: Any vulnerabilities, hardcoded secrets, or authentication issues?
+2. **Correctness**: Logic errors, edge cases not handled, null reference risks?
+3. **Performance**: Inefficient code, N+1 queries, memory leaks?
+4. **Maintainability**: Code duplication, unclear naming, missing documentation?
+5. **Testing**: Adequate test coverage, quality of test assertions?
+6. **Architecture**: Compliance with SOLID principles and project architecture?
+7. **Plan Compliance**: Does implementation match the approved plan?
+
+For each issue, please provide:
+- File path and line number
+- Clear explanation of the problem
+- Why it matters
+- How to fix it
+- Severity level (Critical/Suggested)
+
+Also note any particularly good code or patterns worth highlighting.
+
+**Repository:** {{repository_name}}
+**Author:** {{author_name}}
+**Created:** {{created_at}}

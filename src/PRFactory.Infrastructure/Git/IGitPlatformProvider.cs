@@ -22,6 +22,27 @@ public record RepositoryInfo(
     string CloneUrl
 );
 
+public record FileChange(
+    string Path,
+    string Status,
+    int Additions,
+    int Deletions,
+    int Changes
+);
+
+public record PullRequestDetails(
+    int Number,
+    string Url,
+    string HtmlUrl,
+    string Title,
+    string Description,
+    int FilesChangedCount,
+    int LinesAdded,
+    int LinesDeleted,
+    int CommitsCount,
+    List<FileChange> FilesChanged
+);
+
 /// <summary>
 /// Strategy interface for git platform-specific operations (PR creation, comments)
 /// Each platform (GitHub, Bitbucket, Azure DevOps) implements this interface
@@ -57,6 +78,15 @@ public interface IGitPlatformProvider
     /// </summary>
     Task<RepositoryInfo> GetRepositoryInfoAsync(
         Guid repositoryId,
+        CancellationToken ct = default
+    );
+
+    /// <summary>
+    /// Get pull request details including files changed, commits, and statistics
+    /// </summary>
+    Task<PullRequestDetails> GetPullRequestDetailsAsync(
+        Guid repositoryId,
+        int pullRequestNumber,
         CancellationToken ct = default
     );
 }

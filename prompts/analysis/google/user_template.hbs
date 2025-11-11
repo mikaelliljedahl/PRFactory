@@ -1,0 +1,106 @@
+# Codebase Analysis Request
+
+## Analysis Objective
+{{analysis_objective}}
+
+{{#if specific_questions}}
+## Specific Questions to Answer
+{{#each specific_questions}}
+{{@index}}. {{this}}
+{{/each}}
+{{/if}}
+
+## Repository Context
+
+### Information
+- **Repository:** {{repository_name}}
+- **URL:** {{repository_url}}
+- **Branch:** {{branch_name}}
+- **Primary Language:** {{primary_language}}
+
+### Project Structure
+{{codebase_structure}}
+
+{{#if technology_stack}}
+### Technology Stack
+- **Framework:** {{technology_stack.framework}}
+- **Database:** {{technology_stack.database}}
+- **Architecture Pattern:** {{technology_stack.architecture}}
+- **Key Libraries:** {{technology_stack.libraries}}
+{{/if}}
+
+## Files for Analysis
+{{#each files_to_analyze}}
+### File: {{this.path}}
+{{#if this.description}}**Description:** {{this.description}}{{/if}}
+{{#if this.relevance}}**Relevance:** {{this.relevance}}{{/if}}
+
+```{{this.language}}
+{{this.content}}
+```
+
+{{/each}}
+
+{{#if related_files}}
+## Related Context Files
+{{#each related_files}}
+- `{{this.path}}`{{#if this.description}} - {{this.description}}{{/if}}
+{{/each}}
+{{/if}}
+
+{{#if architectural_patterns}}
+## Known Architectural Patterns
+{{architectural_patterns}}
+{{/if}}
+
+{{#if focus_areas}}
+## Areas to Focus On
+{{#each focus_areas}}
+- {{this}}
+{{/each}}
+{{/if}}
+
+---
+
+## Analysis Task
+
+Analyze the codebase to address the objective and questions above. Structure your response:
+
+1. **Summary**
+   - High-level overview of key findings
+   - Quick answers to specific questions
+
+2. **Detailed Analysis**
+   - Examine architecture, design patterns, and implementation
+   - Trace data flow and execution paths
+   - Identify component dependencies and relationships
+   - Reference specific files and line numbers
+   - Include code excerpts where relevant
+
+3. **Findings**
+   - **Strengths**: Well-designed and implemented aspects
+   - **Weaknesses**: Technical debt, code smells, design issues
+   - **Security Concerns**: Potential vulnerabilities or risks
+   - **Performance Issues**: Bottlenecks or inefficiencies
+
+4. **Recommendations**
+   - Specific, actionable improvement suggestions
+   - Prioritized by impact and effort
+   - Include code examples where helpful
+
+**Analysis Requirements:**
+- Back up all claims with evidence from the code
+- Reference exact file paths and line numbers
+- Consider the broader system context
+- Be objective and constructive
+- Acknowledge limitations if information is insufficient
+
+{{#if constraints}}
+**Constraints:**
+{{#each constraints}}
+- {{this}}
+{{/each}}
+{{/if}}
+
+**Output Format:**
+Use clear headings, bullet points, and code blocks for readability.

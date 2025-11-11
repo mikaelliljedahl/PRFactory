@@ -168,6 +168,17 @@ public static class DependencyInjection
         // Register default CLI agent (Claude Code)
         services.AddScoped<ICliAgent>(sp => sp.GetRequiredService<ClaudeCodeCliAdapter>());
 
+        // Register LLM providers (multi-provider support)
+        services.Configure<PRFactory.Core.Configuration.LlmProvidersOptions>(
+            configuration.GetSection("LlmProviders"));
+
+        services.AddScoped<PRFactory.Infrastructure.Agents.Adapters.ClaudeCodeCliLlmProvider>();
+        services.AddScoped<PRFactory.Infrastructure.Agents.Adapters.GeminiCliAdapter>();
+        services.AddScoped<PRFactory.Infrastructure.Agents.Adapters.OpenAiCliAdapter>();
+
+        // Register LLM provider factory
+        services.AddScoped<PRFactory.Core.Application.LLM.ILlmProviderFactory, PRFactory.Infrastructure.Application.LlmProviderFactory>();
+
         // Register Git platform integration (LocalGitService, providers, and GitPlatformService)
         services.AddGitPlatformIntegration(sp =>
         {

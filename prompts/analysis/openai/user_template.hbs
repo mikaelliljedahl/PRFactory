@@ -1,0 +1,52 @@
+# Codebase Analysis
+
+## Objective
+{{analysis_objective}}
+
+{{#if specific_questions}}
+## Questions
+{{#each specific_questions}}
+{{@index}}. {{this}}
+{{/each}}
+{{/if}}
+
+## Repository
+- **Name:** {{repository_name}}
+- **Branch:** {{branch_name}}
+- **Language:** {{primary_language}}
+
+### Structure
+{{codebase_structure}}
+
+{{#if technology_stack}}
+### Stack
+- Framework: {{technology_stack.framework}}
+- Database: {{technology_stack.database}}
+- Architecture: {{technology_stack.architecture}}
+{{/if}}
+
+## Files
+{{#each files_to_analyze}}
+**{{this.path}}**{{#if this.description}} - {{this.description}}{{/if}}
+```{{this.language}}
+{{this.content}}
+```
+{{/each}}
+
+{{#if focus_areas}}
+## Focus
+{{#each focus_areas}}
+- {{this}}
+{{/each}}
+{{/if}}
+
+---
+
+Analyze the code and provide:
+1. Summary of findings
+2. Detailed analysis with file references
+3. Strengths and weaknesses
+4. Security and performance notes
+5. Actionable recommendations
+
+Include file paths and line numbers for all references.

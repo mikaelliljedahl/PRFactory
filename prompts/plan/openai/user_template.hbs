@@ -1,0 +1,50 @@
+# Implementation Plan Request
+
+## Ticket
+- **ID:** {{ticket_number}}
+- **Title:** {{ticket_title}}
+- **URL:** {{ticket_url}}
+
+**Description:**
+{{ticket_description}}
+
+## Codebase
+
+### Structure
+{{codebase_structure}}
+
+### Related Files
+{{#each related_files}}
+**{{this.path}}**{{#if this.description}} - {{this.description}}{{/if}}
+```{{this.language}}
+{{this.content}}
+```
+{{/each}}
+
+{{#if technology_stack}}
+### Tech Stack
+- Framework: {{technology_stack.framework}}
+- Database: {{technology_stack.database}}
+- Language: {{technology_stack.language}}
+{{/if}}
+
+{{#if acceptance_criteria}}
+## Acceptance Criteria
+{{#each acceptance_criteria}}
+- {{this}}
+{{/each}}
+{{/if}}
+
+---
+
+Generate a detailed implementation plan with:
+1. Overview and technical approach
+2. Step-by-step implementation (files, methods, classes)
+3. Database changes (DDL, entities)
+4. API specifications (endpoints, DTOs)
+5. Testing strategy
+6. Security considerations
+7. Dependencies and integrations
+8. Rollout plan
+
+**Repository:** {{repository_name}}

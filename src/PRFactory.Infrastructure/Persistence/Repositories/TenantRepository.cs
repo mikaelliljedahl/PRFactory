@@ -33,6 +33,12 @@ public class TenantRepository : ITenantRepository
             .FirstOrDefaultAsync(t => t.Name == name, cancellationToken);
     }
 
+    public async Task<Tenant?> GetByExternalTenantAsync(string identityProvider, string externalTenantId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Tenants
+            .FirstOrDefaultAsync(t => t.IdentityProvider == identityProvider && t.ExternalTenantId == externalTenantId, cancellationToken);
+    }
+
     public async Task<List<Tenant>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _context.Tenants

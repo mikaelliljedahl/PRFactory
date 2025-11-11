@@ -42,7 +42,7 @@ public class TicketApplicationService : ITicketApplicationService
         _logger.LogDebug("Getting all tickets");
 
         // Get current tenant ID from context
-        var tenantId = _tenantContext.GetCurrentTenantId();
+        var tenantId = await _tenantContext.GetCurrentTenantIdAsync(cancellationToken);
 
         // Get all tickets for the current tenant
         var tickets = await _ticketRepository.GetByTenantIdAsync(tenantId, cancellationToken);

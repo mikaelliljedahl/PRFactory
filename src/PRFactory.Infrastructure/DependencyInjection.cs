@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
@@ -44,26 +45,37 @@ public static class DependencyInjection
             return new AesEncryptionService(encryptionKey, logger);
         });
 
-        // Register DbContext
+        // Register DbContext (only if not already registered, e.g., by tests)
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? "Data Source=prfactory.db";
 
-        services.AddDbContext<ApplicationDbContext>((sp, options) =>
+        // Check if DbContext is already registered (e.g., by test setup with InMemory database)
+        var dbContextDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(ApplicationDbContext));
+        if (dbContextDescriptor == null)
         {
-            options.UseSqlite(connectionString);
-
-            // Enable sensitive data logging in development
-            if (configuration.GetValue<bool>("Logging:EnableSensitiveDataLogging"))
+            services.AddDbContext<ApplicationDbContext>((sp, options) =>
             {
-                options.EnableSensitiveDataLogging();
-            }
+                options.UseSqlite(connectionString);
 
-            // Enable detailed errors in development
-            if (configuration.GetValue<bool>("Logging:EnableDetailedErrors"))
-            {
-                options.EnableDetailedErrors();
-            }
-        });
+                // Enable sensitive data logging in development
+                if (configuration.GetValue<bool>("Logging:EnableSensitiveDataLogging"))
+                {
+                    options.EnableSensitiveDataLogging();
+                }
+
+                // Enable detailed errors in development
+                if (configuration.GetValue<bool>("Logging:EnableDetailedErrors"))
+                {
+                    options.EnableDetailedErrors();
+                }
+
+                // Suppress EF Core service provider warning in test scenarios
+                // This warning occurs when running 700+ tests that each create a new DbContext
+                options.EnableServiceProviderCaching(false);
+                options.ConfigureWarnings(warnings =>
+                    warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.CoreEventId.ManyServiceProvidersCreatedWarning));
+            });
+        }
 
         // Register repositories
         services.AddScoped<ITenantRepository, TenantRepository>();
@@ -110,7 +122,11 @@ public static class DependencyInjection
         // Team Review application services
         services.AddScoped<IUserService, Application.UserService>();
         services.AddScoped<IPlanReviewService, Application.PlanReviewService>();
-        services.AddScoped<ICurrentUserService, Application.StubCurrentUserService>();
+        services.AddScoped<ICurrentUserService, Application.CurrentUserService>();
+        services.AddScoped<IProvisioningService, Application.ProvisioningService>();
+
+        // Register IHttpContextAccessor for CurrentUserService
+        services.AddHttpContextAccessor();
 
         // Register agent prompt services
         services.AddScoped<Agents.Services.IAgentPromptService, Agents.Services.AgentPromptService>();

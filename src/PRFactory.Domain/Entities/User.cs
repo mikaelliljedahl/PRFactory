@@ -1,6 +1,17 @@
 namespace PRFactory.Domain.Entities;
 
 /// <summary>
+/// User roles within a tenant
+/// </summary>
+public enum UserRole
+{
+    Owner = 0,
+    Admin = 1,
+    Member = 2,
+    Viewer = 3
+}
+
+/// <summary>
 /// Represents a user in the PRFactory system.
 /// Users can be assigned as reviewers for plan reviews and can comment on tickets.
 /// </summary>
@@ -36,6 +47,21 @@ public class User
     /// Used for integration with authentication providers
     /// </summary>
     public string? ExternalAuthId { get; private set; }
+
+    /// <summary>
+    /// Identity provider used by this user (AzureAD, GoogleWorkspace, Personal)
+    /// </summary>
+    public string? IdentityProvider { get; private set; }
+
+    /// <summary>
+    /// User's role within the tenant
+    /// </summary>
+    public UserRole Role { get; private set; } = UserRole.Member;
+
+    /// <summary>
+    /// Whether this user is active and can access the system
+    /// </summary>
+    public bool IsActive { get; private set; } = true;
 
     /// <summary>
     /// When the user was created
@@ -76,7 +102,7 @@ public class User
     private User() { }
 
     /// <summary>
-    /// Creates a new user
+    /// Creates a new user (legacy constructor, prefer Create factory method)
     /// </summary>
     public User(Guid tenantId, string email, string displayName, string? avatarUrl = null, string? externalAuthId = null)
     {
@@ -92,6 +118,39 @@ public class User
         AvatarUrl = avatarUrl;
         ExternalAuthId = externalAuthId;
         CreatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Creates a new user with all properties (factory method for provisioning)
+    /// </summary>
+    public static User Create(
+        Guid tenantId,
+        string email,
+        string displayName,
+        string? avatarUrl,
+        string? externalAuthId,
+        string? identityProvider,
+        UserRole role)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            throw new ArgumentException("Email cannot be empty", nameof(email));
+        if (string.IsNullOrWhiteSpace(displayName))
+            throw new ArgumentException("Display name cannot be empty", nameof(displayName));
+
+        return new User
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            Email = email.Trim().ToLowerInvariant(),
+            DisplayName = displayName.Trim(),
+            AvatarUrl = avatarUrl,
+            ExternalAuthId = externalAuthId,
+            IdentityProvider = identityProvider,
+            Role = role,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            OAuthScopes = Array.Empty<string>()
+        };
     }
 
     /// <summary>
@@ -117,12 +176,40 @@ public class User
     /// <summary>
     /// Links the user to an external authentication provider
     /// </summary>
-    public void LinkExternalAuth(string externalAuthId)
+    public void LinkExternalAuth(string externalAuthId, string identityProvider)
     {
         if (string.IsNullOrWhiteSpace(externalAuthId))
             throw new ArgumentException("External auth ID cannot be empty", nameof(externalAuthId));
 
+        if (string.IsNullOrWhiteSpace(identityProvider))
+            throw new ArgumentException("Identity provider cannot be empty", nameof(identityProvider));
+
         ExternalAuthId = externalAuthId.Trim();
+        IdentityProvider = identityProvider.Trim();
+    }
+
+    /// <summary>
+    /// Sets the user's role within the tenant
+    /// </summary>
+    public void SetRole(UserRole role)
+    {
+        Role = role;
+    }
+
+    /// <summary>
+    /// Deactivates the user (prevents access to the system)
+    /// </summary>
+    public void Deactivate()
+    {
+        IsActive = false;
+    }
+
+    /// <summary>
+    /// Activates the user (allows access to the system)
+    /// </summary>
+    public void Activate()
+    {
+        IsActive = true;
     }
 
     /// <summary>

@@ -365,7 +365,7 @@ public class TicketService : ITicketService
         try
         {
             // Get current tenant ID
-            var tenantId = _tenantContext.GetCurrentTenantId();
+            var tenantId = await _tenantContext.GetCurrentTenantIdAsync(ct);
 
             // Create ticket using domain factory method
             var ticket = Ticket.Create(

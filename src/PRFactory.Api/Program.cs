@@ -1,8 +1,13 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi.Models;
 using PRFactory.Api.Middleware;
+using PRFactory.Infrastructure.Persistence;
 using Serilog;
 using Serilog.Events;
 using System.Reflection;
+
+// Constants
+const string NotConfiguredPlaceholder = "not-configured";
 
 // Default allowed CORS origins (static to avoid repeated allocations)
 var defaultAllowedOrigins = new[] { "http://localhost:3000", "http://localhost:5173" };
@@ -96,6 +101,52 @@ builder.Services.AddCors(options =>
 });
 
 // ============================================================================
+// Configure Identity
+// ============================================================================
+builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false;
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 8;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = true;
+})
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
+
+// External authentication providers
+builder.Services.AddAuthentication()
+    .AddGoogle(options =>
+    {
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"]
+            ?? NotConfiguredPlaceholder;
+        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]
+            ?? NotConfiguredPlaceholder;
+        options.CallbackPath = "/signin-google";
+        options.Scope.Add("openid");
+        options.Scope.Add("profile");
+        options.Scope.Add("email");
+        options.SaveTokens = true;
+
+        // Note: Google Workspace "hd" (hosted domain) claim is extracted in AuthController
+    })
+    .AddMicrosoftAccount(options =>
+    {
+        options.ClientId = builder.Configuration["Authentication:Microsoft:ClientId"]
+            ?? NotConfiguredPlaceholder;
+        options.ClientSecret = builder.Configuration["Authentication:Microsoft:ClientSecret"]
+            ?? NotConfiguredPlaceholder;
+        options.CallbackPath = "/signin-microsoft";
+        options.Scope.Add("openid");
+        options.Scope.Add("profile");
+        options.Scope.Add("email");
+        options.SaveTokens = true;
+
+        // Note: Azure AD "tid" (tenant ID) claim is extracted in AuthController
+    });
+
+// ============================================================================
 // Configure Health Checks
 // ============================================================================
 builder.Services.AddHealthChecks();
@@ -146,6 +197,10 @@ if (!app.Environment.IsDevelopment())
 
 // Webhook authentication (validates HMAC signatures)
 app.UseJiraWebhookAuthentication();
+
+// Authentication & Authorization
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Map controllers
 app.MapControllers();

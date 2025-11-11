@@ -34,6 +34,17 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.ExternalAuthId)
             .HasMaxLength(255);
 
+        builder.Property(u => u.IdentityProvider)
+            .HasMaxLength(50);
+
+        builder.Property(u => u.Role)
+            .IsRequired()
+            .HasConversion<int>(); // Store enum as int
+
+        builder.Property(u => u.IsActive)
+            .IsRequired()
+            .HasDefaultValue(true);
+
         builder.Property(u => u.CreatedAt)
             .IsRequired();
 

@@ -78,7 +78,15 @@ public class TenantApplicationService : ITenantApplicationService
         }
 
         // Create tenant entity
-        var tenant = Tenant.Create(name, ticketPlatformUrl, ticketPlatformApiToken, claudeApiKey, ticketPlatform);
+        // For manually created tenants, use "Manual" as identity provider
+        var tenant = Tenant.Create(
+            name: name,
+            identityProvider: "Manual",
+            externalTenantId: Guid.NewGuid().ToString(), // Generate unique ID for manual tenants
+            ticketPlatformUrl: ticketPlatformUrl,
+            ticketPlatformApiToken: ticketPlatformApiToken,
+            claudeApiKey: claudeApiKey,
+            ticketPlatform: ticketPlatform);
 
         // Update configuration if provided
         if (configuration != null)

@@ -184,7 +184,7 @@ public static class MockHelpers
         Mock<ITenantContext> mockContext,
         Guid tenantId)
     {
-        mockContext.Setup(x => x.GetCurrentTenantId()).Returns(tenantId);
+        mockContext.Setup(x => x.GetCurrentTenantIdAsync(It.IsAny<CancellationToken>())).ReturnsAsync(tenantId);
     }
 
     /// <summary>

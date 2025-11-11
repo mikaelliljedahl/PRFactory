@@ -54,6 +54,9 @@ public class ClaudeCodeCliAdapterTests : IDisposable
                 databaseName: $"ClaudeCodeCliAdapterTestDb_{Guid.NewGuid()}",
                 new InMemoryDatabaseRoot()) // Dedicated root ensures complete isolation
             .EnableSensitiveDataLogging()
+            .EnableServiceProviderCaching(false) // Disable caching to avoid EF Core warning
+            .ConfigureWarnings(warnings =>
+                warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.CoreEventId.ManyServiceProvidersCreatedWarning)) // Suppress warning for test scenarios
             .Options;
 
         _dbContext = new ApplicationDbContext(

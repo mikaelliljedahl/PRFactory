@@ -45,26 +45,31 @@ public static class DependencyInjection
             return new AesEncryptionService(encryptionKey, logger);
         });
 
-        // Register DbContext
+        // Register DbContext (only if not already registered, e.g., by tests)
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? "Data Source=prfactory.db";
 
-        services.AddDbContext<ApplicationDbContext>((sp, options) =>
+        // Check if DbContext is already registered (e.g., by test setup with InMemory database)
+        var dbContextDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(ApplicationDbContext));
+        if (dbContextDescriptor == null)
         {
-            options.UseSqlite(connectionString);
-
-            // Enable sensitive data logging in development
-            if (configuration.GetValue<bool>("Logging:EnableSensitiveDataLogging"))
+            services.AddDbContext<ApplicationDbContext>((sp, options) =>
             {
-                options.EnableSensitiveDataLogging();
-            }
+                options.UseSqlite(connectionString);
 
-            // Enable detailed errors in development
-            if (configuration.GetValue<bool>("Logging:EnableDetailedErrors"))
-            {
-                options.EnableDetailedErrors();
-            }
-        });
+                // Enable sensitive data logging in development
+                if (configuration.GetValue<bool>("Logging:EnableSensitiveDataLogging"))
+                {
+                    options.EnableSensitiveDataLogging();
+                }
+
+                // Enable detailed errors in development
+                if (configuration.GetValue<bool>("Logging:EnableDetailedErrors"))
+                {
+                    options.EnableDetailedErrors();
+                }
+            });
+        }
 
         // Register repositories
         services.AddScoped<ITenantRepository, TenantRepository>();

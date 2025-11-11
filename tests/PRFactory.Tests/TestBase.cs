@@ -37,7 +37,10 @@ public abstract class TestBase : IDisposable
 
         // Configure in-memory database
         services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}"));
+            options.UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}")
+                .EnableServiceProviderCaching(false) // Disable caching to avoid EF Core warning about too many service providers
+                .ConfigureWarnings(warnings =>
+                    warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.CoreEventId.ManyServiceProvidersCreatedWarning))); // Suppress warning for test scenarios
 
         // Add infrastructure services
         services.AddInfrastructure(Configuration);

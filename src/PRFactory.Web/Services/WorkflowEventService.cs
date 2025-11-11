@@ -40,14 +40,17 @@ public class WorkflowEventService : IWorkflowEventService
     {
         try
         {
-            var (events, totalCount) = await _workflowEventRepository.GetPagedAsync(
+            var queryParams = new WorkflowEventQueryParameters(
                 pageNumber,
                 pageSize,
                 ticketId,
                 eventType,
                 startDate,
                 endDate,
-                searchText,
+                searchText);
+
+            var (events, totalCount) = await _workflowEventRepository.GetPagedAsync(
+                queryParams,
                 ct);
 
             // Get ticket keys for all events
@@ -193,14 +196,17 @@ public class WorkflowEventService : IWorkflowEventService
     {
         try
         {
-            var (events, _) = await _workflowEventRepository.GetPagedAsync(
+            var queryParams = new WorkflowEventQueryParameters(
                 1,
                 int.MaxValue,
                 ticketId,
                 eventType,
                 startDate,
                 endDate,
-                null,
+                null);
+
+            var (events, _) = await _workflowEventRepository.GetPagedAsync(
+                queryParams,
                 ct);
 
             var csv = new StringBuilder();
@@ -230,14 +236,17 @@ public class WorkflowEventService : IWorkflowEventService
     {
         try
         {
-            var (events, _) = await _workflowEventRepository.GetPagedAsync(
+            var queryParams = new WorkflowEventQueryParameters(
                 1,
                 int.MaxValue,
                 ticketId,
                 eventType,
                 startDate,
                 endDate,
-                null,
+                null);
+
+            var (events, _) = await _workflowEventRepository.GetPagedAsync(
+                queryParams,
                 ct);
 
             var eventDtos = events.Select(e => MapToDto(e, null)).ToList();

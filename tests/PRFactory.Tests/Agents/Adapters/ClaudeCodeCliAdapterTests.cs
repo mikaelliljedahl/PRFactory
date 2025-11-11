@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using PRFactory.Domain.Entities;
+using PRFactory.Domain.ValueObjects;
 using PRFactory.Infrastructure.Agents.Adapters;
 using PRFactory.Infrastructure.Configuration;
 using PRFactory.Infrastructure.Execution;
@@ -110,13 +111,14 @@ public class ClaudeCodeCliAdapterTests : IDisposable
     public async Task ExecutePromptWithTenantAsync_WithApiKeyProvider_BuildsCorrectEnvironmentVariables()
     {
         // Arrange
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var providerConfig = new ApiKeyProviderConfiguration(
             _tenantId,
             "Z.ai Provider",
             LlmProviderType.ZAi,
             "https://api.z.ai",
             "encrypted-token-123",
             "claude-sonnet-4-5");
+        var provider = TenantLlmProvider.CreateApiKeyProvider(providerConfig);
 
         provider.SetAsDefault();
         await _dbContext.TenantLlmProviders.AddAsync(provider);
@@ -190,7 +192,7 @@ public class ClaudeCodeCliAdapterTests : IDisposable
     public async Task ExecutePromptWithTenantAsync_WithCustomTimeout_UsesCustomTimeout()
     {
         // Arrange
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var providerConfig = new ApiKeyProviderConfiguration(
             _tenantId,
             "Custom Provider",
             LlmProviderType.OpenRouter,
@@ -198,6 +200,7 @@ public class ClaudeCodeCliAdapterTests : IDisposable
             "encrypted-token",
             "gpt-4o",
             timeoutMs: 600000);
+        var provider = TenantLlmProvider.CreateApiKeyProvider(providerConfig);
 
         provider.SetAsDefault();
         await _dbContext.TenantLlmProviders.AddAsync(provider);
@@ -228,7 +231,7 @@ public class ClaudeCodeCliAdapterTests : IDisposable
     public async Task ExecutePromptWithTenantAsync_WithDisableNonEssentialTraffic_IncludesFlag()
     {
         // Arrange
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var providerConfig = new ApiKeyProviderConfiguration(
             _tenantId,
             "Minimax Provider",
             LlmProviderType.MinimaxM2,
@@ -236,6 +239,7 @@ public class ClaudeCodeCliAdapterTests : IDisposable
             "encrypted-token",
             "MiniMax-M2",
             disableNonEssentialTraffic: true);
+        var provider = TenantLlmProvider.CreateApiKeyProvider(providerConfig);
 
         provider.SetAsDefault();
         await _dbContext.TenantLlmProviders.AddAsync(provider);
@@ -273,7 +277,7 @@ public class ClaudeCodeCliAdapterTests : IDisposable
             ["extended_model"] = "MiniMax-M2-Extended"
         };
 
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var providerConfig = new ApiKeyProviderConfiguration(
             _tenantId,
             "Minimax with Overrides",
             LlmProviderType.MinimaxM2,
@@ -281,6 +285,7 @@ public class ClaudeCodeCliAdapterTests : IDisposable
             "encrypted-token",
             "MiniMax-M2",
             modelOverrides: modelOverrides);
+        var provider = TenantLlmProvider.CreateApiKeyProvider(providerConfig);
 
         provider.SetAsDefault();
         await _dbContext.TenantLlmProviders.AddAsync(provider);
@@ -315,23 +320,25 @@ public class ClaudeCodeCliAdapterTests : IDisposable
     public async Task ExecutePromptWithTenantAsync_WithSpecificProviderId_UsesSpecifiedProvider()
     {
         // Arrange
-        var defaultProvider = TenantLlmProvider.CreateApiKeyProvider(
+        var defaultProviderConfig = new ApiKeyProviderConfiguration(
             _tenantId,
             "Default Provider",
             LlmProviderType.ZAi,
             "https://api.z.ai",
             "encrypted-default-token",
             "claude-sonnet");
+        var defaultProvider = TenantLlmProvider.CreateApiKeyProvider(defaultProviderConfig);
 
         defaultProvider.SetAsDefault();
 
-        var specificProvider = TenantLlmProvider.CreateApiKeyProvider(
+        var specificProviderConfig = new ApiKeyProviderConfiguration(
             _tenantId,
             "Specific Provider",
             LlmProviderType.OpenRouter,
             "https://api.openrouter.ai",
             "encrypted-specific-token",
             "gpt-4o");
+        var specificProvider = TenantLlmProvider.CreateApiKeyProvider(specificProviderConfig);
 
         await _dbContext.TenantLlmProviders.AddAsync(defaultProvider);
         await _dbContext.TenantLlmProviders.AddAsync(specificProvider);
@@ -387,13 +394,14 @@ public class ClaudeCodeCliAdapterTests : IDisposable
     public async Task ExecutePromptWithTenantAsync_WithInactiveProvider_ReturnsEmptyEnvironmentVariables()
     {
         // Arrange
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var providerConfig = new ApiKeyProviderConfiguration(
             _tenantId,
             "Inactive Provider",
             LlmProviderType.ZAi,
             "https://api.z.ai",
             "encrypted-token",
             "claude-sonnet");
+        var provider = TenantLlmProvider.CreateApiKeyProvider(providerConfig);
 
         provider.SetAsDefault();
         provider.Deactivate();
@@ -455,13 +463,14 @@ public class ClaudeCodeCliAdapterTests : IDisposable
     public async Task ExecuteWithProjectContextAndTenantAsync_WithProvider_BuildsEnvironmentVariables()
     {
         // Arrange
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var providerConfig = new ApiKeyProviderConfiguration(
             _tenantId,
             "Project Context Provider",
             LlmProviderType.ZAi,
             "https://api.z.ai",
             "encrypted-token",
             "claude-sonnet");
+        var provider = TenantLlmProvider.CreateApiKeyProvider(providerConfig);
 
         provider.SetAsDefault();
         await _dbContext.TenantLlmProviders.AddAsync(provider);
@@ -527,7 +536,7 @@ public class ClaudeCodeCliAdapterTests : IDisposable
             ["model_2"] = "override-2"
         };
 
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var providerConfig = new ApiKeyProviderConfiguration(
             _tenantId,
             "Full Featured Provider",
             LlmProviderType.MinimaxM2,
@@ -537,6 +546,7 @@ public class ClaudeCodeCliAdapterTests : IDisposable
             timeoutMs: 450000,
             disableNonEssentialTraffic: true,
             modelOverrides: modelOverrides);
+        var provider = TenantLlmProvider.CreateApiKeyProvider(providerConfig);
 
         provider.SetAsDefault();
         await _dbContext.TenantLlmProviders.AddAsync(provider);
@@ -575,13 +585,14 @@ public class ClaudeCodeCliAdapterTests : IDisposable
             .Setup(e => e.Decrypt(It.IsAny<string>()))
             .Throws(new InvalidOperationException("Decryption failed"));
 
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var providerConfig = new ApiKeyProviderConfiguration(
             _tenantId,
             "Test Provider",
             LlmProviderType.ZAi,
             "https://api.z.ai",
             "encrypted-token",
             "claude-sonnet");
+        var provider = TenantLlmProvider.CreateApiKeyProvider(providerConfig);
 
         provider.SetAsDefault();
         await _dbContext.TenantLlmProviders.AddAsync(provider);

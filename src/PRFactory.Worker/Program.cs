@@ -20,9 +20,7 @@ try
     var builder = Host.CreateApplicationBuilder(args);
 
     // Configure Serilog from appsettings.json
-    // TODO: ReadFrom.Configuration requires Serilog.Settings.Configuration package
     builder.Services.AddSerilog((services, lc) => lc
-        // .ReadFrom.Configuration(builder.Configuration)
         .ReadFrom.Services(services)
         .MinimumLevel.Information()
         .Enrich.FromLogContext()
@@ -85,70 +83,8 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
     services.Configure<AgentHostOptions>(
         configuration.GetSection("AgentHost"));
 
-    // Register Infrastructure Services
-    // TODO: These would come from PRFactory.Infrastructure
-    // services.AddScoped<IAgentExecutionQueue, AgentExecutionQueue>();
-    // services.AddScoped<IAgentGraphExecutor, AgentGraphExecutor>();
-    // services.AddScoped<ICheckpointStore, CheckpointStore>();
-    // services.AddScoped<ITicketRepository, TicketRepository>();
-
     // Register Worker Services
     services.AddScoped<IWorkflowResumeHandler, WorkflowResumeHandler>();
-
-    // Register Database Context
-    // services.AddDbContext<ApplicationDbContext>(options =>
-    // {
-    //     var connectionString = configuration.GetConnectionString("Database");
-    //     options.UseSqlite(connectionString);
-    //     options.EnableSensitiveDataLogging(builder.Environment.IsDevelopment());
-    // });
-
-    // Register Agent Framework Services
-    // This would integrate with Microsoft.Agents.AI
-    // services.AddAgentFramework(options =>
-    // {
-    //     options.ConfigureAgentGraph<WorkflowAgentGraph>();
-    //     options.EnableCheckpointing();
-    //     options.EnableTelemetry();
-    // });
-
-    // Register HTTP Clients for external services
-    // TODO: AddHttpClient requires Microsoft.Extensions.Http package
-    // services.AddHttpClient("Jira", client =>
-    // {
-    //     var jiraUrl = configuration["Jira:BaseUrl"];
-    //     if (!string.IsNullOrEmpty(jiraUrl))
-    //     {
-    //         client.BaseAddress = new Uri(jiraUrl);
-    //         client.DefaultRequestHeaders.Add("Accept", "application/json");
-    //     }
-    // });
-    //
-    // services.AddHttpClient("GitHub", client =>
-    // {
-    //     client.BaseAddress = new Uri("https://api.github.com");
-    //     client.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
-    //     client.DefaultRequestHeaders.Add("User-Agent", "PRFactory");
-    // });
-    //
-    // services.AddHttpClient("Claude", client =>
-    // {
-    //     client.BaseAddress = new Uri("https://api.anthropic.com");
-    //     client.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
-    // });
-
-    // Register Polly resilience policies
-    // services.AddResiliencePipeline("default", builder =>
-    // {
-    //     builder
-    //         .AddRetry(new RetryStrategyOptions
-    //         {
-    //             MaxRetryAttempts = 3,
-    //             Delay = TimeSpan.FromSeconds(1),
-    //             BackoffType = DelayBackoffType.Exponential
-    //         })
-    //         .AddTimeout(TimeSpan.FromMinutes(2));
-    // });
 
     Log.Information("Services configured successfully");
 }

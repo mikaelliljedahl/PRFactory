@@ -1,4 +1,5 @@
 using PRFactory.Domain.Entities;
+using PRFactory.Domain.ValueObjects;
 
 namespace PRFactory.Domain.Interfaces;
 
@@ -21,13 +22,7 @@ public interface IWorkflowEventRepository
     /// Gets workflow events with pagination and filtering
     /// </summary>
     Task<(List<WorkflowEvent> Events, int TotalCount)> GetPagedAsync(
-        int pageNumber,
-        int pageSize,
-        Guid? ticketId = null,
-        string? eventType = null,
-        DateTime? startDate = null,
-        DateTime? endDate = null,
-        string? searchText = null,
+        WorkflowEventQueryParameters queryParameters,
         CancellationToken cancellationToken = default);
 
     /// <summary>

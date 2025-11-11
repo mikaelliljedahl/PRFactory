@@ -150,17 +150,17 @@ public class Ticket
     /// <summary>
     /// Navigation property to the repository
     /// </summary>
-    public Repository? Repository { get; private set; }
+    public Repository? Repository { get; }
 
     /// <summary>
     /// Navigation property to the LLM provider configuration
     /// </summary>
-    public TenantLlmProvider? LlmProvider { get; private set; }
+    public TenantLlmProvider? LlmProvider { get; }
 
     /// <summary>
     /// Navigation property to the tenant
     /// </summary>
-    public Tenant? Tenant { get; private set; }
+    public Tenant? Tenant { get; }
 
     /// <summary>
     /// Events that occurred during the ticket lifecycle
@@ -305,8 +305,7 @@ public class Ticket
     /// </summary>
     public void AddQuestion(Question question)
     {
-        if (question == null)
-            throw new ArgumentNullException(nameof(question));
+        ArgumentNullException.ThrowIfNull(question);
 
         Questions.Add(question);
         AddEvent(new QuestionAdded(Id, question));
@@ -357,7 +356,7 @@ public class Ticket
     public void ApprovePlan()
     {
         // For team review: validate that sufficient approvals have been received
-        if (PlanReviews.Any() && !HasSufficientApprovals())
+        if (PlanReviews.Count > 0 && !HasSufficientApprovals())
         {
             var approvedCount = PlanReviews.Count(r => r.IsRequired && r.Status == ReviewStatus.Approved);
             throw new InvalidOperationException(
@@ -509,7 +508,7 @@ public class Ticket
     public bool HasSufficientApprovals()
     {
         // If no reviewers assigned, fall back to single-user workflow (backward compatible)
-        if (!PlanReviews.Any())
+        if (PlanReviews.Count == 0)
             return true;
 
         var requiredReviews = PlanReviews.Where(r => r.IsRequired).ToList();
@@ -523,9 +522,9 @@ public class Ticket
     /// </summary>
     public bool HasRejections()
     {
-        return PlanReviews.Any(r =>
+        return PlanReviews.Count(r =>
             r.Status == ReviewStatus.RejectedForRefinement ||
-            r.Status == ReviewStatus.RejectedForRegeneration);
+            r.Status == ReviewStatus.RejectedForRegeneration) > 0;
     }
 
     /// <summary>

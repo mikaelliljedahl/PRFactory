@@ -1,4 +1,5 @@
 using PRFactory.Domain.Entities;
+using PRFactory.Domain.ValueObjects;
 
 namespace PRFactory.Core.Application.Services;
 
@@ -62,13 +63,7 @@ public interface ITenantApplicationService
     /// Updates a tenant
     /// </summary>
     Task<Tenant> UpdateTenantAsync(
-        Guid id,
-        string name,
-        string ticketPlatformUrl,
-        string? ticketPlatformApiToken = null,
-        string? claudeApiKey = null,
-        string? ticketPlatform = null,
-        TenantConfiguration? configuration = null,
+        UpdateTenantRequest request,
         CancellationToken ct = default);
 
     /// <summary>

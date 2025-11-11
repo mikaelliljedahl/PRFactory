@@ -8,6 +8,11 @@ namespace PRFactory.Api.Middleware;
 /// </summary>
 public class ExceptionHandlingMiddleware
 {
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
     private readonly RequestDelegate _next;
     private readonly ILogger<ExceptionHandlingMiddleware> _logger;
 
@@ -53,12 +58,7 @@ public class ExceptionHandlingMiddleware
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)statusCode;
 
-        var options = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
-
-        return context.Response.WriteAsync(JsonSerializer.Serialize(response, options));
+        return context.Response.WriteAsync(JsonSerializer.Serialize(response, JsonOptions));
     }
 }
 

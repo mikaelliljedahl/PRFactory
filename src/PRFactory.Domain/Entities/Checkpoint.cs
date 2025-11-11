@@ -72,12 +72,12 @@ public class Checkpoint
     /// <summary>
     /// Navigation property to the ticket
     /// </summary>
-    public Ticket? Ticket { get; private set; }
+    public Ticket? Ticket { get; }
 
     /// <summary>
     /// Navigation property to the tenant
     /// </summary>
-    public Tenant? Tenant { get; private set; }
+    public Tenant? Tenant { get; }
 
     private Checkpoint() { }
 

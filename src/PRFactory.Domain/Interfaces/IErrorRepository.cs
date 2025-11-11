@@ -17,15 +17,7 @@ public interface IErrorRepository
     /// Gets all error logs for a specific tenant with pagination
     /// </summary>
     Task<(List<ErrorLog> Items, int TotalCount)> GetByTenantAsync(
-        Guid tenantId,
-        int page = 1,
-        int pageSize = 20,
-        ErrorSeverity? severity = null,
-        string? entityType = null,
-        bool? isResolved = null,
-        DateTime? fromDate = null,
-        DateTime? toDate = null,
-        string? searchTerm = null,
+        ErrorQueryParameters queryParameters,
         CancellationToken cancellationToken = default);
 
     /// <summary>

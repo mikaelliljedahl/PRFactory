@@ -29,50 +29,42 @@ public class ErrorRepository : IErrorRepository
     }
 
     public async Task<(List<ErrorLog> Items, int TotalCount)> GetByTenantAsync(
-        Guid tenantId,
-        int page = 1,
-        int pageSize = 20,
-        ErrorSeverity? severity = null,
-        string? entityType = null,
-        bool? isResolved = null,
-        DateTime? fromDate = null,
-        DateTime? toDate = null,
-        string? searchTerm = null,
+        ErrorQueryParameters queryParameters,
         CancellationToken cancellationToken = default)
     {
         var query = _context.Set<ErrorLog>()
-            .Where(e => e.TenantId == tenantId);
+            .Where(e => e.TenantId == queryParameters.TenantId);
 
         // Apply filters
-        if (severity.HasValue)
-            query = query.Where(e => e.Severity == severity.Value);
+        if (queryParameters.Severity.HasValue)
+            query = query.Where(e => e.Severity == queryParameters.Severity.Value);
 
-        if (!string.IsNullOrWhiteSpace(entityType))
-            query = query.Where(e => e.EntityType == entityType);
+        if (!string.IsNullOrWhiteSpace(queryParameters.EntityType))
+            query = query.Where(e => e.EntityType == queryParameters.EntityType);
 
-        if (isResolved.HasValue)
-            query = query.Where(e => e.IsResolved == isResolved.Value);
+        if (queryParameters.IsResolved.HasValue)
+            query = query.Where(e => e.IsResolved == queryParameters.IsResolved.Value);
 
-        if (fromDate.HasValue)
-            query = query.Where(e => e.CreatedAt >= fromDate.Value);
+        if (queryParameters.FromDate.HasValue)
+            query = query.Where(e => e.CreatedAt >= queryParameters.FromDate.Value);
 
-        if (toDate.HasValue)
-            query = query.Where(e => e.CreatedAt <= toDate.Value);
+        if (queryParameters.ToDate.HasValue)
+            query = query.Where(e => e.CreatedAt <= queryParameters.ToDate.Value);
 
-        if (!string.IsNullOrWhiteSpace(searchTerm))
+        if (!string.IsNullOrWhiteSpace(queryParameters.SearchTerm))
         {
             query = query.Where(e =>
-                e.Message.Contains(searchTerm) ||
-                (e.StackTrace != null && e.StackTrace.Contains(searchTerm)) ||
-                (e.ResolutionNotes != null && e.ResolutionNotes.Contains(searchTerm)));
+                e.Message.Contains(queryParameters.SearchTerm) ||
+                (e.StackTrace != null && e.StackTrace.Contains(queryParameters.SearchTerm)) ||
+                (e.ResolutionNotes != null && e.ResolutionNotes.Contains(queryParameters.SearchTerm)));
         }
 
         var totalCount = await query.CountAsync(cancellationToken);
 
         var items = await query
             .OrderByDescending(e => e.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((queryParameters.Page - 1) * queryParameters.PageSize)
+            .Take(queryParameters.PageSize)
             .ToListAsync(cancellationToken);
 
         return (items, totalCount);

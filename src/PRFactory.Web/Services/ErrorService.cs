@@ -1,4 +1,5 @@
 using PRFactory.Core.Application.Services;
+using PRFactory.Domain.Entities;
 using PRFactory.Domain.ValueObjects;
 using PRFactory.Web.Models;
 
@@ -36,8 +37,19 @@ public class ErrorService : IErrorService
     {
         try
         {
+            var queryParams = new ErrorQueryParameters(
+                tenantId,
+                page,
+                pageSize,
+                severity,
+                entityType,
+                isResolved,
+                fromDate,
+                toDate,
+                searchTerm);
+
             var (items, totalCount) = await _errorApplicationService.GetErrorsAsync(
-                tenantId, page, pageSize, severity, entityType, isResolved, fromDate, toDate, searchTerm, ct);
+                queryParams, ct);
 
             var dtos = items.Select(MapToDto).ToList();
             return (dtos, totalCount);

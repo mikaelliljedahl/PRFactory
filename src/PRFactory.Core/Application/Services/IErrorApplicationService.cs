@@ -14,15 +14,7 @@ public interface IErrorApplicationService
     /// Gets errors for a tenant with pagination and filtering
     /// </summary>
     Task<(List<ErrorLog> Items, int TotalCount)> GetErrorsAsync(
-        Guid tenantId,
-        int page = 1,
-        int pageSize = 20,
-        ErrorSeverity? severity = null,
-        string? entityType = null,
-        bool? isResolved = null,
-        DateTime? fromDate = null,
-        DateTime? toDate = null,
-        string? searchTerm = null,
+        ErrorQueryParameters queryParameters,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -52,13 +44,7 @@ public interface IErrorApplicationService
     /// Logs a new error
     /// </summary>
     Task<ErrorLog> LogErrorAsync(
-        Guid tenantId,
-        ErrorSeverity severity,
-        string message,
-        string? stackTrace = null,
-        string? entityType = null,
-        Guid? entityId = null,
-        string? contextData = null,
+        LogErrorRequest request,
         CancellationToken cancellationToken = default);
 
     /// <summary>

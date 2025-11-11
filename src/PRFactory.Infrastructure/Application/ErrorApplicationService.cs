@@ -28,30 +28,13 @@ public class ErrorApplicationService : IErrorApplicationService
 
     /// <inheritdoc/>
     public async Task<(List<ErrorLog> Items, int TotalCount)> GetErrorsAsync(
-        Guid tenantId,
-        int page = 1,
-        int pageSize = 20,
-        ErrorSeverity? severity = null,
-        string? entityType = null,
-        bool? isResolved = null,
-        DateTime? fromDate = null,
-        DateTime? toDate = null,
-        string? searchTerm = null,
+        ErrorQueryParameters queryParameters,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("Getting errors for tenant {TenantId}, page {Page}, pageSize {PageSize}", tenantId, page, pageSize);
+        _logger.LogDebug("Getting errors for tenant {TenantId}, page {Page}, pageSize {PageSize}",
+            queryParameters.TenantId, queryParameters.Page, queryParameters.PageSize);
 
-        return await _errorRepository.GetByTenantAsync(
-            tenantId,
-            page,
-            pageSize,
-            severity,
-            entityType,
-            isResolved,
-            fromDate,
-            toDate,
-            searchTerm,
-            cancellationToken);
+        return await _errorRepository.GetByTenantAsync(queryParameters, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -91,25 +74,19 @@ public class ErrorApplicationService : IErrorApplicationService
 
     /// <inheritdoc/>
     public async Task<ErrorLog> LogErrorAsync(
-        Guid tenantId,
-        ErrorSeverity severity,
-        string message,
-        string? stackTrace = null,
-        string? entityType = null,
-        Guid? entityId = null,
-        string? contextData = null,
+        LogErrorRequest request,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogError("Logging error for tenant {TenantId}: {Message}", tenantId, message);
+        _logger.LogError("Logging error for tenant {TenantId}: {Message}", request.TenantId, request.Message);
 
         var errorLog = ErrorLog.Create(
-            tenantId,
-            severity,
-            message,
-            stackTrace,
-            entityType,
-            entityId,
-            contextData);
+            request.TenantId,
+            request.Severity,
+            request.Message,
+            request.StackTrace,
+            request.EntityType,
+            request.EntityId,
+            request.ContextData);
 
         return await _errorRepository.AddAsync(errorLog, cancellationToken);
     }

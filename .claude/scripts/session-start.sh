@@ -71,10 +71,15 @@ chmod +x "$DOTNET_INSTALL_SCRIPT"
 
 if [ "$USE_SPECIFIC_VERSION" = true ]; then
     echo "🔧 Installing .NET SDK version $DOTNET_VERSION (from global.json)..."
-    "$DOTNET_INSTALL_SCRIPT" --version "$DOTNET_VERSION" --install-dir "$DOTNET_INSTALL_DIR" --verbose
+    # Try specific version first, fallback to channel if it fails
+    if ! "$DOTNET_INSTALL_SCRIPT" --version "$DOTNET_VERSION" --install-dir "$DOTNET_INSTALL_DIR" --verbose; then
+        echo "⚠️  Specific version $DOTNET_VERSION not available, falling back to latest in channel..."
+        CHANNEL_VERSION="${DOTNET_VERSION%.*}"
+        "$DOTNET_INSTALL_SCRIPT" --channel "$CHANNEL_VERSION" --install-dir "$DOTNET_INSTALL_DIR" --verbose
+    fi
 else
-    echo "🔧 Installing .NET SDK $DOTNET_VERSION (including preview/RC versions)..."
-    "$DOTNET_INSTALL_SCRIPT" --channel "$DOTNET_VERSION" --quality preview --install-dir "$DOTNET_INSTALL_DIR" --verbose
+    echo "🔧 Installing .NET SDK $DOTNET_VERSION (latest stable)..."
+    "$DOTNET_INSTALL_SCRIPT" --channel "$DOTNET_VERSION" --install-dir "$DOTNET_INSTALL_DIR" --verbose
 fi
 
 # Add to PATH for current session

@@ -187,12 +187,14 @@ public class UserTests
         // Arrange
         var user = new User(_tenantId, ValidEmail, ValidDisplayName);
         const string externalAuthId = "auth0|123456";
+        const string identityProvider = "Auth0";
 
         // Act
-        user.LinkExternalAuth(externalAuthId);
+        user.LinkExternalAuth(externalAuthId, identityProvider);
 
         // Assert
         Assert.Equal(externalAuthId, user.ExternalAuthId);
+        Assert.Equal(identityProvider, user.IdentityProvider);
     }
 
     [Theory]
@@ -205,7 +207,7 @@ public class UserTests
         var user = new User(_tenantId, ValidEmail, ValidDisplayName);
 
         // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() => user.LinkExternalAuth(invalidId!));
+        var ex = Assert.Throws<ArgumentException>(() => user.LinkExternalAuth(invalidId!, "Auth0"));
         Assert.Contains("externalAuthId", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 

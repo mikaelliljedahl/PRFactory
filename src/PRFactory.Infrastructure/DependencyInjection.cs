@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
@@ -110,7 +111,11 @@ public static class DependencyInjection
         // Team Review application services
         services.AddScoped<IUserService, Application.UserService>();
         services.AddScoped<IPlanReviewService, Application.PlanReviewService>();
-        services.AddScoped<ICurrentUserService, Application.StubCurrentUserService>();
+        services.AddScoped<ICurrentUserService, Application.CurrentUserService>();
+        services.AddScoped<IProvisioningService, Application.ProvisioningService>();
+
+        // Register IHttpContextAccessor for CurrentUserService
+        services.AddHttpContextAccessor();
 
         // Register agent prompt services
         services.AddScoped<Agents.Services.IAgentPromptService, Agents.Services.AgentPromptService>();

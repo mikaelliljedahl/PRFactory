@@ -1,4 +1,7 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
 using PRFactory.Infrastructure;
+using PRFactory.Infrastructure.Persistence;
 using PRFactory.Web.Hubs;
 using PRFactory.Web.Services;
 using Serilog;
@@ -40,6 +43,80 @@ builder.Services.AddScoped<IErrorService, ErrorService>();
 // Register Toast notification service
 builder.Services.AddScoped<IToastService, ToastService>();
 
+// Configure Identity
+builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false;
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 8;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = true;
+    options.User.RequireUniqueEmail = true;
+})
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
+
+// Configure external authentication providers
+builder.Services.AddAuthentication()
+    .AddGoogle(options =>
+    {
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"]
+            ?? throw new InvalidOperationException("Google ClientId not configured");
+        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]
+            ?? throw new InvalidOperationException("Google ClientSecret not configured");
+        options.CallbackPath = "/signin-google";
+
+        options.Scope.Add("openid");
+        options.Scope.Add("profile");
+        options.Scope.Add("email");
+        options.SaveTokens = true;
+
+        // Map Google Workspace domain claim
+        // Note: MapJsonKey for custom claims (hd) can be added if needed
+    })
+    .AddMicrosoftAccount(options =>
+    {
+        options.ClientId = builder.Configuration["Authentication:Microsoft:ClientId"]
+            ?? throw new InvalidOperationException("Microsoft ClientId not configured");
+        options.ClientSecret = builder.Configuration["Authentication:Microsoft:ClientSecret"]
+            ?? throw new InvalidOperationException("Microsoft ClientSecret not configured");
+        options.CallbackPath = "/signin-microsoft";
+
+        options.Scope.Add("openid");
+        options.Scope.Add("profile");
+        options.Scope.Add("email");
+        options.SaveTokens = true;
+
+        // Map Azure AD tenant ID claim
+        // Note: MapJsonKey for custom claims (tid) can be added if needed
+    });
+
+// Configure authentication cookie for Blazor Server
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/auth/login";
+    options.LogoutPath = "/api/auth/logout";
+    options.AccessDeniedPath = "/auth/access-denied";
+    options.ExpireTimeSpan = TimeSpan.FromDays(30);
+    options.SlidingExpiration = true;
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+});
+
+// Add authorization
+builder.Services.AddAuthorizationCore(options =>
+{
+    options.AddPolicy("RequireOwner", policy =>
+        policy.RequireClaim("role", "Owner"));
+    options.AddPolicy("RequireAdmin", policy =>
+        policy.RequireClaim("role", "Owner", "Admin"));
+});
+
+// Add cascading authentication state
+builder.Services.AddCascadingAuthenticationState();
+
 var app = builder.Build();
 
 // Seed demo data in Development environment
@@ -61,6 +138,9 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapBlazorHub();
 app.MapHub<TicketHub>("/hubs/tickets");

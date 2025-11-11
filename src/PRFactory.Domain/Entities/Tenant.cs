@@ -17,6 +17,16 @@ public class Tenant
     public string Name { get; private set; } = string.Empty;
 
     /// <summary>
+    /// Identity provider used for authentication (AzureAD, GoogleWorkspace, Personal)
+    /// </summary>
+    public string IdentityProvider { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// External tenant identifier from the identity provider (Azure AD tenant ID or Google Workspace domain)
+    /// </summary>
+    public string ExternalTenantId { get; private set; } = string.Empty;
+
+    /// <summary>
     /// Ticket platform being used (Jira, AzureDevOps, GitHub, GitLab)
     /// </summary>
     public string TicketPlatform { get; private set; } = "Jira"; // Default to Jira for backward compatibility
@@ -73,6 +83,8 @@ public class Tenant
     /// </summary>
     public static Tenant Create(
         string name,
+        string identityProvider,
+        string externalTenantId,
         string ticketPlatformUrl,
         string ticketPlatformApiToken,
         string claudeApiKey,
@@ -80,6 +92,12 @@ public class Tenant
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Tenant name cannot be empty", nameof(name));
+
+        if (string.IsNullOrWhiteSpace(identityProvider))
+            throw new ArgumentException("Identity provider cannot be empty", nameof(identityProvider));
+
+        if (string.IsNullOrWhiteSpace(externalTenantId))
+            throw new ArgumentException("External tenant ID cannot be empty", nameof(externalTenantId));
 
         if (string.IsNullOrWhiteSpace(ticketPlatformUrl))
             throw new ArgumentException("Ticket platform URL cannot be empty", nameof(ticketPlatformUrl));
@@ -97,6 +115,8 @@ public class Tenant
         {
             Id = Guid.NewGuid(),
             Name = name,
+            IdentityProvider = identityProvider,
+            ExternalTenantId = externalTenantId,
             TicketPlatform = ticketPlatform,
             TicketPlatformUrl = ticketPlatformUrl.TrimEnd('/'),
             TicketPlatformApiToken = ticketPlatformApiToken,

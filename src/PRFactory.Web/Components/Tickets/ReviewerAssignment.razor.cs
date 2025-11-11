@@ -51,7 +51,7 @@ public partial class ReviewerAssignment
             IsLoading = true;
             ErrorMessage = null;
 
-            var tenantId = TenantContext.GetCurrentTenantId();
+            var tenantId = await TenantContext.GetCurrentTenantIdAsync(default);
 
             AvailableUsers = await UserService.GetByTenantIdAsync(tenantId);
             Logger.LogInformation("Loaded {Count} users for reviewer assignment", AvailableUsers.Count);

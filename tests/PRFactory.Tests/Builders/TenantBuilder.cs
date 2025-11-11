@@ -8,6 +8,8 @@ namespace PRFactory.Tests.Builders;
 public class TenantBuilder
 {
     private string _name = "Test Tenant";
+    private string _identityProvider = "AzureAD";
+    private string _externalTenantId = "test-tenant-id-123";
     private string _ticketPlatform = "Jira";
     private string _ticketPlatformUrl = "https://test-tenant.atlassian.net";
     private string _ticketPlatformApiToken = "test-jira-token";
@@ -22,6 +24,18 @@ public class TenantBuilder
     public TenantBuilder WithName(string name)
     {
         _name = name;
+        return this;
+    }
+
+    public TenantBuilder WithIdentityProvider(string identityProvider)
+    {
+        _identityProvider = identityProvider;
+        return this;
+    }
+
+    public TenantBuilder WithExternalTenantId(string externalTenantId)
+    {
+        _externalTenantId = externalTenantId;
         return this;
     }
 
@@ -100,6 +114,8 @@ public class TenantBuilder
     {
         var tenant = Tenant.Create(
             _name,
+            _identityProvider,
+            _externalTenantId,
             _ticketPlatformUrl,
             _ticketPlatformApiToken,
             _claudeApiKey,

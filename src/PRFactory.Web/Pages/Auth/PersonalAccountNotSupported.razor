@@ -1,0 +1,32 @@
+@page "/auth/personal-account-not-supported"
+@layout EmptyLayout
+@using PRFactory.Web.UI.Cards
+@using PRFactory.Web.UI.Alerts
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <Card Title="Personal Account Not Supported" Icon="x-circle">
+            <div class="text-center">
+                <AlertMessage
+                    Message="PRFactory requires a work or school account."
+                    Type="AlertType.Warning" />
+
+                <p class="mt-3">
+                    Please sign in with an account from:
+                </p>
+                <ul class="text-start">
+                    <li>Azure Active Directory (Microsoft work/school account)</li>
+                    <li>Google Workspace (Google work/school account)</li>
+                </ul>
+
+                <p class="mt-3 text-muted">
+                    Personal Gmail accounts and personal Microsoft accounts are not supported.
+                </p>
+
+                <a href="/auth/login" class="btn btn-primary mt-3">
+                    <i class="bi bi-arrow-left"></i> Back to Login
+                </a>
+            </div>
+        </Card>
+    </div>
+</div>

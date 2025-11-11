@@ -9,6 +9,7 @@ public interface ITenantContext
     /// <summary>
     /// Gets the current tenant ID
     /// </summary>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The current tenant ID</returns>
-    Guid GetCurrentTenantId();
+    Task<Guid> GetCurrentTenantIdAsync(CancellationToken cancellationToken = default);
 }

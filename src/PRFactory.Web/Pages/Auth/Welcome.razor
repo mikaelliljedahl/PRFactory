@@ -1,0 +1,37 @@
+@page "/auth/welcome"
+@attribute [Authorize]
+@layout EmptyLayout
+@using Microsoft.AspNetCore.Authorization
+@using PRFactory.Web.UI.Cards
+@using PRFactory.Web.UI.Buttons
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="text-center mb-4">
+            <h1>Welcome to PRFactory! 🎉</h1>
+            <p class="lead">Your organization has been created</p>
+        </div>
+
+        <Card Title="Getting Started" Icon="rocket">
+            <p>PRFactory helps you automate development workflows with AI-powered agents.</p>
+
+            <div class="mt-4">
+                <h5>Next Steps:</h5>
+                <ul class="text-start">
+                    <li>✅ Your organization is created</li>
+                    <li>✅ You're signed in as Owner</li>
+                    <li>⚙️ Connect your Anthropic account when you're ready to use AI features</li>
+                    <li>⚙️ Add a repository to start automating workflows</li>
+                    <li>⚙️ Configure integrations (Jira, Azure DevOps, GitHub) in Settings</li>
+                </ul>
+            </div>
+
+            <div class="mt-4 d-flex gap-2">
+                <LoadingButton OnClick="GoToDashboard" Text="Go to Dashboard" Icon="arrow-right" />
+                <button class="btn btn-outline-primary" @onclick="GoToSettings">
+                    <i class="bi bi-gear"></i> Configure Integrations
+                </button>
+            </div>
+        </Card>
+    </div>
+</div>

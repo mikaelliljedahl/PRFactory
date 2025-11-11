@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PRFactory.Domain.Entities;
@@ -23,8 +25,9 @@ namespace PRFactory.Infrastructure.Persistence;
 /// <summary>
 /// Main Entity Framework Core DbContext for PRFactory.
 /// Handles all database operations for Tenants, Repositories, and Tickets.
+/// Includes ASP.NET Core Identity tables for authentication.
 /// </summary>
-public class ApplicationDbContext : DbContext
+public class ApplicationDbContext : IdentityDbContext<IdentityUser>
 {
     private readonly IEncryptionService _encryptionService;
     private readonly ILogger<ApplicationDbContext> _logger;
@@ -51,7 +54,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<ErrorLog> ErrorLogs => Set<ErrorLog>();
 
     // Team Review DbSets
-    public DbSet<User> Users => Set<User>();
+    // Note: This hides IdentityDbContext's Users DbSet<IdentityUser> property
+    public new DbSet<User> Users => Set<User>();
     public DbSet<PlanReview> PlanReviews => Set<PlanReview>();
     public DbSet<ReviewComment> ReviewComments => Set<ReviewComment>();
 
@@ -60,6 +64,7 @@ public class ApplicationDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // IMPORTANT: Call base first to configure Identity tables
         base.OnModelCreating(modelBuilder);
 
         // Apply entity configurations

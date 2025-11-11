@@ -1,0 +1,39 @@
+@page "/auth/login"
+@layout EmptyLayout
+@using PRFactory.Web.UI.Cards
+@using PRFactory.Web.UI.Buttons
+@using PRFactory.Web.UI.Alerts
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <Card Title="Welcome to PRFactory" Icon="box-arrow-in-right">
+            <div class="text-center">
+                <p class="lead">Sign in with your work or school account</p>
+
+                <div class="d-grid gap-2 mt-4">
+                    <LoadingButton
+                        OnClick="@(() => SignInWithProvider("Microsoft"))"
+                        Text="Sign in with Microsoft"
+                        Icon="microsoft"
+                        IsLoading="@isLoading"
+                        AdditionalClass="btn-primary btn-lg" />
+
+                    <LoadingButton
+                        OnClick="@(() => SignInWithProvider("Google"))"
+                        Text="Sign in with Google"
+                        Icon="google"
+                        IsLoading="@isLoading"
+                        Variant="ButtonVariant.OutlinePrimary"
+                        Size="UI.Buttons.ButtonSize.Large" />
+                </div>
+
+                <div class="mt-4">
+                    <AlertMessage
+                        Message="PRFactory requires a work or school account from Azure AD or Google Workspace."
+                        Type="AlertType.Info"
+                        Icon="info-circle" />
+                </div>
+            </div>
+        </Card>
+    </div>
+</div>

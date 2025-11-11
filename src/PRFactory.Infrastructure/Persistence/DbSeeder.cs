@@ -67,11 +67,13 @@ public class DbSeeder
 
         // Create tenant using factory method with platform parameter
         var tenant = Tenant.Create(
-            DemoTenantData.TenantName,
-            DemoTenantData.JiraUrl,
-            encryptedJiraToken,
-            encryptedClaudeKey,
-            "Jira"
+            name: DemoTenantData.TenantName,
+            identityProvider: "Demo",
+            externalTenantId: "demo-tenant-external-id",
+            ticketPlatformUrl: DemoTenantData.JiraUrl,
+            ticketPlatformApiToken: encryptedJiraToken,
+            claudeApiKey: encryptedClaudeKey,
+            ticketPlatform: "Jira"
         );
 
         // Override the auto-generated ID with our hardcoded demo ID

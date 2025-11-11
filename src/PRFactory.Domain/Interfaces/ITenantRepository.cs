@@ -18,6 +18,11 @@ public interface ITenantRepository
     Task<Tenant?> GetByNameAsync(string name, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets a tenant by its external tenant ID and identity provider
+    /// </summary>
+    Task<Tenant?> GetByExternalTenantAsync(string identityProvider, string externalTenantId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets all tenants
     /// </summary>
     Task<List<Tenant>> GetAllAsync(CancellationToken cancellationToken = default);

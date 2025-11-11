@@ -589,6 +589,8 @@ public class CheckpointRepositoryTests : TestBase
     {
         return Tenant.Create(
             name: name,
+            identityProvider: "AzureAD",
+            externalTenantId: "test-tenant-id",
             ticketPlatformUrl: "https://test.atlassian.net",
             ticketPlatformApiToken: "test-token",
             claudeApiKey: "test-claude-key",

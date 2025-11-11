@@ -219,6 +219,8 @@ public class TenantRepositoryTests : TestBase
         // Arrange
         var tenant = Tenant.Create(
             "New Tenant",
+            "AzureAD",
+            "test-external-tenant-id",
             "https://new-tenant.atlassian.net",
             "api-token",
             "claude-key",

@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi.Models;
 using PRFactory.Api.Middleware;
+using PRFactory.Infrastructure.Persistence;
 using Serilog;
 using Serilog.Events;
 using System.Reflection;
@@ -91,6 +93,50 @@ builder.Services.AddCors(options =>
               .AllowCredentials();
     });
 });
+
+// ============================================================================
+// Configure Identity
+// ============================================================================
+builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false;
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 8;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = true;
+})
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
+
+// External authentication providers
+builder.Services.AddAuthentication()
+    .AddGoogle(options =>
+    {
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"]
+            ?? "not-configured";
+        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]
+            ?? "not-configured";
+        options.CallbackPath = "/signin-google";
+        options.Scope.Add("openid");
+        options.Scope.Add("profile");
+        options.Scope.Add("email");
+        options.SaveTokens = true;
+        // Note: MapJsonKey for custom claims (hd) can be added if needed
+    })
+    .AddMicrosoftAccount(options =>
+    {
+        options.ClientId = builder.Configuration["Authentication:Microsoft:ClientId"]
+            ?? "not-configured";
+        options.ClientSecret = builder.Configuration["Authentication:Microsoft:ClientSecret"]
+            ?? "not-configured";
+        options.CallbackPath = "/signin-microsoft";
+        options.Scope.Add("openid");
+        options.Scope.Add("profile");
+        options.Scope.Add("email");
+        options.SaveTokens = true;
+        // Note: MapJsonKey for custom claims (tid) can be added if needed
+    });
 
 // ============================================================================
 // Configure Entity Framework Core
@@ -194,9 +240,9 @@ if (!app.Environment.IsDevelopment())
 // Webhook authentication (validates HMAC signatures)
 app.UseJiraWebhookAuthentication();
 
-// Authentication & Authorization (if needed later)
-// app.UseAuthentication();
-// app.UseAuthorization();
+// Authentication & Authorization
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Map controllers
 app.MapControllers();

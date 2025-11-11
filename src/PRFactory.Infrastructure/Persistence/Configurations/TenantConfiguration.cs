@@ -30,6 +30,14 @@ public class TenantConfiguration : IEntityTypeConfiguration<Tenant>
             .IsRequired()
             .HasMaxLength(200);
 
+        builder.Property(t => t.IdentityProvider)
+            .IsRequired()
+            .HasMaxLength(50);
+
+        builder.Property(t => t.ExternalTenantId)
+            .IsRequired()
+            .HasMaxLength(255);
+
         builder.Property(t => t.TicketPlatform)
             .IsRequired()
             .HasMaxLength(50)
@@ -82,6 +90,11 @@ public class TenantConfiguration : IEntityTypeConfiguration<Tenant>
         // Indexes
         builder.HasIndex(t => t.TicketPlatform)
             .HasDatabaseName("IX_Tenants_TicketPlatform");
+
+        // Unique constraint: IdentityProvider + ExternalTenantId must be unique
+        builder.HasIndex(t => new { t.IdentityProvider, t.ExternalTenantId })
+            .IsUnique()
+            .HasDatabaseName("IX_Tenants_IdentityProvider_ExternalTenantId");
 
         // Relationships
         builder.HasMany(t => t.Repositories)

@@ -72,8 +72,7 @@ builder.Services.AddAuthentication()
         options.Scope.Add("email");
         options.SaveTokens = true;
 
-        // Map Google Workspace domain claim
-        // Note: MapJsonKey for custom claims (hd) can be added if needed
+        // Note: Google Workspace "hd" (hosted domain) claim is extracted in AuthController
     })
     .AddMicrosoftAccount(options =>
     {
@@ -88,8 +87,7 @@ builder.Services.AddAuthentication()
         options.Scope.Add("email");
         options.SaveTokens = true;
 
-        // Map Azure AD tenant ID claim
-        // Note: MapJsonKey for custom claims (tid) can be added if needed
+        // Note: Azure AD "tid" (tenant ID) claim is extracted in AuthController
     });
 
 // Configure authentication cookie for Blazor Server

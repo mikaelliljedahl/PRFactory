@@ -125,6 +125,8 @@ builder.Services.AddAuthentication()
         options.Scope.Add("profile");
         options.Scope.Add("email");
         options.SaveTokens = true;
+
+        // Note: Google Workspace "hd" (hosted domain) claim is extracted in AuthController
     })
     .AddMicrosoftAccount(options =>
     {
@@ -137,6 +139,8 @@ builder.Services.AddAuthentication()
         options.Scope.Add("profile");
         options.Scope.Add("email");
         options.SaveTokens = true;
+
+        // Note: Azure AD "tid" (tenant ID) claim is extracted in AuthController
     });
 
 // ============================================================================

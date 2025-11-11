@@ -581,36 +581,9 @@ Requires human review and approval before merge
 
 ## State Transitions
 
-### State Transition Rules
+PRFactory uses a 17-state workflow state machine to track ticket progress. For the complete state machine design including valid transitions and code examples, see [ARCHITECTURE.md - Workflow State Machine](ARCHITECTURE.md#workflow-state-machine).
 
-```mermaid
-stateDiagram-v2
-    [*] --> Triggered: Jira webhook received
-    Triggered --> Analyzing: TriggerAgent executed
-    Analyzing --> QuestionsPosted: Questions generated
-    QuestionsPosted --> AnswersReceived: Developer responds
-    AnswersReceived --> Planning: All questions answered
-    AnswersReceived --> QuestionsPosted: More questions needed
-    Planning --> PlanPosted: Plan generated and committed
-    PlanPosted --> PlanApproved: Developer approves
-    PlanPosted --> AnswersReceived: Developer rejects, more clarification
-    PlanApproved --> Implementing: Auto-implementation enabled
-    PlanApproved --> PRCreated: Manual implementation + PR created
-    Implementing --> PRCreated: Code generated and pushed
-    PRCreated --> Completed: PR merged
-    Completed --> [*]
-
-    Triggered --> Cancelled: User cancels
-    QuestionsPosted --> Cancelled: User cancels
-    PlanPosted --> Cancelled: User cancels
-
-    Analyzing --> Failed: Error during analysis
-    Planning --> Failed: Error during planning
-    Implementing --> Failed: Error during implementation
-    Failed --> [*]
-```
-
-### Transition Triggers
+### Common Transition Triggers
 
 | From State | To State | Trigger |
 |------------|----------|---------|

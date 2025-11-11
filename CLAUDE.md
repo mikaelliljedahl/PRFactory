@@ -892,367 +892,46 @@ These items CAN be simplified or removed:
 
 ### 3-Phase Workflow Model
 
-PRFactory orchestrates work through three distinct phases, each managed by its own graph:
+PRFactory orchestrates work through three distinct phases. For complete workflow details including sequence diagrams, state transitions, and example walkthroughs, see [WORKFLOW.md](docs/WORKFLOW.md).
 
-#### Phase 1: Requirements Refinement (RefinementGraph)
+**Brief Overview:**
+1. **Phase 1: Requirements Refinement (RefinementGraph)** - Understand what needs to be built
+2. **Phase 2: Implementation Planning (PlanningGraph)** - Create reviewable implementation plan
+3. **Phase 3: Code Implementation (ImplementationGraph)** - Execute approved plan (optional)
 
-**Purpose**: Understand what needs to be built
+Each phase suspends the workflow for human approval before proceeding to the next phase. This ensures AI assists but humans decide.
 
-**Flow**:
-```
-Trigger → RepositoryClone → Analysis → QuestionGeneration → JiraPost → [HumanWait] → AnswerProcessing
-```
-
-**Key Features:**
-- Clones repository and analyzes codebase context
-- Generates clarifying questions using Claude AI
-- Suspends workflow awaiting human answers
-- Resumes when answers received via webhook
-- Includes retry logic for analysis failures (up to 3 attempts)
-
-**Suspension Point**: After posting questions to Jira, waits for `@claude` mention with answers
-
-**Completion Event**: `RefinementCompleteEvent` → triggers PlanningGraph
-
-#### Phase 2: Implementation Planning (PlanningGraph)
-
-**Purpose**: Create a detailed, reviewable implementation plan
-
-**Flow**:
-```
-Planning → [GitPlan + JiraPost (parallel)] → [HumanWait] → Approval/Rejection → Loop or Continue
-```
-
-**Key Features:**
-- Generates implementation plan using Claude AI with full codebase context
-- **Parallel execution**: Commits plan to git AND posts to Jira simultaneously
-- Suspends workflow awaiting plan approval
-- Loops back to regenerate if rejected (max 5 retries)
-- Tracks rejection reasons for improved regeneration
-
-**Suspension Point**: After posting plan, waits for approval/rejection
-
-**Completion Event**:
-- `PlanApprovedEvent` → triggers ImplementationGraph
-- `PlanRejectedEvent` → loops back to Planning with rejection context
-
-**Loop Behavior**: If plan rejected, incorporates feedback and regenerates (tracks retry count)
-
-#### Phase 3: Code Implementation (ImplementationGraph)
-
-**Purpose**: Optionally implement code based on approved plan
-
-**Flow**:
-```
-[Check Config] → Implementation → GitCommit → [PullRequest + JiraPost (parallel)] → Completion
-```
-
-**Key Features:**
-- **Conditional execution**: Only runs if `AutoImplementAfterPlanApproval` enabled
-- Implements code following approved plan
-- **Parallel execution**: Creates PR AND posts to Jira simultaneously
-- Creates pull request for mandatory human review
-- No suspension points - runs to completion or failure
-
-**Configuration Check**: Tenant-level setting controls whether this phase executes
-
-**Completion**: Workflow marked as completed, PR awaits human merge
-
----
-
-### How Agent Graphs Orchestrate Work
-
-#### Graph Execution Model
-
-Each graph is a self-contained workflow with:
-
-1. **Sequential Stages**: Agents execute in defined order
-2. **Parallel Execution**: Multiple agents can run simultaneously (e.g., GitPlan + JiraPost)
-3. **Checkpointing**: State saved after each significant operation
-4. **Suspension/Resume**: Graphs can pause and resume on external events
-5. **Error Handling**: Per-agent and per-graph error handling with retries
-6. **State Validation**: Ensures only valid state transitions
-
-#### WorkflowOrchestrator Responsibilities
-
-The orchestrator manages the overall workflow lifecycle:
-
-```csharp
-// Coordinates transitions between graphs
-RefinementGraph → (on RefinementCompleteEvent) → PlanningGraph
-PlanningGraph   → (on PlanApprovedEvent)       → ImplementationGraph
-ImplementationGraph → Workflow Completed
-```
-
-**Key Responsibilities:**
-1. **Graph Lifecycle Management**: Start, suspend, resume, cancel workflows
-2. **Event-Driven Transitions**: Listen for graph completion events and trigger next graph
-3. **State Persistence**: Save/load workflow state across executions
-4. **Error Recovery**: Handle graph failures and coordinate retries
-5. **Event Publishing**: Emit workflow-level events (suspended, completed, failed, cancelled)
-
-**Why This Separation Matters:**
-- Graphs focus on their specific workflow logic
-- Orchestrator handles cross-graph concerns
-- Each can evolve independently
-- Easy to add new graphs without modifying existing ones
-
-#### Graph Communication
-
-Graphs communicate via **typed messages**:
-
-```csharp
-// Example message flow:
-TriggerTicketMessage → RefinementGraph
-  ↓
-RefinementCompleteEvent → PlanningGraph
-  ↓
-AnswersReceivedMessage → PlanningGraph
-  ↓
-PlanApprovedEvent → ImplementationGraph
-  ↓
-CompletedMessage
-```
-
-**Benefits:**
-- Type safety and compile-time validation
-- Clear contracts between graphs
-- Easy to add new message types
-- Enables graph testing with mock messages
+For architectural details on how graphs execute and coordinate, see [ARCHITECTURE.md](docs/ARCHITECTURE.md#agent-system).
 
 ---
 
 ### Why Flexibility Matters for Future Enhancements
 
-The multi-graph architecture enables future capabilities **without major refactoring**:
+The multi-graph architecture enables future capabilities without major refactoring. For detailed future plans and timelines, see [ROADMAP.md](docs/ROADMAP.md).
 
-#### 1. Advanced Code Review Workflows
+**Examples of Future Workflows:**
+- **CodeReviewGraph**: Automated review with iteration before PR
+- **TestingGraph**: Automated test generation and execution
+- **ParallelImplementationGraph**: A/B testing multiple approaches
+- **ApprovalGraph**: Multi-stage approval workflows
+- **ContinuousRefinementLoops**: Quality-driven improvement iterations
+- **DeploymentGraph**: Automated deployment orchestration
 
-**New Graph**: `CodeReviewGraph`
-
-```
-PlanningGraph → CodeReviewGraph → [Multiple Review Rounds] → ImplementationGraph
-```
-
-- Automated code review agent suggests improvements
-- Human reviews and provides feedback
-- Agent iterates on implementation before PR creation
-
-#### 2. Testing & Validation Workflows
-
-**New Graph**: `TestingGraph`
-
-```
-ImplementationGraph → TestingGraph → [Run Tests, Generate Additional Tests] → Merge or Fix
-```
-
-- Automated test generation for new code
-- Test execution and result analysis
-- Generate additional edge case tests
-- Loop back to implementation if tests fail
-
-#### 3. A/B Implementation Strategies
-
-**Enhanced Graph**: `ParallelImplementationGraph`
-
-```
-PlanningGraph → [ImplementationGraph_A + ImplementationGraph_B] → ComparisonAgent → Select Winner
-```
-
-- Generate code using multiple approaches
-- Compare results (code quality, test coverage, performance)
-- Human selects best implementation
-
-#### 4. Multi-Stage Approval Workflows
-
-**New Graph**: `ApprovalGraph`
-
-```
-PlanningGraph → TeamLeadApproval → ArchitectApproval → SecurityReview → ImplementationGraph
-```
-
-- Multi-level approval requirements
-- Different approval rules per tenant/repository
-- Automated approval for low-risk changes
-
-#### 5. Continuous Refinement Loops
-
-**Enhanced Orchestrator**: Support feedback loops
-
-```
-ImplementationGraph → [CodeQualityCheck] → (if issues) → RefinementGraph → Improve
-```
-
-- Static analysis of generated code
-- Loop back to refinement if quality below threshold
-- Automated improvement iterations
-
-#### 6. Deployment & Monitoring Workflows
-
-**New Graph**: `DeploymentGraph`
-
-```
-PRMerged → DeploymentGraph → [Deploy to Staging] → [Run E2E Tests] → [Deploy to Prod]
-```
-
-- Automated deployment orchestration
-- Post-deployment validation
-- Rollback on failures
+This is why we preserve the graph abstraction - it's designed for extensibility, not just current features.
 
 ---
 
 ### Multi-Tenant Architecture
 
-PRFactory is designed as a **multi-tenant SaaS application**:
+PRFactory is designed as a multi-tenant SaaS application with strict tenant isolation. For technical details on tenant isolation, security, and configuration, see [ARCHITECTURE.md - Security Architecture](docs/ARCHITECTURE.md#security-architecture).
 
-#### Tenant Isolation
-
-```
-Tenant A                    Tenant B
-  ├── Repositories            ├── Repositories
-  ├── Tickets                 ├── Tickets
-  ├── Credentials (encrypted) ├── Credentials (encrypted)
-  └── Configuration           └── Configuration
-```
-
-**Isolation Guarantees:**
-- Database queries filtered by `TenantId` (EF Core global filters)
-- Workspace directories isolated by tenant
-- Encrypted credentials per-tenant
-- Configuration per-tenant (API limits, feature flags)
-
-#### Tenant-Specific Configuration
-
-```csharp
-public class TenantConfiguration
-{
-    public bool AutoImplementAfterPlanApproval { get; set; }
-    public int MaxTokensPerRequest { get; set; }
-    public bool EnableCodeReview { get; set; }
-    public string[] AllowedRepositories { get; set; }
-    // ... more tenant-specific settings
-}
-```
-
-**Why Configuration Flexibility Matters:**
+**Why This Matters:**
 - Different customers have different approval processes
 - Token limits vary by customer subscription tier
 - Feature flags enable gradual rollout
-- Allows per-tenant customization without code changes
+- Per-tenant customization without code changes
 
-#### Security Considerations
-
-1. **Credential Encryption**: All tokens/secrets encrypted at rest (AES-256)
-2. **Workspace Isolation**: Each tenant's cloned repos in separate directories
-3. **API Rate Limiting**: Per-tenant rate limits for Claude API
-4. **Audit Logging**: All operations logged with tenant context
-5. **No Cross-Tenant Data Access**: Enforced at database query level
-
----
-
-## Multi-Platform Strategy
-
-### The Strategy Pattern Implementation
-
-```
-                    IGitPlatformService (Facade)
-                              │
-                    ┌─────────┴─────────┐
-                    │                   │
-            LocalGitService    IGitPlatformProvider (Strategy)
-            (LibGit2Sharp)              │
-                                ┌───────┼───────┐
-                                │       │       │
-                           GitHub  Bitbucket  Azure DevOps
-```
-
-### Platform Selection
-
-The system automatically selects the correct platform provider based on `Repository.GitPlatform` property:
-
-```csharp
-// Repository entity:
-public class Repository
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; }
-    public string GitPlatform { get; set; } // "GitHub", "Bitbucket", "AzureDevOps", "GitLab"
-    public string CloneUrl { get; set; }
-    public string AccessToken { get; set; }
-    // ...
-}
-
-// Platform provider automatically selected:
-var pr = await _gitService.CreatePullRequestAsync(repositoryId, request);
-// ↑ Uses GitHubProvider if GitPlatform == "GitHub"
-// ↑ Uses BitbucketProvider if GitPlatform == "Bitbucket"
-// ↑ Uses AzureDevOpsProvider if GitPlatform == "AzureDevOps"
-```
-
-### Why Each Platform Matters
-
-#### GitHub
-- **Market**: Open source, startups, mid-market
-- **Features**: Rich API, excellent documentation, wide adoption
-- **Integration**: Octokit .NET library (official)
-
-#### Bitbucket
-- **Market**: Atlassian ecosystem, enterprises using Jira
-- **Features**: Tight Jira integration, self-hosted options
-- **Integration**: REST API (no official .NET SDK)
-
-#### Azure DevOps
-- **Market**: Microsoft shops, enterprises with Azure
-- **Features**: Integrated platform (repos + work items + pipelines)
-- **Integration**: Official Azure DevOps SDK
-
-#### GitLab (Planned)
-- **Market**: Enterprises, DevOps-heavy organizations
-- **Features**: Complete DevSecOps platform, self-hosted common
-- **Integration**: GitLab.NET library available
-
-### Adding a New Platform
-
-To add support for a new platform (example: GitLab):
-
-1. **Create Provider Implementation**:
-```csharp
-public class GitLabProvider : IGitPlatformProvider
-{
-    public string PlatformName => "GitLab";
-
-    public async Task<PullRequestInfo> CreatePullRequestAsync(
-        Guid repositoryId,
-        CreatePullRequestRequest request,
-        CancellationToken ct = default)
-    {
-        // Implementation using GitLab.NET or REST API
-    }
-
-    // ... implement other interface methods
-}
-```
-
-2. **Register in DI**:
-```csharp
-services.AddScoped<IGitPlatformProvider, GitLabProvider>();
-```
-
-3. **Update Repository Configuration**:
-```csharp
-var repo = new Repository
-{
-    GitPlatform = "GitLab", // <- New platform
-    CloneUrl = "https://gitlab.com/org/repo.git",
-    // ...
-};
-```
-
-4. **That's it!** No changes to:
-- Core business logic
-- Domain entities
-- Workflow graphs
-- Agent implementations
+**DO NOT** remove or simplify multi-tenant isolation - this is a core business model requirement.
 
 ---
 

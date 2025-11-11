@@ -1,6 +1,6 @@
 # PRFactory Roadmap
 
-**Last Updated**: 2025-11-10
+**Last Updated**: 2025-11-11
 **Purpose**: Clear future vision separated from current implementation
 
 This document outlines planned enhancements beyond the current MVP implementation.
@@ -20,6 +20,17 @@ This document outlines planned enhancements beyond the current MVP implementatio
 
 ## Recently Completed ✅
 
+### Authentication & User Management (PR #52 - Nov 11, 2025)
+- ✅ OAuth 2.0 integration with Microsoft Azure AD and Google Workspace
+- ✅ Auto-provisioning of tenants and users from identity providers
+- ✅ Role-based access control (Owner, Admin, Member, Viewer)
+- ✅ ProvisioningService and CurrentUserService (replaces StubCurrentUserService)
+- ✅ Complete Blazor UI (Login, Welcome, Profile dropdown)
+- ✅ ASP.NET Core Identity integration with encrypted credentials
+- ✅ 40 comprehensive unit tests (100% pass rate)
+- ✅ Security enhancements (open redirect protection, personal account blocking)
+- ⚠️ OAuth client registration required (Google/Microsoft app credentials)
+
 ### Multi-LLM Provider Support (PR #48 - Nov 10, 2025)
 - ✅ TenantLlmProvider entity with support for 6 provider types:
   - Anthropic Native (OAuth), Z.ai, Minimax M2, OpenRouter, Together AI, Custom
@@ -31,7 +42,7 @@ This document outlines planned enhancements beyond the current MVP implementatio
 - ✅ Ticket-level provider selection
 
 ### Test Coverage Expansion (PR #46 - Nov 9, 2025)
-- ✅ **606 passing tests** (from 151) - 302% increase
+- ✅ **708 passing tests** (from 151) - includes authentication tests
 - ✅ 88% code coverage achieved (exceeded 80% target)
 - ✅ Domain entities, repositories, graphs, services, and DI tested
 - ⚠️ Remaining gaps: TenantLlmProvider tests, ProcessExecutor tests, UI component tests
@@ -40,24 +51,25 @@ This document outlines planned enhancements beyond the current MVP implementatio
 
 ## Short Term (Next 3 Months)
 
-### 🔐 Authentication & User Management (CRITICAL PRIORITY)
+### 🔐 Authentication & User Management ⚠️ **MOSTLY COMPLETE**
 
-**Goal**: Replace StubCurrentUserService with production-ready authentication
+**Goal**: ✅ Core authentication complete, UI enhancements remaining
 
-- [ ] **OAuth 2.0 SSO Integration**
-  - [ ] Google OAuth provider
-  - [ ] Microsoft OAuth provider
-  - [ ] User profile management (display name, avatar)
-  - [ ] Session management and token refresh
-  - [ ] Replace StubCurrentUserService with real implementation
+- [x] **OAuth 2.0 SSO Integration** ✅ **COMPLETED (PR #52)**
+  - [x] Google OAuth provider (Google Workspace)
+  - [x] Microsoft OAuth provider (Azure AD)
+  - [x] User profile management (display name, avatar)
+  - [x] Session management and token refresh
+  - [x] Replace StubCurrentUserService with real implementation ✅
+  - [ ] **OAuth client registration** (Google/Microsoft app credentials required)
 
-- [ ] **User Management UI**
+- [ ] **User Management UI** (Next sprint)
   - [ ] User profile page
   - [ ] Team member management
   - [ ] User search and assignment
-  - [ ] User roles and permissions (basic RBAC)
+  - [ ] User roles and permissions UI (RBAC implemented, UI pending)
 
-**Success Criteria**: Users can sign in with Google/Microsoft, StubCurrentUserService removed
+**Success Criteria**: ✅ Core complete - Users can sign in with Google/Microsoft, StubCurrentUserService removed. OAuth client registration and UI enhancements remain.
 
 ---
 
@@ -65,12 +77,13 @@ This document outlines planned enhancements beyond the current MVP implementatio
 
 **Goal**: Complete remaining test coverage gaps for production readiness
 
-- [x] **Unit Test Suite** ✅ **COMPLETED** (PR #46)
+- [x] **Unit Test Suite** ✅ **MOSTLY COMPLETE** (PR #46, #52)
   - [x] Target: 80% code coverage → **88% achieved**
-  - [x] 606 passing tests across all layers
+  - [x] **708 passing tests** across all layers (includes authentication)
   - [x] Domain entities tested
   - [x] Graphs tested
   - [x] Git providers tested
+  - [x] Authentication tested (ProvisioningService, CurrentUserService - 40 tests)
   - [ ] TenantLlmProvider tests (new entity from PR #48)
   - [ ] ProcessExecutor tests (new service from PR #48)
   - [ ] Encryption service tests

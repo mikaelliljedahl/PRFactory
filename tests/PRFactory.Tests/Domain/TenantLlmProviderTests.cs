@@ -1,4 +1,5 @@
 using PRFactory.Domain.Entities;
+using PRFactory.Domain.ValueObjects;
 using Xunit;
 
 namespace PRFactory.Tests.Domain;
@@ -16,14 +17,17 @@ public class TenantLlmProviderTests
     [Fact]
     public void CreateApiKeyProvider_WithValidInputs_ReturnsValidProvider()
     {
-        // Act
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        // Arrange
+        var config = new ApiKeyProviderConfiguration(
             _tenantId,
             ValidName,
             LlmProviderType.ZAi,
             ValidApiBaseUrl,
             ValidApiToken,
             ValidModel);
+
+        // Act
+        var provider = TenantLlmProvider.CreateApiKeyProvider(config);
 
         // Assert
         Assert.NotNull(provider);
@@ -48,8 +52,8 @@ public class TenantLlmProviderTests
     [Fact]
     public void CreateApiKeyProvider_WithCustomTimeout_SetsTimeout()
     {
-        // Act
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        // Arrange
+        var config = new ApiKeyProviderConfiguration(
             _tenantId,
             ValidName,
             LlmProviderType.MinimaxM2,
@@ -58,6 +62,9 @@ public class TenantLlmProviderTests
             ValidModel,
             timeoutMs: 600000);
 
+        // Act
+        var provider = TenantLlmProvider.CreateApiKeyProvider(config);
+
         // Assert
         Assert.Equal(600000, provider.TimeoutMs);
     }
@@ -65,8 +72,8 @@ public class TenantLlmProviderTests
     [Fact]
     public void CreateApiKeyProvider_WithDisableNonEssentialTraffic_SetsFlag()
     {
-        // Act
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        // Arrange
+        var config = new ApiKeyProviderConfiguration(
             _tenantId,
             ValidName,
             LlmProviderType.MinimaxM2,
@@ -74,6 +81,9 @@ public class TenantLlmProviderTests
             ValidApiToken,
             ValidModel,
             disableNonEssentialTraffic: true);
+
+        // Act
+        var provider = TenantLlmProvider.CreateApiKeyProvider(config);
 
         // Assert
         Assert.True(provider.DisableNonEssentialTraffic);
@@ -89,8 +99,7 @@ public class TenantLlmProviderTests
             ["default_sonnet_model"] = "MiniMax-M2"
         };
 
-        // Act
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var config = new ApiKeyProviderConfiguration(
             _tenantId,
             ValidName,
             LlmProviderType.MinimaxM2,
@@ -98,6 +107,9 @@ public class TenantLlmProviderTests
             ValidApiToken,
             ValidModel,
             modelOverrides: modelOverrides);
+
+        // Act
+        var provider = TenantLlmProvider.CreateApiKeyProvider(config);
 
         // Assert
         Assert.NotNull(provider.ModelOverrides);
@@ -111,7 +123,7 @@ public class TenantLlmProviderTests
     {
         // Act & Assert
         var ex = Assert.Throws<ArgumentException>(() =>
-            TenantLlmProvider.CreateApiKeyProvider(
+            new ApiKeyProviderConfiguration(
                 Guid.Empty,
                 ValidName,
                 LlmProviderType.ZAi,
@@ -130,7 +142,7 @@ public class TenantLlmProviderTests
     {
         // Act & Assert
         var ex = Assert.Throws<ArgumentException>(() =>
-            TenantLlmProvider.CreateApiKeyProvider(
+            new ApiKeyProviderConfiguration(
                 _tenantId,
                 invalidName!,
                 LlmProviderType.ZAi,
@@ -149,7 +161,7 @@ public class TenantLlmProviderTests
     {
         // Act & Assert
         var ex = Assert.Throws<ArgumentException>(() =>
-            TenantLlmProvider.CreateApiKeyProvider(
+            new ApiKeyProviderConfiguration(
                 _tenantId,
                 ValidName,
                 LlmProviderType.ZAi,
@@ -168,7 +180,7 @@ public class TenantLlmProviderTests
     {
         // Act & Assert
         var ex = Assert.Throws<ArgumentException>(() =>
-            TenantLlmProvider.CreateApiKeyProvider(
+            new ApiKeyProviderConfiguration(
                 _tenantId,
                 ValidName,
                 LlmProviderType.ZAi,
@@ -187,7 +199,7 @@ public class TenantLlmProviderTests
     {
         // Act & Assert
         var ex = Assert.Throws<ArgumentException>(() =>
-            TenantLlmProvider.CreateApiKeyProvider(
+            new ApiKeyProviderConfiguration(
                 _tenantId,
                 ValidName,
                 LlmProviderType.ZAi,
@@ -271,13 +283,14 @@ public class TenantLlmProviderTests
     public void UpdateApiToken_WithValidToken_UpdatesToken()
     {
         // Arrange
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var config = new ApiKeyProviderConfiguration(
             _tenantId,
             ValidName,
             LlmProviderType.ZAi,
             ValidApiBaseUrl,
             ValidApiToken,
             ValidModel);
+        var provider = TenantLlmProvider.CreateApiKeyProvider(config);
 
         const string newToken = "new-encrypted-token";
 
@@ -330,13 +343,14 @@ public class TenantLlmProviderTests
     public void UpdateConfiguration_WithNewName_UpdatesName()
     {
         // Arrange
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var config = new ApiKeyProviderConfiguration(
             _tenantId,
             ValidName,
             LlmProviderType.ZAi,
             ValidApiBaseUrl,
             ValidApiToken,
             ValidModel);
+        var provider = TenantLlmProvider.CreateApiKeyProvider(config);
 
         const string newName = "Updated Provider";
 
@@ -352,13 +366,14 @@ public class TenantLlmProviderTests
     public void UpdateConfiguration_WithNewApiBaseUrl_UpdatesUrl()
     {
         // Arrange
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var config = new ApiKeyProviderConfiguration(
             _tenantId,
             ValidName,
             LlmProviderType.ZAi,
             ValidApiBaseUrl,
             ValidApiToken,
             ValidModel);
+        var provider = TenantLlmProvider.CreateApiKeyProvider(config);
 
         const string newUrl = "https://api.newprovider.com";
 
@@ -374,13 +389,14 @@ public class TenantLlmProviderTests
     public void UpdateConfiguration_WithNewDefaultModel_UpdatesModel()
     {
         // Arrange
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var config = new ApiKeyProviderConfiguration(
             _tenantId,
             ValidName,
             LlmProviderType.ZAi,
             ValidApiBaseUrl,
             ValidApiToken,
             ValidModel);
+        var provider = TenantLlmProvider.CreateApiKeyProvider(config);
 
         const string newModel = "gpt-4o";
 
@@ -396,13 +412,14 @@ public class TenantLlmProviderTests
     public void UpdateConfiguration_WithNewTimeout_UpdatesTimeout()
     {
         // Arrange
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var config = new ApiKeyProviderConfiguration(
             _tenantId,
             ValidName,
             LlmProviderType.ZAi,
             ValidApiBaseUrl,
             ValidApiToken,
             ValidModel);
+        var provider = TenantLlmProvider.CreateApiKeyProvider(config);
 
         // Act
         provider.UpdateConfiguration(timeoutMs: 600000);
@@ -416,13 +433,14 @@ public class TenantLlmProviderTests
     public void UpdateConfiguration_WithDisableNonEssentialTraffic_UpdatesFlag()
     {
         // Arrange
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var config = new ApiKeyProviderConfiguration(
             _tenantId,
             ValidName,
             LlmProviderType.ZAi,
             ValidApiBaseUrl,
             ValidApiToken,
             ValidModel);
+        var provider = TenantLlmProvider.CreateApiKeyProvider(config);
 
         // Act
         provider.UpdateConfiguration(disableNonEssentialTraffic: true);
@@ -436,13 +454,14 @@ public class TenantLlmProviderTests
     public void UpdateConfiguration_WithModelOverrides_UpdatesOverrides()
     {
         // Arrange
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var config = new ApiKeyProviderConfiguration(
             _tenantId,
             ValidName,
             LlmProviderType.MinimaxM2,
             ValidApiBaseUrl,
             ValidApiToken,
             ValidModel);
+        var provider = TenantLlmProvider.CreateApiKeyProvider(config);
 
         var newOverrides = new Dictionary<string, string>
         {
@@ -465,13 +484,14 @@ public class TenantLlmProviderTests
     public void UpdateConfiguration_WithMultipleFields_UpdatesAll()
     {
         // Arrange
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var config = new ApiKeyProviderConfiguration(
             _tenantId,
             ValidName,
             LlmProviderType.ZAi,
             ValidApiBaseUrl,
             ValidApiToken,
             ValidModel);
+        var provider = TenantLlmProvider.CreateApiKeyProvider(config);
 
         const string newName = "Multi-Update Provider";
         const string newUrl = "https://api.multi.com";
@@ -503,13 +523,14 @@ public class TenantLlmProviderTests
     public void UpdateConfiguration_WithNoChanges_StillUpdatesTimestamp()
     {
         // Arrange
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var config = new ApiKeyProviderConfiguration(
             _tenantId,
             ValidName,
             LlmProviderType.ZAi,
             ValidApiBaseUrl,
             ValidApiToken,
             ValidModel);
+        var provider = TenantLlmProvider.CreateApiKeyProvider(config);
 
         Assert.Null(provider.UpdatedAt);
 
@@ -528,13 +549,14 @@ public class TenantLlmProviderTests
     public void SetAsDefault_SetsIsDefaultToTrue()
     {
         // Arrange
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var config = new ApiKeyProviderConfiguration(
             _tenantId,
             ValidName,
             LlmProviderType.ZAi,
             ValidApiBaseUrl,
             ValidApiToken,
             ValidModel);
+        var provider = TenantLlmProvider.CreateApiKeyProvider(config);
 
         Assert.False(provider.IsDefault);
 
@@ -550,13 +572,14 @@ public class TenantLlmProviderTests
     public void RemoveAsDefault_SetsIsDefaultToFalse()
     {
         // Arrange
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var config = new ApiKeyProviderConfiguration(
             _tenantId,
             ValidName,
             LlmProviderType.ZAi,
             ValidApiBaseUrl,
             ValidApiToken,
             ValidModel);
+        var provider = TenantLlmProvider.CreateApiKeyProvider(config);
 
         provider.SetAsDefault();
         Assert.True(provider.IsDefault);
@@ -577,13 +600,14 @@ public class TenantLlmProviderTests
     public void Activate_SetsIsActiveToTrue()
     {
         // Arrange
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var config = new ApiKeyProviderConfiguration(
             _tenantId,
             ValidName,
             LlmProviderType.ZAi,
             ValidApiBaseUrl,
             ValidApiToken,
             ValidModel);
+        var provider = TenantLlmProvider.CreateApiKeyProvider(config);
 
         provider.Deactivate();
         Assert.False(provider.IsActive);
@@ -600,13 +624,14 @@ public class TenantLlmProviderTests
     public void Deactivate_SetsIsActiveToFalse()
     {
         // Arrange
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var config = new ApiKeyProviderConfiguration(
             _tenantId,
             ValidName,
             LlmProviderType.ZAi,
             ValidApiBaseUrl,
             ValidApiToken,
             ValidModel);
+        var provider = TenantLlmProvider.CreateApiKeyProvider(config);
 
         Assert.True(provider.IsActive);
 
@@ -626,13 +651,14 @@ public class TenantLlmProviderTests
     public void GenerateClaudeSettingsEnv_WithBasicProvider_GeneratesBasicEnv()
     {
         // Arrange
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var config = new ApiKeyProviderConfiguration(
             _tenantId,
             ValidName,
             LlmProviderType.ZAi,
             ValidApiBaseUrl,
             ValidApiToken,
             ValidModel);
+        var provider = TenantLlmProvider.CreateApiKeyProvider(config);
 
         const string decryptedToken = "decrypted-api-key-123";
 
@@ -671,7 +697,7 @@ public class TenantLlmProviderTests
     public void GenerateClaudeSettingsEnv_WithDisableNonEssentialTraffic_IncludesFlag()
     {
         // Arrange
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var config = new ApiKeyProviderConfiguration(
             _tenantId,
             ValidName,
             LlmProviderType.MinimaxM2,
@@ -679,6 +705,7 @@ public class TenantLlmProviderTests
             ValidApiToken,
             ValidModel,
             disableNonEssentialTraffic: true);
+        var provider = TenantLlmProvider.CreateApiKeyProvider(config);
 
         const string decryptedToken = "decrypted-api-key";
 
@@ -701,7 +728,7 @@ public class TenantLlmProviderTests
             ["extended_model"] = "MiniMax-M2-Extended"
         };
 
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var config = new ApiKeyProviderConfiguration(
             _tenantId,
             ValidName,
             LlmProviderType.MinimaxM2,
@@ -709,6 +736,7 @@ public class TenantLlmProviderTests
             ValidApiToken,
             ValidModel,
             modelOverrides: modelOverrides);
+        var provider = TenantLlmProvider.CreateApiKeyProvider(config);
 
         const string decryptedToken = "decrypted-api-key";
 
@@ -726,7 +754,7 @@ public class TenantLlmProviderTests
     public void GenerateClaudeSettingsEnv_WithCustomTimeout_UsesCustomTimeout()
     {
         // Arrange
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var config = new ApiKeyProviderConfiguration(
             _tenantId,
             ValidName,
             LlmProviderType.ZAi,
@@ -734,6 +762,7 @@ public class TenantLlmProviderTests
             ValidApiToken,
             ValidModel,
             timeoutMs: 600000);
+        var provider = TenantLlmProvider.CreateApiKeyProvider(config);
 
         const string decryptedToken = "decrypted-api-key";
 
@@ -754,7 +783,7 @@ public class TenantLlmProviderTests
             ["model_2"] = "override-2"
         };
 
-        var provider = TenantLlmProvider.CreateApiKeyProvider(
+        var config = new ApiKeyProviderConfiguration(
             _tenantId,
             ValidName,
             LlmProviderType.MinimaxM2,
@@ -764,6 +793,8 @@ public class TenantLlmProviderTests
             timeoutMs: 450000,
             disableNonEssentialTraffic: true,
             modelOverrides: modelOverrides);
+
+        var provider = TenantLlmProvider.CreateApiKeyProvider(config);
 
         const string decryptedToken = "full-featured-token";
 

@@ -83,8 +83,7 @@ public class QuestionAdded : WorkflowEvent
     /// </summary>
     public QuestionAdded(Guid ticketId, Question question)
     {
-        if (question == null)
-            throw new ArgumentNullException(nameof(question));
+        ArgumentNullException.ThrowIfNull(question);
 
         TicketId = ticketId;
         Question = question;

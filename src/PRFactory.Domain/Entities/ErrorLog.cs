@@ -76,7 +76,7 @@ public class ErrorLog
     /// <summary>
     /// Navigation property to the tenant
     /// </summary>
-    public Tenant? Tenant { get; private set; }
+    public Tenant? Tenant { get; }
 
     private ErrorLog() { }
 

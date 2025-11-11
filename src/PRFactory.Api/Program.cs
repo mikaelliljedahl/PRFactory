@@ -4,6 +4,9 @@ using Serilog;
 using Serilog.Events;
 using System.Reflection;
 
+// Default allowed CORS origins (static to avoid repeated allocations)
+var defaultAllowedOrigins = new[] { "http://localhost:3000", "http://localhost:5173" };
+
 var builder = WebApplication.CreateBuilder(args);
 
 // ============================================================================
@@ -83,7 +86,7 @@ builder.Services.AddCors(options =>
     {
         // Get allowed origins from configuration
         var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-            ?? new[] { "http://localhost:3000", "http://localhost:5173" };
+            ?? defaultAllowedOrigins;
 
         policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
@@ -155,9 +158,9 @@ app.MapHealthChecks("/health");
 // ============================================================================
 try
 {
-    Log.Information("Starting PRFactory.Api");
-    Log.Information("Environment: {Environment}", app.Environment.EnvironmentName);
-    Log.Information("Configuration loaded from: {ConfigurationSource}",
+    Log.Information(
+        "Starting PRFactory.Api - Environment: {Environment}, Configuration: {ConfigurationSource}",
+        app.Environment.EnvironmentName,
         builder.Configuration.GetDebugView());
 
     await app.RunAsync();

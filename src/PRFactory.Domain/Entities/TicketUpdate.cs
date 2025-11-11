@@ -76,7 +76,7 @@ public class TicketUpdate
     /// <summary>
     /// Navigation property to the parent ticket
     /// </summary>
-    public Ticket? Ticket { get; private set; }
+    public Ticket? Ticket { get; }
 
     private TicketUpdate() { }
 
@@ -100,7 +100,7 @@ public class TicketUpdate
         if (string.IsNullOrWhiteSpace(updatedDescription))
             throw new ArgumentException("Updated description cannot be empty", nameof(updatedDescription));
 
-        if (successCriteria == null || !successCriteria.Any())
+        if (successCriteria == null || successCriteria.Count == 0)
             throw new ArgumentException("Success criteria cannot be empty", nameof(successCriteria));
 
         if (string.IsNullOrWhiteSpace(acceptanceCriteria))
@@ -190,7 +190,7 @@ public class TicketUpdate
         if (string.IsNullOrWhiteSpace(updatedDescription))
             throw new ArgumentException("Updated description cannot be empty", nameof(updatedDescription));
 
-        if (successCriteria == null || !successCriteria.Any())
+        if (successCriteria == null || successCriteria.Count == 0)
             throw new ArgumentException("Success criteria cannot be empty", nameof(successCriteria));
 
         if (string.IsNullOrWhiteSpace(acceptanceCriteria))

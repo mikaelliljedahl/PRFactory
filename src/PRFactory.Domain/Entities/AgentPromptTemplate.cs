@@ -64,7 +64,7 @@ public class AgentPromptTemplate
     /// <summary>
     /// Navigation property to tenant
     /// </summary>
-    public Tenant? Tenant { get; private init; }
+    public Tenant? Tenant { get; }
 
     private AgentPromptTemplate() { }
 

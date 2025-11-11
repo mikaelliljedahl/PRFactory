@@ -290,7 +290,7 @@ public class TicketUpdatesController : ControllerBase
     /// <summary>
     /// Maps a TicketUpdate entity to a TicketUpdateResponse DTO
     /// </summary>
-    private TicketUpdateResponse MapToResponse(Domain.Entities.TicketUpdate ticketUpdate, string ticketKey)
+    private static TicketUpdateResponse MapToResponse(Domain.Entities.TicketUpdate ticketUpdate, string ticketKey)
     {
         return new TicketUpdateResponse
         {

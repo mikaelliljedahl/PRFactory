@@ -10,6 +10,10 @@ namespace PRFactory.Infrastructure.Application;
 /// </summary>
 public class ProvisioningService : IProvisioningService
 {
+    private const string PlaceholderTicketPlatformUrl = "https://placeholder.example.com";
+    private const string PlaceholderApiToken = "PLACEHOLDER_TOKEN";
+    private const string PlaceholderClaudeApiKey = "PLACEHOLDER_API_KEY";
+
     private readonly ITenantRepository _tenantRepository;
     private readonly IUserRepository _userRepository;
     private readonly ILogger<ProvisioningService> _logger;
@@ -69,9 +73,9 @@ public class ProvisioningService : IProvisioningService
                 name: tenantName,
                 identityProvider: identityProvider,
                 externalTenantId: effectiveExternalTenantId,
-                ticketPlatformUrl: "https://placeholder.example.com", // Placeholder - user will configure later
-                ticketPlatformApiToken: "PLACEHOLDER_TOKEN", // Placeholder - user will configure later
-                claudeApiKey: GetClaudeApiKeyFromEnvironment() ?? "PLACEHOLDER_API_KEY", // Try environment variable or placeholder
+                ticketPlatformUrl: PlaceholderTicketPlatformUrl, // Placeholder - user will configure later
+                ticketPlatformApiToken: PlaceholderApiToken, // Placeholder - user will configure later
+                claudeApiKey: GetClaudeApiKeyFromEnvironment() ?? PlaceholderClaudeApiKey, // Try environment variable or placeholder
                 ticketPlatform: "Jira");
 
             // Mark tenant as inactive - requires configuration before use
@@ -148,7 +152,7 @@ public class ProvisioningService : IProvisioningService
     /// <summary>
     /// Determines a tenant name based on identity provider and external tenant ID
     /// </summary>
-    private string DetermineTenantName(string identityProvider, string? externalTenantId, string email)
+    private static string DetermineTenantName(string identityProvider, string? externalTenantId, string email)
     {
         // For Google Workspace, use the domain
         if (identityProvider == "GoogleWorkspace" && !string.IsNullOrWhiteSpace(externalTenantId))
@@ -176,7 +180,7 @@ public class ProvisioningService : IProvisioningService
     /// <summary>
     /// Tries to get Claude API key from environment variable
     /// </summary>
-    private string? GetClaudeApiKeyFromEnvironment()
+    private static string? GetClaudeApiKeyFromEnvironment()
     {
         // Try to get from environment variable (useful for development)
         return Environment.GetEnvironmentVariable("CLAUDE_API_KEY")

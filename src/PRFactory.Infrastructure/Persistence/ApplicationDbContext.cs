@@ -62,111 +62,111 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
     // LLM Provider DbSets
     public DbSet<TenantLlmProvider> TenantLlmProviders => Set<TenantLlmProvider>();
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    protected override void OnModelCreating(ModelBuilder builder)
     {
         // IMPORTANT: Call base first to configure Identity tables
-        base.OnModelCreating(modelBuilder);
+        base.OnModelCreating(builder);
 
         // Apply entity configurations
-        modelBuilder.ApplyConfiguration(new TenantConfig(_encryptionService));
-        modelBuilder.ApplyConfiguration(new RepositoryConfig(_encryptionService));
-        modelBuilder.ApplyConfiguration(new TicketConfig());
-        modelBuilder.ApplyConfiguration(new TicketUpdateConfig());
-        modelBuilder.ApplyConfiguration(new WorkflowEventConfig());
-        modelBuilder.ApplyConfiguration(new WorkflowStateConfig());
-        modelBuilder.ApplyConfiguration(new CheckpointConfig());
-        modelBuilder.ApplyConfiguration(new AgentPromptTemplateConfig());
+        builder.ApplyConfiguration(new TenantConfig(_encryptionService));
+        builder.ApplyConfiguration(new RepositoryConfig(_encryptionService));
+        builder.ApplyConfiguration(new TicketConfig());
+        builder.ApplyConfiguration(new TicketUpdateConfig());
+        builder.ApplyConfiguration(new WorkflowEventConfig());
+        builder.ApplyConfiguration(new WorkflowStateConfig());
+        builder.ApplyConfiguration(new CheckpointConfig());
+        builder.ApplyConfiguration(new AgentPromptTemplateConfig());
 
         // Team Review configurations
-        modelBuilder.ApplyConfiguration(new UserConfig());
-        modelBuilder.ApplyConfiguration(new PlanReviewConfig());
-        modelBuilder.ApplyConfiguration(new ReviewCommentConfig());
+        builder.ApplyConfiguration(new UserConfig());
+        builder.ApplyConfiguration(new PlanReviewConfig());
+        builder.ApplyConfiguration(new ReviewCommentConfig());
 
         // LLM Provider configuration
-        modelBuilder.ApplyConfiguration(new TenantLlmProviderConfig(_encryptionService));
+        builder.ApplyConfiguration(new TenantLlmProviderConfig(_encryptionService));
 
         // Add indexes for common queries
-        AddIndexes(modelBuilder);
+        AddIndexes(builder);
 
         // Configure enum conversions
-        ConfigureEnumConversions(modelBuilder);
+        ConfigureEnumConversions(builder);
     }
 
-    private void AddIndexes(ModelBuilder modelBuilder)
+    private void AddIndexes(ModelBuilder builder)
     {
         // Ticket indexes
-        modelBuilder.Entity<Ticket>()
+        builder.Entity<Ticket>()
             .HasIndex(t => t.TicketKey)
             .IsUnique();
 
-        modelBuilder.Entity<Ticket>()
+        builder.Entity<Ticket>()
             .HasIndex(t => t.TenantId);
 
-        modelBuilder.Entity<Ticket>()
+        builder.Entity<Ticket>()
             .HasIndex(t => t.RepositoryId);
 
-        modelBuilder.Entity<Ticket>()
+        builder.Entity<Ticket>()
             .HasIndex(t => t.State);
 
-        modelBuilder.Entity<Ticket>()
+        builder.Entity<Ticket>()
             .HasIndex(t => new { t.State, t.TenantId });
 
-        modelBuilder.Entity<Ticket>()
+        builder.Entity<Ticket>()
             .HasIndex(t => t.CreatedAt);
 
         // Repository indexes
-        modelBuilder.Entity<Repository>()
+        builder.Entity<Repository>()
             .HasIndex(r => r.TenantId);
 
-        modelBuilder.Entity<Repository>()
+        builder.Entity<Repository>()
             .HasIndex(r => r.CloneUrl)
             .IsUnique();
 
-        modelBuilder.Entity<Repository>()
+        builder.Entity<Repository>()
             .HasIndex(r => r.GitPlatform);
 
         // Tenant indexes
-        modelBuilder.Entity<Tenant>()
+        builder.Entity<Tenant>()
             .HasIndex(t => t.Name)
             .IsUnique();
 
-        modelBuilder.Entity<Tenant>()
+        builder.Entity<Tenant>()
             .HasIndex(t => t.IsActive);
 
         // WorkflowEvent indexes
-        modelBuilder.Entity<WorkflowEvent>()
+        builder.Entity<WorkflowEvent>()
             .HasIndex(e => e.TicketId);
 
-        modelBuilder.Entity<WorkflowEvent>()
+        builder.Entity<WorkflowEvent>()
             .HasIndex(e => e.OccurredAt);
 
-        modelBuilder.Entity<WorkflowEvent>()
+        builder.Entity<WorkflowEvent>()
             .HasIndex(e => e.EventType);
 
         // ErrorLog indexes
-        modelBuilder.Entity<ErrorLog>()
+        builder.Entity<ErrorLog>()
             .HasIndex(e => e.TenantId);
 
-        modelBuilder.Entity<ErrorLog>()
+        builder.Entity<ErrorLog>()
             .HasIndex(e => e.Severity);
 
-        modelBuilder.Entity<ErrorLog>()
+        builder.Entity<ErrorLog>()
             .HasIndex(e => e.IsResolved);
 
-        modelBuilder.Entity<ErrorLog>()
+        builder.Entity<ErrorLog>()
             .HasIndex(e => e.CreatedAt);
 
-        modelBuilder.Entity<ErrorLog>()
+        builder.Entity<ErrorLog>()
             .HasIndex(e => new { e.EntityType, e.EntityId });
 
-        modelBuilder.Entity<ErrorLog>()
+        builder.Entity<ErrorLog>()
             .HasIndex(e => new { e.TenantId, e.IsResolved, e.Severity });
     }
 
-    private void ConfigureEnumConversions(ModelBuilder modelBuilder)
+    private void ConfigureEnumConversions(ModelBuilder builder)
     {
         // Convert WorkflowState enum to string in database
-        modelBuilder.Entity<Ticket>()
+        builder.Entity<Ticket>()
             .Property(t => t.State)
             .HasConversion(
                 v => v.ToString(),
@@ -174,14 +174,14 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
             );
 
         // Also for WorkflowStateChanged events
-        modelBuilder.Entity<WorkflowStateChanged>()
+        builder.Entity<WorkflowStateChanged>()
             .Property(e => e.From)
             .HasConversion(
                 v => v.ToString(),
                 v => (WorkflowState)Enum.Parse(typeof(WorkflowState), v)
             );
 
-        modelBuilder.Entity<WorkflowStateChanged>()
+        builder.Entity<WorkflowStateChanged>()
             .Property(e => e.To)
             .HasConversion(
                 v => v.ToString(),
@@ -189,7 +189,7 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
             );
 
         // ErrorLog enum conversion
-        modelBuilder.Entity<ErrorLog>()
+        builder.Entity<ErrorLog>()
             .Property(e => e.Severity)
             .HasConversion(
                 v => v.ToString(),
@@ -197,7 +197,7 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
             );
 
         // QuestionAdded - store Question as JSON
-        modelBuilder.Entity<QuestionAdded>()
+        builder.Entity<QuestionAdded>()
             .OwnsOne(e => e.Question, question =>
             {
                 question.ToJson();

@@ -6,6 +6,9 @@ using Serilog;
 using Serilog.Events;
 using System.Reflection;
 
+// Constants
+const string NotConfiguredPlaceholder = "not-configured";
+
 // Default allowed CORS origins (static to avoid repeated allocations)
 var defaultAllowedOrigins = new[] { "http://localhost:3000", "http://localhost:5173" };
 
@@ -117,9 +120,9 @@ builder.Services.AddAuthentication()
     .AddGoogle(options =>
     {
         options.ClientId = builder.Configuration["Authentication:Google:ClientId"]
-            ?? "not-configured";
+            ?? NotConfiguredPlaceholder;
         options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]
-            ?? "not-configured";
+            ?? NotConfiguredPlaceholder;
         options.CallbackPath = "/signin-google";
         options.Scope.Add("openid");
         options.Scope.Add("profile");
@@ -131,9 +134,9 @@ builder.Services.AddAuthentication()
     .AddMicrosoftAccount(options =>
     {
         options.ClientId = builder.Configuration["Authentication:Microsoft:ClientId"]
-            ?? "not-configured";
+            ?? NotConfiguredPlaceholder;
         options.ClientSecret = builder.Configuration["Authentication:Microsoft:ClientSecret"]
-            ?? "not-configured";
+            ?? NotConfiguredPlaceholder;
         options.CallbackPath = "/signin-microsoft";
         options.Scope.Add("openid");
         options.Scope.Add("profile");

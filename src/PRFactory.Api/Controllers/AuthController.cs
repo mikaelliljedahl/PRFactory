@@ -13,6 +13,12 @@ namespace PRFactory.Api.Controllers;
 [ApiController]
 public class AuthController : ControllerBase
 {
+    private const string ErrorPagePath = "/auth/error";
+    private const string WelcomePagePath = "/auth/welcome";
+    private const string LoginPagePath = "/auth/login";
+    private const string PersonalAccountNotSupportedPath = "/auth/personal-account-not-supported";
+    private const string DefaultReturnPath = "/";
+
     private readonly SignInManager<IdentityUser> _signInManager;
     private readonly UserManager<IdentityUser> _userManager;
     private readonly IProvisioningService _provisioningService;
@@ -66,55 +72,29 @@ public class AuthController : ControllerBase
             if (info == null)
             {
                 _logger.LogWarning("External login info was null");
-                return Redirect("/auth/login");
+                return Redirect(LoginPagePath);
             }
 
-            // 2. Extract claims
-            var externalUserId = info.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
-            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
-            var displayName = info.Principal.FindFirstValue(ClaimTypes.Name);
-            var identityProvider = info.LoginProvider; // "Microsoft" or "Google"
+            // 2. Extract claims and validate provider
+            var (externalUserId, email, displayName, identityProvider, externalTenantId, validationResult) =
+                ExtractAndValidateExternalLoginInfo(info);
 
-            _logger.LogInformation(
-                "External login callback: Provider={Provider}, ExternalUserId={ExternalUserId}, Email={Email}, DisplayName={DisplayName}",
-                identityProvider, externalUserId, email, displayName);
-
-            // 3. Extract tenant identifier
-            string? externalTenantId = null;
-            if (identityProvider == "Microsoft")
+            if (validationResult != null)
             {
-                externalTenantId = info.Principal.FindFirstValue("tid"); // Azure AD tenant ID
-                identityProvider = "AzureAD";
-
-                _logger.LogInformation("Azure AD tenant ID: {TenantId}", externalTenantId);
-            }
-            else if (identityProvider == "Google")
-            {
-                externalTenantId = info.Principal.FindFirstValue("hd"); // Google Workspace domain
-
-                if (!string.IsNullOrEmpty(externalTenantId))
-                {
-                    identityProvider = "GoogleWorkspace";
-                    _logger.LogInformation("Google Workspace domain: {Domain}", externalTenantId);
-                }
-                else
-                {
-                    _logger.LogWarning("Personal Google account attempted to sign in: {Email}", email);
-                    return Redirect("/auth/personal-account-not-supported");
-                }
+                return validationResult; // Early return if validation failed
             }
 
             // Validate required claims
             if (string.IsNullOrEmpty(externalUserId))
             {
                 _logger.LogError("External user ID is missing from claims");
-                return Redirect("/auth/error");
+                return Redirect(ErrorPagePath);
             }
 
             if (string.IsNullOrEmpty(email))
             {
                 _logger.LogError("Email is missing from claims");
-                return Redirect("/auth/error");
+                return Redirect(ErrorPagePath);
             }
 
             // 4. Provision or get existing user
@@ -144,7 +124,7 @@ public class AuthController : ControllerBase
                 {
                     _logger.LogError("Failed to create Identity user: {Errors}",
                         string.Join(", ", createResult.Errors.Select(e => e.Description)));
-                    return Redirect("/auth/error");
+                    return Redirect(ErrorPagePath);
                 }
 
                 var addLoginResult = await _userManager.AddLoginAsync(identityUser, info);
@@ -152,7 +132,7 @@ public class AuthController : ControllerBase
                 {
                     _logger.LogError("Failed to add external login: {Errors}",
                         string.Join(", ", addLoginResult.Errors.Select(e => e.Description)));
-                    return Redirect("/auth/error");
+                    return Redirect(ErrorPagePath);
                 }
 
                 _logger.LogInformation("Created Identity user for {Email}", email);
@@ -193,16 +173,87 @@ public class AuthController : ControllerBase
             if (isNewTenant)
             {
                 _logger.LogInformation("Redirecting new tenant to welcome page");
-                return Redirect("/auth/welcome");
+                return Redirect(WelcomePagePath);
             }
 
-            return Redirect(returnUrl ?? "/");
+            // Security: Validate returnUrl to prevent open redirect attacks
+            var safeReturnUrl = ValidateReturnUrl(returnUrl);
+            return Redirect(safeReturnUrl);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during external login callback");
-            return Redirect("/auth/error");
+            return Redirect(ErrorPagePath);
         }
+    }
+
+    /// <summary>
+    /// Validates and sanitizes return URL to prevent open redirect attacks
+    /// </summary>
+    /// <param name="returnUrl">User-provided return URL</param>
+    /// <returns>Safe local URL or default path</returns>
+    private string ValidateReturnUrl(string? returnUrl)
+    {
+        // If no return URL provided, use default
+        if (string.IsNullOrWhiteSpace(returnUrl))
+        {
+            return DefaultReturnPath;
+        }
+
+        // Security: Only allow local URLs (must start with /)
+        // This prevents open redirect attacks to external domains
+        if (Url.IsLocalUrl(returnUrl))
+        {
+            return returnUrl;
+        }
+
+        // If URL is not local, log warning and redirect to default
+        _logger.LogWarning("Rejected non-local return URL: {ReturnUrl}", returnUrl);
+        return DefaultReturnPath;
+    }
+
+    /// <summary>
+    /// Extracts and validates external login information from OAuth provider
+    /// </summary>
+    /// <param name="info">External login info from OAuth provider</param>
+    /// <returns>Tuple containing extracted claims and optional validation error result</returns>
+    private (string? externalUserId, string? email, string? displayName, string identityProvider,
+        string? externalTenantId, IActionResult? validationResult) ExtractAndValidateExternalLoginInfo(ExternalLoginInfo info)
+    {
+        var externalUserId = info.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
+        var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+        var displayName = info.Principal.FindFirstValue(ClaimTypes.Name);
+        var identityProvider = info.LoginProvider; // "Microsoft" or "Google"
+        string? externalTenantId = null;
+
+        // Extract tenant identifier based on provider
+        if (identityProvider == "Microsoft")
+        {
+            externalTenantId = info.Principal.FindFirstValue("tid"); // Azure AD tenant ID
+            identityProvider = "AzureAD";
+            _logger.LogInformation(
+                "Azure AD login: Email={Email}, TenantId={TenantId}",
+                email, externalTenantId);
+        }
+        else if (identityProvider == "Google")
+        {
+            externalTenantId = info.Principal.FindFirstValue("hd"); // Google Workspace domain
+
+            if (!string.IsNullOrEmpty(externalTenantId))
+            {
+                identityProvider = "GoogleWorkspace";
+                _logger.LogInformation(
+                    "Google Workspace login: Email={Email}, Domain={Domain}",
+                    email, externalTenantId);
+            }
+            else
+            {
+                _logger.LogWarning("Personal Google account attempted to sign in: {Email}", email);
+                return (null, null, null, identityProvider, null, Redirect(PersonalAccountNotSupportedPath));
+            }
+        }
+
+        return (externalUserId, email, displayName, identityProvider, externalTenantId, null);
     }
 
     /// <summary>
@@ -215,6 +266,6 @@ public class AuthController : ControllerBase
     {
         await _signInManager.SignOutAsync();
         _logger.LogInformation("User logged out");
-        return Redirect("/");
+        return Redirect(DefaultReturnPath);
     }
 }

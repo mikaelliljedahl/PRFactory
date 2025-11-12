@@ -106,7 +106,7 @@ public class PostApprovalCommentAgent : BaseAgent
     /// <summary>
     /// Gets suggestions from context state as a list of strings
     /// </summary>
-    private List<string> GetSuggestionsFromState(AgentContext context)
+    private static List<string> GetSuggestionsFromState(AgentContext context)
     {
         if (!context.State.TryGetValue("suggestions", out var value))
         {
@@ -130,7 +130,7 @@ public class PostApprovalCommentAgent : BaseAgent
     /// <summary>
     /// Formats approval message as markdown
     /// </summary>
-    private string FormatApprovalMessage(
+    private static string FormatApprovalMessage(
         List<string> suggestions,
         string reviewId,
         string platformName)
@@ -205,7 +205,9 @@ public class PostApprovalCommentAgent : BaseAgent
                 ex,
                 "Failed to post approval to PR #{PrNumber} on repository {RepositoryId}",
                 pullRequestNumber, repositoryId);
-            throw;
+            throw new InvalidOperationException(
+                $"Failed to post approval to PR #{pullRequestNumber} on repository {repositoryId}",
+                ex);
         }
     }
 }

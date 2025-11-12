@@ -1,5 +1,7 @@
 namespace PRFactory.Domain.Entities;
 
+using System.Diagnostics.CodeAnalysis;
+
 /// <summary>
 /// Represents the result of an AI code review performed on a pull request.
 /// Stores review feedback, identified issues, suggestions, and praise.
@@ -77,7 +79,7 @@ public class CodeReviewResult
     /// <summary>
     /// Whether this review passed (no critical issues)
     /// </summary>
-    public bool Passed => !CriticalIssues.Any();
+    public bool Passed => CriticalIssues.Count == 0;
 
     /// <summary>
     /// Total number of issues (critical + suggestions)
@@ -93,6 +95,7 @@ public class CodeReviewResult
     /// <summary>
     /// Creates a new code review result
     /// </summary>
+    [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Entity constructor with many properties")]
     public CodeReviewResult(
         Guid ticketId,
         int pullRequestNumber,

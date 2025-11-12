@@ -32,8 +32,10 @@ namespace PRFactory.Infrastructure.Agents.Adapters;
 /// - Implement direct API integration using OpenAI .NET SDK (Betalgo.OpenAI or official SDK)
 /// - This provides better control, error handling, and feature support
 /// </summary>
-public class OpenAiCliAdapter : ILlmProvider
+public partial class OpenAiCliAdapter : ILlmProvider
 {
+    private static readonly string[] VersionArgs = { "--version" };
+
     private readonly IProcessExecutor _processExecutor;
     private readonly ILogger<OpenAiCliAdapter> _logger;
     private readonly ProviderOptions _options;
@@ -300,7 +302,7 @@ public class OpenAiCliAdapter : ILlmProvider
             // Check if CLI is installed
             var versionResult = await _processExecutor.ExecuteAsync(
                 _options.CliPath,
-                new[] { "--version" },
+                VersionArgs,
                 workingDirectory: null,
                 timeoutSeconds: 5,
                 cancellationToken: ct);
@@ -410,19 +412,19 @@ public class OpenAiCliAdapter : ILlmProvider
         {
             // Look for token usage patterns in the output
             // OpenAI typically returns usage info in JSON format
-            var inputTokenMatch = Regex.Match(output, @"(?:prompt_tokens|input_tokens).*?:\s*(\d+)", RegexOptions.IgnoreCase);
+            var inputTokenMatch = PromptTokenPattern().Match(output);
             if (inputTokenMatch.Success && int.TryParse(inputTokenMatch.Groups[1].Value, out var inputTokens))
             {
                 metrics.InputTokens = inputTokens;
             }
 
-            var outputTokenMatch = Regex.Match(output, @"(?:completion_tokens|output_tokens).*?:\s*(\d+)", RegexOptions.IgnoreCase);
+            var outputTokenMatch = CompletionTokenPattern().Match(output);
             if (outputTokenMatch.Success && int.TryParse(outputTokenMatch.Groups[1].Value, out var outputTokens))
             {
                 metrics.OutputTokens = outputTokens;
             }
 
-            var totalTokenMatch = Regex.Match(output, @"total_tokens.*?:\s*(\d+)", RegexOptions.IgnoreCase);
+            var totalTokenMatch = TotalTokenPattern().Match(output);
             if (totalTokenMatch.Success && int.TryParse(totalTokenMatch.Groups[1].Value, out var totalTokens))
             {
                 metrics.TotalTokens = totalTokens;
@@ -440,6 +442,15 @@ public class OpenAiCliAdapter : ILlmProvider
 
         return metrics;
     }
+
+    [GeneratedRegex(@"(?:prompt_tokens|input_tokens).*?:\s*(\d+)", RegexOptions.IgnoreCase)]
+    private static partial Regex PromptTokenPattern();
+
+    [GeneratedRegex(@"(?:completion_tokens|output_tokens).*?:\s*(\d+)", RegexOptions.IgnoreCase)]
+    private static partial Regex CompletionTokenPattern();
+
+    [GeneratedRegex(@"total_tokens.*?:\s*(\d+)", RegexOptions.IgnoreCase)]
+    private static partial Regex TotalTokenPattern();
 
     /// <summary>
     /// Converts a list of strings to an async enumerable for streaming

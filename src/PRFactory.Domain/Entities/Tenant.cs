@@ -191,8 +191,7 @@ public class Tenant
     /// </summary>
     public void AddLlmProvider(TenantLlmProvider provider)
     {
-        if (provider == null)
-            throw new ArgumentNullException(nameof(provider));
+        ArgumentNullException.ThrowIfNull(provider);
 
         if (provider.TenantId != Id)
             throw new ArgumentException($"Provider belongs to different tenant (Provider: {provider.TenantId}, Tenant: {Id})", nameof(provider));

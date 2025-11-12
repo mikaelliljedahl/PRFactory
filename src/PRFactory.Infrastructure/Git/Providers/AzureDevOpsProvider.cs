@@ -52,7 +52,7 @@ public class AzureDevOpsProvider : IGitPlatformProvider
         return await _retryPolicy.ExecuteAsync(async () =>
         {
             var connection = CreateConnection(organization, repo.AccessToken);
-            var gitClient = connection.GetClient<GitHttpClient>();
+            var gitClient = await connection.GetClientAsync<GitHttpClient>();
 
             var prToCreate = new GitPullRequest
             {
@@ -100,7 +100,7 @@ public class AzureDevOpsProvider : IGitPlatformProvider
         await _retryPolicy.ExecuteAsync(async () =>
         {
             var connection = CreateConnection(organization, repo.AccessToken);
-            var gitClient = connection.GetClient<GitHttpClient>();
+            var gitClient = await connection.GetClientAsync<GitHttpClient>();
 
             _logger.LogInformation("Adding comment to Azure DevOps PR #{Number} in {Organization}/{Project}/{Repo}",
                 pullRequestNumber, organization, project, repoName);
@@ -139,7 +139,7 @@ public class AzureDevOpsProvider : IGitPlatformProvider
         return await _retryPolicy.ExecuteAsync(async () =>
         {
             var connection = CreateConnection(organization, repo.AccessToken);
-            var gitClient = connection.GetClient<GitHttpClient>();
+            var gitClient = await connection.GetClientAsync<GitHttpClient>();
 
             var repositories = await gitClient.GetRepositoriesAsync(project, cancellationToken: ct);
             var repository = repositories.FirstOrDefault(r => r.Name == repoName);
@@ -168,7 +168,7 @@ public class AzureDevOpsProvider : IGitPlatformProvider
         return await _retryPolicy.ExecuteAsync(async () =>
         {
             var connection = CreateConnection(organization, repo.AccessToken);
-            var gitClient = connection.GetClient<GitHttpClient>();
+            var gitClient = await connection.GetClientAsync<GitHttpClient>();
 
             _logger.LogInformation("Fetching Azure DevOps PR #{Number} details from {Organization}/{Project}/{Repo}",
                 pullRequestNumber, organization, project, repoName);
@@ -197,7 +197,7 @@ public class AzureDevOpsProvider : IGitPlatformProvider
             var totalDeletions = 0;
 
             // Get changes from the latest iteration
-            if (iterations.Any())
+            if (iterations.Count > 0)
             {
                 var latestIteration = iterations.OrderByDescending(i => i.Id).First();
                 var changes = await gitClient.GetPullRequestIterationChangesAsync(

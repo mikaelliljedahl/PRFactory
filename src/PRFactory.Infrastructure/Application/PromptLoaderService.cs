@@ -12,6 +12,8 @@ namespace PRFactory.Infrastructure.Application;
 /// </summary>
 public class PromptLoaderService : IPromptLoaderService
 {
+    private static readonly string[] FileSizes = { "B", "KB", "MB", "GB" };
+
     private readonly string _promptsBasePath;
     private readonly IHandlebars _handlebars;
 
@@ -88,7 +90,18 @@ public class PromptLoaderService : IPromptLoaderService
     /// Register custom Handlebars helpers
     /// </summary>
     /// <param name="handlebars">Handlebars instance</param>
-    private void RegisterCustomHelpers(IHandlebars handlebars)
+    private static void RegisterCustomHelpers(IHandlebars handlebars)
+    {
+        RegisterCodeHelper(handlebars);
+        RegisterTruncateHelper(handlebars);
+        RegisterFileSizeHelper(handlebars);
+    }
+
+    /// <summary>
+    /// Register custom code formatting helper
+    /// </summary>
+    /// <param name="handlebars">Handlebars instance</param>
+    private static void RegisterCodeHelper(IHandlebars handlebars)
     {
         // Custom helper: Format code with syntax highlighting markers
         // Usage: {{code "csharp" codeContent}}
@@ -98,7 +111,14 @@ public class PromptLoaderService : IPromptLoaderService
             var code = parameters.Length > 1 ? parameters[1]?.ToString() ?? "" : "";
             writer.WriteSafeString($"```{language}\n{code}\n```");
         });
+    }
 
+    /// <summary>
+    /// Register custom text truncation helper
+    /// </summary>
+    /// <param name="handlebars">Handlebars instance</param>
+    private static void RegisterTruncateHelper(IHandlebars handlebars)
+    {
         // Custom helper: Truncate long content
         // Usage: {{truncate longText 500}}
         handlebars.RegisterHelper("truncate", (writer, context, parameters) =>
@@ -112,26 +132,44 @@ public class PromptLoaderService : IPromptLoaderService
             }
             else
             {
-                writer.WriteSafeString(text.Substring(0, maxLength) + "...");
+                var truncated = text.AsSpan(0, maxLength);
+                writer.WriteSafeString($"{truncated}...");
             }
         });
+    }
 
+    /// <summary>
+    /// Register custom file size formatting helper
+    /// </summary>
+    /// <param name="handlebars">Handlebars instance</param>
+    private static void RegisterFileSizeHelper(IHandlebars handlebars)
+    {
         // Custom helper: Format file size
         // Usage: {{filesize bytesCount}}
         handlebars.RegisterHelper("filesize", (writer, context, parameters) =>
         {
             var bytes = parameters.Length > 0 ? long.Parse(parameters[0]?.ToString() ?? "0") : 0;
-            string[] sizes = { "B", "KB", "MB", "GB" };
-            double len = bytes;
-            int order = 0;
-
-            while (len >= 1024 && order < sizes.Length - 1)
-            {
-                order++;
-                len = len / 1024;
-            }
-
-            writer.WriteSafeString($"{len:0.##} {sizes[order]}");
+            var formatted = FormatFileSize(bytes);
+            writer.WriteSafeString(formatted);
         });
+    }
+
+    /// <summary>
+    /// Format bytes into human-readable file size
+    /// </summary>
+    /// <param name="bytes">Number of bytes</param>
+    /// <returns>Formatted file size string (e.g., "1.5 MB")</returns>
+    private static string FormatFileSize(long bytes)
+    {
+        double len = bytes;
+        int order = 0;
+
+        while (len >= 1024 && order < FileSizes.Length - 1)
+        {
+            order++;
+            len = len / 1024;
+        }
+
+        return $"{len:0.##} {FileSizes[order]}";
     }
 }

@@ -62,7 +62,7 @@ public class CodeReviewAgentTests
             llmProviderId);
     }
 
-    private AgentContext CreateContext(Guid ticketId, int? prNumber = 123, string? prUrl = "https://github.com/test/repo/pull/123")
+    private static AgentContext CreateContext(Guid ticketId, int? prNumber = 123, string? prUrl = "https://github.com/test/repo/pull/123")
     {
         return new AgentContext
         {
@@ -86,28 +86,26 @@ public class CodeReviewAgentTests
     public void DetectLanguage_WithCSharpFile_ReturnsCSharp()
     {
         // This tests the private DetectLanguage method indirectly through reflection
-        var agent = CreateAgent();
         var detectLanguageMethod = typeof(CodeReviewAgent).GetMethod(
             "DetectLanguage",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
 
         Assert.NotNull(detectLanguageMethod);
 
-        var result = detectLanguageMethod.Invoke(agent, new object[] { "Service.cs" }) as string;
+        var result = detectLanguageMethod.Invoke(null, new object[] { "Service.cs" }) as string;
         Assert.Equal("csharp", result);
     }
 
     [Fact]
     public void DetectLanguage_WithTypeScriptFile_ReturnsTypeScript()
     {
-        var agent = CreateAgent();
         var detectLanguageMethod = typeof(CodeReviewAgent).GetMethod(
             "DetectLanguage",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
 
         Assert.NotNull(detectLanguageMethod);
 
-        var result = detectLanguageMethod.Invoke(agent, new object[] { "component.ts" }) as string;
+        var result = detectLanguageMethod.Invoke(null, new object[] { "component.ts" }) as string;
         Assert.Equal("typescript", result);
     }
 
@@ -118,10 +116,9 @@ public class CodeReviewAgentTests
     [Fact]
     public void IsTestFile_WithTestFile_ReturnsTrue()
     {
-        var agent = CreateAgent();
         var isTestFileMethod = typeof(CodeReviewAgent).GetMethod(
             "IsTestFile",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
 
         Assert.NotNull(isTestFileMethod);
 
@@ -136,7 +133,7 @@ public class CodeReviewAgentTests
 
         foreach (var path in testFilePaths)
         {
-            var result = (bool?)isTestFileMethod.Invoke(agent, new object[] { path });
+            var result = (bool?)isTestFileMethod.Invoke(null, new object[] { path });
             Assert.True(result, $"Expected {path} to be detected as test file");
         }
     }
@@ -144,10 +141,9 @@ public class CodeReviewAgentTests
     [Fact]
     public void IsTestFile_WithNonTestFile_ReturnsFalse()
     {
-        var agent = CreateAgent();
         var isTestFileMethod = typeof(CodeReviewAgent).GetMethod(
             "IsTestFile",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
 
         Assert.NotNull(isTestFileMethod);
 
@@ -161,7 +157,7 @@ public class CodeReviewAgentTests
 
         foreach (var path in nonTestFilePaths)
         {
-            var result = (bool?)isTestFileMethod.Invoke(agent, new object[] { path });
+            var result = (bool?)isTestFileMethod.Invoke(null, new object[] { path });
             Assert.False(result, $"Expected {path} NOT to be detected as test file");
         }
     }

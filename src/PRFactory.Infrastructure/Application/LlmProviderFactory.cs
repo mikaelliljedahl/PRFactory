@@ -13,6 +13,8 @@ namespace PRFactory.Infrastructure.Application;
 /// </summary>
 public class LlmProviderFactory : ILlmProviderFactory
 {
+    private const string AnthropicProviderName = "anthropic";
+
     private readonly IServiceProvider _serviceProvider;
     private readonly LlmProvidersOptions _options;
 
@@ -39,7 +41,7 @@ public class LlmProviderFactory : ILlmProviderFactory
     {
         return providerName.ToLowerInvariant() switch
         {
-            "anthropic" or "claude" =>
+            AnthropicProviderName or "claude" =>
                 _serviceProvider.GetRequiredService<PRFactory.Infrastructure.Agents.Adapters.ClaudeCodeCliLlmProvider>(),
 
             "google" or "gemini" =>
@@ -59,7 +61,7 @@ public class LlmProviderFactory : ILlmProviderFactory
     /// <returns>Default LLM provider instance</returns>
     public ILlmProvider GetDefaultProvider()
     {
-        var defaultProvider = _options.DefaultProvider ?? "anthropic";
+        var defaultProvider = _options.DefaultProvider ?? AnthropicProviderName;
         return CreateProvider(defaultProvider);
     }
 
@@ -88,7 +90,7 @@ public class LlmProviderFactory : ILlmProviderFactory
         }
 
         // Use fallback or configured fallback
-        var fallback = fallbackProvider ?? _options.FallbackProvider ?? "anthropic";
+        var fallback = fallbackProvider ?? _options.FallbackProvider ?? AnthropicProviderName;
         return CreateProvider(fallback);
     }
 
@@ -98,6 +100,6 @@ public class LlmProviderFactory : ILlmProviderFactory
     /// <returns>List of provider names</returns>
     public List<string> GetAvailableProviders()
     {
-        return new List<string> { "anthropic", "google", "openai" };
+        return new List<string> { AnthropicProviderName, "google", "openai" };
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,10 +39,8 @@ public class CodeReviewGraph : AgentGraphBase
     protected override async Task<GraphExecutionResult> ExecuteCoreAsync(
         IAgentMessage inputMessage,
         GraphContext context,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
-        var startTime = DateTime.UtcNow;
-
         try
         {
             // Input should be ReviewCodeMessage
@@ -55,7 +54,7 @@ public class CodeReviewGraph : AgentGraphBase
                 "Starting code review graph for ticket {TicketId}, PR #{PrNumber}",
                 context.TicketId, reviewMessage.PullRequestNumber);
 
-            return await ExecuteCodeReviewAsync(reviewMessage, context, cancellationToken, startTime);
+            return await ExecuteCodeReviewAsync(reviewMessage, context, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -67,13 +66,12 @@ public class CodeReviewGraph : AgentGraphBase
         }
     }
 
+    [SuppressMessage("Design", "S3248", Justification = "Resume functionality not yet implemented for CodeReviewGraph - reviews are fully automated")]
     protected override async Task<GraphExecutionResult> ResumeCoreAsync(
         IAgentMessage resumeMessage,
         GraphContext context,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
-        var startTime = DateTime.UtcNow;
-
         try
         {
             var currentState = context.State.TryGetValue("current_state", out var state)
@@ -105,20 +103,19 @@ public class CodeReviewGraph : AgentGraphBase
     private async Task<GraphExecutionResult> ExecuteCodeReviewAsync(
         ReviewCodeMessage reviewMessage,
         GraphContext context,
-        CancellationToken cancellationToken,
-        DateTime startTime)
+        CancellationToken cancellationToken)
     {
+        var startTime = DateTime.UtcNow;
+
         // Get retry count from context
         var retryCount = context.State.TryGetValue("review_retry_count", out var count)
             ? Convert.ToInt32(count)
             : 0;
 
+        // Stage 1: Execute CodeReviewAgent
         Logger.LogInformation(
             "Executing code review for ticket {TicketId}, attempt {Attempt}",
             context.TicketId, retryCount + 1);
-
-        // Stage 1: Execute CodeReviewAgent
-        Logger.LogInformation("Stage 1: CodeReviewAgent for ticket {TicketId}", context.TicketId);
 
         var reviewResult = await ExecuteAgentAsync<CodeReviewAgent>(
             reviewMessage, context, "code_review", cancellationToken);
@@ -136,10 +133,6 @@ public class CodeReviewGraph : AgentGraphBase
                 new InvalidOperationException("Failed to parse code review results"));
         }
 
-        Logger.LogInformation(
-            "Code review result: ReviewId={ReviewId}, HasIssues={HasIssues}, Critical={Critical}, Suggestions={Suggestions}",
-            reviewId, hasCriticalIssues, criticalIssues.Count, suggestions.Count);
-
         // Store review data in context for agents to access
         context.State["review_id"] = reviewId;
         context.State["critical_issues"] = criticalIssues;
@@ -148,12 +141,10 @@ public class CodeReviewGraph : AgentGraphBase
         // Stage 2: Check if there are critical issues
         if (hasCriticalIssues || suggestions.Count > 0)
         {
-            Logger.LogInformation(
-                "Review found {CriticalCount} critical issues and {SuggestionCount} suggestions",
-                criticalIssues.Count, suggestions.Count);
-
             // Post feedback to PR (Stage 3)
-            Logger.LogInformation("Stage 3: PostReviewCommentsAgent for ticket {TicketId}", context.TicketId);
+            Logger.LogInformation(
+                "Found issues for ticket {TicketId}: {CriticalCount} critical, {SuggestionCount} suggestions",
+                context.TicketId, criticalIssues.Count, suggestions.Count);
             await ExecuteAgentAsync<PostReviewCommentsAgent>(
                 reviewMessage, context, "post_comments", cancellationToken);
             await SaveCheckpointAsync(context, "feedback_posted", "PostReviewCommentsAgent");
@@ -167,7 +158,6 @@ public class CodeReviewGraph : AgentGraphBase
                     retryCount, maxRetries, context.TicketId);
 
                 // Post warning and complete
-                // TODO: Post warning comment to PR
                 context.State["is_completed"] = true;
                 context.State["completed_with_warnings"] = true;
                 context.State["retry_count"] = retryCount;
@@ -188,10 +178,6 @@ public class CodeReviewGraph : AgentGraphBase
             }
 
             // Loop back to ImplementationGraph for fixes
-            Logger.LogInformation(
-                "Looping back to ImplementationGraph for fixes, attempt {Attempt}",
-                retryCount + 2);
-
             context.State["review_retry_count"] = retryCount + 1;
             context.State["pending_fixes"] = true;
             context.State["critical_issues"] = criticalIssues;
@@ -210,11 +196,6 @@ public class CodeReviewGraph : AgentGraphBase
         }
 
         // Stage 4: No issues - post approval comment
-        Logger.LogInformation(
-            "Review passed with no critical issues for ticket {TicketId}",
-            context.TicketId);
-
-        Logger.LogInformation("Stage 4: PostApprovalCommentAgent for ticket {TicketId}", context.TicketId);
         await ExecuteAgentAsync<PostApprovalCommentAgent>(
             reviewMessage, context, "post_approval", cancellationToken);
 

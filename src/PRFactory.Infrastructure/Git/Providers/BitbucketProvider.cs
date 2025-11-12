@@ -75,6 +75,7 @@ public class BitbucketCommitsResponse
 /// </summary>
 public class BitbucketProvider : IGitPlatformProvider
 {
+    private const string BearerPrefix = "Bearer";
     private readonly HttpClient _httpClient;
     private readonly ILogger<BitbucketProvider> _logger;
     private readonly IAsyncPolicy<HttpResponseMessage> _retryPolicy;
@@ -125,7 +126,7 @@ public class BitbucketProvider : IGitPlatformProvider
         };
 
         _httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", repo.AccessToken);
+            new AuthenticationHeaderValue(BearerPrefix, repo.AccessToken);
 
         _logger.LogInformation("Creating Bitbucket PR in {Workspace}/{Repo}: {Title}",
             workspace, repoSlug, request.Title);
@@ -169,7 +170,7 @@ public class BitbucketProvider : IGitPlatformProvider
         };
 
         _httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", repo.AccessToken);
+            new AuthenticationHeaderValue(BearerPrefix, repo.AccessToken);
 
         _logger.LogInformation("Adding comment to Bitbucket PR #{Number} in {Workspace}/{Repo}",
             pullRequestNumber, workspace, repoSlug);
@@ -197,7 +198,7 @@ public class BitbucketProvider : IGitPlatformProvider
         var (workspace, repoSlug) = ParseBitbucketUrl(repo.CloneUrl);
 
         _httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", repo.AccessToken);
+            new AuthenticationHeaderValue(BearerPrefix, repo.AccessToken);
 
         var response = await _retryPolicy.ExecuteAsync(async () =>
         {
@@ -232,7 +233,7 @@ public class BitbucketProvider : IGitPlatformProvider
         var (workspace, repoSlug) = ParseBitbucketUrl(repo.CloneUrl);
 
         _httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", repo.AccessToken);
+            new AuthenticationHeaderValue(BearerPrefix, repo.AccessToken);
 
         _logger.LogInformation("Fetching Bitbucket PR #{Number} details from {Workspace}/{Repo}",
             pullRequestNumber, workspace, repoSlug);

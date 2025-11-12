@@ -13,9 +13,9 @@ CLAUDE_PROJECT_DIR="${CLAUDE_PROJECT_DIR:-.}"
 # Extract SDK version from global.json
 GLOBAL_JSON_PATH="$CLAUDE_PROJECT_DIR/global.json"
 SPECIFIC_VERSION=""
-if [ -f "$GLOBAL_JSON_PATH" ]; then
+if [[ -f "$GLOBAL_JSON_PATH" ]]; then
     SPECIFIC_VERSION=$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$GLOBAL_JSON_PATH" | head -1)
-    if [ -n "$SPECIFIC_VERSION" ]; then
+    if [[ -n "$SPECIFIC_VERSION" ]]; then
         echo "📋 Found .NET SDK version in global.json: $SPECIFIC_VERSION"
     fi
 fi
@@ -25,13 +25,13 @@ DOTNET_VERSION="${SPECIFIC_VERSION:-10.0}"
 # Check if correct .NET version is already installed
 if command -v dotnet &> /dev/null; then
     CURRENT_VERSION=$(dotnet --version 2>/dev/null || echo "none")
-    if [ "$CURRENT_VERSION" = "$DOTNET_VERSION" ] || [[ "$CURRENT_VERSION" == 10.* ]]; then
+    if [[ "$CURRENT_VERSION" = "$DOTNET_VERSION" ]] || [[ "$CURRENT_VERSION" == 10.* ]]; then
         echo "✅ .NET SDK already installed (version: $CURRENT_VERSION)"
         export DOTNET_ROOT="$DOTNET_INSTALL_DIR"
         export PATH="$DOTNET_INSTALL_DIR:$PATH"
 
         # Persist for Claude Code session
-        if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
+        if [[ -n "${CLAUDE_ENV_FILE:-}" ]]; then
             echo "export DOTNET_ROOT=\"$DOTNET_INSTALL_DIR\"" >> "$CLAUDE_ENV_FILE"
             echo "export PATH=\"$DOTNET_INSTALL_DIR:\$PATH\"" >> "$CLAUDE_ENV_FILE"
         fi
@@ -43,7 +43,7 @@ else
 fi
 
 # Download installation script if not already done
-if [ ! -f "$DOTNET_INSTALL_SCRIPT" ]; then
+if [[ ! -f "$DOTNET_INSTALL_SCRIPT" ]]; then
     echo "📥 Downloading .NET installation script..."
     if ! curl -sSL https://raw.githubusercontent.com/dotnet/install-scripts/main/src/dotnet-install.sh -o "$DOTNET_INSTALL_SCRIPT" 2>/dev/null; then
         echo "⚠️  GitHub download failed, trying dotnet.microsoft.com..."
@@ -55,7 +55,7 @@ fi
 # Install .NET SDK if needed
 if ! command -v dotnet &> /dev/null || ! (dotnet --version | grep -q "10\."); then
     echo "🔧 Installing .NET SDK $DOTNET_VERSION..."
-    if [ -n "$SPECIFIC_VERSION" ]; then
+    if [[ -n "$SPECIFIC_VERSION" ]]; then
         "$DOTNET_INSTALL_SCRIPT" --version "$SPECIFIC_VERSION" --install-dir "$DOTNET_INSTALL_DIR" 2>&1 | grep -E "(Downloaded|Extracting|Installed)" || true
     else
         "$DOTNET_INSTALL_SCRIPT" --channel 10.0 --quality preview --install-dir "$DOTNET_INSTALL_DIR" 2>&1 | grep -E "(Downloaded|Extracting|Installed)" || true
@@ -67,7 +67,7 @@ export DOTNET_ROOT="$DOTNET_INSTALL_DIR"
 export PATH="$DOTNET_INSTALL_DIR:$PATH"
 
 # Persist environment variables for Claude Code
-if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
+if [[ -n "${CLAUDE_ENV_FILE:-}" ]]; then
     echo "export DOTNET_ROOT=\"$DOTNET_INSTALL_DIR\"" >> "$CLAUDE_ENV_FILE"
     echo "export PATH=\"$DOTNET_INSTALL_DIR:\$PATH\"" >> "$CLAUDE_ENV_FILE"
 fi
@@ -84,7 +84,7 @@ NUGET_PROXY_SCRIPT="$CLAUDE_PROJECT_DIR/.claude/scripts/nuget-proxy.py"
 # Kill any existing proxy
 pkill -f nuget-proxy.py 2>/dev/null || true
 
-if [ -f "$NUGET_PROXY_SCRIPT" ]; then
+if [[ -f "$NUGET_PROXY_SCRIPT" ]]; then
     nohup python3 "$NUGET_PROXY_SCRIPT" > /tmp/nuget-proxy.log 2>&1 &
     sleep 2
 

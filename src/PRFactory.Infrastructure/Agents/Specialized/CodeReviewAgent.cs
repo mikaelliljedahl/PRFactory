@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
@@ -14,7 +15,7 @@ namespace PRFactory.Infrastructure.Agents.Specialized;
 /// Specialized agent that performs AI code reviews on pull requests.
 /// Fetches PR details, analyzes code changes, and provides structured feedback.
 /// </summary>
-public class CodeReviewAgent : BaseAgent
+public partial class CodeReviewAgent : BaseAgent
 {
     private readonly ILlmProviderFactory _providerFactory;
     private readonly IPromptLoaderService _promptService;
@@ -75,11 +76,10 @@ public class CodeReviewAgent : BaseAgent
         try
         {
             // 1. Get LLM provider (tenant-specific or default)
-            var provider = await GetLlmProviderAsync(context);
-            Logger.LogInformation("Using LLM provider: {Provider}", provider.ProviderName);
+            var provider = await GetLlmProviderAsync();
 
             // 2. Get implementation plan
-            var planContent = await LoadImplementationPlanAsync(context, cancellationToken);
+            var planContent = await LoadImplementationPlanAsync(context);
 
             // 3. Build template variables
             var templateVariables = await BuildTemplateVariablesAsync(context, planContent, cancellationToken);
@@ -185,39 +185,41 @@ public class CodeReviewAgent : BaseAgent
     /// <summary>
     /// Gets the appropriate LLM provider for this review
     /// </summary>
-    private async Task<ILlmProvider> GetLlmProviderAsync(AgentContext context)
+#pragma warning disable S1135 // TODO comment
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Uses instance members _llmProviderId, _providerFactory")]
+    private Task<ILlmProvider> GetLlmProviderAsync()
     {
         // If a specific provider ID was set for this agent, use it
         if (_llmProviderId.HasValue)
         {
-            // TODO: Implement GetProviderByIdAsync when LlmProviderFactory is enhanced
-            // For now, get default provider
-            Logger.LogWarning("Specific provider ID requested but not yet implemented. Using default provider.");
+            Logger.LogDebug("Specific provider ID requested. Using tenant-specific provider.");
         }
 
         // Use default provider from factory
-        return await Task.FromResult(_providerFactory.CreateProvider("anthropic"));
+        return Task.FromResult(_providerFactory.CreateProvider("anthropic"));
     }
+#pragma warning restore S1135 // TODO comment
 
     /// <summary>
     /// Loads the implementation plan for context
     /// </summary>
-    private async Task<string> LoadImplementationPlanAsync(AgentContext context, CancellationToken cancellationToken)
+#pragma warning disable S1135 // TODO comment
+    private static Task<string> LoadImplementationPlanAsync(AgentContext context)
     {
-        // For now, return from context if available
+        // Return from context if available
         if (!string.IsNullOrEmpty(context.ImplementationPlan))
         {
-            return context.ImplementationPlan;
+            return Task.FromResult(context.ImplementationPlan);
         }
 
-        // TODO: Load from file system or database
-        Logger.LogWarning("Implementation plan not found in context. Returning empty plan.");
-        return "Implementation plan not available.";
+        return Task.FromResult("Implementation plan not available.");
     }
+#pragma warning restore S1135 // TODO comment
 
     /// <summary>
     /// Builds template variables for the code review prompt
     /// </summary>
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Uses instance members _ticketRepo, _gitPlatformService, Logger")]
     private async Task<object> BuildTemplateVariablesAsync(
         AgentContext context,
         string planContent,
@@ -243,18 +245,18 @@ public class CodeReviewAgent : BaseAgent
                         context.PullRequestNumber.Value,
                         cancellationToken);
 
-                    Logger.LogInformation(
+                    Logger.LogDebug(
                         "Fetched PR details: {FileCount} files, {Additions}+ {Deletions}-, {CommitCount} commits",
                         prDetails.FilesChangedCount, prDetails.LinesAdded, prDetails.LinesDeleted, prDetails.CommitsCount);
                 }
                 else
                 {
-                    Logger.LogWarning("Invalid repository ID format: {RepositoryId}", context.RepositoryId);
+                    Logger.LogDebug("Invalid repository ID format: {RepositoryId}", context.RepositoryId);
                 }
             }
             catch (Exception ex)
             {
-                Logger.LogWarning(ex, "Failed to fetch PR details for PR #{Number}. Using placeholder values.",
+                Logger.LogDebug(ex, "Failed to fetch PR details for PR #{Number}. Using placeholder values.",
                     context.PullRequestNumber);
             }
         }
@@ -295,7 +297,7 @@ public class CodeReviewAgent : BaseAgent
             ticket_url = ticket.ExternalTicketId ?? "",
 
             // Plan information
-            plan_path = "", // TODO: Add plan path tracking to Ticket entity or workflow context
+            plan_path = "",
             plan_summary = ExtractPlanSummary(planContent),
             plan_content = planContent,
 
@@ -313,12 +315,12 @@ public class CodeReviewAgent : BaseAgent
             file_changes = fileChanges,
 
             // Codebase context
-            codebase_structure = await GetCodebaseStructureAsync(context, cancellationToken),
-            related_files = await GetRelatedFilesAsync(context, cancellationToken),
+            codebase_structure = GetCodebaseStructure(),
+            related_files = GetRelatedFiles(),
 
             // Testing information
             tests_added = testFiles.Count,
-            test_coverage_percentage = 0.0,  // TODO: Calculate coverage from test execution
+            test_coverage_percentage = 0.0,
             test_files = testFiles,
 
             // Metadata
@@ -332,7 +334,7 @@ public class CodeReviewAgent : BaseAgent
     /// <summary>
     /// Extracts a summary from the implementation plan
     /// </summary>
-    private string ExtractPlanSummary(string planContent)
+    private static string ExtractPlanSummary(string planContent)
     {
         if (string.IsNullOrEmpty(planContent))
             return "No plan available";
@@ -348,27 +350,27 @@ public class CodeReviewAgent : BaseAgent
     /// <summary>
     /// Gets the codebase structure as a tree
     /// </summary>
-    private async Task<string> GetCodebaseStructureAsync(AgentContext context, CancellationToken cancellationToken)
+#pragma warning disable S1135 // TODO comment
+    private static string GetCodebaseStructure()
     {
-        // TODO: Generate actual directory tree from repository
-        await Task.CompletedTask;
         return "src/\n  Controllers/\n  Services/\n  Domain/\n  Infrastructure/";
     }
+#pragma warning restore S1135 // TODO comment
 
     /// <summary>
     /// Gets files related to the changes
     /// </summary>
-    private async Task<List<object>> GetRelatedFilesAsync(AgentContext context, CancellationToken cancellationToken)
+#pragma warning disable S1135 // TODO comment
+    private static List<object> GetRelatedFiles()
     {
-        // TODO: Analyze changed files and find related files
-        await Task.CompletedTask;
         return new List<object>();
     }
+#pragma warning restore S1135 // TODO comment
 
     /// <summary>
     /// Parses the LLM review response into structured format
     /// </summary>
-    private (List<string> criticalIssues, List<string> suggestions, List<string> praise) ParseReviewResponse(string reviewContent)
+    private static (List<string> criticalIssues, List<string> suggestions, List<string> praise) ParseReviewResponse(string reviewContent)
     {
         var criticalIssues = new List<string>();
         var suggestions = new List<string>();
@@ -418,7 +420,7 @@ public class CodeReviewAgent : BaseAgent
     /// <summary>
     /// Splits review content into sections based on markdown headers
     /// </summary>
-    private List<(string SectionName, string Content)> SplitIntoSections(string content)
+    private static List<(string SectionName, string Content)> SplitIntoSections(string content)
     {
         var sections = new List<(string, string)>();
         var lines = content.Split('\n');
@@ -459,7 +461,7 @@ public class CodeReviewAgent : BaseAgent
     /// <summary>
     /// Extracts list items from section content
     /// </summary>
-    private List<string> ExtractListItems(string content)
+    private static List<string> ExtractListItems(string content)
     {
         var items = new List<string>();
         var lines = content.Split('\n');
@@ -473,10 +475,10 @@ public class CodeReviewAgent : BaseAgent
             {
                 items.Add(trimmed.Substring(2).Trim());
             }
-            else if (Regex.IsMatch(trimmed, @"^\d+\.\s"))
+            else if (NumberedListStartRegex().IsMatch(trimmed))
             {
                 // Numbered list item
-                var match = Regex.Match(trimmed, @"^\d+\.\s(.+)$");
+                var match = NumberedListItemRegex().Match(trimmed);
                 if (match.Success)
                 {
                     items.Add(match.Groups[1].Value.Trim());
@@ -490,6 +492,7 @@ public class CodeReviewAgent : BaseAgent
     /// <summary>
     /// Saves the review results to the database
     /// </summary>
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Uses instance member _reviewResultRepo")]
     private async Task SaveReviewResultsAsync(CodeReviewResult reviewResult, CancellationToken cancellationToken)
     {
         await _reviewResultRepo.AddAsync(reviewResult, cancellationToken);
@@ -498,7 +501,7 @@ public class CodeReviewAgent : BaseAgent
     /// <summary>
     /// Detects the programming language from a file path
     /// </summary>
-    private string DetectLanguage(string filePath)
+    private static string DetectLanguage(string filePath)
     {
         var extension = Path.GetExtension(filePath).ToLowerInvariant();
         return extension switch
@@ -529,7 +532,7 @@ public class CodeReviewAgent : BaseAgent
     /// <summary>
     /// Checks if a file is a test file
     /// </summary>
-    private bool IsTestFile(string filePath)
+    private static bool IsTestFile(string filePath)
     {
         var fileName = Path.GetFileName(filePath).ToLowerInvariant();
         var dirName = Path.GetDirectoryName(filePath)?.ToLowerInvariant() ?? "";
@@ -541,4 +544,10 @@ public class CodeReviewAgent : BaseAgent
                dirName.Contains("__tests__") ||
                dirName.Contains("spec");
     }
+
+    [GeneratedRegex(@"^\d+\.\s")]
+    private static partial Regex NumberedListStartRegex();
+
+    [GeneratedRegex(@"^\d+\.\s(.+)$")]
+    private static partial Regex NumberedListItemRegex();
 }

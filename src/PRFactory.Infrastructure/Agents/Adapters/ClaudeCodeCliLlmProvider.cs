@@ -17,8 +17,11 @@ namespace PRFactory.Infrastructure.Agents.Adapters;
 /// LLM provider adapter for Claude Code CLI.
 /// Implements ILlmProvider interface for multi-provider support.
 /// </summary>
-public class ClaudeCodeCliLlmProvider : ILlmProvider
+public partial class ClaudeCodeCliLlmProvider : ILlmProvider
 {
+    private static readonly string[] VersionArgs = { "--version" };
+    private static readonly string[] AuthStatusArgs = { "auth", "status" };
+
     private readonly IProcessExecutor _processExecutor;
     private readonly ILogger<ClaudeCodeCliLlmProvider> _logger;
     private readonly ClaudeCodeCliOptions _options;
@@ -208,7 +211,7 @@ public class ClaudeCodeCliLlmProvider : ILlmProvider
             // Check if CLI is installed
             var versionResult = await _processExecutor.ExecuteAsync(
                 _options.ExecutablePath,
-                new[] { "--version" },
+                VersionArgs,
                 workingDirectory: null,
                 timeoutSeconds: 5,
                 cancellationToken: ct);
@@ -227,7 +230,7 @@ public class ClaudeCodeCliLlmProvider : ILlmProvider
             // Check if authenticated
             var authResult = await _processExecutor.ExecuteAsync(
                 _options.ExecutablePath,
-                new[] { "auth", "status" },
+                AuthStatusArgs,
                 workingDirectory: null,
                 timeoutSeconds: 5,
                 cancellationToken: ct);
@@ -322,20 +325,20 @@ public class ClaudeCodeCliLlmProvider : ILlmProvider
             // Look for token usage patterns in the output
             // Example patterns: "Tokens used: 1234", "Input tokens: 100", "Output tokens: 50"
 
-            var inputTokenMatch = Regex.Match(output, @"Input tokens:\s*(\d+)", RegexOptions.IgnoreCase);
+            var inputTokenMatch = InputTokenPattern().Match(output);
             if (inputTokenMatch.Success && int.TryParse(inputTokenMatch.Groups[1].Value, out var inputTokens))
             {
                 metrics.InputTokens = inputTokens;
             }
 
-            var outputTokenMatch = Regex.Match(output, @"Output tokens:\s*(\d+)", RegexOptions.IgnoreCase);
+            var outputTokenMatch = OutputTokenPattern().Match(output);
             if (outputTokenMatch.Success && int.TryParse(outputTokenMatch.Groups[1].Value, out var outputTokens))
             {
                 metrics.OutputTokens = outputTokens;
             }
 
             // If total tokens are provided
-            var totalTokenMatch = Regex.Match(output, @"(?:Total tokens|Tokens used):\s*(\d+)", RegexOptions.IgnoreCase);
+            var totalTokenMatch = TotalTokenPattern().Match(output);
             if (totalTokenMatch.Success && int.TryParse(totalTokenMatch.Groups[1].Value, out var totalTokens))
             {
                 metrics.TotalTokens = totalTokens;
@@ -354,6 +357,15 @@ public class ClaudeCodeCliLlmProvider : ILlmProvider
 
         return metrics;
     }
+
+    [GeneratedRegex(@"Input tokens:\s*(\d+)", RegexOptions.IgnoreCase)]
+    private static partial Regex InputTokenPattern();
+
+    [GeneratedRegex(@"Output tokens:\s*(\d+)", RegexOptions.IgnoreCase)]
+    private static partial Regex OutputTokenPattern();
+
+    [GeneratedRegex(@"(?:Total tokens|Tokens used):\s*(\d+)", RegexOptions.IgnoreCase)]
+    private static partial Regex TotalTokenPattern();
 
     /// <summary>
     /// Converts a list of strings to an async enumerable for streaming

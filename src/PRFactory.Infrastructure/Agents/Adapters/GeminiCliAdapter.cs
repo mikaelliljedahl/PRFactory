@@ -28,8 +28,11 @@ namespace PRFactory.Infrastructure.Agents.Adapters;
 /// - Via gcloud: gcloud components install gemini-cli
 /// - Verify: gemini --version
 /// </summary>
-public class GeminiCliAdapter : ILlmProvider
+public partial class GeminiCliAdapter : ILlmProvider
 {
+    private static readonly string[] VersionArgs = { "--version" };
+    private static readonly string[] AuthStatusArgs = { "auth", "status" };
+
     private readonly IProcessExecutor _processExecutor;
     private readonly ILogger<GeminiCliAdapter> _logger;
     private readonly ProviderOptions _options;
@@ -289,7 +292,7 @@ public class GeminiCliAdapter : ILlmProvider
             // Check if CLI is installed
             var versionResult = await _processExecutor.ExecuteAsync(
                 _options.CliPath,
-                new[] { "--version" },
+                VersionArgs,
                 workingDirectory: null,
                 timeoutSeconds: 5,
                 cancellationToken: ct);
@@ -310,7 +313,7 @@ public class GeminiCliAdapter : ILlmProvider
             // Check if authenticated (command may vary)
             var authResult = await _processExecutor.ExecuteAsync(
                 _options.CliPath,
-                new[] { "auth", "status" },
+                AuthStatusArgs,
                 workingDirectory: null,
                 timeoutSeconds: 5,
                 cancellationToken: ct);
@@ -403,19 +406,19 @@ public class GeminiCliAdapter : ILlmProvider
         try
         {
             // Look for token usage patterns in the output
-            var inputTokenMatch = Regex.Match(output, @"Input tokens:\s*(\d+)", RegexOptions.IgnoreCase);
+            var inputTokenMatch = InputTokenPattern().Match(output);
             if (inputTokenMatch.Success && int.TryParse(inputTokenMatch.Groups[1].Value, out var inputTokens))
             {
                 metrics.InputTokens = inputTokens;
             }
 
-            var outputTokenMatch = Regex.Match(output, @"Output tokens:\s*(\d+)", RegexOptions.IgnoreCase);
+            var outputTokenMatch = OutputTokenPattern().Match(output);
             if (outputTokenMatch.Success && int.TryParse(outputTokenMatch.Groups[1].Value, out var outputTokens))
             {
                 metrics.OutputTokens = outputTokens;
             }
 
-            var totalTokenMatch = Regex.Match(output, @"(?:Total tokens|Tokens used):\s*(\d+)", RegexOptions.IgnoreCase);
+            var totalTokenMatch = TotalTokenPattern().Match(output);
             if (totalTokenMatch.Success && int.TryParse(totalTokenMatch.Groups[1].Value, out var totalTokens))
             {
                 metrics.TotalTokens = totalTokens;
@@ -433,6 +436,15 @@ public class GeminiCliAdapter : ILlmProvider
 
         return metrics;
     }
+
+    [GeneratedRegex(@"Input tokens:\s*(\d+)", RegexOptions.IgnoreCase)]
+    private static partial Regex InputTokenPattern();
+
+    [GeneratedRegex(@"Output tokens:\s*(\d+)", RegexOptions.IgnoreCase)]
+    private static partial Regex OutputTokenPattern();
+
+    [GeneratedRegex(@"(?:Total tokens|Tokens used):\s*(\d+)", RegexOptions.IgnoreCase)]
+    private static partial Regex TotalTokenPattern();
 
     /// <summary>
     /// Converts a list of strings to an async enumerable for streaming

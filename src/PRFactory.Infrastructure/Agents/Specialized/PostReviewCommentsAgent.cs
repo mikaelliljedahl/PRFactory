@@ -109,7 +109,7 @@ public class PostReviewCommentsAgent : BaseAgent
     /// <summary>
     /// Gets issues from context state as a list of strings
     /// </summary>
-    private List<string> GetIssuesFromState(AgentContext context, string key)
+    private static List<string> GetIssuesFromState(AgentContext context, string key)
     {
         if (!context.State.TryGetValue(key, out var value))
         {
@@ -133,7 +133,7 @@ public class PostReviewCommentsAgent : BaseAgent
     /// <summary>
     /// Formats review feedback as markdown comment
     /// </summary>
-    private string FormatReviewFeedback(
+    private static string FormatReviewFeedback(
         List<string> criticalIssues,
         List<string> suggestions,
         string reviewId,
@@ -213,7 +213,9 @@ public class PostReviewCommentsAgent : BaseAgent
                 ex,
                 "Failed to post comment to PR #{PrNumber} on repository {RepositoryId}",
                 pullRequestNumber, repositoryId);
-            throw;
+            throw new InvalidOperationException(
+                $"Failed to post comment to PR #{pullRequestNumber} on repository {repositoryId}",
+                ex);
         }
     }
 }

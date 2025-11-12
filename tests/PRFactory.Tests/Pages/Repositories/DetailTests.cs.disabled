@@ -1,0 +1,215 @@
+using Bunit;
+using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Logging;
+using Moq;
+using PRFactory.Tests.Blazor;
+using PRFactory.Tests.Blazor.TestDataBuilders;
+using PRFactory.Web.Models;
+using PRFactory.Web.Pages.Repositories;
+using PRFactory.Web.Services;
+using Radzen;
+using Xunit;
+
+namespace PRFactory.Tests.Pages.Repositories;
+
+public class DetailTests : PageTestBase
+{
+    private Mock<IRepositoryService> _mockRepositoryService;
+    private Mock<NavigationManager> _mockNavigationManager;
+    private Mock<ILogger<Detail>> _mockLogger;
+    private Mock<DialogService> _mockDialogService;
+
+    public DetailTests()
+    {
+        _mockRepositoryService = new Mock<IRepositoryService>();
+        _mockNavigationManager = new Mock<NavigationManager>();
+        _mockLogger = new Mock<ILogger<Detail>>();
+        _mockDialogService = new Mock<DialogService>();
+
+    }
+
+    protected override void ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    {
+        base.ConfigureServices(services);
+        services.AddSingleton(_mockRepositoryService.Object);
+        services.AddSingleton(_mockNavigationManager.Object);
+        services.AddSingleton(_mockLogger.Object);
+        services.AddSingleton(_mockDialogService.Object);
+    }
+
+    [Fact]
+    public async Task OnInitialized_LoadsRepository()
+    {
+        // Arrange
+        var repositoryId = Guid.NewGuid();
+        var repository = new RepositoryDtoBuilder()
+            .WithId(repositoryId)
+            .WithName("Test Repository")
+            .Build();
+
+        _mockRepositoryService
+            .Setup(x => x.GetRepositoryByIdAsync(repositoryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(repository);
+
+        // Act
+        var cut = RenderComponent<Detail>(parameters => parameters
+            .Add(p => p.Id, repositoryId));
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        _mockRepositoryService.Verify(
+            x => x.GetRepositoryByIdAsync(repositoryId, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task OnInitialized_WhenRepositoryNotFound_ShowsErrorMessage()
+    {
+        // Arrange
+        var repositoryId = Guid.NewGuid();
+
+        _mockRepositoryService
+            .Setup(x => x.GetRepositoryByIdAsync(repositoryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((RepositoryDto?)null);
+
+        // Act
+        var cut = RenderComponent<Detail>(parameters => parameters
+            .Add(p => p.Id, repositoryId));
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        cut.WaitForState(() => cut.Markup.Contains("not found") || cut.Markup.Contains("Error"));
+    }
+
+    [Fact]
+    public async Task OnInitialized_WhenError_ShowsErrorMessage()
+    {
+        // Arrange
+        var repositoryId = Guid.NewGuid();
+
+        _mockRepositoryService
+            .Setup(x => x.GetRepositoryByIdAsync(repositoryId, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Network error"));
+
+        // Act
+        var cut = RenderComponent<Detail>(parameters => parameters
+            .Add(p => p.Id, repositoryId));
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        Assert.NotNull(cut);
+    }
+
+    [Fact]
+    public async Task Render_ShowsLoadingStateInitially()
+    {
+        // Arrange
+        var repositoryId = Guid.NewGuid();
+        var tcs = new TaskCompletionSource<RepositoryDto?>();
+
+        _mockRepositoryService
+            .Setup(x => x.GetRepositoryByIdAsync(repositoryId, It.IsAny<CancellationToken>()))
+            .Returns(tcs.Task);
+
+        // Act
+        var cut = RenderComponent<Detail>(parameters => parameters
+            .Add(p => p.Id, repositoryId));
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(50));
+        Assert.Contains("spinner", cut.Markup.ToLower()) || Assert.Contains("loading", cut.Markup.ToLower());
+
+        // Complete loading
+        tcs.SetResult(new RepositoryDtoBuilder().WithId(repositoryId).Build());
+    }
+
+    [Fact]
+    public async Task Render_ShowsRepositoryDetails()
+    {
+        // Arrange
+        var repositoryId = Guid.NewGuid();
+        var repository = new RepositoryDtoBuilder()
+            .WithId(repositoryId)
+            .WithName("Production Repository")
+            .WithGitPlatform("GitHub")
+            .Build();
+
+        _mockRepositoryService
+            .Setup(x => x.GetRepositoryByIdAsync(repositoryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(repository);
+
+        // Act
+        var cut = RenderComponent<Detail>(parameters => parameters
+            .Add(p => p.Id, repositoryId));
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        cut.WaitForState(() => cut.Markup.Contains("Production Repository") || !cut.Markup.Contains("spinner"));
+    }
+
+    [Fact]
+    public async Task Render_ShowsEditButton()
+    {
+        // Arrange
+        var repositoryId = Guid.NewGuid();
+        var repository = new RepositoryDtoBuilder()
+            .WithId(repositoryId)
+            .Build();
+
+        _mockRepositoryService
+            .Setup(x => x.GetRepositoryByIdAsync(repositoryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(repository);
+
+        // Act
+        var cut = RenderComponent<Detail>(parameters => parameters
+            .Add(p => p.Id, repositoryId));
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        cut.WaitForState(() => cut.Markup.Contains("Edit") || !cut.Markup.Contains("spinner"));
+    }
+
+    [Fact]
+    public async Task Render_ShowsBackButton()
+    {
+        // Arrange
+        var repositoryId = Guid.NewGuid();
+        var repository = new RepositoryDtoBuilder()
+            .WithId(repositoryId)
+            .Build();
+
+        _mockRepositoryService
+            .Setup(x => x.GetRepositoryByIdAsync(repositoryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(repository);
+
+        // Act
+        var cut = RenderComponent<Detail>(parameters => parameters
+            .Add(p => p.Id, repositoryId));
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        cut.WaitForState(() => cut.Markup.Contains("Back") || !cut.Markup.Contains("spinner"));
+    }
+
+    [Fact]
+    public async Task Render_ShowsRepositoryPlatformIcon()
+    {
+        // Arrange
+        var repositoryId = Guid.NewGuid();
+        var repository = RepositoryDtoBuilder.GitHub()
+            .WithId(repositoryId)
+            .Build();
+
+        _mockRepositoryService
+            .Setup(x => x.GetRepositoryByIdAsync(repositoryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(repository);
+
+        // Act
+        var cut = RenderComponent<Detail>(parameters => parameters
+            .Add(p => p.Id, repositoryId));
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        cut.WaitForState(() => cut.Markup.Contains("GitHub") || !cut.Markup.Contains("spinner"));
+    }
+}

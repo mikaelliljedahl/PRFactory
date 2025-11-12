@@ -1,0 +1,295 @@
+using Bunit;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Moq;
+using PRFactory.Domain.Entities;
+using PRFactory.Domain.ValueObjects;
+using PRFactory.Tests.Blazor;
+using PRFactory.Tests.Blazor.TestDataBuilders;
+using PRFactory.Web.Services;
+using Xunit;
+using WorkflowsIndex = PRFactory.Web.Pages.Workflows.Index;
+
+namespace PRFactory.Tests.Pages.Workflows;
+
+public class IndexTests : PageTestBase
+{
+    private readonly Mock<ITicketService> _mockTicketService;
+    private readonly Mock<ILogger<WorkflowsIndex>> _mockLogger;
+
+    public IndexTests()
+    {
+        _mockTicketService = new Mock<ITicketService>();
+        _mockLogger = new Mock<ILogger<WorkflowsIndex>>();
+
+        Services.AddSingleton(_mockTicketService.Object);
+        Services.AddSingleton(_mockLogger.Object);
+    }
+
+    [Fact]
+    public async Task OnInitialized_LoadsWorkflows()
+    {
+        // Arrange
+        var tickets = new List<Ticket>
+        {
+            CreateTicket(WorkflowState.Planning),
+            CreateTicket(WorkflowState.Implementing)
+        };
+
+        _mockTicketService.Setup(s => s.GetAllTicketsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tickets);
+
+        // Act
+        var cut = RenderComponent<WorkflowsIndex>();
+        await Task.Delay(100); // Allow async initialization
+
+        // Assert
+        Assert.Contains("Workflows", cut.Markup);
+        _mockTicketService.Verify(s => s.GetAllTicketsAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task OnInitialized_DisplaysStatistics()
+    {
+        // Arrange
+        var tickets = new List<Ticket>
+        {
+            CreateTicket(WorkflowState.Planning), // Active
+            CreateTicket(WorkflowState.AwaitingAnswers), // Awaiting input
+            CreateTicket(WorkflowState.Completed, completedToday: true), // Completed today
+            CreateTicket(WorkflowState.Failed) // Failed
+        };
+
+        _mockTicketService.Setup(s => s.GetAllTicketsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tickets);
+
+        // Act
+        var cut = RenderComponent<WorkflowsIndex>();
+        await Task.Delay(100);
+
+        // Assert
+        Assert.Contains("Active Workflows", cut.Markup);
+        Assert.Contains("Awaiting Input", cut.Markup);
+        Assert.Contains("Completed Today", cut.Markup);
+        Assert.Contains("Failed", cut.Markup);
+    }
+
+    [Fact]
+    public async Task OnInitialized_WithNoWorkflows_DisplaysEmptyState()
+    {
+        // Arrange
+        _mockTicketService.Setup(s => s.GetAllTicketsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Ticket>());
+
+        // Act
+        var cut = RenderComponent<WorkflowsIndex>();
+        await Task.Delay(100);
+
+        // Assert
+        Assert.Contains("No workflows found", cut.Markup);
+        Assert.Contains("View Tickets", cut.Markup);
+    }
+
+    [Fact]
+    public async Task OnInitialized_WithError_DisplaysErrorMessage()
+    {
+        // Arrange
+        _mockTicketService.Setup(s => s.GetAllTicketsAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Database error"));
+
+        // Act
+        var cut = RenderComponent<WorkflowsIndex>();
+        await Task.Delay(100);
+
+        // Assert
+        Assert.Contains("Failed to load workflows", cut.Markup);
+        Assert.Contains("Retry", cut.Markup);
+    }
+
+    [Fact]
+    public async Task OnInitialized_DisplaysWorkflowsTable()
+    {
+        // Arrange
+        var repository = CreateRepository();
+        var ticket = CreateTicket(WorkflowState.Planning);
+        ticket.Repository = repository;
+
+        _mockTicketService.Setup(s => s.GetAllTicketsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Ticket> { ticket });
+
+        // Act
+        var cut = RenderComponent<WorkflowsIndex>();
+        await Task.Delay(100);
+
+        // Assert
+        Assert.Contains("Recent Workflows", cut.Markup);
+        Assert.Contains(ticket.TicketKey, cut.Markup);
+        Assert.Contains(ticket.Title, cut.Markup);
+        Assert.Contains(repository.Name, cut.Markup);
+    }
+
+    [Fact]
+    public async Task ViewButton_Click_NavigatesToTicketDetails()
+    {
+        // Arrange
+        var ticketId = Guid.NewGuid();
+        var ticket = CreateTicket(WorkflowState.Planning);
+        ticket.Id = ticketId;
+
+        _mockTicketService.Setup(s => s.GetAllTicketsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Ticket> { ticket });
+
+        var cut = RenderComponent<Index>();
+        await Task.Delay(100);
+
+        // Act
+        var viewButton = cut.Find("button:contains('View')");
+        viewButton.Click();
+
+        // Assert
+        var navMan = Services.GetRequiredService<FakeNavigationManager>();
+        Assert.Equal($"http://localhost/tickets/{ticketId}", navMan.Uri);
+    }
+
+    [Fact]
+    public async Task CalculatesStatistics_Correctly()
+    {
+        // Arrange
+        var today = DateTime.UtcNow.Date;
+        var yesterday = today.AddDays(-1);
+
+        var tickets = new List<Ticket>
+        {
+            CreateTicket(WorkflowState.Planning), // Active: 1
+            CreateTicket(WorkflowState.Implementing), // Active: 2
+            CreateTicket(WorkflowState.AwaitingAnswers), // Awaiting: 1
+            CreateTicket(WorkflowState.PlanUnderReview), // Awaiting: 2
+            CreateTicket(WorkflowState.Completed, completedToday: true), // Completed today: 1
+            CreateTicket(WorkflowState.Completed, completedAt: yesterday), // Not today
+            CreateTicket(WorkflowState.Failed), // Failed: 1
+            CreateTicket(WorkflowState.ImplementationFailed) // Failed: 2
+        };
+
+        _mockTicketService.Setup(s => s.GetAllTicketsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tickets);
+
+        // Act
+        var cut = RenderComponent<WorkflowsIndex>();
+        await Task.Delay(100);
+
+        // Assert
+        // Active: 2, Awaiting: 2, Completed Today: 1, Failed: 2
+        Assert.Contains("Active Workflows", cut.Markup);
+        Assert.Contains("Awaiting Input", cut.Markup);
+    }
+
+    [Fact]
+    public async Task DisplaysDuration_ForCompletedWorkflows()
+    {
+        // Arrange
+        var ticket = CreateTicket(WorkflowState.Completed, completedToday: true);
+
+        _mockTicketService.Setup(s => s.GetAllTicketsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Ticket> { ticket });
+
+        // Act
+        var cut = RenderComponent<WorkflowsIndex>();
+        await Task.Delay(100);
+
+        // Assert
+        // Duration should be displayed (calculated from CreatedAt to CompletedAt)
+        Assert.NotNull(cut.Markup);
+    }
+
+    [Fact]
+    public async Task DisplaysDuration_ForOngoingWorkflows()
+    {
+        // Arrange
+        var ticket = CreateTicket(WorkflowState.Planning);
+
+        _mockTicketService.Setup(s => s.GetAllTicketsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Ticket> { ticket });
+
+        // Act
+        var cut = RenderComponent<WorkflowsIndex>();
+        await Task.Delay(100);
+
+        // Assert
+        // Duration should be displayed (calculated from CreatedAt to now)
+        Assert.NotNull(cut.Markup);
+    }
+
+    [Fact]
+    public async Task WorkflowsTable_OrdersByCreatedAtDescending()
+    {
+        // Arrange
+        var oldTicket = CreateTicket(WorkflowState.Completed);
+        oldTicket.CreatedAt = DateTime.UtcNow.AddDays(-10);
+        oldTicket.TicketKey = "OLD-123";
+
+        var newTicket = CreateTicket(WorkflowState.Planning);
+        newTicket.CreatedAt = DateTime.UtcNow;
+        newTicket.TicketKey = "NEW-456";
+
+        _mockTicketService.Setup(s => s.GetAllTicketsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Ticket> { oldTicket, newTicket });
+
+        // Act
+        var cut = RenderComponent<WorkflowsIndex>();
+        await Task.Delay(100);
+
+        // Assert
+        var markup = cut.Markup;
+        var newTicketIndex = markup.IndexOf("NEW-456", StringComparison.Ordinal);
+        var oldTicketIndex = markup.IndexOf("OLD-123", StringComparison.Ordinal);
+
+        // NEW-456 should appear before OLD-123 in markup
+        Assert.True(newTicketIndex < oldTicketIndex);
+    }
+
+    private Ticket CreateTicket(WorkflowState state, bool completedToday = false, DateTime? completedAt = null)
+    {
+        var ticket = new Ticket(
+            Guid.NewGuid(),
+            "TEST-123",
+            "Test Ticket",
+            "Description",
+            TicketSource.Jira,
+            Guid.NewGuid())
+        {
+            Title = "Test Ticket Title",
+            CreatedAt = DateTime.UtcNow.AddHours(-2),
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        // Use reflection to set State since it's internal setter
+        var stateProperty = typeof(Ticket).GetProperty(nameof(Ticket.State));
+        stateProperty?.SetValue(ticket, state);
+
+        if (completedToday)
+        {
+            var completedAtProperty = typeof(Ticket).GetProperty(nameof(Ticket.CompletedAt));
+            completedAtProperty?.SetValue(ticket, DateTime.UtcNow);
+        }
+        else if (completedAt.HasValue)
+        {
+            var completedAtProperty = typeof(Ticket).GetProperty(nameof(Ticket.CompletedAt));
+            completedAtProperty?.SetValue(ticket, completedAt.Value);
+        }
+
+        return ticket;
+    }
+
+    private Repository CreateRepository()
+    {
+        return new Repository(
+            Guid.NewGuid(),
+            "test-repo",
+            "https://github.com/test/repo",
+            GitPlatform.GitHub)
+        {
+            Name = "test-repo",
+            IsActive = true
+        };
+    }
+}

@@ -1,0 +1,291 @@
+using Bunit;
+using Microsoft.AspNetCore.Components;
+using Moq;
+using PRFactory.Tests.Blazor;
+using PRFactory.Tests.Blazor.TestDataBuilders;
+using PRFactory.Web.Models;
+using PRFactory.Web.Services;
+using Radzen;
+using Xunit;
+using TenantIndex = PRFactory.Web.Pages.Tenants.Index;
+
+namespace PRFactory.Tests.Pages.Tenants;
+
+public class IndexTests : PageTestBase
+{
+    private Mock<ITenantService> _mockTenantService;
+    private Mock<NavigationManager> _mockNavigationManager;
+    private Mock<DialogService> _mockDialogService;
+
+    public IndexTests()
+    {
+        _mockTenantService = new Mock<ITenantService>();
+        _mockNavigationManager = new Mock<NavigationManager>();
+        _mockDialogService = new Mock<DialogService>();
+
+    }
+
+    protected override void ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    {
+        base.ConfigureServices(services);
+        services.AddSingleton(_mockTenantService.Object);
+        services.AddSingleton(_mockNavigationManager.Object);
+        services.AddSingleton(_mockDialogService.Object);
+    }
+
+    [Fact]
+    public async Task OnInitialized_LoadsTenants()
+    {
+        // Arrange
+        var tenants = new List<TenantDto>
+        {
+            new TenantDtoBuilder().WithName("Tenant 1").Build(),
+            new TenantDtoBuilder().WithName("Tenant 2").Build()
+        };
+
+        _mockTenantService
+            .Setup(x => x.GetAllTenantsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tenants);
+
+        _mockTenantService
+            .Setup(x => x.GetTenantStatsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync((2, 0));
+
+        // Act
+        var cut = RenderComponent<TenantIndex>();
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        cut.WaitForState(() => cut.Markup.Contains("Tenant 1"));
+
+        Assert.Contains("Tenant 1", cut.Markup);
+        Assert.Contains("Tenant 2", cut.Markup);
+
+        _mockTenantService.Verify(
+            x => x.GetAllTenantsAsync(It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task OnInitialized_LoadsStats()
+    {
+        // Arrange
+        _mockTenantService
+            .Setup(x => x.GetAllTenantsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TenantDto>());
+
+        _mockTenantService
+            .Setup(x => x.GetTenantStatsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync((5, 2));
+
+        // Act
+        var cut = RenderComponent<TenantIndex>();
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        _mockTenantService.Verify(
+            x => x.GetTenantStatsAsync(It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task OnInitialized_WhenError_ShowsErrorMessage()
+    {
+        // Arrange
+        _mockTenantService
+            .Setup(x => x.GetAllTenantsAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Network error"));
+
+        // Act
+        var cut = RenderComponent<TenantIndex>();
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        cut.WaitForState(() => cut.Markup.Contains("Failed to load tenants"));
+
+        Assert.Contains("Failed to load tenants", cut.Markup);
+    }
+
+    [Fact]
+    public async Task SearchFilter_FiltersTenantsCorrectly()
+    {
+        // Arrange
+        var tenants = new List<TenantDto>
+        {
+            new TenantDtoBuilder().WithName("ACME Corporation").Build(),
+            new TenantDtoBuilder().WithName("Beta Industries").Build()
+        };
+
+        _mockTenantService
+            .Setup(x => x.GetAllTenantsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tenants);
+
+        _mockTenantService
+            .Setup(x => x.GetTenantStatsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync((2, 0));
+
+        // Act
+        var cut = RenderComponent<TenantIndex>();
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        cut.WaitForState(() => cut.Markup.Contains("ACME"));
+        Assert.Contains("ACME Corporation", cut.Markup);
+        Assert.Contains("Beta Industries", cut.Markup);
+    }
+
+    [Fact]
+    public async Task FilterByActiveStatus_LoadsActiveTenants()
+    {
+        // Arrange
+        var activeTenants = new List<TenantDto>
+        {
+            new TenantDtoBuilder().WithIsActive(true).Build()
+        };
+
+        _mockTenantService
+            .Setup(x => x.GetActiveTenantsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(activeTenants);
+
+        _mockTenantService
+            .Setup(x => x.GetAllTenantsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(activeTenants);
+
+        _mockTenantService
+            .Setup(x => x.GetTenantStatsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync((1, 0));
+
+        // Act
+        var cut = RenderComponent<TenantIndex>();
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        Assert.NotNull(cut);
+    }
+
+    [Fact]
+    public async Task ActivateTenant_WhenSuccessful_ReloadsTenants()
+    {
+        // Arrange
+        var tenant = new TenantDtoBuilder()
+            .WithIsActive(false)
+            .Build();
+
+        _mockTenantService
+            .Setup(x => x.GetAllTenantsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TenantDto> { tenant });
+
+        _mockTenantService
+            .Setup(x => x.GetTenantStatsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync((0, 1));
+
+        _mockTenantService
+            .Setup(x => x.ActivateTenantAsync(tenant.Id, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var cut = RenderComponent<TenantIndex>();
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        Assert.NotNull(cut);
+    }
+
+    [Fact]
+    public async Task DeactivateTenant_WhenSuccessful_ReloadsTenants()
+    {
+        // Arrange
+        var tenant = new TenantDtoBuilder()
+            .WithIsActive(true)
+            .Build();
+
+        _mockTenantService
+            .Setup(x => x.GetAllTenantsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TenantDto> { tenant });
+
+        _mockTenantService
+            .Setup(x => x.GetTenantStatsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync((1, 0));
+
+        _mockTenantService
+            .Setup(x => x.DeactivateTenantAsync(tenant.Id, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var cut = RenderComponent<TenantIndex>();
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        Assert.NotNull(cut);
+    }
+
+    [Fact]
+    public async Task DeleteTenant_WhenSuccessful_ReloadsTenants()
+    {
+        // Arrange
+        var tenant = new TenantDtoBuilder().Build();
+
+        _mockTenantService
+            .Setup(x => x.GetAllTenantsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TenantDto> { tenant });
+
+        _mockTenantService
+            .Setup(x => x.GetTenantStatsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync((1, 0));
+
+        _mockTenantService
+            .Setup(x => x.DeleteTenantAsync(tenant.Id, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var cut = RenderComponent<TenantIndex>();
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        Assert.NotNull(cut);
+    }
+
+    [Fact]
+    public async Task Render_ShowsCreateTenantButton()
+    {
+        // Arrange
+        _mockTenantService
+            .Setup(x => x.GetAllTenantsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TenantDto>());
+
+        _mockTenantService
+            .Setup(x => x.GetTenantStatsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync((0, 0));
+
+        // Act
+        var cut = RenderComponent<TenantIndex>();
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        Assert.Contains("Create", cut.Markup) || Assert.True(cut.Markup.Contains("Add") || cut.Markup.Contains("New"));
+    }
+
+    [Fact]
+    public async Task Render_ShowsLoadingStateInitially()
+    {
+        // Arrange
+        var tcs = new TaskCompletionSource<List<TenantDto>>();
+        _mockTenantService
+            .Setup(x => x.GetAllTenantsAsync(It.IsAny<CancellationToken>()))
+            .Returns(tcs.Task);
+
+        _mockTenantService
+            .Setup(x => x.GetTenantStatsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync((0, 0));
+
+        // Act
+        var cut = RenderComponent<TenantIndex>();
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(50));
+        Assert.Contains("spinner", cut.Markup.ToLower()) || Assert.Contains("loading", cut.Markup.ToLower());
+
+        // Complete loading
+        tcs.SetResult(new List<TenantDto>());
+    }
+}

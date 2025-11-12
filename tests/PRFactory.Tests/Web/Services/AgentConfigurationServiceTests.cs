@@ -160,26 +160,28 @@ public class AgentConfigurationServiceTests
             .WithId(tenantId)
             .Build();
 
-        var anthropicProvider = new TenantLlmProvider(
+        var anthropicProvider = TenantLlmProvider.CreateOAuthProvider(
             tenantId: tenantId,
             name: "Anthropic",
-            providerId: "anthropic",
-            apiKey: "encrypted-key",
-            isActive: true);
+            defaultModel: "claude-sonnet-4-5-20250929");
 
-        var openAiProvider = new TenantLlmProvider(
+        var openAiConfig = new PRFactory.Domain.ValueObjects.ApiKeyProviderConfiguration(
             tenantId: tenantId,
             name: "OpenAI",
-            providerId: "openai",
-            apiKey: "encrypted-key",
-            isActive: true);
+            providerType: PRFactory.Domain.Entities.LlmProviderType.Custom,
+            apiBaseUrl: "https://api.openai.com/v1",
+            encryptedApiToken: "encrypted-key",
+            defaultModel: "gpt-4o");
+        var openAiProvider = TenantLlmProvider.CreateApiKeyProvider(openAiConfig);
 
-        var googleProvider = new TenantLlmProvider(
+        var googleConfig = new PRFactory.Domain.ValueObjects.ApiKeyProviderConfiguration(
             tenantId: tenantId,
             name: "Google",
-            providerId: "google",
-            apiKey: "encrypted-key",
-            isActive: true);
+            providerType: PRFactory.Domain.Entities.LlmProviderType.Custom,
+            apiBaseUrl: "https://generativelanguage.googleapis.com/v1",
+            encryptedApiToken: "encrypted-key",
+            defaultModel: "gemini-2.0-flash-exp");
+        var googleProvider = TenantLlmProvider.CreateApiKeyProvider(googleConfig);
 
         tenant.AddLlmProvider(anthropicProvider);
         tenant.AddLlmProvider(openAiProvider);
@@ -275,14 +277,12 @@ public class AgentConfigurationServiceTests
             .WithId(tenantId)
             .Build();
 
-        var providerId = Guid.NewGuid();
-        var provider = new TenantLlmProvider(
+        var provider = TenantLlmProvider.CreateOAuthProvider(
             tenantId: tenantId,
             name: "Anthropic",
-            providerId: "anthropic",
-            apiKey: "encrypted-key",
-            isActive: true);
+            defaultModel: "claude-sonnet-4-5-20250929");
 
+        var providerId = provider.Id;
         tenant.AddLlmProvider(provider);
 
         _mockTenantContext
@@ -357,14 +357,13 @@ public class AgentConfigurationServiceTests
             .WithId(tenantId)
             .Build();
 
-        var providerId = Guid.NewGuid();
-        var provider = new TenantLlmProvider(
+        var provider = TenantLlmProvider.CreateOAuthProvider(
             tenantId: tenantId,
             name: "Anthropic",
-            providerId: "anthropic",
-            apiKey: "encrypted-key",
-            isActive: false); // Inactive provider
+            defaultModel: "claude-sonnet-4-5-20250929");
+        provider.Deactivate(); // Make provider inactive
 
+        var providerId = provider.Id;
         tenant.AddLlmProvider(provider);
 
         _mockTenantContext

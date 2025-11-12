@@ -1,8 +1,8 @@
 # Epic 1: Team Review & Collaboration
 
-**Status:** 🔴 Not Started
+**Status:** 🟡 Partially Implemented (Core entities and services exist)
 **Priority:** P1 (Critical)
-**Effort:** 2-3 weeks
+**Effort:** 1-2 weeks (implementation and testing)
 **Dependencies:** None
 
 ---
@@ -11,256 +11,183 @@
 
 Transform PRFactory from **single-player** to **multi-player**. Enable team collaboration on AI-generated plans through commenting, discussion, and formal approval workflows.
 
-**Current Pain:** AI generates plans, but only one person can review. Teams can't collaborate or discuss before implementation.
+**Current State:**
+- ✅ Core entities exist (PlanReview, ReviewComment, ReviewStatus)
+- ✅ Application services implemented (IPlanReviewService, IPlanService)
+- ✅ Repositories implemented (PlanReviewRepository, ReviewCommentRepository)
+- ✅ Blazor components exist (PlanReviewSection, PlanReviewStatus)
+- ⚠️ Some features need enhancement (AI validation, advanced UI)
 
-**Solution:** Build collaborative review features directly into the Web UI, making Phase 2 (Planning) a team-based function.
+**Remaining Work:**
+- Agent-based plan validation (`cli review` commands)
+- Enhanced UI components for better collaboration
+- Notification system for @mentions
+- Advanced analytics and reporting
 
 ---
 
 ## Success Criteria
 
-✅ **Must Have:**
-- Team members can comment on AI-generated plans
-- Threaded discussions with replies
-- Formal approval workflow (Draft → PendingReview → ChangesRequested → Approved)
-- Plan cannot proceed to implementation until approved
-- `cli review` agent can validate plans and code-vs-plan alignment
+✅ **Already Implemented:**
+- Team members can be assigned as reviewers (required/optional)
+- Review workflow exists (Pending → Approved/Rejected)
+- Comments with @mentions
+- Plan cannot proceed until sufficient approvals received
+- Blazor Server architecture with service injection (NO HTTP calls)
 
-✅ **Nice to Have:**
-- @mentions to notify team members
-- Comment resolution workflow (Active → Resolved)
+✅ **Must Have (This Epic):**
+- `cli review` agent can validate plans with AI
+- Code-vs-plan alignment validation
+- Enhanced comment threading UI
+- Notification system for @mentions
+- Plan revision history viewer
+
+✅ **Nice to Have (Future):**
 - Email notifications for comments/approvals
+- Real-time collaboration (SignalR)
 - Plan diff viewer (show changes between plan revisions)
+- Analytics dashboard (approval rates, review times)
+
+---
+
+## Current Architecture (What Already Exists)
+
+### Domain Entities
+
+**Ticket Entity** (Plan data stored here):
+- `PlanBranchName` (string) - Branch where plan is stored (LibGit2Sharp)
+- `PlanMarkdownPath` (string) - Path to plan markdown file
+- `PlanApprovedAt` (DateTime?) - When approved
+- `RequiredApprovalCount` (int) - Number of required approvals
+
+**PlanReview Entity** (`/PRFactory.Domain/Entities/PlanReview.cs`):
+- `Id`, `TicketId`, `ReviewerId`, `Status`, `IsRequired`, `AssignedAt`, `ReviewedAt`, `Decision`
+- Methods: `Approve()`, `Reject()`, `ResetForNewPlan()`, `SetRequired()`
+
+**ReviewComment Entity** (`/PRFactory.Domain/Entities/ReviewComment.cs`):
+- `Id`, `TicketId`, `AuthorId`, `Content`, `MentionedUserIds`, `CreatedAt`, `UpdatedAt`
+- Methods: `Update()`, `MentionsUser()`, `AddMention()`, `RemoveMention()`
+
+**ReviewStatus Enum**:
+- `Pending` = 0
+- `Approved` = 1
+- `RejectedForRefinement` = 2 (refine while keeping structure)
+- `RejectedForRegeneration` = 3 (regenerate from scratch)
+
+### Application Services
+
+**IPlanService** (`/PRFactory.Core/Application/Services/IPlanService.cs`):
+- `GetPlanAsync(Guid ticketId)` - Returns PlanInfo (reads markdown from git branch using LibGit2Sharp)
+
+**IPlanReviewService** (`/PRFactory.Core/Application/Services/IPlanReviewService.cs`):
+- `AssignReviewersAsync()` - Assign reviewers (required/optional)
+- `GetReviewsByTicketIdAsync()` - Get all reviews
+- `GetPendingReviewsForReviewerAsync()` - Get pending reviews
+- `ApproveReviewAsync()` - Approve a review
+- `RejectReviewAsync()` - Reject a review (refine or regenerate)
+- `AddCommentAsync()` - Add comment with @mentions
+- `GetCommentsByTicketIdAsync()` - Get all comments
+- `UpdateCommentAsync()` - Update comment
+- `DeleteCommentAsync()` - Delete comment
+- `HasSufficientApprovalsAsync()` - Check approval threshold
+- `ResetReviewsForNewPlanAsync()` - Reset reviews when plan regenerated
+
+**Implementation:** `/PRFactory.Infrastructure/Application/PlanService.cs` and `PlanReviewService.cs`
+- Uses LibGit2Sharp to read plan files from git branches
+- Delegates to domain methods on Ticket entity
+- Uses repositories for data access
+- Logs all review actions
+
+### Web Services (Blazor Server Facades)
+
+**ITicketService** (`/PRFactory.Web/Services/ITicketService.cs`):
+
+**Team Review Methods:**
+- `GetReviewersAsync()` - Returns List&lt;ReviewerDto&gt;
+- `AssignReviewersAsync()` - Assign reviewers
+- `ApproveReviewAsync()` - Approve review
+- `RejectReviewAsync()` - Reject review
+- `GetCommentsAsync()` - Returns List&lt;ReviewCommentDto&gt;
+- `AddCommentAsync()` - Add comment
+- `HasSufficientApprovalsAsync()` - Check approvals
+
+**Plan Methods:**
+- `GetPlanAsync()` - Returns PlanDto (markdown content)
+- `ApprovePlanAsync()` - Approve and proceed
+- `RejectPlanAsync()` - Reject with reason
+- `RefinePlanAsync()` - Refine with instructions
+
+**Implementation:** `/PRFactory.Web/Services/TicketService.cs`
+- **Blazor Server architecture** - Uses direct service injection (NO HTTP calls)
+- Injects `IPlanService` and `IPlanReviewService`
+- Converts between domain entities and DTOs
+
+### Blazor Components
+
+**PlanReviewSection.razor** (`/PRFactory.Web/Components/Tickets/PlanReviewSection.razor`):
+- Displays plan details (branch name, markdown path)
+- Single-user review actions: Approve, Request Refinements, Reject & Regenerate
+- Team review features: Reviewer assignment, status display, comment thread
+- Validates sufficient approvals before allowing plan approval
+
+**PlanReviewStatus.razor** (`/PRFactory.Web/Components/Tickets/PlanReviewStatus.razor`):
+- Shows required/optional reviewers with approval count badge
+- Displays reviewer avatars with status
+- Shows reviewer decisions and relative time
+
+**Related Components:**
+- `ReviewerAssignment.razor` - UI for assigning reviewers
+- `ReviewCommentThread.razor` - Discussion thread UI
+- `ReviewerAvatar.razor` - Avatar display with status badge
+
+### Architecture Pattern (Blazor Server)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                 Blazor Server Components                     │
+│           (PlanReviewSection.razor.cs)                       │
+└────────────────────────┬────────────────────────────────────┘
+                         │ @inject ITicketService
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│          Web Layer Service (Facade Pattern)                  │
+│              PRFactory.Web/Services/                         │
+│               TicketService.cs                               │
+│                                                               │
+│   - Converts between DTOs and domain entities                │
+│   - Facade for multiple application services                 │
+│   - Injected into Blazor components                          │
+└────────────────────────┬────────────────────────────────────┘
+                         │ Injects application services
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│        Application Service Layer (Business Logic)            │
+│         PRFactory.Infrastructure/Application/                │
+│            PlanService.cs, PlanReviewService.cs              │
+│                                                               │
+│   - Encapsulates business logic                              │
+│   - Coordinates multiple repositories                        │
+│   - Shared by Blazor AND external clients                    │
+└────────────────────────┬────────────────────────────────────┘
+                         │ Injects repositories
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│              Infrastructure Layer                            │
+│       PlanReviewRepository, ReviewCommentRepository          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**IMPORTANT:** This is a **Blazor Server** application.
+- ❌ DO NOT create API controllers for internal Blazor use
+- ✅ DO use direct service injection (`@inject ITicketService`)
+- ❌ DO NOT make HTTP calls within the same process
+- ✅ DO use application services (IPlanService, IPlanReviewService)
 
 ---
 
 ## Implementation Plan
 
-### 1. Web UI - Commenting System
-
-**Database Schema:**
-
-```sql
-CREATE TABLE PlanComments (
-    CommentID UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    PlanID UNIQUEIDENTIFIER NOT NULL,
-    UserID UNIQUEIDENTIFIER NOT NULL,
-    ParentCommentID UNIQUEIDENTIFIER NULL,  -- For threading
-    Content NVARCHAR(MAX) NOT NULL,
-    Timestamp DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-    Status NVARCHAR(20) NOT NULL DEFAULT 'Active',  -- Active, Resolved
-
-    CONSTRAINT FK_PlanComments_Plans FOREIGN KEY (PlanID) REFERENCES Plans(Id),
-    CONSTRAINT FK_PlanComments_Users FOREIGN KEY (UserID) REFERENCES Users(Id),
-    CONSTRAINT FK_PlanComments_Parent FOREIGN KEY (ParentCommentID) REFERENCES PlanComments(CommentID)
-);
-
-CREATE INDEX IX_PlanComments_PlanID ON PlanComments(PlanID);
-CREATE INDEX IX_PlanComments_ParentCommentID ON PlanComments(ParentCommentID);
-```
-
-**Backend API Endpoints:**
-
-```csharp
-// POST /api/plans/{planId}/comments
-public class CreateCommentRequest
-{
-    public string Content { get; set; }
-    public Guid? ParentCommentId { get; set; }  // null for top-level
-}
-
-// GET /api/plans/{planId}/comments
-public class CommentDto
-{
-    public Guid CommentId { get; set; }
-    public Guid UserId { get; set; }
-    public string UserName { get; set; }
-    public string Content { get; set; }
-    public DateTime Timestamp { get; set; }
-    public string Status { get; set; }
-    public Guid? ParentCommentId { get; set; }
-    public List<CommentDto> Replies { get; set; }  // Nested structure
-}
-
-// PUT /api/comments/{commentId}
-// DELETE /api/comments/{commentId}
-```
-
-**Frontend UI (Blazor):**
-
-Create `/PRFactory.Web/Components/Plans/PlanCommentThread.razor`:
-
-```razor
-<Card Title="Team Discussion" Icon="chat-dots">
-    @foreach (var comment in topLevelComments)
-    {
-        <CommentItem Comment="@comment" OnReply="HandleReply" />
-
-        @if (comment.Replies.Any())
-        {
-            <div class="ms-4">
-                @foreach (var reply in comment.Replies)
-                {
-                    <CommentItem Comment="@reply" OnReply="HandleReply" />
-                }
-            </div>
-        }
-    }
-
-    <FormField Label="Add Comment">
-        <InputTextArea @bind-Value="newCommentContent" rows="3" />
-    </FormField>
-    <LoadingButton OnClick="HandlePostComment" Icon="send">
-        Post Comment
-    </LoadingButton>
-</Card>
-```
-
-**Files to Create:**
-- `/PRFactory.Core/Entities/PlanComment.cs` (domain entity)
-- `/PRFactory.Core/Repositories/IPlanCommentRepository.cs` (interface)
-- `/PRFactory.Infrastructure/Repositories/PlanCommentRepository.cs` (EF Core)
-- `/PRFactory.Infrastructure/Application/PlanCommentService.cs` (business logic)
-- `/PRFactory.Api/Controllers/PlanCommentsController.cs` (API endpoints)
-- `/PRFactory.Web/Components/Plans/PlanCommentThread.razor` (UI component)
-- `/PRFactory.Web/Components/Plans/CommentItem.razor` (individual comment)
-
----
-
-### 2. Web UI - Approval Workflow
-
-**Database Schema:**
-
-```sql
-ALTER TABLE Plans
-ADD Status NVARCHAR(50) NOT NULL DEFAULT 'Draft';
-
--- Possible values: Draft, PendingReview, ChangesRequested, Approved
-```
-
-**State Machine Logic:**
-
-```csharp
-public enum PlanStatus
-{
-    Draft,
-    PendingReview,
-    ChangesRequested,
-    Approved
-}
-
-public class Plan
-{
-    public PlanStatus Status { get; private set; } = PlanStatus.Draft;
-
-    public void RequestReview(Guid requestedBy)
-    {
-        if (Status != PlanStatus.Draft && Status != PlanStatus.ChangesRequested)
-            throw new InvalidOperationException("Can only request review from Draft or ChangesRequested");
-
-        Status = PlanStatus.PendingReview;
-        // Emit event: PlanReviewRequestedEvent
-    }
-
-    public void RequestChanges(Guid reviewerId, string reason)
-    {
-        if (Status != PlanStatus.PendingReview)
-            throw new InvalidOperationException("Can only request changes when PendingReview");
-
-        Status = PlanStatus.ChangesRequested;
-        // Emit event: PlanChangesRequestedEvent
-        // Create comment with reason
-    }
-
-    public void Approve(Guid approverId)
-    {
-        if (Status != PlanStatus.PendingReview)
-            throw new InvalidOperationException("Can only approve when PendingReview");
-
-        Status = PlanStatus.Approved;
-        // Emit event: PlanApprovedEvent
-    }
-}
-```
-
-**Backend API Endpoints:**
-
-```csharp
-// POST /api/plans/{planId}/request-review
-public Task<IActionResult> RequestReview(Guid planId);
-
-// POST /api/plans/{planId}/request-changes
-public class RequestChangesRequest
-{
-    public string Reason { get; set; }  // Required
-}
-public Task<IActionResult> RequestChanges(Guid planId, RequestChangesRequest request);
-
-// POST /api/plans/{planId}/approve
-public Task<IActionResult> Approve(Guid planId);
-```
-
-**Frontend UI (Blazor):**
-
-Update `/PRFactory.Web/Pages/Plans/Detail.razor`:
-
-```razor
-<Card Title="Plan Status" Icon="diagram-3">
-    <StatusBadge Status="@plan.Status" />
-
-    @if (plan.Status == PlanStatus.Draft || plan.Status == PlanStatus.ChangesRequested)
-    {
-        <LoadingButton OnClick="HandleRequestReview" Icon="send-check">
-            Request Review
-        </LoadingButton>
-    }
-
-    @if (plan.Status == PlanStatus.PendingReview && IsReviewer(currentUser))
-    {
-        <LoadingButton OnClick="HandleApprove" Icon="check-circle" Color="success">
-            Approve Plan
-        </LoadingButton>
-
-        <LoadingButton OnClick="HandleRequestChanges" Icon="x-circle" Color="warning">
-            Request Changes
-        </LoadingButton>
-    }
-
-    @if (plan.Status == PlanStatus.Approved)
-    {
-        <LoadingButton OnClick="HandleStartImplementation" Icon="code-slash">
-            Start Implementation (Phase 3)
-        </LoadingButton>
-    }
-    else
-    {
-        <InfoBox Type="Warning">
-            Plan must be approved before implementation can begin.
-        </InfoBox>
-    }
-</Card>
-```
-
-**Business Logic:**
-
-```csharp
-// Check user roles for approval permissions
-public bool CanApprove(User user, Plan plan)
-{
-    // Only team leads or plan owners can approve
-    return user.Roles.Contains("TeamLead") || plan.OwnerId == user.Id;
-}
-```
-
-**Files to Modify:**
-- `/PRFactory.Core/Entities/Plan.cs` (add Status property, state machine methods)
-- `/PRFactory.Infrastructure/Application/PlanService.cs` (workflow methods)
-- `/PRFactory.Api/Controllers/PlansController.cs` (approval endpoints)
-- `/PRFactory.Web/Pages/Plans/Detail.razor` (approval UI)
-
----
-
-### 3. Agent: `cli review` - Plan Validation
+### 1. Agent: `cli review` - Plan Validation (NEW)
 
 **Command 1: Plan Review**
 
@@ -317,42 +244,25 @@ Provide a completeness assessment with:
 - Recommendations to fill gaps
 ```
 
-**CLI Implementation:**
+**Service to Create:**
 
+`/PRFactory.Infrastructure/Application/PlanValidationService.cs`:
 ```csharp
-// cli review --plan <path> --prompt <text>
-public class ReviewPlanCommand
+public interface IPlanValidationService
 {
-    [Option("--plan", Required = true)]
-    public string PlanPath { get; set; }
+    Task<PlanValidationResult> ValidatePlanAsync(Guid ticketId, string checkType);
+    Task<PlanValidationResult> ValidatePlanWithPromptAsync(Guid ticketId, string customPrompt);
+    Task<CodePlanAlignmentResult> ValidateCodeVsPlanAsync(Guid ticketId, string diffContent);
+}
 
-    [Option("--prompt", Required = false)]
-    public string? CustomPrompt { get; set; }
-
-    [Option("--check", Required = false)]
-    public string? CheckType { get; set; }  // security, completeness, performance
-
-    public async Task<int> ExecuteAsync()
-    {
-        // Load plan content
-        var planContent = File.ReadAllText(PlanPath);
-
-        // Select prompt
-        var promptTemplate = CheckType switch
-        {
-            "security" => LoadPrompt("review/plan_security_check.txt"),
-            "completeness" => LoadPrompt("review/plan_completeness_check.txt"),
-            _ => CustomPrompt ?? throw new ArgumentException("Must provide --prompt or --check")
-        };
-
-        // Call LLM
-        var response = await _llmProvider.SendMessageAsync(
-            prompt: promptTemplate.Replace("{plan_content}", planContent));
-
-        // Output results
-        Console.WriteLine(response.Content);
-        return 0;
-    }
+public class PlanValidationResult
+{
+    public string CheckType { get; set; }
+    public int Score { get; set; }
+    public string RiskLevel { get; set; }
+    public List<string> Findings { get; set; }
+    public List<string> Recommendations { get; set; }
+    public string RawResponse { get; set; }
 }
 ```
 
@@ -391,54 +301,9 @@ Provide validation results:
 - Overall score: 0-100 (100 = perfect alignment)
 ```
 
-**CLI Implementation:**
-
-```csharp
-public class ValidateCodeCommand
-{
-    [Option("--validate", Required = true)]
-    public bool Validate { get; set; }
-
-    [Option("--plan-dir", Required = true)]
-    public string PlanDirectory { get; set; }
-
-    [Option("--diff", Required = true)]
-    public string DiffFilePath { get; set; }
-
-    public async Task<int> ExecuteAsync()
-    {
-        // Load all plan artifacts
-        var planFiles = Directory.GetFiles(PlanDirectory, "*.md");
-        var planContent = string.Join("\n\n---\n\n",
-            planFiles.Select(f => $"## {Path.GetFileName(f)}\n\n{File.ReadAllText(f)}"));
-
-        // Load diff
-        var diff = File.ReadAllText(DiffFilePath);
-
-        // Load validation prompt
-        var promptTemplate = LoadPrompt("review/code_plan_validation.txt");
-        var prompt = promptTemplate
-            .Replace("{plan_artifacts}", planContent)
-            .Replace("{code_diff}", diff);
-
-        // Call LLM
-        var response = await _llmProvider.SendMessageAsync(prompt);
-
-        // Parse score from response
-        var score = ExtractScore(response.Content);
-
-        // Output results
-        Console.WriteLine(response.Content);
-
-        // Exit code: 0 if score >= 90, 1 otherwise
-        return score >= 90 ? 0 : 1;
-    }
-}
-```
-
 **Web UI Integration:**
 
-Add "Run Plan Validation" button in plan detail page:
+Add "Run Plan Validation" to PlanReviewSection component:
 
 ```razor
 <Card Title="Plan Analysis" Icon="shield-check">
@@ -454,10 +319,32 @@ Add "Run Plan Validation" button in plan detail page:
         Run Analysis
     </LoadingButton>
 
-    @if (!string.IsNullOrEmpty(analysisResult))
+    @if (analysisResult != null)
     {
         <Card Title="Analysis Results" Icon="file-earmark-text">
-            <pre>@analysisResult</pre>
+            <div class="validation-result">
+                <div class="alert alert-@GetAlertClass(analysisResult.RiskLevel)">
+                    <strong>Risk Level:</strong> @analysisResult.RiskLevel
+                    <br />
+                    <strong>Score:</strong> @analysisResult.Score / 100
+                </div>
+
+                <h6>Findings:</h6>
+                <ul>
+                    @foreach (var finding in analysisResult.Findings)
+                    {
+                        <li>@finding</li>
+                    }
+                </ul>
+
+                <h6>Recommendations:</h6>
+                <ul>
+                    @foreach (var rec in analysisResult.Recommendations)
+                    {
+                        <li>@rec</li>
+                    }
+                </ul>
+            </div>
         </Card>
     }
 </Card>
@@ -468,101 +355,209 @@ Add "Run Plan Validation" button in plan detail page:
 - `/prompts/review/anthropic/plan_completeness_check.txt`
 - `/prompts/review/anthropic/plan_performance_check.txt`
 - `/prompts/review/anthropic/code_plan_validation.txt`
-- CLI command implementation (exact location TBD based on CLI structure)
+- `/PRFactory.Core/Application/Services/IPlanValidationService.cs`
+- `/PRFactory.Infrastructure/Application/PlanValidationService.cs`
+- CLI command implementation (integrate with existing CLI structure)
+
+---
+
+### 2. Enhanced UI - Notification System (NEW)
+
+**Goal:** Notify users when mentioned in comments or assigned as reviewers
+
+**Service to Create:**
+
+`/PRFactory.Infrastructure/Application/NotificationService.cs`:
+```csharp
+public interface INotificationService
+{
+    Task NotifyReviewerAssignedAsync(Guid reviewerId, Guid ticketId, bool isRequired);
+    Task NotifyMentionedInCommentAsync(List<Guid> mentionedUserIds, Guid ticketId, Guid commentId);
+    Task NotifyPlanApprovedAsync(Guid ticketId, List<Guid> reviewerIds);
+    Task NotifyPlanRejectedAsync(Guid ticketId, List<Guid> reviewerIds, string reason);
+}
+```
+
+**Implementation:**
+- In-app notifications (show in UI navbar)
+- Future: Email notifications (via SendGrid/SMTP)
+- Future: Slack/Teams integration
+
+**Blazor Component:**
+
+`/PRFactory.Web/Components/Notifications/NotificationBell.razor`:
+- Show notification count badge
+- Dropdown with recent notifications
+- Mark as read functionality
+
+---
+
+### 3. Enhanced UI - Comment Threading Improvements (NEW)
+
+**Current:** ReviewCommentThread.razor exists but may need enhancement
+
+**Enhancements:**
+- Rich text editor for comments (markdown support with preview)
+- @mention autocomplete (type @ to see user list)
+- Edit/delete comments (if author)
+- Reply threading (nested comments)
+- Emoji reactions (👍, ❤️, etc.)
+
+**Files to Enhance:**
+- `/PRFactory.Web/Components/Tickets/ReviewCommentThread.razor`
+- `/PRFactory.Web/UI/Forms/MarkdownEditor.razor` (NEW - rich editor component)
+
+---
+
+### 4. Plan Revision History (NEW)
+
+**Goal:** Track plan changes over time when refined/regenerated
+
+**Database Schema:**
+
+```sql
+CREATE TABLE PlanRevisions (
+    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    TicketId UNIQUEIDENTIFIER NOT NULL,
+    RevisionNumber INT NOT NULL,
+    BranchName NVARCHAR(255) NOT NULL,
+    MarkdownPath NVARCHAR(500) NOT NULL,
+    CommitHash NVARCHAR(100) NOT NULL,
+    Content NVARCHAR(MAX) NOT NULL,
+    CreatedAt DATETIME2 NOT NULL,
+    CreatedByUserId UNIQUEIDENTIFIER NOT NULL,
+    RevisionReason NVARCHAR(50) NOT NULL, -- Initial, Refined, Regenerated
+
+    CONSTRAINT FK_PlanRevisions_Tickets FOREIGN KEY (TicketId) REFERENCES Tickets(Id),
+    CONSTRAINT FK_PlanRevisions_Users FOREIGN KEY (CreatedByUserId) REFERENCES Users(Id)
+);
+
+CREATE INDEX IX_PlanRevisions_TicketId ON PlanRevisions(TicketId);
+```
+
+**Entity to Create:**
+
+`/PRFactory.Domain/Entities/PlanRevision.cs`
+
+**Service Methods to Add:**
+
+`IPlanService`:
+- `GetPlanRevisionsAsync(Guid ticketId)` - Get revision history
+- `GetPlanRevisionAsync(Guid revisionId)` - Get specific revision
+- `CreateRevisionAsync(Guid ticketId, string reason)` - Snapshot current plan
+
+**Blazor Component:**
+
+`/PRFactory.Web/Components/Plans/PlanRevisionHistory.razor`:
+- Timeline view of revisions
+- Compare revisions (diff viewer)
+- Restore previous revision option
 
 ---
 
 ## Acceptance Criteria
 
-### Database & Backend
-- [ ] `PlanComments` table created with migrations
-- [ ] `Plans.Status` column added
-- [ ] `IPlanCommentRepository` and implementation created
-- [ ] `PlanCommentService` with business logic
-- [ ] API endpoints for comments (POST, GET, PUT, DELETE)
-- [ ] API endpoints for approval workflow (request-review, request-changes, approve)
-
-### Frontend (Blazor)
-- [ ] `PlanCommentThread.razor` component displays threaded comments
-- [ ] Users can post top-level comments
-- [ ] Users can reply to comments (threading)
-- [ ] Plan status badge shows current workflow state
-- [ ] Approval buttons visible based on user role and plan status
-- [ ] Implementation button locked until plan approved
-
-### CLI Agent
+### Agent-Based Validation
 - [ ] `cli review --plan` command validates plans with custom or pre-defined prompts
 - [ ] `cli review --check security|completeness|performance` shortcuts work
 - [ ] `cli review --validate` compares code diff against plan artifacts
 - [ ] Validation returns exit code 0 (success) or 1 (failure) based on score
 - [ ] Prompt templates created and loaded correctly
+- [ ] IPlanValidationService and implementation created
+- [ ] Web UI can trigger validation and display results
+
+### Notification System
+- [ ] INotificationService and implementation created
+- [ ] In-app notifications displayed in UI navbar
+- [ ] Users notified when assigned as reviewers
+- [ ] Users notified when mentioned in comments
+- [ ] Notifications marked as read
+
+### Enhanced Comments
+- [ ] Markdown editor with preview for comments
+- [ ] @mention autocomplete shows user list
+- [ ] Edit/delete comments (if author)
+- [ ] Emoji reactions on comments
+
+### Plan Revision History
+- [ ] PlanRevisions table and entity created
+- [ ] Service methods for revision tracking implemented
+- [ ] Revision created automatically when plan refined/regenerated
+- [ ] PlanRevisionHistory component displays timeline
+- [ ] Diff viewer compares revisions
+- [ ] Restore previous revision functionality
 
 ### Integration
-- [ ] Web UI can trigger `cli review` commands
-- [ ] Analysis results displayed in Web UI
-- [ ] Code-vs-plan validation runs before PR creation
-- [ ] Users cannot create PR if validation score < 90
+- [ ] Validation results displayed in PlanReviewSection
+- [ ] Notifications integrate with existing workflow
+- [ ] Plan revision history accessible from ticket detail page
+- [ ] All features work with Blazor Server architecture (no API controllers)
 
 ---
 
 ## Testing Plan
 
 ### Unit Tests
-- [ ] Plan state machine transitions (Draft → PendingReview → Approved)
-- [ ] Invalid state transitions throw exceptions
-- [ ] Comment threading logic
-- [ ] Authorization checks (who can approve)
+- [ ] PlanValidationService logic
+- [ ] NotificationService notification creation
+- [ ] PlanRevision entity methods
+- [ ] Comment threading logic with @mentions
 
 ### Integration Tests
-- [ ] Create comment via API
-- [ ] Retrieve comments with nested replies
-- [ ] Approval workflow API calls
-- [ ] `cli review` executes and returns results
+- [ ] Validate plan via service
+- [ ] Create notification and retrieve
+- [ ] Create plan revision and retrieve history
+- [ ] Add comment with @mentions
 
 ### E2E Tests
-- [ ] User posts comment on plan
-- [ ] User requests review on plan
-- [ ] Reviewer approves plan
-- [ ] Implementation starts only after approval
+- [ ] User triggers plan validation from UI
+- [ ] User receives notification when mentioned
+- [ ] User views plan revision history
+- [ ] User compares two plan revisions
 - [ ] Validation fails if code doesn't match plan
 
 ---
 
 ## Migration Path
 
-### Phase 1: Database & Backend (Week 1)
-1. Create `PlanComments` table and entity
-2. Add `Status` to `Plans` table
-3. Implement repositories and services
-4. Create API endpoints
-5. Write unit tests
+### Phase 1: Agent-Based Validation (Week 1)
+1. Create prompt templates for validation
+2. Implement IPlanValidationService and PlanValidationService
+3. Integrate with existing agent infrastructure
+4. Add validation UI to PlanReviewSection component
+5. Write unit and integration tests
+6. CLI command implementation (if needed)
 
-### Phase 2: Frontend UI (Week 2)
-1. Build `PlanCommentThread` component
-2. Add approval workflow UI to plan detail page
-3. Add status badges and buttons
-4. Wire up API calls
-5. Test UI flows
+### Phase 2: Notification System (Week 1-2)
+1. Create INotificationService and NotificationService
+2. Add notification creation to review/comment flows
+3. Build NotificationBell Blazor component
+4. Add notification repository and entity (if needed)
+5. Test notification delivery
 
-### Phase 3: CLI Agent (Week 2-3)
-1. Create prompt templates
-2. Implement `cli review --plan` command
-3. Implement `cli review --validate` command
-4. Add Web UI integration
-5. Test end-to-end validation workflow
+### Phase 3: Enhanced UI Features (Week 2)
+1. Create PlanRevisions table and entity
+2. Implement revision tracking in PlanService
+3. Build PlanRevisionHistory component with diff viewer
+4. Enhance ReviewCommentThread with markdown editor and @mentions
+5. Add emoji reactions
+6. Test all UI enhancements
 
 ---
 
 ## Risks & Mitigations
 
-**Risk:** Complex threading logic for comments
-**Mitigation:** Use proven patterns (e.g., recursive CTE for comment trees), test thoroughly
-
 **Risk:** LLM validation may give inconsistent results
 **Mitigation:** Use structured prompts, extract scores with regex, set clear thresholds (e.g., 90%)
 
-**Risk:** Users bypass approval workflow
-**Mitigation:** Enforce at API level, not just UI (return 403 if plan not approved)
+**Risk:** Notification spam if too many @mentions
+**Mitigation:** Batch notifications, allow user preferences for notification frequency
+
+**Risk:** Plan revision storage can grow large
+**Mitigation:** Archive old revisions, compress markdown content, implement retention policy
+
+**Risk:** Complexity of diff viewer for large plans
+**Mitigation:** Use proven diff libraries (Monaco Editor, diff-match-patch), paginate results
 
 ---
 
@@ -574,8 +569,18 @@ Add "Run Plan Validation" button in plan detail page:
 
 ---
 
+## Notes
+
+**Architecture Compliance:**
+- ✅ Follows Blazor Server architecture (no API controllers for internal use)
+- ✅ Uses service injection pattern (ITicketService → IPlanReviewService)
+- ✅ Uses LibGit2Sharp for git operations
+- ✅ Follows Clean Architecture layers (Domain → Application → Web)
+- ✅ Uses code-behind pattern for Blazor components
+- ✅ Uses existing UI component library (/UI/*)
+
 **Next Steps:**
 1. Review this epic with team
 2. Assign engineer(s) to implement
 3. Create tickets for Phase 1, 2, 3
-4. Start with database schema and backend API
+4. Start with agent validation (highest value)

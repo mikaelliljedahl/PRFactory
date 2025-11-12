@@ -89,7 +89,7 @@ public class CodeReviewGraphTests
         };
 
         // Wrap the agent result in a message (this is what ExecuteAsync returns)
-        var resultMessage = new AgentExecutedMessage(agentResult);
+        var resultMessage = new AgentExecutedMessage(Guid.Parse(ticketId), agentResult);
 
         _mockAgentExecutor
             .Setup(e => e.ExecuteAsync<CodeReviewAgent>(
@@ -169,7 +169,7 @@ public class CodeReviewGraphTests
             }
         };
 
-        var resultMessage = new AgentExecutedMessage(agentResult);
+        var resultMessage = new AgentExecutedMessage(Guid.Parse(ticketId), agentResult);
 
         _mockAgentExecutor
             .Setup(e => e.ExecuteAsync<CodeReviewAgent>(
@@ -242,7 +242,7 @@ public class CodeReviewGraphTests
             }
         };
 
-        var resultMessage = new AgentExecutedMessage(agentResult);
+        var resultMessage = new AgentExecutedMessage(Guid.Parse(ticketId), agentResult);
 
         _mockAgentExecutor
             .Setup(e => e.ExecuteAsync<CodeReviewAgent>(
@@ -314,7 +314,7 @@ public class CodeReviewGraphTests
             }
         };
 
-        var resultMessage = new AgentExecutedMessage(agentResult);
+        var resultMessage = new AgentExecutedMessage(Guid.Parse(ticketId), agentResult);
 
         _mockAgentExecutor
             .Setup(e => e.ExecuteAsync<CodeReviewAgent>(
@@ -381,7 +381,7 @@ public class CodeReviewGraphTests
             }
         };
 
-        var resultMessage = new AgentExecutedMessage(agentResult);
+        var resultMessage = new AgentExecutedMessage(Guid.Parse(ticketId), agentResult);
 
         _mockAgentExecutor
             .Setup(e => e.ExecuteAsync<CodeReviewAgent>(
@@ -437,7 +437,7 @@ public class CodeReviewGraphTests
             }
         };
 
-        var resultMessage = new AgentExecutedMessage(agentResult);
+        var resultMessage = new AgentExecutedMessage(Guid.Parse(ticketId), agentResult);
 
         _mockAgentExecutor
             .Setup(e => e.ExecuteAsync<CodeReviewAgent>(
@@ -469,7 +469,7 @@ public class CodeReviewGraphTests
 /// <summary>
 /// Helper message class for wrapping agent results in tests
 /// </summary>
-public record AgentExecutedMessage(AgentResult Result) : IAgentMessage
+public record AgentExecutedMessage(Guid TicketId, AgentResult Result) : IAgentMessage
 {
     public DateTime Timestamp { get; init; } = DateTime.UtcNow;
 }

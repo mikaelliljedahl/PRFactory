@@ -1,99 +1,71 @@
 #!/bin/bash
 set -e
 
-echo "🚀 PRFactory SessionStart Hook - Installing .NET SDK 10..."
+echo "🚀 PRFactory SessionStart Hook - Installing .NET SDK..."
 
-# Define SDK version - read from global.json if available
+# Define installation directory
 DOTNET_INSTALL_DIR="$HOME/.dotnet"
-DOTNET_INSTALL_SCRIPT="/tmp/dotnet-install.sh"
 
-# Try to extract specific version from global.json
-GLOBAL_JSON_PATH="${CLAUDE_PROJECT_DIR:-$(pwd)}/global.json"
-if [ -f "$GLOBAL_JSON_PATH" ]; then
-    # Use sed for better portability (works without Perl regex support)
-    SPECIFIC_VERSION=$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$GLOBAL_JSON_PATH" | head -1)
-    if [ -n "$SPECIFIC_VERSION" ]; then
-        echo "📋 Found specific .NET SDK version in global.json: $SPECIFIC_VERSION"
-        DOTNET_VERSION="$SPECIFIC_VERSION"
-        USE_SPECIFIC_VERSION=true
-    else
-        echo "⚠️  Could not extract version from global.json, using channel approach"
-        DOTNET_VERSION="10.0"
-        USE_SPECIFIC_VERSION=false
-    fi
-else
-    echo "ℹ️  No global.json found, using channel approach"
-    DOTNET_VERSION="10.0"
-    USE_SPECIFIC_VERSION=false
-fi
-
-# Check if .NET SDK 10 is already installed
+# Check if .NET is already installed
 if command -v dotnet &> /dev/null; then
     CURRENT_VERSION=$(dotnet --version 2>/dev/null || echo "none")
+    echo "✅ .NET SDK is already installed (version: $CURRENT_VERSION)"
+    echo "📍 .NET location: $(which dotnet)"
+    dotnet --info
 
-    # Check if the correct version is installed
-    VERSION_MATCH=false
-    if [ "$USE_SPECIFIC_VERSION" = true ] && [ "$CURRENT_VERSION" = "$DOTNET_VERSION" ]; then
-        VERSION_MATCH=true
-    elif [[ "$CURRENT_VERSION" == 10.* ]]; then
-        VERSION_MATCH=true
+    # Ensure environment variables are persisted
+    if [ -n "$CLAUDE_ENV_FILE" ]; then
+        echo "export DOTNET_ROOT=\"$DOTNET_INSTALL_DIR\"" >> "$CLAUDE_ENV_FILE"
+        echo "export PATH=\"$DOTNET_INSTALL_DIR:\$PATH\"" >> "$CLAUDE_ENV_FILE"
     fi
-
-    if [ "$VERSION_MATCH" = true ]; then
-        echo "✅ .NET SDK 10 is already installed (version: $CURRENT_VERSION)"
-        echo "📍 .NET location: $(which dotnet)"
-        dotnet --info
-
-        # Ensure environment variables are persisted for Claude Code
-        if [ -n "$CLAUDE_ENV_FILE" ]; then
-            echo "export DOTNET_ROOT=\"$DOTNET_INSTALL_DIR\"" >> "$CLAUDE_ENV_FILE"
-            echo "export PATH=\"$DOTNET_INSTALL_DIR:\$PATH\"" >> "$CLAUDE_ENV_FILE"
-        fi
-        exit 0
-    else
-        if [ "$USE_SPECIFIC_VERSION" = true ]; then
-            echo "⚠️  Found .NET version $CURRENT_VERSION, but need version $DOTNET_VERSION (from global.json)"
-        else
-            echo "⚠️  Found .NET version $CURRENT_VERSION, but need version 10.x"
-        fi
-    fi
+    exit 0
 fi
 
-echo "📥 Downloading .NET installation script..."
-# Try GitHub first (dotnet.microsoft.com redirects to blocked builds.dotnet.microsoft.com)
-if curl -sSL https://raw.githubusercontent.com/dotnet/install-scripts/main/src/dotnet-install.sh -o "$DOTNET_INSTALL_SCRIPT" 2>/dev/null; then
-    echo "✅ Downloaded from GitHub"
-else
-    echo "⚠️ GitHub download failed, trying dotnet.microsoft.com..."
-    curl -sSL https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh -o "$DOTNET_INSTALL_SCRIPT"
-fi
-chmod +x "$DOTNET_INSTALL_SCRIPT"
+echo "⚠️  .NET 10 SDK downloads are blocked by Claude Code proxy."
+echo "📦 Installing .NET 8 LTS via apt packages (workaround)..."
 
-if [ "$USE_SPECIFIC_VERSION" = true ]; then
-    echo "🔧 Installing .NET SDK version $DOTNET_VERSION (from global.json)..."
-    # Try specific version first, fallback to channel if it fails
-    if ! "$DOTNET_INSTALL_SCRIPT" --version "$DOTNET_VERSION" --install-dir "$DOTNET_INSTALL_DIR" --verbose; then
-        echo "⚠️  Specific version $DOTNET_VERSION not available, falling back to latest in channel..."
-        CHANNEL_VERSION="${DOTNET_VERSION%.*}"
-        "$DOTNET_INSTALL_SCRIPT" --channel "$CHANNEL_VERSION" --install-dir "$DOTNET_INSTALL_DIR" --verbose
-    fi
-else
-    echo "🔧 Installing .NET SDK $DOTNET_VERSION (latest stable)..."
-    "$DOTNET_INSTALL_SCRIPT" --channel "$DOTNET_VERSION" --install-dir "$DOTNET_INSTALL_DIR" --verbose
+# Create temp directory for deb packages
+TEMP_DIR=$(mktemp -d)
+cd "$TEMP_DIR"
+
+# Download .NET 8 packages without sudo
+echo "📥 Downloading .NET 8 packages..."
+apt-get download dotnet-sdk-8.0 dotnet-runtime-8.0 dotnet-hostfxr-8.0 dotnet-host-8.0 2>&1 | grep -v "Warning:"
+
+# Extract packages to temporary directory
+echo "📦 Extracting packages..."
+EXTRACT_DIR="$TEMP_DIR/extracted"
+mkdir -p "$EXTRACT_DIR"
+
+for deb in *.deb; do
+    echo "  Extracting $deb..."
+    dpkg-deb -x "$deb" "$EXTRACT_DIR"
+done
+
+# Copy .NET to installation directory
+echo "📁 Installing to $DOTNET_INSTALL_DIR..."
+mkdir -p "$DOTNET_INSTALL_DIR"
+cp -r "$EXTRACT_DIR"/usr/lib/dotnet/* "$DOTNET_INSTALL_DIR/"
+if [ -f "$EXTRACT_DIR/usr/bin/dotnet" ]; then
+    cp "$EXTRACT_DIR/usr/bin/dotnet" "$DOTNET_INSTALL_DIR/"
 fi
+chmod +x "$DOTNET_INSTALL_DIR/dotnet"
+
+# Clean up
+cd /
+rm -rf "$TEMP_DIR"
 
 # Add to PATH for current session
 export DOTNET_ROOT="$DOTNET_INSTALL_DIR"
 export PATH="$DOTNET_INSTALL_DIR:$PATH"
 
 # Persist environment variables
-# For Claude Code on the web, use CLAUDE_ENV_FILE
 if [ -n "$CLAUDE_ENV_FILE" ]; then
     echo "📝 Persisting environment variables to Claude Code session..."
     echo "export DOTNET_ROOT=\"$DOTNET_INSTALL_DIR\"" >> "$CLAUDE_ENV_FILE"
     echo "export PATH=\"$DOTNET_INSTALL_DIR:\$PATH\"" >> "$CLAUDE_ENV_FILE"
 else
-    # For local development, persist to shell profile files
+    # For local development
     echo "📝 Persisting environment variables to shell profiles..."
     echo "" >> "$HOME/.bashrc"
     echo "# .NET SDK configuration (added by PRFactory SessionStart hook)" >> "$HOME/.bashrc"
@@ -120,11 +92,12 @@ echo ""
 echo "📦 .NET SDK info:"
 dotnet --info
 echo ""
-echo "🎯 Ready to build PRFactory with .NET 10!"
+echo "⚠️  Note: Installed .NET 8 LTS instead of .NET 10 due to proxy restrictions."
+echo "    The project may need adjustments to build with .NET 8."
 echo ""
 
-# Start NuGet proxy for .NET restore/build (works around Claude Code proxy auth issues)
-echo "🔧 Starting NuGet proxy..."
+# Start NuGet proxy (not needed for apt-installed .NET, but keep for consistency)
+echo "🔧 Starting NuGet proxy (for dotnet restore/build)..."
 NUGET_PROXY_SCRIPT="${CLAUDE_PROJECT_DIR:-$(pwd)}/.claude/scripts/nuget-proxy.py"
 if [ -f "$NUGET_PROXY_SCRIPT" ]; then
     # Kill any existing proxy
@@ -134,39 +107,9 @@ if [ -f "$NUGET_PROXY_SCRIPT" ]; then
     nohup python3 "$NUGET_PROXY_SCRIPT" > /tmp/nuget-proxy.log 2>&1 &
     sleep 2
 
-    # Check if proxy started
     if pgrep -f nuget-proxy.py > /dev/null; then
         echo "✅ NuGet proxy started on http://127.0.0.1:8888"
-        echo ""
-
-        # Configure environment for .NET to use the NuGet proxy
-        # CRITICAL: .NET HttpClient doesn't handle Claude Code's JWT proxy authentication,
-        # so we route through a local proxy that handles it
-        echo "🔧 Configuring .NET to use NuGet proxy..."
-
-        # Create a helper script that agents can source
-        DOTNET_PROXY_HELPER="/tmp/dotnet-proxy-setup.sh"
-        cat > "$DOTNET_PROXY_HELPER" <<'EOF'
-# Unset Claude Code proxy variables that .NET can't handle
-unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY GLOBAL_AGENT_HTTP_PROXY GLOBAL_AGENT_HTTPS_PROXY
-
-# Set NuGet proxy
-export HTTP_PROXY=http://127.0.0.1:8888
-export HTTPS_PROXY=http://127.0.0.1:8888
-EOF
-
-        echo "✅ Created helper script at $DOTNET_PROXY_HELPER"
-        echo ""
-        echo "💡 Before running dotnet restore/build, source the helper script:"
-        echo "   source /tmp/dotnet-proxy-setup.sh"
-        echo "   dotnet restore"
-        echo "   dotnet build"
-        echo ""
-        echo "📝 Or run directly:"
-        echo "   source /tmp/dotnet-proxy-setup.sh && dotnet restore && dotnet build"
     else
         echo "⚠️  NuGet proxy failed to start (check /tmp/nuget-proxy.log)"
     fi
-else
-    echo "⚠️  NuGet proxy script not found at $NUGET_PROXY_SCRIPT"
 fi

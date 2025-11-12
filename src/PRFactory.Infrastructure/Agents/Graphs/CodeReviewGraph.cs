@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using PRFactory.Infrastructure.Agents.Base;
 using PRFactory.Infrastructure.Agents.Messages;
 using PRFactory.Infrastructure.Agents.Specialized;
+using ICheckpointStore = PRFactory.Infrastructure.Agents.Base.ICheckpointStore;
 
 namespace PRFactory.Infrastructure.Agents.Graphs;
 
@@ -182,7 +183,7 @@ public class CodeReviewGraph : AgentGraphBase
                         HasCriticalIssues: true,
                         CriticalIssues: criticalIssues,
                         Suggestions: suggestions,
-                        CompletedAt: DateTime.UtcNow
+                        ReviewedAt: DateTime.UtcNow
                     ),
                     duration);
             }
@@ -237,7 +238,7 @@ public class CodeReviewGraph : AgentGraphBase
                 HasCriticalIssues: false,
                 CriticalIssues: new List<string>(),
                 Suggestions: suggestions,
-                CompletedAt: DateTime.UtcNow
+                ReviewedAt: DateTime.UtcNow
             ),
             completedDuration);
     }

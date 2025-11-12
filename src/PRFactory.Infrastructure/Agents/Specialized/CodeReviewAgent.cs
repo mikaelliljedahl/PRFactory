@@ -260,7 +260,7 @@ public class CodeReviewAgent : BaseAgent
         }
 
         // Map file changes to template format
-        var fileChanges = prDetails?.FilesChanged.Select(f => new
+        var fileChangesList = prDetails?.FilesChanged.Select(f => new
         {
             path = f.Path,
             status = f.Status,
@@ -269,10 +269,12 @@ public class CodeReviewAgent : BaseAgent
             changes = f.Changes,
             language = DetectLanguage(f.Path),
             is_test = IsTestFile(f.Path)
-        }).ToList() ?? new List<object>();
+        }).ToList();
+
+        var fileChanges = fileChangesList ?? new List<dynamic>();
 
         // Count test files
-        var testFiles = fileChanges.Where(f => ((dynamic)f).is_test).ToList();
+        var testFiles = fileChangesList?.Where(f => f.is_test).ToList() ?? new List<dynamic>();
 
         // Build comprehensive template variables
         return new
@@ -284,7 +286,7 @@ public class CodeReviewAgent : BaseAgent
             ticket_url = ticket.ExternalTicketId ?? "",
 
             // Plan information
-            plan_path = context.Ticket?.PlanPath ?? "",
+            plan_path = "", // TODO: Add plan path tracking to Ticket entity or workflow context
             plan_summary = ExtractPlanSummary(planContent),
             plan_content = planContent,
 

@@ -19,8 +19,10 @@ public class WorkflowOrchestratorTests
     private readonly Mock<RefinementGraph> _mockRefinementGraph;
     private readonly Mock<PlanningGraph> _mockPlanningGraph;
     private readonly Mock<ImplementationGraph> _mockImplementationGraph;
+    private readonly Mock<CodeReviewGraph> _mockCodeReviewGraph;
     private readonly Mock<IWorkflowStateStore> _mockStateStore;
     private readonly Mock<IEventPublisher> _mockEventPublisher;
+    private readonly Mock<ITenantConfigurationService> _mockTenantConfigService;
 
     public WorkflowOrchestratorTests()
     {
@@ -45,12 +47,18 @@ public class WorkflowOrchestratorTests
             mockAgentExecutor.Object);
 
         var mockImplementationLogger = new Mock<ILogger<ImplementationGraph>>();
-        var mockTenantConfigService = new Mock<ITenantConfigurationService>();
+        _mockTenantConfigService = new Mock<ITenantConfigurationService>();
         _mockImplementationGraph = new Mock<ImplementationGraph>(
             mockImplementationLogger.Object,
             mockCheckpointStore.Object,
             mockAgentExecutor.Object,
-            mockTenantConfigService.Object);
+            _mockTenantConfigService.Object);
+
+        var mockCodeReviewLogger = new Mock<ILogger<CodeReviewGraph>>();
+        _mockCodeReviewGraph = new Mock<CodeReviewGraph>(
+            mockCodeReviewLogger.Object,
+            mockCheckpointStore.Object,
+            mockAgentExecutor.Object);
     }
 
     #region StartWorkflowAsync Tests
@@ -1005,8 +1013,10 @@ public class WorkflowOrchestratorTests
             _mockRefinementGraph.Object,
             _mockPlanningGraph.Object,
             _mockImplementationGraph.Object,
+            _mockCodeReviewGraph.Object,
             _mockStateStore.Object,
-            _mockEventPublisher.Object);
+            _mockEventPublisher.Object,
+            _mockTenantConfigService.Object);
     }
 
     #endregion

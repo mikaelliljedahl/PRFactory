@@ -86,6 +86,7 @@ public static class DependencyInjection
         services.AddScoped<DomainCheckpointRepository, CheckpointRepository>();
         services.AddScoped<IAgentPromptTemplateRepository, AgentPromptTemplateRepository>();
         services.AddScoped<IErrorRepository, ErrorRepository>();
+        services.AddScoped<ICodeReviewResultRepository, CodeReviewResultRepository>();
 
         // Team Review repositories
         services.AddScoped<IUserRepository, UserRepository>();
@@ -176,8 +177,9 @@ public static class DependencyInjection
         services.AddScoped<PRFactory.Infrastructure.Agents.Adapters.GeminiCliAdapter>();
         services.AddScoped<PRFactory.Infrastructure.Agents.Adapters.OpenAiCliAdapter>();
 
-        // Register LLM provider factory
+        // Register LLM provider factory and prompt loader
         services.AddScoped<PRFactory.Core.Application.LLM.ILlmProviderFactory, PRFactory.Infrastructure.Application.LlmProviderFactory>();
+        services.AddScoped<PRFactory.Core.Application.LLM.IPromptLoaderService, PRFactory.Infrastructure.Application.PromptLoaderService>();
 
         // Register Git platform integration (LocalGitService, providers, and GitPlatformService)
         services.AddGitPlatformIntegration(sp =>
@@ -210,6 +212,12 @@ public static class DependencyInjection
         services.AddScoped<Agents.Graphs.RefinementGraph>();
         services.AddScoped<Agents.Graphs.PlanningGraph>();
         services.AddScoped<Agents.Graphs.ImplementationGraph>();
+        services.AddScoped<Agents.Graphs.CodeReviewGraph>();
+
+        // Register specialized agents for code review workflow
+        services.AddTransient<Agents.Specialized.CodeReviewAgent>();
+        services.AddTransient<Agents.Specialized.PostReviewCommentsAgent>();
+        services.AddTransient<Agents.Specialized.PostApprovalCommentAgent>();
 
         // Register workflow orchestrator
         services.AddScoped<Agents.Graphs.IWorkflowOrchestrator, Agents.Graphs.WorkflowOrchestrator>();

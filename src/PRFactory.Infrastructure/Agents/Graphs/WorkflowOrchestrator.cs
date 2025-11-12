@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PRFactory.Infrastructure.Agents.Base;
 using PRFactory.Infrastructure.Agents.Messages;
+using PRFactory.Infrastructure.Configuration;
 
 namespace PRFactory.Infrastructure.Agents.Graphs
 {
@@ -25,7 +26,7 @@ namespace PRFactory.Infrastructure.Agents.Graphs
         private readonly CodeReviewGraph _codeReviewGraph;
         private readonly IWorkflowStateStore _workflowStateStore;
         private readonly IEventPublisher _eventPublisher;
-        private readonly Configuration.ITenantConfigurationService _tenantConfigService;
+        private readonly ITenantConfigurationService _tenantConfigService;
 
         public WorkflowOrchestrator(
             ILogger<WorkflowOrchestrator> logger,
@@ -35,7 +36,7 @@ namespace PRFactory.Infrastructure.Agents.Graphs
             CodeReviewGraph codeReviewGraph,
             IWorkflowStateStore workflowStateStore,
             IEventPublisher eventPublisher,
-            Configuration.ITenantConfigurationService tenantConfigService)
+            ITenantConfigurationService tenantConfigService)
         {
             _logger = logger;
             _refinementGraph = refinementGraph;

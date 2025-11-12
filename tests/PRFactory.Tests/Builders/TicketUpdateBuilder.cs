@@ -17,7 +17,6 @@ public class TicketUpdateBuilder
     };
     private string _acceptanceCriteria = "- Default acceptance criterion 1\n- Default acceptance criterion 2";
     private int _version = 1;
-    private bool _isDraft = true;
     private bool _isApproved = false;
     private string? _rejectionReason;
     private DateTime? _approvedAt;
@@ -83,7 +82,6 @@ public class TicketUpdateBuilder
 
     public TicketUpdateBuilder AsDraft()
     {
-        _isDraft = true;
         _isApproved = false;
         _approvedAt = null;
         _postedAt = null;
@@ -92,7 +90,6 @@ public class TicketUpdateBuilder
 
     public TicketUpdateBuilder AsApproved()
     {
-        _isDraft = false;
         _isApproved = true;
         _approvedAt = DateTime.UtcNow;
         return this;
@@ -100,7 +97,6 @@ public class TicketUpdateBuilder
 
     public TicketUpdateBuilder AsPosted()
     {
-        _isDraft = false;
         _isApproved = true;
         _approvedAt = DateTime.UtcNow.AddMinutes(-5);
         _postedAt = DateTime.UtcNow;

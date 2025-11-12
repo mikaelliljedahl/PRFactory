@@ -76,6 +76,11 @@ public class Tenant
     /// </summary>
     public List<Ticket> Tickets { get; private set; } = new();
 
+    /// <summary>
+    /// LLM provider configurations for this tenant
+    /// </summary>
+    public List<TenantLlmProvider> LlmProviders { get; private set; } = new();
+
     private Tenant() { }
 
     /// <summary>
@@ -178,6 +183,65 @@ public class Tenant
     public void Deactivate()
     {
         IsActive = false;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Adds an LLM provider to this tenant
+    /// </summary>
+    public void AddLlmProvider(TenantLlmProvider provider)
+    {
+        if (provider == null)
+            throw new ArgumentNullException(nameof(provider));
+
+        if (provider.TenantId != Id)
+            throw new ArgumentException($"Provider belongs to different tenant (Provider: {provider.TenantId}, Tenant: {Id})", nameof(provider));
+
+        if (LlmProviders.Any(p => p.Id == provider.Id))
+            throw new InvalidOperationException($"Provider {provider.Id} already exists for tenant {Id}");
+
+        LlmProviders.Add(provider);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Removes an LLM provider from this tenant
+    /// </summary>
+    public void RemoveLlmProvider(Guid providerId)
+    {
+        var provider = LlmProviders.FirstOrDefault(p => p.Id == providerId);
+        if (provider == null)
+            throw new InvalidOperationException($"Provider {providerId} not found for tenant {Id}");
+
+        LlmProviders.Remove(provider);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Gets the default LLM provider for this tenant
+    /// </summary>
+    public TenantLlmProvider? GetDefaultLlmProvider()
+    {
+        return LlmProviders.FirstOrDefault(p => p.IsDefault && p.IsActive);
+    }
+
+    /// <summary>
+    /// Sets a provider as the default for this tenant (clears other defaults)
+    /// </summary>
+    public void SetDefaultLlmProvider(Guid providerId)
+    {
+        var provider = LlmProviders.FirstOrDefault(p => p.Id == providerId);
+        if (provider == null)
+            throw new InvalidOperationException($"Provider {providerId} not found for tenant {Id}");
+
+        // Clear existing default
+        foreach (var p in LlmProviders.Where(p => p.IsDefault))
+        {
+            p.RemoveAsDefault();
+        }
+
+        // Set new default
+        provider.SetAsDefault();
         UpdatedAt = DateTime.UtcNow;
     }
 }

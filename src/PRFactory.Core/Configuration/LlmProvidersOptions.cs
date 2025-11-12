@@ -10,7 +10,7 @@ public class LlmProvidersOptions
     /// <summary>
     /// Default provider to use when none is specified
     /// </summary>
-    public string DefaultProvider { get; set; } = "anthropic";
+    public string? DefaultProvider { get; set; } = "anthropic";
 
     /// <summary>
     /// Fallback provider to use if primary provider fails

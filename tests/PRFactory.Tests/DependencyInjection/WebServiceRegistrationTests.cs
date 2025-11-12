@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using PRFactory.Infrastructure;
 using PRFactory.Web.Services;
 using Xunit;
+using Web = PRFactory.Web;
 
 namespace PRFactory.Tests.DependencyInjection;
 

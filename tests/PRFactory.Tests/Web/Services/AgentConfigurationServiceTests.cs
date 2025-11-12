@@ -236,7 +236,7 @@ public class AgentConfigurationServiceTests
                 tenantId,
                 It.IsAny<TenantConfiguration>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(tenant);
+            .Returns(Task.CompletedTask);
 
         var newConfiguration = new AgentConfigurationDto
         {

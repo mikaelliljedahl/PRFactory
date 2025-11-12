@@ -1,0 +1,103 @@
+# Code Implementation Task
+
+## Ticket Information
+**Ticket:** {{ticket_number}} - {{ticket_title}}
+**URL:** {{ticket_url}}
+
+**Description:**
+{{ticket_description}}
+
+## Implementation Plan
+**Plan Location:** {{plan_path}}
+
+**Complete Plan:**
+{{plan_content}}
+
+## Codebase Context
+
+### Project Structure
+{{codebase_structure}}
+
+### Related Existing Files
+{{#each existing_files}}
+#### {{this.path}}
+{{#if this.description}}Purpose: {{this.description}}{{/if}}
+
+```{{this.language}}
+{{this.content}}
+```
+
+{{/each}}
+
+{{#if technology_stack}}
+### Technology Stack
+- **Framework:** {{technology_stack.framework}}
+- **Database:** {{technology_stack.database}}
+- **ORM:** {{technology_stack.orm}}
+- **Testing Framework:** {{technology_stack.testing_framework}}
+- **.NET Version:** {{technology_stack.dotnet_version}}
+{{/if}}
+
+{{#if coding_standards}}
+### Project Coding Standards
+{{coding_standards}}
+{{/if}}
+
+{{#if files_to_create}}
+## Files to Create
+{{#each files_to_create}}
+- `{{this.path}}` - {{this.description}}
+{{/each}}
+{{/if}}
+
+{{#if files_to_modify}}
+## Files to Modify
+{{#each files_to_modify}}
+- `{{this.path}}` - {{this.changes_needed}}
+{{/each}}
+{{/if}}
+
+---
+
+## Implementation Instructions
+
+Implement the feature according to the plan above. For each file, provide:
+
+```
+FILE: /full/path/to/file.cs
+ACTION: Create | Modify
+DESCRIPTION: What this file does
+
+[Complete file content with all using statements]
+```
+
+For database migrations:
+```
+MIGRATION: YYYYMMDD_MigrationName
+[SQL DDL statements]
+```
+
+**Requirements:**
+1. Write complete, production-ready code (no TODOs or placeholders)
+2. Include all necessary using statements and dependencies
+3. Add comprehensive error handling with try-catch blocks
+4. Implement proper logging for debugging
+5. Add XML documentation comments for public methods/classes
+6. Include inline comments for complex logic
+7. Follow existing codebase patterns and conventions
+8. Use async/await correctly for I/O operations
+9. Implement null safety checks
+10. Write code that passes all tests
+
+**Code Quality Checklist:**
+- [ ] No null reference exceptions possible
+- [ ] Error handling covers all failure scenarios
+- [ ] Logging added for debugging and monitoring
+- [ ] Follows C# .NET 8 conventions
+- [ ] Matches existing codebase architecture
+- [ ] Public APIs have XML documentation
+- [ ] Complex logic has explanatory comments
+
+**Repository:** {{repository_name}}
+**Branch:** {{branch_name}}
+**Base Commit:** {{base_commit}}

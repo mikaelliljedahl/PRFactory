@@ -457,12 +457,14 @@ namespace PRFactory.Infrastructure.Agents.Graphs
             services.AddScoped<RefinementGraph>();
             services.AddScoped<PlanningGraph>();
             services.AddScoped<ImplementationGraph>();
+            services.AddScoped<CodeReviewGraph>();
             services.AddScoped<WorkflowOrchestrator>();
 
             // Register as IAgentGraph for dynamic resolution
             services.AddScoped<IAgentGraph, RefinementGraph>(sp => sp.GetRequiredService<RefinementGraph>());
             services.AddScoped<IAgentGraph, PlanningGraph>(sp => sp.GetRequiredService<PlanningGraph>());
             services.AddScoped<IAgentGraph, ImplementationGraph>(sp => sp.GetRequiredService<ImplementationGraph>());
+            services.AddScoped<IAgentGraph, CodeReviewGraph>(sp => sp.GetRequiredService<CodeReviewGraph>());
 
             return services;
         }

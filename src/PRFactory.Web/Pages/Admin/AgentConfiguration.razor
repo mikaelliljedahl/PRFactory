@@ -1,0 +1,218 @@
+@page "/admin/agent-configuration"
+@using PRFactory.Web.UI.Alerts
+@using PRFactory.Web.UI.Display
+@using PRFactory.Web.UI.Buttons
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Agent Configuration - PRFactory</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="/tenants">Admin</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Agent Configuration</li>
+                </ol>
+            </nav>
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1 class="display-6">
+                        <i class="bi bi-cpu"></i> Agent Configuration
+                    </h1>
+                    <p class="text-muted">
+                        Configure which LLM provider each agent type uses for optimal performance and cost.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <LoadingSpinner IsLoading="true" Message="Loading agent configuration..." />
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <AlertMessage Type="AlertType.Danger" Title="Error" Message="@errorMessage" Icon="exclamation-triangle-fill" />
+    }
+    else if (configuration != null && providers != null)
+    {
+        <EditForm Model="@configuration" OnValidSubmit="HandleSaveConfiguration">
+            <DataAnnotationsValidator />
+
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <AlertMessage Type="AlertType.Success" Title="Success" Message="@successMessage" Icon="check-circle-fill" Dismissible="true" OnDismiss="@(() => successMessage = null)" />
+            }
+
+            @if (validationErrors.Any())
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Validation Failed:</strong>
+                    <ul class="mb-0 mt-2">
+                        @foreach (var error in validationErrors)
+                        {
+                            <li>@error</li>
+                        }
+                    </ul>
+                    <button type="button" class="btn-close" @onclick="@(() => validationErrors.Clear())"></button>
+                </div>
+            }
+
+            <!-- Agent Provider Assignments Section -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-robot"></i> Agent LLM Provider Assignments
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">
+                        Select which LLM provider each agent type should use. Leave as "Use Tenant Default" to use the tenant's default provider.
+                    </p>
+
+                    <div class="row">
+                        <!-- Analysis Agents -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-search"></i> Analysis Agents
+                            </label>
+                            <p class="text-muted small mb-2">Used for ticket refinement and question answering (fast, cheap models recommended)</p>
+                            <InputSelect @bind-Value="configuration.AnalysisAgentProviderId" class="form-select">
+                                <option value="">Use Tenant Default</option>
+                                @foreach (var provider in providers.Where(p => p.IsActive))
+                                {
+                                    <option value="@provider.Id">
+                                        @provider.Name (@provider.DefaultModel) @(provider.IsDefault ? " [Default]" : "")
+                                    </option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => configuration.AnalysisAgentProviderId)" />
+                        </div>
+
+                        <!-- Planning Agents -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-diagram-3"></i> Planning Agents
+                            </label>
+                            <p class="text-muted small mb-2">Used for implementation plan generation (balanced models recommended)</p>
+                            <InputSelect @bind-Value="configuration.PlanningAgentProviderId" class="form-select">
+                                <option value="">Use Tenant Default</option>
+                                @foreach (var provider in providers.Where(p => p.IsActive))
+                                {
+                                    <option value="@provider.Id">
+                                        @provider.Name (@provider.DefaultModel) @(provider.IsDefault ? " [Default]" : "")
+                                    </option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => configuration.PlanningAgentProviderId)" />
+                        </div>
+
+                        <!-- Implementation Agents -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-code-slash"></i> Implementation Agents
+                            </label>
+                            <p class="text-muted small mb-2">Used for code generation and git operations (best coding models recommended)</p>
+                            <InputSelect @bind-Value="configuration.ImplementationAgentProviderId" class="form-select">
+                                <option value="">Use Tenant Default</option>
+                                @foreach (var provider in providers.Where(p => p.IsActive))
+                                {
+                                    <option value="@provider.Id">
+                                        @provider.Name (@provider.DefaultModel) @(provider.IsDefault ? " [Default]" : "")
+                                    </option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => configuration.ImplementationAgentProviderId)" />
+                        </div>
+
+                        <!-- Code Review Agents -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-eye"></i> Code Review Agents
+                            </label>
+                            <p class="text-muted small mb-2">Used for code review (different perspective from implementation recommended)</p>
+                            <InputSelect @bind-Value="configuration.CodeReviewAgentProviderId" class="form-select">
+                                <option value="">Use Tenant Default</option>
+                                @foreach (var provider in providers.Where(p => p.IsActive))
+                                {
+                                    <option value="@provider.Id">
+                                        @provider.Name (@provider.DefaultModel) @(provider.IsDefault ? " [Default]" : "")
+                                    </option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => configuration.CodeReviewAgentProviderId)" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Code Review Settings Section -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-gear"></i> Code Review Settings
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <InputCheckbox @bind-Value="configuration.EnableCodeReview" class="form-check-input" id="enableCodeReview" />
+                                <label class="form-check-label" for="enableCodeReview">
+                                    <strong>Enable Automated Code Review</strong>
+                                </label>
+                                <p class="text-muted small mb-0 ms-4">
+                                    Automatically review code after implementation completes
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold" for="maxIterations">
+                                <i class="bi bi-arrow-repeat"></i> Max Review Iterations
+                            </label>
+                            <InputNumber @bind-Value="configuration.MaxCodeReviewIterations" class="form-control" id="maxIterations" min="1" max="10" />
+                            <div class="form-text">Number of review-fix cycles before requiring human intervention (1-10)</div>
+                            <ValidationMessage For="@(() => configuration.MaxCodeReviewIterations)" />
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <InputCheckbox @bind-Value="configuration.AutoApproveIfNoIssues" class="form-check-input" id="autoApprove" />
+                                <label class="form-check-label" for="autoApprove">
+                                    <strong>Auto-approve if No Issues Found</strong>
+                                </label>
+                                <p class="text-muted small mb-0 ms-4">
+                                    Automatically approve code if review finds no issues
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <InputCheckbox @bind-Value="configuration.RequireHumanApprovalAfterReview" class="form-check-input" id="requireHumanApproval" />
+                                <label class="form-check-label" for="requireHumanApproval">
+                                    <strong>Require Human Approval After Review</strong>
+                                </label>
+                                <p class="text-muted small mb-0 ms-4">
+                                    Always require human approval even if automated review passes
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save Button -->
+            <div class="d-flex justify-content-end gap-2">
+                <a href="/tenants" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Cancel
+                </a>
+                <LoadingButton IsLoading="@isSaving" Icon="check-circle" ButtonType="submit" CssClass="btn btn-primary">
+                    Save Configuration
+                </LoadingButton>
+            </div>
+        </EditForm>
+    }
+</div>

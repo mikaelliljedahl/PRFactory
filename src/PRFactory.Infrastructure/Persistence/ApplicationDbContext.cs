@@ -19,6 +19,7 @@ using UserConfig = PRFactory.Infrastructure.Persistence.Configurations.UserConfi
 using PlanReviewConfig = PRFactory.Infrastructure.Persistence.Configurations.PlanReviewConfiguration;
 using ReviewCommentConfig = PRFactory.Infrastructure.Persistence.Configurations.ReviewCommentConfiguration;
 using TenantLlmProviderConfig = PRFactory.Infrastructure.Persistence.Configurations.TenantLlmProviderConfiguration;
+using CodeReviewResultConfig = PRFactory.Infrastructure.Persistence.Configurations.CodeReviewResultConfiguration;
 
 namespace PRFactory.Infrastructure.Persistence;
 
@@ -62,6 +63,9 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
     // LLM Provider DbSets
     public DbSet<TenantLlmProvider> TenantLlmProviders => Set<TenantLlmProvider>();
 
+    // Code Review DbSets
+    public DbSet<CodeReviewResult> CodeReviewResults => Set<CodeReviewResult>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         // IMPORTANT: Call base first to configure Identity tables
@@ -84,6 +88,9 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
 
         // LLM Provider configuration
         builder.ApplyConfiguration(new TenantLlmProviderConfig(_encryptionService));
+
+        // Code Review configuration
+        builder.ApplyConfiguration(new CodeReviewResultConfig());
 
         // Add indexes for common queries
         AddIndexes(builder);

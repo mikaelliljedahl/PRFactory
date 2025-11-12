@@ -85,6 +85,16 @@ public class TenantConfiguration : IEntityTypeConfiguration<Tenant>
             config.Property(c => c.EnableCodeReview);
             config.Property(c => c.AllowedRepositories);
             config.OwnsOne(c => c.CustomPromptTemplates);
+
+            // Multi-LLM Configuration (Epic 02)
+            config.Property(c => c.EnableAutoCodeReview);
+            config.Property(c => c.CodeReviewLlmProviderId);
+            config.Property(c => c.ImplementationLlmProviderId);
+            config.Property(c => c.PlanningLlmProviderId);
+            config.Property(c => c.AnalysisLlmProviderId);
+            config.Property(c => c.MaxCodeReviewIterations);
+            config.Property(c => c.AutoApproveIfNoIssues);
+            config.Property(c => c.RequireHumanApprovalAfterReview);
         });
 
         // Indexes

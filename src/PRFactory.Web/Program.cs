@@ -39,6 +39,7 @@ builder.Services.AddScoped<IWorkflowEventService, WorkflowEventService>();
 builder.Services.AddScoped<IAgentPromptService, AgentPromptService>();
 builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<IErrorService, ErrorService>();
+builder.Services.AddScoped<IAgentConfigurationService, AgentConfigurationService>();
 
 // Register Toast notification service
 builder.Services.AddScoped<IToastService, ToastService>();

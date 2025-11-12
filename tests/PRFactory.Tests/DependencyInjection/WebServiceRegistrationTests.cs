@@ -23,7 +23,7 @@ public class WebServiceRegistrationTests : DIValidationTestBase
 
         // Register SignalR event broadcaster
         services.AddScoped<PRFactory.Infrastructure.Events.IEventBroadcaster,
-            Web.Services.SignalREventBroadcaster>();
+            PRFactory.Web.Services.SignalREventBroadcaster>();
 
         // Register web layer facade services (from Program.cs)
         services.AddScoped<ITicketService, TicketService>();
@@ -106,8 +106,8 @@ public class WebServiceRegistrationTests : DIValidationTestBase
         using var provider = BuildServiceProvider(services);
 
         // Assert
-        AssertServiceRegistered<Web.Services.IAgentPromptService>(services);
-        AssertServiceResolvable<Web.Services.IAgentPromptService>(provider);
+        AssertServiceRegistered<PRFactory.Web.Services.IAgentPromptService>(services);
+        AssertServiceResolvable<PRFactory.Web.Services.IAgentPromptService>(provider);
     }
 
     [Fact]
@@ -156,7 +156,7 @@ public class WebServiceRegistrationTests : DIValidationTestBase
         AssertServiceLifetime<ITicketService>(services, ServiceLifetime.Scoped);
         AssertServiceLifetime<IRepositoryService>(services, ServiceLifetime.Scoped);
         AssertServiceLifetime<IWorkflowEventService>(services, ServiceLifetime.Scoped);
-        AssertServiceLifetime<Web.Services.IAgentPromptService>(services, ServiceLifetime.Scoped);
+        AssertServiceLifetime<PRFactory.Web.Services.IAgentPromptService>(services, ServiceLifetime.Scoped);
         AssertServiceLifetime<ITenantService>(services, ServiceLifetime.Scoped);
         AssertServiceLifetime<IErrorService>(services, ServiceLifetime.Scoped);
         AssertServiceLifetime<IToastService>(services, ServiceLifetime.Scoped);

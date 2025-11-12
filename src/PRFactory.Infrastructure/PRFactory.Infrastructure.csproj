@@ -34,6 +34,9 @@
     <!-- YAML parsing for agent prompt templates -->
     <PackageReference Include="YamlDotNet" Version="16.2.0" />
 
+    <!-- Handlebars template rendering for prompts -->
+    <PackageReference Include="Handlebars.Net" Version="2.1.6" />
+
     <!-- API Clients -->
     <PackageReference Include="Octokit" Version="13.0.1" />
     <PackageReference Include="Refit" Version="7.2.22" />

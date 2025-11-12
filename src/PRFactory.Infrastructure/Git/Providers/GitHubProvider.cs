@@ -119,6 +119,62 @@ public class GitHubProvider : IGitPlatformProvider
         });
     }
 
+    public async Task<PullRequestDetails> GetPullRequestDetailsAsync(
+        Guid repositoryId,
+        int pullRequestNumber,
+        CancellationToken ct = default)
+    {
+        var repo = await GetRepositoryAsync(repositoryId, ct);
+        var (owner, repoName) = ParseGitHubUrl(repo.CloneUrl);
+
+        return (PullRequestDetails)await _retryPolicy.ExecuteAsync(async () =>
+        {
+            var client = CreateGitHubClient(repo.AccessToken);
+
+            _logger.LogInformation("Fetching GitHub PR #{Number} details from {Owner}/{Repo}",
+                pullRequestNumber, owner, repoName);
+
+            // Get PR basic info
+            var pr = await client.PullRequest.Get(owner, repoName, pullRequestNumber);
+
+            // Get PR files
+            var files = await client.PullRequest.Files(owner, repoName, pullRequestNumber);
+
+            // Get PR commits
+            var commits = await client.PullRequest.Commits(owner, repoName, pullRequestNumber);
+
+            // Map files to FileChange records
+            var fileChanges = files.Select(f => new FileChange(
+                Path: f.FileName,
+                Status: f.Status,
+                Additions: f.Additions,
+                Deletions: f.Deletions,
+                Changes: f.Changes
+            )).ToList();
+
+            // Calculate statistics
+            var totalAdditions = files.Sum(f => f.Additions);
+            var totalDeletions = files.Sum(f => f.Deletions);
+
+            _logger.LogInformation(
+                "GitHub PR #{Number} has {FileCount} files, {Additions} additions, {Deletions} deletions, {CommitCount} commits",
+                pullRequestNumber, files.Count, totalAdditions, totalDeletions, commits.Count);
+
+            return new PullRequestDetails(
+                Number: pr.Number,
+                Url: pr.Url,
+                HtmlUrl: pr.HtmlUrl,
+                Title: pr.Title,
+                Description: pr.Body ?? string.Empty,
+                FilesChangedCount: files.Count,
+                LinesAdded: totalAdditions,
+                LinesDeleted: totalDeletions,
+                CommitsCount: commits.Count,
+                FilesChanged: fileChanges
+            );
+        });
+    }
+
     private GitHubClient CreateGitHubClient(string accessToken)
     {
         var client = new GitHubClient(new ProductHeaderValue("PRFactory"));

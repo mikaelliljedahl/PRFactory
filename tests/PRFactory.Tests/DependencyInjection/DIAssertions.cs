@@ -49,6 +49,7 @@ public static class DIAssertions
     /// Asserts that a service can be resolved without throwing (validates dependency chain)
     /// </summary>
     public static void AssertDependencyChainResolvable<TInterface>(IServiceProvider provider)
+        where TInterface : notnull
     {
         // Use scoped provider to properly resolve scoped services
         using var scope = provider.CreateScope();

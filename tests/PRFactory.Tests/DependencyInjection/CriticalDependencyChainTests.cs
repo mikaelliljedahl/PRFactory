@@ -302,7 +302,7 @@ public class CriticalDependencyChainTests : DIValidationTestBase
         using var provider = BuildServiceProvider(services);
 
         // Act & Assert
-        DIAssertions.AssertDependencyChainResolvable<Infrastructure.Execution.IProcessExecutor>(provider);
+        DIAssertions.AssertDependencyChainResolvable<PRFactory.Infrastructure.Execution.IProcessExecutor>(provider);
     }
 
     [Fact]

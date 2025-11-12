@@ -70,6 +70,15 @@ public interface IGitPlatformService
         Guid repositoryId,
         CancellationToken ct = default
     );
+
+    /// <summary>
+    /// Get pull request details including files changed, commits, and statistics
+    /// </summary>
+    Task<PullRequestDetails> GetPullRequestDetailsAsync(
+        Guid repositoryId,
+        int pullRequestNumber,
+        CancellationToken ct = default
+    );
 }
 
 /// <summary>
@@ -225,6 +234,20 @@ public class GitPlatformService : IGitPlatformService
             repositoryId, provider.PlatformName);
 
         return await provider.GetRepositoryInfoAsync(repositoryId, ct);
+    }
+
+    public async Task<PullRequestDetails> GetPullRequestDetailsAsync(
+        Guid repositoryId,
+        int pullRequestNumber,
+        CancellationToken ct = default)
+    {
+        var repo = await _repositoryGetter(repositoryId, ct);
+        var provider = GetProvider(repo.GitPlatform);
+
+        _logger.LogInformation("Getting PR #{PullRequestNumber} details for {RepositoryId} using {Platform}",
+            pullRequestNumber, repositoryId, provider.PlatformName);
+
+        return await provider.GetPullRequestDetailsAsync(repositoryId, pullRequestNumber, ct);
     }
 
     private IGitPlatformProvider GetProvider(string platformName)

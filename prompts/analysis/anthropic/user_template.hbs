@@ -1,0 +1,100 @@
+# Codebase Analysis Request
+
+## Analysis Objective
+{{analysis_objective}}
+
+{{#if specific_questions}}
+## Specific Questions
+{{#each specific_questions}}
+{{@index}}. {{this}}
+{{/each}}
+{{/if}}
+
+## Codebase Context
+
+### Repository Information
+- **Name:** {{repository_name}}
+- **URL:** {{repository_url}}
+- **Branch:** {{branch_name}}
+- **Language:** {{primary_language}}
+
+### Project Structure
+{{codebase_structure}}
+
+{{#if technology_stack}}
+### Technology Stack
+- **Framework:** {{technology_stack.framework}}
+- **Database:** {{technology_stack.database}}
+- **Architecture:** {{technology_stack.architecture}}
+- **Key Libraries:** {{technology_stack.libraries}}
+{{/if}}
+
+## Files to Analyze
+{{#each files_to_analyze}}
+### {{this.path}}
+{{#if this.description}}**Purpose:** {{this.description}}{{/if}}
+{{#if this.relevance}}**Relevance:** {{this.relevance}}{{/if}}
+
+```{{this.language}}
+{{this.content}}
+```
+
+{{/each}}
+
+{{#if related_files}}
+## Related Files (Context)
+{{#each related_files}}
+- **{{this.path}}**{{#if this.description}} - {{this.description}}{{/if}}
+{{/each}}
+{{/if}}
+
+{{#if architectural_patterns}}
+## Known Architectural Patterns
+{{architectural_patterns}}
+{{/if}}
+
+{{#if focus_areas}}
+## Focus Areas
+{{#each focus_areas}}
+- {{this}}
+{{/each}}
+{{/if}}
+
+---
+
+**Analysis Instructions:**
+
+Analyze the codebase to answer the objective and questions above. Provide:
+
+1. **Summary**: High-level overview of findings
+
+2. **Detailed Analysis**:
+   - Examine architecture, design patterns, implementation details
+   - Trace data flow and execution paths
+   - Identify dependencies and relationships between components
+   - Reference specific files and line numbers
+
+3. **Findings**:
+   - **Strengths**: Well-implemented aspects
+   - **Weaknesses**: Technical debt, code smells, potential issues
+   - **Security**: Any security concerns or vulnerabilities
+   - **Performance**: Bottlenecks or optimization opportunities
+
+4. **Recommendations**:
+   - Specific, actionable improvements
+   - Prioritized by impact
+   - Include code examples where helpful
+
+**Analysis Approach:**
+- Be thorough but focused on the objective
+- Use evidence from the actual code
+- Consider the broader system context
+- Provide file paths and line numbers for all references
+- Acknowledge limitations if information is insufficient
+
+{{#if constraints}}
+**Constraints:**
+{{#each constraints}}
+- {{this}}
+{{/each}}
+{{/if}}

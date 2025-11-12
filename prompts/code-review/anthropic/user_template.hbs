@@ -1,0 +1,84 @@
+# Code Review Request
+
+## Ticket Information
+**Ticket:** {{ticket_number}}
+**Title:** {{ticket_title}}
+**Description:**
+{{ticket_description}}
+
+**Ticket URL:** {{ticket_url}}
+
+## Implementation Plan
+**Plan Path:** {{plan_path}}
+**Plan Summary:**
+{{plan_summary}}
+
+## Pull Request Details
+**PR URL:** {{pull_request_url}}
+**Branch:** {{branch_name}} → {{target_branch}}
+**Files Changed:** {{files_changed_count}}
+**Lines Added:** {{lines_added}}
+**Lines Deleted:** {{lines_deleted}}
+**Commits:** {{commits_count}}
+
+## Code Changes
+
+{{#each file_changes}}
+### File: {{this.file_path}}
+**Change Type:** {{this.change_type}}
+**Language:** {{this.language}}
+**Lines Changed:** +{{this.lines_added}} -{{this.lines_deleted}}
+{{#if this.is_test_file}}**Type:** Test File{{/if}}
+
+```{{this.language}}
+{{this.diff}}
+```
+
+{{/each}}
+
+## Codebase Context
+
+### Project Structure
+{{codebase_structure}}
+
+### Related Files
+{{#each related_files}}
+- **{{this.path}}** - {{this.description}}
+{{/each}}
+
+## Testing Coverage
+**Tests Added/Modified:** {{tests_added}}
+**Test Coverage:** {{test_coverage_percentage}}%
+
+{{#if test_files}}
+### Test Files
+{{#each test_files}}
+- {{this.path}}
+{{/each}}
+{{/if}}
+
+## Repository Metadata
+**Repository:** {{repository_name}}
+**Author:** {{author_name}}
+**Created:** {{created_at}}
+
+---
+
+**Review Instructions:**
+Please review this pull request thoroughly and provide detailed feedback on:
+
+1. **Security Issues:** Check for vulnerabilities, hardcoded secrets, insecure authentication/authorization
+2. **Correctness:** Verify logic, edge cases, error handling, null safety
+3. **Performance:** Identify inefficient code, database issues, memory problems
+4. **Maintainability:** Assess code clarity, documentation, naming, duplication
+5. **Testing:** Evaluate test coverage, test quality, missing test cases
+6. **Architecture:** Check adherence to SOLID principles and clean architecture patterns
+7. **Implementation Plan Compliance:** Verify the code implements what was planned
+
+For each issue found, please:
+- Specify file path and line numbers
+- Explain WHY it's an issue
+- Provide specific HOW to fix it
+- Rate severity (Critical/Suggested/Praise)
+
+Also highlight any particularly well-written code or excellent patterns used.

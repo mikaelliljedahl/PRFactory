@@ -1,0 +1,81 @@
+# Implementation Planning Request
+
+## Ticket Information
+**Ticket Number:** {{ticket_number}}
+**Title:** {{ticket_title}}
+**URL:** {{ticket_url}}
+
+**Full Description:**
+{{ticket_description}}
+
+## Codebase Context
+
+### Project Structure
+{{codebase_structure}}
+
+### Existing Patterns
+{{#if existing_patterns}}
+The codebase follows these established patterns:
+{{existing_patterns}}
+{{/if}}
+
+### Related Files
+{{#each related_files}}
+#### {{this.path}}
+{{#if this.description}}**Purpose:** {{this.description}}{{/if}}
+
+```{{this.language}}
+{{this.content}}
+```
+
+{{/each}}
+
+### Technology Stack
+{{#if technology_stack}}
+- **Framework:** {{technology_stack.framework}}
+- **Database:** {{technology_stack.database}}
+- **Language:** {{technology_stack.language}}
+- **Architecture:** {{technology_stack.architecture}}
+{{/if}}
+
+## Requirements Analysis
+{{#if requirements}}
+**Functional Requirements:**
+{{#each requirements.functional}}
+- {{this}}
+{{/each}}
+
+**Non-Functional Requirements:**
+{{#each requirements.non_functional}}
+- {{this}}
+{{/each}}
+{{/if}}
+
+## Acceptance Criteria
+{{#if acceptance_criteria}}
+{{#each acceptance_criteria}}
+- {{this}}
+{{/each}}
+{{/if}}
+
+---
+
+**Planning Instructions:**
+
+Generate a comprehensive implementation plan that includes:
+
+1. **Overview**: What needs to be built and why
+2. **Step-by-step implementation guide**: Specific files, methods, classes to create/modify
+3. **Database changes**: DDL statements, entity models, migrations
+4. **API specifications**: Endpoints, DTOs, validation rules
+5. **Testing strategy**: Unit tests, integration tests, edge cases
+6. **Security considerations**: Auth, input validation, secrets management
+7. **Dependencies**: New packages, external integrations
+8. **Rollout plan**: Feature flags, migrations, backwards compatibility
+
+Make the plan detailed enough that any engineer can implement it without additional clarification.
+
+Consider the existing codebase patterns and architecture. Reuse existing code where possible.
+
+**Repository:** {{repository_name}}
+**Current Branch:** {{current_branch}}

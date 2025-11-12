@@ -16,9 +16,16 @@ public class TenantBuilder
     private string _claudeApiKey = "test-claude-api-key";
     private bool _isActive = true;
     private TenantConfiguration? _configuration;
+    private Guid? _id;
 
     public TenantBuilder()
     {
+    }
+
+    public TenantBuilder WithId(Guid id)
+    {
+        _id = id;
+        return this;
     }
 
     public TenantBuilder WithName(string name)
@@ -120,6 +127,13 @@ public class TenantBuilder
             _ticketPlatformApiToken,
             _claudeApiKey,
             _ticketPlatform);
+
+        // Set custom ID if provided (using reflection for testing purposes)
+        if (_id.HasValue)
+        {
+            var idProperty = typeof(Tenant).GetProperty("Id");
+            idProperty?.SetValue(tenant, _id.Value);
+        }
 
         if (_configuration != null)
         {

@@ -38,11 +38,44 @@ public class BitbucketMainBranch
     public string Name { get; set; } = string.Empty;
 }
 
+public class BitbucketPullRequestDetails
+{
+    public int Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public BitbucketLinks Links { get; set; } = new();
+}
+
+public class BitbucketDiffstatResponse
+{
+    public List<BitbucketDiffstat>? Values { get; set; }
+}
+
+public class BitbucketDiffstat
+{
+    public string Status { get; set; } = string.Empty;
+    public int LinesAdded { get; set; }
+    public int LinesRemoved { get; set; }
+    public BitbucketFile? Old { get; set; }
+    public BitbucketFile? New { get; set; }
+}
+
+public class BitbucketFile
+{
+    public string Path { get; set; } = string.Empty;
+}
+
+public class BitbucketCommitsResponse
+{
+    public int Size { get; set; }
+}
+
 /// <summary>
 /// Bitbucket implementation using HttpClient and REST API
 /// </summary>
 public class BitbucketProvider : IGitPlatformProvider
 {
+    private const string BearerPrefix = "Bearer";
     private readonly HttpClient _httpClient;
     private readonly ILogger<BitbucketProvider> _logger;
     private readonly IAsyncPolicy<HttpResponseMessage> _retryPolicy;
@@ -93,7 +126,7 @@ public class BitbucketProvider : IGitPlatformProvider
         };
 
         _httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", repo.AccessToken);
+            new AuthenticationHeaderValue(BearerPrefix, repo.AccessToken);
 
         _logger.LogInformation("Creating Bitbucket PR in {Workspace}/{Repo}: {Title}",
             workspace, repoSlug, request.Title);
@@ -137,7 +170,7 @@ public class BitbucketProvider : IGitPlatformProvider
         };
 
         _httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", repo.AccessToken);
+            new AuthenticationHeaderValue(BearerPrefix, repo.AccessToken);
 
         _logger.LogInformation("Adding comment to Bitbucket PR #{Number} in {Workspace}/{Repo}",
             pullRequestNumber, workspace, repoSlug);
@@ -165,7 +198,7 @@ public class BitbucketProvider : IGitPlatformProvider
         var (workspace, repoSlug) = ParseBitbucketUrl(repo.CloneUrl);
 
         _httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", repo.AccessToken);
+            new AuthenticationHeaderValue(BearerPrefix, repo.AccessToken);
 
         var response = await _retryPolicy.ExecuteAsync(async () =>
         {
@@ -188,6 +221,93 @@ public class BitbucketProvider : IGitPlatformProvider
             bbRepo.Name,
             bbRepo.Mainbranch?.Name ?? "main",
             repo.CloneUrl
+        );
+    }
+
+    public async Task<PullRequestDetails> GetPullRequestDetailsAsync(
+        Guid repositoryId,
+        int pullRequestNumber,
+        CancellationToken ct = default)
+    {
+        var repo = await GetRepositoryAsync(repositoryId, ct);
+        var (workspace, repoSlug) = ParseBitbucketUrl(repo.CloneUrl);
+
+        _httpClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue(BearerPrefix, repo.AccessToken);
+
+        _logger.LogInformation("Fetching Bitbucket PR #{Number} details from {Workspace}/{Repo}",
+            pullRequestNumber, workspace, repoSlug);
+
+        // Get PR basic info
+        var prResponse = await _retryPolicy.ExecuteAsync(async () =>
+        {
+            return await _httpClient.GetAsync(
+                $"https://api.bitbucket.org/2.0/repositories/{workspace}/{repoSlug}/pullrequests/{pullRequestNumber}",
+                ct
+            );
+        });
+
+        prResponse.EnsureSuccessStatusCode();
+        var pr = await prResponse.Content.ReadFromJsonAsync<BitbucketPullRequestDetails>(cancellationToken: ct);
+
+        if (pr == null)
+        {
+            throw new InvalidOperationException("Failed to deserialize Bitbucket PR response");
+        }
+
+        // Get PR diffstat for file changes
+        var diffstatResponse = await _retryPolicy.ExecuteAsync(async () =>
+        {
+            return await _httpClient.GetAsync(
+                $"https://api.bitbucket.org/2.0/repositories/{workspace}/{repoSlug}/pullrequests/{pullRequestNumber}/diffstat",
+                ct
+            );
+        });
+
+        diffstatResponse.EnsureSuccessStatusCode();
+        var diffstat = await diffstatResponse.Content.ReadFromJsonAsync<BitbucketDiffstatResponse>(cancellationToken: ct);
+
+        // Get PR commits
+        var commitsResponse = await _retryPolicy.ExecuteAsync(async () =>
+        {
+            return await _httpClient.GetAsync(
+                $"https://api.bitbucket.org/2.0/repositories/{workspace}/{repoSlug}/pullrequests/{pullRequestNumber}/commits",
+                ct
+            );
+        });
+
+        commitsResponse.EnsureSuccessStatusCode();
+        var commits = await commitsResponse.Content.ReadFromJsonAsync<BitbucketCommitsResponse>(cancellationToken: ct);
+
+        // Map files to FileChange records
+        var fileChanges = diffstat?.Values?.Select(f => new FileChange(
+            Path: f.Old?.Path ?? f.New?.Path ?? "unknown",
+            Status: f.Status,
+            Additions: f.LinesAdded,
+            Deletions: f.LinesRemoved,
+            Changes: f.LinesAdded + f.LinesRemoved
+        )).ToList() ?? new List<FileChange>();
+
+        // Calculate statistics
+        var totalAdditions = fileChanges.Sum(f => f.Additions);
+        var totalDeletions = fileChanges.Sum(f => f.Deletions);
+        var commitCount = commits?.Size ?? 0;
+
+        _logger.LogInformation(
+            "Bitbucket PR #{Number} has {FileCount} files, {Additions} additions, {Deletions} deletions, {CommitCount} commits",
+            pullRequestNumber, fileChanges.Count, totalAdditions, totalDeletions, commitCount);
+
+        return new PullRequestDetails(
+            Number: pr.Id,
+            Url: pr.Links.Self.Href,
+            HtmlUrl: pr.Links.Html.Href,
+            Title: pr.Title,
+            Description: pr.Description ?? string.Empty,
+            FilesChangedCount: fileChanges.Count,
+            LinesAdded: totalAdditions,
+            LinesDeleted: totalDeletions,
+            CommitsCount: commitCount,
+            FilesChanged: fileChanges
         );
     }
 

@@ -1,43 +1,56 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PRFactory.Infrastructure.Agents.Base;
 using PRFactory.Infrastructure.Agents.Messages;
+using PRFactory.Infrastructure.Configuration;
 
 namespace PRFactory.Infrastructure.Agents.Graphs
 {
     /// <summary>
     /// WorkflowOrchestrator - Main orchestrator for multi-graph workflows
     ///
-    /// Chains graphs: Refinement → Planning → [Implementation]
+    /// Chains graphs: Refinement → Planning → [Implementation] → [CodeReview]
     /// - Event-driven transitions between graphs
     /// - Handles webhook resume after HumanWait
     /// - Maintains overall workflow state
+    /// - Supports code review loop (Implementation ↔ CodeReview)
     /// </summary>
     public class WorkflowOrchestrator : IWorkflowOrchestrator
     {
+        private const string ImplementationGraphName = "ImplementationGraph";
+
         private readonly ILogger<WorkflowOrchestrator> _logger;
         private readonly RefinementGraph _refinementGraph;
         private readonly PlanningGraph _planningGraph;
         private readonly ImplementationGraph _implementationGraph;
+        private readonly CodeReviewGraph _codeReviewGraph;
         private readonly IWorkflowStateStore _workflowStateStore;
         private readonly IEventPublisher _eventPublisher;
+        private readonly ITenantConfigurationService _tenantConfigService;
 
+        [SuppressMessage("Design", "CA1062", Justification = "Workflow orchestrator requires multiple graph dependencies")]
+        [SuppressMessage("Design", "S107", Justification = "WorkflowOrchestrator requires multiple graph dependencies for orchestration")]
         public WorkflowOrchestrator(
             ILogger<WorkflowOrchestrator> logger,
             RefinementGraph refinementGraph,
             PlanningGraph planningGraph,
             ImplementationGraph implementationGraph,
+            CodeReviewGraph codeReviewGraph,
             IWorkflowStateStore workflowStateStore,
-            IEventPublisher eventPublisher)
+            IEventPublisher eventPublisher,
+            ITenantConfigurationService tenantConfigService)
         {
             _logger = logger;
             _refinementGraph = refinementGraph;
             _planningGraph = planningGraph;
             _implementationGraph = implementationGraph;
+            _codeReviewGraph = codeReviewGraph;
             _workflowStateStore = workflowStateStore;
             _eventPublisher = eventPublisher;
+            _tenantConfigService = tenantConfigService;
         }
 
         /// <summary>
@@ -138,8 +151,12 @@ namespace PRFactory.Infrastructure.Agents.Graphs
                         result = await _planningGraph.ResumeAsync(ticketId, resumeMessage, cancellationToken);
                         break;
 
-                    case "ImplementationGraph":
+                    case ImplementationGraphName:
                         result = await _implementationGraph.ResumeAsync(ticketId, resumeMessage, cancellationToken);
+                        break;
+
+                    case "CodeReviewGraph":
+                        result = await _codeReviewGraph.ResumeAsync(ticketId, resumeMessage, cancellationToken);
                         break;
 
                     default:
@@ -315,7 +332,7 @@ namespace PRFactory.Infrastructure.Agents.Graphs
                         );
 
                         // Transition to ImplementationGraph
-                        workflowState.CurrentGraph = "ImplementationGraph";
+                        workflowState.CurrentGraph = ImplementationGraphName;
                         workflowState.Status = WorkflowStatus.Running;
                         await _workflowStateStore.SaveStateAsync(workflowState);
 
@@ -327,24 +344,177 @@ namespace PRFactory.Infrastructure.Agents.Graphs
                     break;
 
                 case "ImplementationGraph":
-                    // This is the final graph - mark workflow as completed
-                    _logger.LogInformation(
-                        "ImplementationGraph completed for ticket {TicketId}, workflow finished",
-                        workflowState.TicketId);
+                    // Check if we should transition to CodeReviewGraph or complete
+                    await HandleImplementationCompletionAsync(workflowState, result, cancellationToken);
+                    break;
 
-                    workflowState.Status = WorkflowStatus.Completed;
-                    workflowState.CompletedAt = DateTime.UtcNow;
-                    await _workflowStateStore.SaveStateAsync(workflowState);
-
-                    await _eventPublisher.PublishAsync(new WorkflowCompletedEvent
-                    {
-                        TicketId = workflowState.TicketId,
-                        WorkflowId = workflowState.WorkflowId,
-                        CompletedAt = DateTime.UtcNow,
-                        Duration = DateTime.UtcNow - workflowState.StartedAt
-                    });
+                case "CodeReviewGraph":
+                    // Check if we should loop back to ImplementationGraph or complete
+                    await HandleCodeReviewCompletionAsync(workflowState, result, cancellationToken);
                     break;
             }
+        }
+
+        /// <summary>
+        /// Handle completion of ImplementationGraph - check if code review should be triggered
+        /// </summary>
+        private async Task HandleImplementationCompletionAsync(
+            WorkflowState workflowState,
+            GraphExecutionResult result,
+            CancellationToken cancellationToken)
+        {
+            // Check if PR was created
+            if (result.OutputMessage is not PRCreatedMessage prCreated)
+            {
+                // No PR created, complete workflow
+                _logger.LogInformation(
+                    "ImplementationGraph completed without PR for ticket {TicketId}, workflow finished",
+                    workflowState.TicketId);
+
+                await CompleteWorkflowAsync(workflowState);
+                return;
+            }
+
+            // Check if auto code review is enabled
+            var tenantConfig = await _tenantConfigService.GetConfigurationForTicketAsync(
+                workflowState.TicketId, cancellationToken);
+
+            if (tenantConfig?.EnableAutoCodeReview != true)
+            {
+                _logger.LogInformation(
+                    "Auto code review disabled for ticket {TicketId}, workflow finished",
+                    workflowState.TicketId);
+
+                await CompleteWorkflowAsync(workflowState);
+                return;
+            }
+
+            // Transition to CodeReviewGraph
+            _logger.LogInformation(
+                "ImplementationGraph completed with PR #{PrNumber} for ticket {TicketId}, transitioning to CodeReviewGraph",
+                prCreated.PullRequestNumber, workflowState.TicketId);
+
+            workflowState.CurrentGraph = "CodeReviewGraph";
+            workflowState.Status = WorkflowStatus.Running;
+            await _workflowStateStore.SaveStateAsync(workflowState);
+
+            // Create ReviewCodeMessage and execute CodeReviewGraph
+            // Note: BranchName and PlanPath are populated from PR metadata during review execution
+            var reviewMessage = new ReviewCodeMessage(
+                workflowState.TicketId,
+                prCreated.PullRequestNumber,
+                prCreated.PullRequestUrl,
+                BranchName: string.Empty,
+                PlanPath: null
+            );
+
+            var reviewResult = await _codeReviewGraph.ExecuteAsync(reviewMessage, cancellationToken);
+            await HandleGraphResultAsync(workflowState, reviewResult, cancellationToken);
+        }
+
+        /// <summary>
+        /// Handle completion of CodeReviewGraph - check if fixes needed or workflow complete
+        /// </summary>
+        private async Task HandleCodeReviewCompletionAsync(
+            WorkflowState workflowState,
+            GraphExecutionResult result,
+            CancellationToken cancellationToken)
+        {
+            if (result.OutputMessage is not CodeReviewCompleteMessage reviewComplete)
+            {
+                _logger.LogWarning(
+                    "CodeReviewGraph completed with unexpected message type for ticket {TicketId}",
+                    workflowState.TicketId);
+
+                await CompleteWorkflowAsync(workflowState);
+                return;
+            }
+
+            // Check if there are critical issues
+            if (!reviewComplete.HasCriticalIssues || reviewComplete.CriticalIssues.Count == 0)
+            {
+                _logger.LogInformation(
+                    "CodeReviewGraph completed with no critical issues for ticket {TicketId}, workflow finished",
+                    workflowState.TicketId);
+
+                // Check if auto-approval should be posted
+                var tenantConfig = await _tenantConfigService.GetConfigurationForTicketAsync(
+                    workflowState.TicketId, cancellationToken);
+
+                if (tenantConfig?.AutoApproveIfNoIssues == true)
+                {
+                    _logger.LogInformation(
+                        "Auto-approval enabled for ticket {TicketId}",
+                        workflowState.TicketId);
+
+                    // Note: Auto-approval posting will be implemented in a future enhancement
+                    // to support direct approval comments on PR/ticket systems
+                }
+
+                await CompleteWorkflowAsync(workflowState);
+                return;
+            }
+
+            // Get retry count from workflow state
+            var retryCount = workflowState.CurrentState.Contains("retry_count:")
+                ? int.Parse(workflowState.CurrentState.Split("retry_count:")[1].Split(',')[0])
+                : 0;
+
+            var tenantConfig2 = await _tenantConfigService.GetConfigurationForTicketAsync(
+                workflowState.TicketId, cancellationToken);
+            var maxIterations = tenantConfig2?.MaxCodeReviewIterations ?? 3;
+
+            if (retryCount >= maxIterations)
+            {
+                _logger.LogWarning(
+                    "CodeReviewGraph max iterations ({MaxIterations}) reached for ticket {TicketId}, completing with warnings",
+                    maxIterations, workflowState.TicketId);
+
+                await CompleteWorkflowAsync(workflowState, hasWarnings: true);
+                return;
+            }
+
+            // Loop back to ImplementationGraph to fix issues
+            _logger.LogInformation(
+                "CodeReviewGraph found {IssueCount} issues for ticket {TicketId}, looping back to ImplementationGraph (attempt {Attempt}/{MaxIterations})",
+                reviewComplete.CriticalIssues.Count, workflowState.TicketId, retryCount + 1, maxIterations);
+
+            workflowState.CurrentGraph = ImplementationGraphName;
+            workflowState.CurrentState = $"retry_count:{retryCount + 1},issues_found";
+            workflowState.Status = WorkflowStatus.Running;
+            await _workflowStateStore.SaveStateAsync(workflowState);
+
+            // Create FixCodeIssuesMessage and execute ImplementationGraph
+            var fixMessage = new FixCodeIssuesMessage(
+                workflowState.TicketId,
+                reviewComplete.CriticalIssues,
+                string.Join("\n", reviewComplete.CriticalIssues.Concat(reviewComplete.Suggestions))
+            );
+
+            var implementationResult = await _implementationGraph.ExecuteAsync(fixMessage, cancellationToken);
+            await HandleGraphResultAsync(workflowState, implementationResult, cancellationToken);
+        }
+
+        /// <summary>
+        /// Complete the workflow successfully
+        /// </summary>
+        private async Task CompleteWorkflowAsync(WorkflowState workflowState, bool hasWarnings = false)
+        {
+            workflowState.Status = WorkflowStatus.Completed;
+            workflowState.CompletedAt = DateTime.UtcNow;
+            if (hasWarnings)
+            {
+                workflowState.CurrentState = "completed_with_warnings";
+            }
+            await _workflowStateStore.SaveStateAsync(workflowState);
+
+            await _eventPublisher.PublishAsync(new WorkflowCompletedEvent
+            {
+                TicketId = workflowState.TicketId,
+                WorkflowId = workflowState.WorkflowId,
+                CompletedAt = DateTime.UtcNow,
+                Duration = DateTime.UtcNow - workflowState.StartedAt
+            });
         }
     }
 

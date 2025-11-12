@@ -1,0 +1,46 @@
+# Code Review Request
+
+## Ticket
+- **ID:** {{ticket_number}}
+- **Title:** {{ticket_title}}
+- **URL:** {{ticket_url}}
+
+**Description:**
+{{ticket_description}}
+
+## Implementation Plan
+- **Path:** {{plan_path}}
+- **Summary:** {{plan_summary}}
+
+## Pull Request
+- **URL:** {{pull_request_url}}
+- **Branch:** {{branch_name}} → {{target_branch}}
+- **Stats:** {{files_changed_count}} files, +{{lines_added}} -{{lines_deleted}} lines
+
+## Code Changes
+
+{{#each file_changes}}
+### `{{this.file_path}}`
+- **Type:** {{this.change_type}}{{#if this.is_test_file}} (Test){{/if}}
+- **Changes:** +{{this.lines_added}} -{{this.lines_deleted}}
+
+```{{this.language}}
+{{this.diff}}
+```
+
+{{/each}}
+
+## Testing
+- **Tests Added:** {{tests_added}}
+- **Coverage:** {{test_coverage_percentage}}%
+
+## Instructions
+Review this PR for:
+1. Security vulnerabilities
+2. Logic errors and edge cases
+3. Performance issues
+4. Code maintainability
+5. Test coverage
+6. Compliance with implementation plan
+
+Provide specific feedback with file paths and line numbers. Explain WHY each issue matters and HOW to fix it.

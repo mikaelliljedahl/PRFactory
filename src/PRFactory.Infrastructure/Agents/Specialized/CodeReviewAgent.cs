@@ -260,21 +260,30 @@ public class CodeReviewAgent : BaseAgent
         }
 
         // Map file changes to template format
-        var fileChangesList = prDetails?.FilesChanged.Select(f => new
+        List<object> fileChanges;
+        List<object> testFiles;
+
+        if (prDetails?.FilesChanged != null)
         {
-            path = f.Path,
-            status = f.Status,
-            additions = f.Additions,
-            deletions = f.Deletions,
-            changes = f.Changes,
-            language = DetectLanguage(f.Path),
-            is_test = IsTestFile(f.Path)
-        }).ToList();
+            var fileChangesList = prDetails.FilesChanged.Select(f => new
+            {
+                path = f.Path,
+                status = f.Status,
+                additions = f.Additions,
+                deletions = f.Deletions,
+                changes = f.Changes,
+                language = DetectLanguage(f.Path),
+                is_test = IsTestFile(f.Path)
+            }).ToList();
 
-        var fileChanges = fileChangesList ?? new List<dynamic>();
-
-        // Count test files
-        var testFiles = fileChangesList?.Where(f => f.is_test).ToList() ?? new List<dynamic>();
+            fileChanges = fileChangesList.Cast<object>().ToList();
+            testFiles = fileChangesList.Where(f => f.is_test).Cast<object>().ToList();
+        }
+        else
+        {
+            fileChanges = new List<object>();
+            testFiles = new List<object>();
+        }
 
         // Build comprehensive template variables
         return new

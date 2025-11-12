@@ -68,7 +68,7 @@ public class PostReviewCommentsAgent : BaseAgent
             var comment = FormatReviewFeedback(
                 criticalIssues,
                 suggestions,
-                reviewId,
+                reviewId ?? "unknown",
                 context.Repository.GitPlatform);
 
             // Post comment to PR

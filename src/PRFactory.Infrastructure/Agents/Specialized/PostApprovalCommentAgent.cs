@@ -66,7 +66,7 @@ public class PostApprovalCommentAgent : BaseAgent
             // Format the approval message
             var comment = FormatApprovalMessage(
                 suggestions,
-                reviewId,
+                reviewId ?? "unknown",
                 context.Repository.GitPlatform);
 
             // Post approval to PR

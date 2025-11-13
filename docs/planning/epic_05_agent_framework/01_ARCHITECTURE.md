@@ -1381,3 +1381,303 @@ The code examples in this document assume the following APIs exist in Microsoft 
 6. Get architect review before proceeding to Week 2
 
 **Deliverable:** API Verification Report with actual signatures and any needed plan updates.
+
+---
+
+## Appendix: Checkpoint Serialization
+
+### Overview
+
+Agent Framework agents maintain conversation state in `AgentThread` objects. PRFactory's checkpoint-based resumption requires serializing this state to the database.
+
+### AgentThread Serialization Strategy
+
+**Challenge:** AgentThread objects may contain:
+- Conversation history (potentially large)
+- Internal state (agent context, tool results)
+- Circular references or non-serializable objects
+
+**Solution:** Custom serialization with compression for large threads.
+
+### Implementation
+
+**Custom JsonConverter:**
+```csharp
+public class AgentThreadConverter : JsonConverter<AgentThread>
+{
+    public override void Write(Utf8JsonWriter writer, AgentThread value, JsonSerializerOptions options)
+    {
+        // Extract serializable portions
+        var dto = new AgentThreadDto
+        {
+            ThreadId = value.Id,
+            Messages = value.Messages.Select(m => new MessageDto
+            {
+                Role = m.Role,
+                Content = m.Content,
+                ToolCalls = m.ToolCalls?.Select(tc => new ToolCallDto
+                {
+                    ToolName = tc.Name,
+                    Arguments = tc.Arguments
+                }).ToList()
+            }).ToList(),
+            Metadata = value.Metadata
+        };
+        
+        JsonSerializer.Serialize(writer, dto, options);
+    }
+    
+    public override AgentThread Read(Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        var dto = JsonSerializer.Deserialize<AgentThreadDto>(ref reader, options);
+        
+        // Reconstruct AgentThread
+        var thread = new AgentThread(dto!.ThreadId);
+        
+        foreach (var msgDto in dto.Messages)
+        {
+            thread.AddMessage(new ChatMessage
+            {
+                Role = msgDto.Role,
+                Content = msgDto.Content,
+                ToolCalls = msgDto.ToolCalls?.Select(tc => new ToolCall
+                {
+                    Name = tc.ToolName,
+                    Arguments = tc.Arguments
+                }).ToList()
+            });
+        }
+        
+        return thread;
+    }
+}
+```
+
+**Checkpoint Save with Compression:**
+```csharp
+public async Task SaveCheckpointAsync(
+    Guid ticketId,
+    string nodeName,
+    AgentThread thread,
+    CancellationToken ct = default)
+{
+    var options = new JsonSerializerOptions
+    {
+        Converters = { new AgentThreadConverter() }
+    };
+    
+    var json = JsonSerializer.Serialize(thread, options);
+    
+    // Compress if > 100KB
+    var conversationHistory = json.Length > 100_000
+        ? await CompressAsync(json)
+        : json;
+    
+    var checkpoint = new Checkpoint
+    {
+        TicketId = ticketId,
+        GraphName = "RefinementGraph",
+        NodeName = nodeName,
+        AgentThreadId = thread.Id,
+        ConversationHistory = conversationHistory,
+        CreatedAt = DateTime.UtcNow
+    };
+    
+    await _checkpointRepository.SaveAsync(checkpoint, ct);
+}
+```
+
+**Compression Helper:**
+```csharp
+private async Task<string> CompressAsync(string json)
+{
+    using var output = new MemoryStream();
+    using (var gzip = new GZipStream(output, CompressionLevel.Optimal))
+    using (var writer = new StreamWriter(gzip))
+    {
+        await writer.WriteAsync(json);
+    }
+    
+    return Convert.ToBase64String(output.ToArray());
+}
+
+private async Task<string> DecompressAsync(string compressed)
+{
+    var bytes = Convert.FromBase64String(compressed);
+    using var input = new MemoryStream(bytes);
+    using var gzip = new GZipStream(input, CompressionMode.Decompress);
+    using var reader = new StreamReader(gzip);
+    
+    return await reader.ReadToEndAsync();
+}
+```
+
+**Checkpoint Load and Resume:**
+```csharp
+public async Task<AgentThread?> LoadCheckpointAsync(
+    Guid ticketId,
+    string nodeName,
+    CancellationToken ct = default)
+{
+    var checkpoint = await _checkpointRepository.GetLatestAsync(
+        ticketId, nodeName, ct);
+    
+    if (checkpoint?.ConversationHistory == null)
+        return null;
+    
+    // Decompress if needed
+    var json = checkpoint.ConversationHistory.StartsWith("{")
+        ? checkpoint.ConversationHistory
+        : await DecompressAsync(checkpoint.ConversationHistory);
+    
+    var options = new JsonSerializerOptions
+    {
+        Converters = { new AgentThreadConverter() }
+    };
+    
+    return JsonSerializer.Deserialize<AgentThread>(json, options);
+}
+```
+
+### Size Limits
+
+**Database Constraints:**
+- `ConversationHistory` field: NVARCHAR(MAX) = 2GB theoretical limit
+- Practical limit: 100MB uncompressed (10MB compressed)
+- Truncate history if exceeds limit (keep last N messages)
+
+**Truncation Strategy:**
+```csharp
+public void TruncateIfNeeded(AgentThread thread, int maxMessages = 50)
+{
+    if (thread.Messages.Count > maxMessages)
+    {
+        // Keep system message + last N messages
+        var systemMsg = thread.Messages.FirstOrDefault(m => m.Role == "system");
+        var recent Messages = thread.Messages.TakeLast(maxMessages - 1).ToList();
+        
+        thread.Messages.Clear();
+        if (systemMsg != null)
+            thread.Messages.Add(systemMsg);
+        thread.Messages.AddRange(recentMessages);
+    }
+}
+```
+
+### Resume Logic Example
+
+**Full Resume Pattern:**
+```csharp
+public async Task<IAgentMessage> ExecuteWithResumeAsync(
+    IAgentMessage input,
+    CancellationToken ct = default)
+{
+    var ticketId = ((AnalysisRequestMessage)input).TicketId;
+    
+    // 1. Load checkpoint
+    var thread = await _checkpointService.LoadCheckpointAsync(
+        ticketId, "AnalysisAgent", ct);
+    
+    // 2. Create or resume agent
+    var agent = await _agentFactory.CreateAgentAsync(
+        Context.TenantId, "AnalyzerAgent", ct);
+    
+    // 3. Build prompt
+    var prompt = BuildPrompt(input);
+    
+    // 4. Run agent (resume from checkpoint if exists)
+    AgentResponse response;
+    if (thread != null)
+    {
+        thread.AddUserMessage(prompt);
+        response = await agent.RunAsync(thread, ct);
+    }
+    else
+    {
+        response = await agent.RunAsync(prompt, ct);
+    }
+    
+    // 5. Save updated checkpoint
+    await _checkpointService.SaveCheckpointAsync(
+        ticketId, "AnalysisAgent", response.Thread, ct);
+    
+    // 6. Return result
+    return ParseResult(response);
+}
+```
+
+### Testing Strategy
+
+**Unit Tests:**
+```csharp
+[Fact]
+public async Task SaveCheckpoint_LargeThread_CompressesData()
+{
+    // Arrange
+    var thread = CreateLargeAgentThread(messages: 100);
+    
+    // Act
+    await _checkpointService.SaveCheckpointAsync(ticketId, "Test", thread);
+    
+    // Assert
+    var checkpoint = await _checkpointRepository.GetLatestAsync(ticketId, "Test");
+    Assert.True(checkpoint.ConversationHistory.Length < originalSize / 2);
+}
+
+[Fact]
+public async Task LoadCheckpoint_CompressedData_DecompressesCorrectly()
+{
+    // Arrange
+    var originalThread = CreateLargeAgentThread(messages: 100);
+    await _checkpointService.SaveCheckpointAsync(ticketId, "Test", originalThread);
+    
+    // Act
+    var loadedThread = await _checkpointService.LoadCheckpointAsync(ticketId, "Test");
+    
+    // Assert
+    Assert.NotNull(loadedThread);
+    Assert.Equal(originalThread.Messages.Count, loadedThread.Messages.Count);
+    Assert.Equal(originalThread.Id, loadedThread.Id);
+}
+```
+
+### Error Handling
+
+**Serialization Failures:**
+```csharp
+try
+{
+    var json = JsonSerializer.Serialize(thread, options);
+}
+catch (NotSupportedException ex)
+{
+    _logger.LogError(ex, "AgentThread serialization failed. Falling back to message-only serialization.");
+    
+    // Fallback: Serialize messages only (lose some state)
+    var messages = thread.Messages.Select(m => new { m.Role, m.Content }).ToList();
+    var json = JsonSerializer.Serialize(messages);
+}
+```
+
+**Deserialization Failures:**
+```csharp
+try
+{
+    return JsonSerializer.Deserialize<AgentThread>(json, options);
+}
+catch (JsonException ex)
+{
+    _logger.LogError(ex, "AgentThread deserialization failed. Cannot resume from checkpoint.");
+    return null;  // Agent will start fresh
+}
+```
+
+### Performance Considerations
+
+**Benchmark Results (Expected):**
+- Serialize 50 messages: ~10ms
+- Compress 50 messages: ~50ms (worth it for > 100KB)
+- Deserialize 50 messages: ~15ms
+- Decompress 50 messages: ~30ms
+
+**Total overhead: ~100ms per checkpoint save/load** (acceptable for workflow resumption).

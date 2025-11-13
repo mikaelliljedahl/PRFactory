@@ -2,7 +2,7 @@
 
 **Document Purpose:** Week-by-week implementation timeline with milestones, deliverables, and approval gates.
 
-**Total Duration:** 10-12 weeks
+**Total Duration:** 14 weeks (12 weeks implementation + 2 weeks buffer)
 **Team Size:** 2 senior engineers
 **Last Updated:** 2025-11-13
 
@@ -12,11 +12,14 @@
 
 ```
 Week 1-3: Foundation
-Week 4-6: Agent Roles  
+Week 4-6: Agent Roles
 Week 7-8: Tool Ecosystem
-Week 9-10: UI Integration
-Week 11-12: Production Readiness
+Week 9-11: UI Integration (extended for AG-UI complexity)
+Week 12-13: Production Readiness
+Week 14: Contingency Buffer
 ```
+
+**Note:** Week 14 is contingency buffer. If ahead of schedule, use for additional testing, performance optimization, or early production deployment.
 
 ---
 
@@ -195,12 +198,14 @@ Week 11-12: Production Readiness
 
 ---
 
-## Phase 4: UI Integration (Weeks 9-10)
+## Phase 4: UI Integration (Weeks 9-11)
 
 ### Objectives
 - AG-UI protocol implementation
 - Blazor components for agent interaction
 - Real-time streaming and follow-up questions
+
+**Note:** Extended to 3 weeks based on AG-UI complexity and streaming implementation effort.
 
 ### Week 9: AG-UI Protocol & Streaming
 
@@ -220,7 +225,7 @@ Week 11-12: Production Readiness
 
 ---
 
-### Week 10: Follow-Up Questions & Approval Gates
+### Week 10: Blazor Components & Integration
 
 **Tasks:**
 - [ ] Implement follow-up question flow (agent asks, user answers)
@@ -235,18 +240,42 @@ Week 11-12: Production Readiness
 - Approval gate UI for human-in-the-loop
 - User acceptance testing results
 
+**Deliverables:**
+- Blazor components with code-behind
+- Basic streaming UI working
+
+**Approval Gate:** Demo streaming in development environment
+
+---
+
+### Week 11: Follow-Up Questions & Approval Gates
+
+**Tasks:**
+- [ ] Implement follow-up question flow (agent asks, user answers)
+- [ ] Create Blazor component: `AgentFollowUpQuestion.razor`
+- [ ] Create Blazor component: `AgentApprovalGate.razor`
+- [ ] Update workflow orchestrator for user interaction pauses
+- [ ] Implement approval gate UI (approve/reject proposed actions)
+- [ ] UX polish and refinement
+- [ ] User acceptance testing
+
+**Deliverables:**
+- Interactive agent UI with follow-up questions
+- Approval gate UI for human-in-the-loop
+- User acceptance testing results
+
 **Approval Gate:** UX team sign-off
 
 ---
 
-## Phase 5: Production Readiness (Weeks 11-12)
+## Phase 5: Production Readiness (Weeks 12-13)
 
 ### Objectives
 - Complete remaining agent roles
 - End-to-end testing
 - Production deployment
 
-### Week 11: CodeExecutorAgent & ReviewerAgent
+### Week 12: CodeExecutorAgent & ReviewerAgent
 
 **Tasks:**
 - [ ] Implement `CodeExecutorAgentAdapter` for ImplementationGraph
@@ -265,7 +294,7 @@ Week 11-12: Production Readiness
 
 ---
 
-### Week 12: Production Deployment
+### Week 13: Production Deployment
 
 **Tasks:**
 - [ ] Create feature flags: `EnableAgentFrameworkAnalyzer`, `EnableAgentFrameworkPlanner`, etc.
@@ -286,6 +315,26 @@ Week 11-12: Production Readiness
 
 ---
 
+### Week 14: Contingency Buffer
+
+**Purpose:** Time buffer for unforeseen delays or additional work.
+
+**Potential Uses:**
+- Address feedback from Week 13 production deployment
+- Additional performance optimization
+- Extra testing or security hardening
+- Early production rollout to additional tenants
+- Documentation improvements
+- Team retrospective and knowledge sharing
+
+**If Ahead of Schedule:**
+- Begin early production deployment
+- Implement nice-to-have features from backlog
+- Create additional training materials
+- Conduct performance tuning
+
+---
+
 ## Milestones
 
 | Milestone | Week | Description |
@@ -294,8 +343,11 @@ Week 11-12: Production Readiness
 | M2: First Agent Live | 4 | AnalyzerAgent working in RefinementGraph |
 | M3: Planning Agents Live | 6 | Both AnalyzerAgent and PlannerAgent production-ready |
 | M4: Complete Tool Ecosystem | 8 | 15+ tools implemented, security validated |
-| M5: UI Integration Complete | 10 | AG-UI streaming, follow-up questions, approval gates |
-| M6: Production Deployment | 12 | All agents deployed to production with feature flags |
+| M5: UI Streaming Complete | 9 | AG-UI streaming working in Blazor |
+| M6: UI Interactive Features | 11 | Follow-up questions and approval gates functional |
+| M7: All Agents Complete | 12 | All 4 agent roles implemented and tested |
+| M8: Production Deployment | 13 | Deployed to production with feature flags |
+| M9: Contingency Complete | 14 | Buffer used or early completion |
 
 ---
 

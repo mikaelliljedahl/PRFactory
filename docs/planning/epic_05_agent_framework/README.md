@@ -61,27 +61,7 @@ This directory contains detailed implementation plans for integrating Microsoft 
      - Adapter implementation patterns
      - Prompt engineering for each role
 
-### 5. **[04_UI_INTEGRATION.md](./04_UI_INTEGRATION.md)**
-   - **Purpose:** AG-UI protocol and Blazor integration
-   - **Audience:** Frontend engineers, full-stack developers
-   - **Key Sections:**
-     - AG-UI protocol (HTTP + SSE)
-     - Blazor component design
-     - Real-time streaming UI
-     - Follow-up question flows
-     - Approval gate UI patterns
-
-### 6. **[05_CONFIGURATION.md](./05_CONFIGURATION.md)**
-   - **Purpose:** Database-driven agent configuration system
-   - **Audience:** Backend engineers, DBAs
-   - **Key Sections:**
-     - Database schema (AgentConfiguration, AgentExecutionLog)
-     - Admin UI for configuration
-     - Runtime agent creation from DB
-     - Multi-tenant isolation
-     - Migration scripts
-
-### 7. **[06_IMPLEMENTATION_ROADMAP.md](./06_IMPLEMENTATION_ROADMAP.md)** ⭐
+### 5. **[04_IMPLEMENTATION_ROADMAP.md](./04_IMPLEMENTATION_ROADMAP.md)** ⭐
    - **Purpose:** Week-by-week implementation timeline
    - **Audience:** Project managers, engineering leadership
    - **Key Sections:**
@@ -91,6 +71,7 @@ This directory contains detailed implementation plans for integrating Microsoft 
      - Phase 4: UI Integration (Weeks 9-10)
      - Phase 5: Production Readiness (Weeks 11-12)
      - Milestones, deliverables, and approval gates
+   - **Note:** UI integration and database configuration details are covered in the main EPIC and 01_ARCHITECTURE.md
 
 ---
 

@@ -9,8 +9,6 @@ using PRFactory.Web.Services;
 using Xunit;
 using ErrorsIndex = PRFactory.Web.Pages.Errors.Index;
 
-namespace PRFactory.Tests.Pages.Errors;
-
 // TODO: Fix compilation errors in this test class (40+ errors)
 // Main issues:
 // - CS1503: GetErrorsAsync signature mismatch

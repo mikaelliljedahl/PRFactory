@@ -481,8 +481,10 @@ public class InfrastructureServiceRegistrationTests : DIValidationTestBase
         using var provider = BuildServiceProvider(services);
 
         // Assert
-        AssertServiceRegistered<ITenantConfigurationService>(services);
-        AssertServiceResolvable<ITenantConfigurationService>(provider);
+        AssertServiceRegistered<PRFactory.Core.Application.Services.ITenantConfigurationService>(services);
+        AssertServiceResolvable<PRFactory.Core.Application.Services.ITenantConfigurationService>(provider);
+        AssertServiceRegistered<PRFactory.Infrastructure.Configuration.ITenantConfigurationService>(services);
+        AssertServiceResolvable<PRFactory.Infrastructure.Configuration.ITenantConfigurationService>(provider);
     }
 
     [Fact]

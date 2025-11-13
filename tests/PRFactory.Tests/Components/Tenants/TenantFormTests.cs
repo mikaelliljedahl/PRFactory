@@ -298,7 +298,10 @@ public class TenantFormTests : ComponentTestBase
     }
 
     [Fact(Skip = "Assertion mismatch - validation-summary not found in markup")]
-    public void Render_ShowsValidationSummary() { }
+    public void Render_ShowsValidationSummary()
+    {
+        // Method intentionally left empty.
+    }
 
     [Theory]
     [InlineData("Jira")]

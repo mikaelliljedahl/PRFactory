@@ -20,6 +20,16 @@ This document outlines planned enhancements beyond the current MVP implementatio
 
 ## Recently Completed ✅
 
+### Admin UI Services Foundation (Epic 06 Phase 1 - Nov 13, 2025)
+- ✅ **RepositoryService** - CRUD operations, connection testing, encrypted token handling
+- ✅ **TenantLlmProviderService** - OAuth and API key provider support, connection testing
+- ✅ **TenantConfigurationService** - Workflow and code review settings management
+- ✅ **UserManagementService** - Role management with RBAC enforcement
+- ✅ **TenantLlmProviderRepository** - EF Core repository implementation
+- ✅ **10 DTOs** - Complete data transfer objects for admin services
+- ✅ **Comprehensive Tests** - Unit and integration tests with full coverage
+- ⚠️ UI pages remain (Epic 06 Phases 2-5 planned)
+
 ### Comprehensive Blazor Testing Infrastructure (PR #61 - Nov 13, 2025)
 - ✅ **bUnit Test Suite** - 1,424 tests for 88 Blazor components with 100% pass rate
 - ✅ **Test Infrastructure** - Reusable base classes (TestContextBase, ComponentTestBase, PageTestBase)
@@ -186,9 +196,12 @@ This document outlines planned enhancements beyond the current MVP implementatio
   - [ ] Dark mode support
   - [ ] Accessibility (WCAG 2.1 AA compliance)
 
-- [ ] **Admin UIs** (HIGH PRIORITY)
-  - [ ] Tenant management pages (create, edit, delete tenants)
-  - [ ] Repository configuration UI (add repos, configure branches)
+- [ ] **Admin UIs** (HIGH PRIORITY - Epic 06 Phases 2-5)
+  - [x] Admin services foundation (RepositoryService, TenantLlmProviderService, etc.) ✅ **COMPLETED Phase 1**
+  - [ ] Repository management UI (list, create, edit, connection testing)
+  - [ ] LLM provider configuration UI (OAuth and API key modes)
+  - [ ] Tenant settings UI (workflow, code review, provider assignments)
+  - [ ] User management UI (role assignment, activation/deactivation)
   - [ ] Agent prompt template editor
   - [ ] Workflow event log viewer
   - [ ] Error reporting and debugging UI

@@ -16,7 +16,7 @@ public class AgentPromptTemplateDtoBuilder
     private Guid? _tenantId = null;
     private string? _recommendedModel = "sonnet";
     private string? _color = "#007bff";
-    private DateTime _createdAt = DateTime.UtcNow;
+    private readonly DateTime _createdAt = DateTime.UtcNow;
     private DateTime? _updatedAt = DateTime.UtcNow;
 
     public AgentPromptTemplateDtoBuilder WithId(Guid id)

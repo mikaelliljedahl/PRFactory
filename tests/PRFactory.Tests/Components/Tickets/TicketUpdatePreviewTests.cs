@@ -40,7 +40,10 @@ public class TicketUpdatePreviewTests : ComponentTestBase
     }
 
     [Fact(Skip = "WaitForState timeout - component doesn't render error message as expected")]
-    public async Task OnInitialized_HandlesServiceError() { }
+    public async Task OnInitialized_HandlesServiceError()
+    {
+        // Method intentionally left empty.
+    }
 
     [Fact]
     public async Task ApproveButton_Click_CallsServiceAndInvokesCallback()
@@ -186,7 +189,10 @@ public class TicketUpdatePreviewTests : ComponentTestBase
     }
 
     [Fact(Skip = "InputAsync expects oninput event but textarea uses onchange - test needs fix")]
-    public async Task ConfirmReject_WithReason_CallsServiceAndInvokesCallback() { }
+    public async Task ConfirmReject_WithReason_CallsServiceAndInvokesCallback()
+    {
+        // Method intentionally left empty.
+    }
 
     [Fact]
     public async Task CancelReject_HidesRejectForm()

@@ -19,7 +19,7 @@ public class WorkflowEventDtoBuilder
     private string? _reason = null;
     private EventSeverity _severity = EventSeverity.Info;
     private string _icon = "circle";
-    private string? _metadataJson = null;
+    private readonly string? _metadataJson = null;
     private Dictionary<string, object> _metadata = new();
 
     public WorkflowEventDtoBuilder WithId(Guid id)

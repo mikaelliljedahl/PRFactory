@@ -28,6 +28,12 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
 
+    <!-- Code Quality Analyzers -->
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="10.4.0.108396">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+
     <!-- Mocking and Assertions -->
     <PackageReference Include="Moq" Version="4.20.70" />
 

@@ -1681,3 +1681,65 @@ catch (JsonException ex)
 - Decompress 50 messages: ~30ms
 
 **Total overhead: ~100ms per checkpoint save/load** (acceptable for workflow resumption).
+
+### Contingency Plan if APIs Significantly Differ
+
+**Scenario:** During Week 1 Day 5 verification, we discover 50%+ of assumed APIs don't exist or work differently.
+
+**Impact Assessment:**
+- **Minor Differences (<20% APIs):** Adjust code examples, no timeline impact
+- **Moderate Differences (20-50% APIs):** Refactor abstractions, +2-3 days in Week 2
+- **Major Differences (>50% APIs):** Pivot strategy, +1-2 weeks timeline extension
+
+**Pivot Strategy for Major Differences:**
+
+If Agent Framework APIs are fundamentally different than assumed:
+
+1. **Week 1-2 Response:**
+   - Halt work on Week 2 tasks immediately
+   - Architect meeting to design custom wrapper around Semantic Kernel
+   - Update all code examples in implementation plans
+   - Extend Week 2 to 1.5 weeks
+
+2. **Custom Wrapper Approach:**
+   ```csharp
+   // If AF APIs don't match, create our own abstraction
+   public interface IPRFactoryAgent
+   {
+       Task<AgentResponse> RunAsync(string prompt, CancellationToken ct);
+       IAsyncEnumerable<AgentStreamChunk> StreamAsync(string prompt, CancellationToken ct);
+   }
+   
+   // Implement using whatever Semantic Kernel provides
+   public class SemanticKernelAgentAdapter : IPRFactoryAgent
+   {
+       private readonly Kernel _kernel;
+       
+       public async Task<AgentResponse> RunAsync(string prompt, CancellationToken ct)
+       {
+           // Adapt to actual Semantic Kernel APIs
+           var result = await _kernel.InvokeAsync(prompt, ct);
+           return new AgentResponse { Output = result.ToString() };
+       }
+   }
+   ```
+
+3. **Timeline Adjustments:**
+   - Week 2 extended by 3 days (API refactoring)
+   - Week 4 extended by 2 days (AnalyzerAgent rework)
+   - Week 5 extended by 2 days (PlannerAgent rework)
+   - **Total impact:** +7 days (1.4 weeks)
+   - **Use contingency buffer:** Week 14 buffer absorbs this
+
+4. **Budget for API Adjustments:**
+   - Week 2: Originally 5 days, budget +3 days = 8 days total
+   - This gives Week 2 more time to get APIs right before Week 3+ depends on them
+
+5. **Approval Gate:**
+   - End of Week 2: Architect review of API adaptation approach
+   - Go/no-go decision: Proceed with Agent Framework or defer epic
+
+**Risk Acceptance:**
+- If > 2 week timeline extension needed after API verification: **DEFER EPIC**
+- Return to CLI-based approach temporarily
+- Revisit Agent Framework in 6 months when APIs are more stable

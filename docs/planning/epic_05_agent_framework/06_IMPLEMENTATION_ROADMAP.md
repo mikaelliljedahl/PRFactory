@@ -398,6 +398,35 @@ Week 14: Contingency Buffer
 
 ---
 
+## Timeline Risk Acceptance
+
+**14-Week Timeline with 1-Week Buffer:**
+
+The 14-week timeline includes:
+- **12 weeks** of active implementation
+- **1 week** buffer for UI complexity (Week 11, added to Phase 4)
+- **1 week** contingency buffer (Week 14)
+
+**Total Buffer:** 2 weeks out of 14 (14.3% contingency)
+
+**Risk Assessment:**
+- ✅ **Acceptable:** 14.3% buffer is reasonable for well-defined work with experienced engineers
+- ✅ **Mitigated by:** Weekly checkpoint meetings (see below) to detect slippage early
+- ✅ **Fallback:** Week 14 can absorb 1-week delay without impacting delivery date
+- ⚠️ **Risk:** If both UI (Week 11) and Contingency (Week 14) are consumed, no remaining buffer
+
+**Alternative Consideration:**
+- **15-week timeline** would provide 21.4% buffer (3 weeks / 14 weeks)
+- Trade-off: More safety vs. faster time-to-market
+- **Decision:** Accept 14-week timeline with explicit risk acknowledgment
+
+**Early Warning System:**
+- Weekly checkpoint meetings (see Team Allocation below)
+- If >3 days behind by Week 6, trigger timeline review
+- Feature flag approach allows partial deployment if needed
+
+---
+
 ## Dependencies & Blockers
 
 ### External Dependencies
@@ -424,6 +453,52 @@ Week 14: Contingency Buffer
 - **Security Engineer (10%):** Security reviews, penetration testing
 - **UX Designer (10%):** AG-UI design, user testing
 - **DevOps (10%):** Deployment, monitoring, infrastructure
+
+### Weekly Checkpoint Meetings
+
+**Purpose:** Early detection of timeline slippage, blocker resolution, and risk mitigation.
+
+**Schedule:**
+- **Day:** Every Friday, 2:00 PM
+- **Duration:** 30 minutes
+- **Attendees:**
+  - 2 engineers (required)
+  - Architect (required)
+  - Product owner (optional)
+  - Part-time support (as needed)
+
+**Agenda:**
+1. **Progress Review (10 min):**
+   - Completed tasks vs. planned tasks for the week
+   - Milestones achieved
+   - Test coverage and code quality metrics
+
+2. **Blocker Identification (10 min):**
+   - Technical blockers (API issues, integration problems)
+   - Resource blockers (waiting on approvals, external dependencies)
+   - Escalation needed?
+
+3. **Timeline Status (5 min):**
+   - On track / 1-2 days behind / 3+ days behind
+   - If 3+ days behind, trigger risk assessment
+   - Adjust next week's scope if needed
+
+4. **Next Week Planning (5 min):**
+   - Confirm tasks for upcoming week
+   - Identify potential risks
+   - Resource needs
+
+**Critical Checkpoints (Approval Gates):**
+- **Week 3:** Architecture review, schema approval
+- **Week 6:** Engineering leadership sign-off for Phase 3
+- **Week 8:** Security team sign-off
+- **Week 11:** UX team sign-off
+- **Week 13:** Production readiness review, go/no-go decision
+
+**Escalation Triggers:**
+- 3+ days behind schedule by Week 6 → Timeline review with stakeholders
+- Critical blocker unresolved for >3 days → Architect escalation
+- Security issues found in Week 8 → Immediate remediation, delay Phase 5 if needed
 
 ---
 

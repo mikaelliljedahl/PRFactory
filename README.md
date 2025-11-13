@@ -15,9 +15,13 @@ PRFactory streamlines the development workflow by:
 ### What Makes PRFactory Different?
 
 ✅ **Team-Based Review** - Multi-reviewer approval workflows ensure no AI-generated code reaches production without proper oversight
+
 ✅ **Transparent Planning** - AI creates detailed implementation plans (committed to git) that your team reviews *before* any code is written
+
 ✅ **Multi-Platform Support** - Works with GitHub, Bitbucket, Azure DevOps (GitLab coming soon)
+
 ✅ **Enterprise-Ready** - Multi-tenant isolation, encrypted credentials, audit trails
+
 ✅ **Optional Implementation** - Use AI to plan only, or let it implement code under your team's review
 
 ### Perfect For:

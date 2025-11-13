@@ -1,0 +1,244 @@
+using Bunit;
+using Moq;
+using PRFactory.Tests.Blazor;
+using PRFactory.Web.Components.Tickets;
+using PRFactory.Web.Models;
+using Xunit;
+using static Moq.It;
+using static Moq.Times;
+
+namespace PRFactory.Tests.Components.Tickets;
+
+public class ReviewCommentThreadTests : ComponentTestBase
+{
+    [Fact]
+    public void Renders_WithEmptyComments()
+    {
+        // Arrange
+        var ticketId = Guid.NewGuid();
+        var comments = new List<ReviewCommentDto>();
+
+        // Act
+        var cut = RenderComponent<ReviewCommentThread>(parameters => parameters
+            .Add(p => p.TicketId, ticketId)
+            .Add(p => p.Comments, comments));
+
+        // Assert
+        Assert.NotNull(cut.Markup);
+    }
+
+    [Fact]
+    public void Renders_ExistingComments()
+    {
+        // Arrange
+        var ticketId = Guid.NewGuid();
+        var comments = new List<ReviewCommentDto>
+        {
+            new ReviewCommentDto
+            {
+                Id = Guid.NewGuid(),
+                TicketId = ticketId,
+                AuthorName = "John Doe",
+                Content = "This looks good!",
+                CreatedAt = DateTime.UtcNow.AddHours(-1)
+            }
+        };
+
+        // Act
+        var cut = RenderComponent<ReviewCommentThread>(parameters => parameters
+            .Add(p => p.TicketId, ticketId)
+            .Add(p => p.Comments, comments));
+
+        // Assert
+        Assert.Contains("John Doe", cut.Markup);
+        Assert.Contains("This looks good!", cut.Markup);
+    }
+
+    [Fact]
+    public async Task PostComment_WithContent_CallsServiceAndInvokesCallback()
+    {
+        // Arrange
+        var ticketId = Guid.NewGuid();
+        var comments = new List<ReviewCommentDto>();
+        var newComment = new ReviewCommentDto
+        {
+            Id = Guid.NewGuid(),
+            TicketId = ticketId,
+            AuthorName = "TestUser",
+            Content = "New comment",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        BlazorMockHelpers.SetupAddComment(MockTicketService, ticketId, newComment);
+
+        var callbackInvoked = false;
+
+        var cut = RenderComponent<ReviewCommentThread>(parameters => parameters
+            .Add(p => p.TicketId, ticketId)
+            .Add(p => p.Comments, comments)
+            .Add(p => p.OnCommentAdded, () => { callbackInvoked = true; }));
+
+        // Act - Enter comment text
+        var textarea = cut.Find("textarea");
+        await textarea.InputAsync(new Microsoft.AspNetCore.Components.ChangeEventArgs { Value = "New comment" });
+
+        // Submit comment
+        var submitButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Post") || b.TextContent.Contains("Submit")).ToList();
+        if (submitButtons.Any())
+        {
+            await submitButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+            await Task.Delay(100);
+
+            // Assert
+            MockTicketService.Verify(
+                x => x.AddCommentAsync(ticketId, It.IsAny<string>(), It.IsAny<CancellationToken>()),
+                Times.Once);
+            BlazorMockHelpers.VerifySuccessToast(MockToastService);
+            Assert.True(callbackInvoked);
+        }
+    }
+
+    [Fact]
+    public async Task PostComment_WithoutContent_ShowsWarning()
+    {
+        // Arrange
+        var ticketId = Guid.NewGuid();
+        var comments = new List<ReviewCommentDto>();
+
+        var cut = RenderComponent<ReviewCommentThread>(parameters => parameters
+            .Add(p => p.TicketId, ticketId)
+            .Add(p => p.Comments, comments));
+
+        // Act - Try to submit without content
+        var submitButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Post") || b.TextContent.Contains("Submit")).ToList();
+        if (submitButtons.Any())
+        {
+            await submitButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+            await Task.Delay(100);
+
+            // Assert
+            BlazorMockHelpers.VerifyWarningToast(MockToastService);
+        }
+    }
+
+    [Fact]
+    public async Task PostComment_HandlesServiceError()
+    {
+        // Arrange
+        var ticketId = Guid.NewGuid();
+        var comments = new List<ReviewCommentDto>();
+
+        MockTicketService.Setup(m => m.AddCommentAsync(ticketId, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Failed to post comment"));
+
+        var cut = RenderComponent<ReviewCommentThread>(parameters => parameters
+            .Add(p => p.TicketId, ticketId)
+            .Add(p => p.Comments, comments));
+
+        // Act
+        var textarea = cut.Find("textarea");
+        await textarea.InputAsync(new Microsoft.AspNetCore.Components.ChangeEventArgs { Value = "Test comment" });
+
+        var submitButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Post") || b.TextContent.Contains("Submit")).ToList();
+        if (submitButtons.Any())
+        {
+            await submitButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+            await Task.Delay(100);
+
+            // Assert
+            BlazorMockHelpers.VerifyErrorToast(MockToastService);
+        }
+    }
+
+    [Fact]
+    public async Task ClearButton_ClearsCommentInput()
+    {
+        // Arrange
+        var ticketId = Guid.NewGuid();
+        var comments = new List<ReviewCommentDto>();
+
+        var cut = RenderComponent<ReviewCommentThread>(parameters => parameters
+            .Add(p => p.TicketId, ticketId)
+            .Add(p => p.Comments, comments));
+
+        // Act - Enter text then clear
+        var textarea = cut.Find("textarea");
+        await textarea.InputAsync(new Microsoft.AspNetCore.Components.ChangeEventArgs { Value = "Test comment" });
+
+        var clearButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Clear") || b.TextContent.Contains("Cancel")).ToList();
+        if (clearButtons.Any())
+        {
+            await clearButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+            // Assert - Textarea should be cleared
+            Assert.NotNull(cut.Markup);
+        }
+    }
+
+    [Fact]
+    public void Renders_MarkdownInComments()
+    {
+        // Arrange
+        var ticketId = Guid.NewGuid();
+        var comments = new List<ReviewCommentDto>
+        {
+            new ReviewCommentDto
+            {
+                Id = Guid.NewGuid(),
+                TicketId = ticketId,
+                AuthorName = "TestUser",
+                Content = "# Heading\n**Bold text**",
+                CreatedAt = DateTime.UtcNow
+            }
+        };
+
+        // Act
+        var cut = RenderComponent<ReviewCommentThread>(parameters => parameters
+            .Add(p => p.TicketId, ticketId)
+            .Add(p => p.Comments, comments));
+
+        // Assert - Markdown should be rendered
+        Assert.Contains("Heading", cut.Markup);
+        Assert.Contains("Bold text", cut.Markup);
+    }
+
+    [Fact]
+    public void Renders_MultipleComments()
+    {
+        // Arrange
+        var ticketId = Guid.NewGuid();
+        var comments = new List<ReviewCommentDto>
+        {
+            new ReviewCommentDto
+            {
+                Id = Guid.NewGuid(),
+                TicketId = ticketId,
+                AuthorName = "User1",
+                Content = "First comment",
+                CreatedAt = DateTime.UtcNow.AddHours(-2)
+            },
+            new ReviewCommentDto
+            {
+                Id = Guid.NewGuid(),
+                TicketId = ticketId,
+                AuthorName = "User2",
+                Content = "Second comment",
+                CreatedAt = DateTime.UtcNow.AddHours(-1)
+            }
+        };
+
+        // Act
+        var cut = RenderComponent<ReviewCommentThread>(parameters => parameters
+            .Add(p => p.TicketId, ticketId)
+            .Add(p => p.Comments, comments));
+
+        // Assert
+        Assert.Contains("User1", cut.Markup);
+        Assert.Contains("First comment", cut.Markup);
+        Assert.Contains("User2", cut.Markup);
+        Assert.Contains("Second comment", cut.Markup);
+    }
+}

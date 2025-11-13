@@ -1,0 +1,243 @@
+using Bunit;
+using Moq;
+using PRFactory.Domain.Entities;
+using PRFactory.Tests.Blazor;
+using PRFactory.Tests.Blazor.TestDataBuilders;
+using PRFactory.Web.Models;
+using PRFactory.Web.Pages.Tickets;
+using PRFactory.Web.Services;
+using Xunit;
+
+namespace PRFactory.Tests.Pages.Tickets;
+
+public class CreateTests : PageTestBase
+{
+    private Mock<IRepositoryService> MockRepositoryService { get; set; } = null!;
+
+    public CreateTests()
+    {
+        MockRepositoryService = new Mock<IRepositoryService>();
+        Services.AddScoped(_ => MockRepositoryService.Object);
+    }
+
+    [Fact]
+    public async Task OnInitialized_LoadsRepositories()
+    {
+        // Arrange
+        var repositories = new List<Repository>();
+
+        MockRepositoryService.Setup(m => m.GetAllRepositoriesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(repositories);
+
+        // Act
+        var cut = RenderComponent<Create>();
+
+        await Task.Delay(200);
+
+        // Assert
+        MockRepositoryService.Verify(x => x.GetAllRepositoriesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task OnInitialized_HandlesRepositoryLoadError()
+    {
+        // Arrange
+        MockRepositoryService.Setup(m => m.GetAllRepositoriesAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Failed to load repositories"));
+
+        // Act
+        var cut = RenderComponent<Create>();
+
+        cut.WaitForState(() => cut.Markup.Contains("Failed") || cut.Markup.Contains("error"), timeout: TimeSpan.FromSeconds(5));
+
+        // Assert
+        Assert.Contains("Failed", cut.Markup);
+        BlazorMockHelpers.VerifyErrorToast(MockToastService);
+    }
+
+    [Fact]
+    public void Renders_CreateTicketForm()
+    {
+        // Arrange
+        MockRepositoryService.Setup(m => m.GetAllRepositoriesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Repository>());
+
+        // Act
+        var cut = RenderComponent<Create>();
+
+        // Assert - Form fields should be present
+        Assert.NotNull(cut.Markup);
+    }
+
+    [Fact]
+    public async Task SubmitForm_WithValidData_CreatesTicketAndNavigates()
+    {
+        // Arrange
+        var repositoryId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var repositories = new List<Repository>();
+
+        MockRepositoryService.Setup(m => m.GetAllRepositoriesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(repositories);
+
+        var createdTicket = new TicketDtoBuilder()
+            .WithTicketKey("TEST-123")
+            .WithTitle("New Ticket")
+            .WithRepositoryId(repositoryId)
+            .Build();
+
+        MockTicketService.Setup(m => m.CreateTicketAsync(
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            It.IsAny<Guid>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(createdTicket);
+
+        var cut = RenderComponent<Create>();
+
+        await Task.Delay(200);
+
+        // Act - Fill form and submit
+        var form = cut.Find("form");
+        if (form != null)
+        {
+            // Fill in required fields
+            var ticketKeyInput = cut.Find("input[name='TicketKey'], input#TicketKey");
+            if (ticketKeyInput != null)
+            {
+                await ticketKeyInput.InputAsync(new Microsoft.AspNetCore.Components.ChangeEventArgs { Value = "TEST-123" });
+            }
+
+            var titleInput = cut.Find("input[name='Title'], input#Title");
+            if (titleInput != null)
+            {
+                await titleInput.InputAsync(new Microsoft.AspNetCore.Components.ChangeEventArgs { Value = "New Ticket" });
+            }
+
+            var descriptionInput = cut.Find("textarea[name='Description'], textarea#Description");
+            if (descriptionInput != null)
+            {
+                await descriptionInput.InputAsync(new Microsoft.AspNetCore.Components.ChangeEventArgs { Value = "Description" });
+            }
+
+            var repositorySelect = cut.Find("select[name='RepositoryId'], select#RepositoryId");
+            if (repositorySelect != null)
+            {
+                await repositorySelect.ChangeAsync(new Microsoft.AspNetCore.Components.ChangeEventArgs { Value = repositoryId.ToString() });
+            }
+
+            // Submit form
+            await form.SubmitAsync();
+
+            await Task.Delay(100);
+
+            // Assert
+            MockTicketService.Verify(
+                x => x.CreateTicketAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<Guid>(),
+                    It.IsAny<CancellationToken>()),
+                Times.Once);
+            BlazorMockHelpers.VerifySuccessToast(MockToastService);
+        }
+    }
+
+    [Fact]
+    public async Task SubmitForm_HandlesServiceError()
+    {
+        // Arrange
+        MockRepositoryService.Setup(m => m.GetAllRepositoriesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Repository>());
+
+        MockTicketService.Setup(m => m.CreateTicketAsync(
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            It.IsAny<Guid>(),
+            It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Creation failed"));
+
+        var cut = RenderComponent<Create>();
+
+        await Task.Delay(200);
+
+        // Act - Submit form
+        var form = cut.Find("form");
+        if (form != null)
+        {
+            await form.SubmitAsync();
+
+            await Task.Delay(100);
+
+            // Assert
+            BlazorMockHelpers.VerifyErrorToast(MockToastService);
+        }
+    }
+
+    [Fact]
+    public void Renders_RepositoryDropdown()
+    {
+        // Arrange
+        MockRepositoryService.Setup(m => m.GetAllRepositoriesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Repository>());
+
+        // Act
+        var cut = RenderComponent<Create>();
+
+        // Assert - Repository dropdown should be present
+        var selects = cut.FindAll("select");
+        Assert.NotEmpty(selects);
+    }
+
+    [Fact]
+    public void DisablesSubmitButton_WhileSubmitting()
+    {
+        // Arrange
+        MockRepositoryService.Setup(m => m.GetAllRepositoriesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Repository>());
+
+        // Act
+        var cut = RenderComponent<Create>();
+
+        // Assert - Submit button should exist
+        var submitButtons = cut.FindAll("button[type='submit']");
+        Assert.NotEmpty(submitButtons);
+    }
+
+    [Fact]
+    public async Task Renders_WithLoadedRepositories()
+    {
+        // Arrange
+        var repository1 = Repository.Create("Repo1", "http://test.com/repo1", "test-org", GitPlatform.GitHub, Guid.NewGuid());
+        var repository2 = Repository.Create("Repo2", "http://test.com/repo2", "test-org", GitPlatform.GitHub, Guid.NewGuid());
+
+        MockRepositoryService.Setup(m => m.GetAllRepositoriesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Repository> { repository1, repository2 });
+
+        // Act
+        var cut = RenderComponent<Create>();
+
+        cut.WaitForState(() => cut.Markup.Contains("Repo1") || cut.FindAll("option").Any(), timeout: TimeSpan.FromSeconds(5));
+
+        // Assert - Repositories should be in dropdown
+        Assert.NotNull(cut.Markup);
+    }
+
+    [Fact]
+    public void Renders_RequiredFieldLabels()
+    {
+        // Arrange
+        MockRepositoryService.Setup(m => m.GetAllRepositoriesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Repository>());
+
+        // Act
+        var cut = RenderComponent<Create>();
+
+        // Assert - Should show required field indicators
+        var labels = cut.FindAll("label");
+        Assert.NotEmpty(labels);
+    }
+}

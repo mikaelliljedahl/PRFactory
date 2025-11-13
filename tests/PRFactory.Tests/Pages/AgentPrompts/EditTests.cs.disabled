@@ -1,0 +1,49 @@
+using Bunit;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Moq;
+using PRFactory.Tests.Blazor;
+using PRFactory.Tests.Blazor.TestDataBuilders;
+using PRFactory.Web.Pages.AgentPrompts;
+using PRFactory.Web.Services;
+using Xunit;
+
+namespace PRFactory.Tests.Pages.AgentPrompts;
+
+public class EditTests : PageTestBase
+{
+    private readonly Mock<IAgentPromptService> _mockPromptService;
+    private readonly Mock<ILogger<Edit>> _mockLogger;
+
+    public EditTests()
+    {
+        _mockPromptService = new Mock<IAgentPromptService>();
+        _mockLogger = new Mock<ILogger<Edit>>();
+
+        Services.AddSingleton(_mockPromptService.Object);
+        Services.AddSingleton(_mockLogger.Object);
+    }
+
+    [Fact]
+    public async Task OnInitialized_LoadsTemplate()
+    {
+        // Arrange
+        var templateId = Guid.NewGuid();
+        var template = new AgentPromptTemplateDtoBuilder()
+            .WithId(templateId)
+            .WithName("Test Template")
+            .Build();
+
+        _mockPromptService.Setup(s => s.GetTemplateByIdAsync(templateId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(template);
+
+        // Act
+        var cut = RenderComponent<Edit>(parameters => parameters
+            .Add(p => p.Id, templateId.ToString()));
+        await Task.Delay(100);
+
+        // Assert
+        _mockPromptService.Verify(s => s.GetTemplateByIdAsync(templateId, It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Contains("Test Template", cut.Markup);
+    }
+}

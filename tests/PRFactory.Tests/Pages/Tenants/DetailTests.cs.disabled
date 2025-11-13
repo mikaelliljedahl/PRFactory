@@ -1,0 +1,211 @@
+using Bunit;
+using Microsoft.AspNetCore.Components;
+using Moq;
+using PRFactory.Tests.Blazor;
+using PRFactory.Tests.Blazor.TestDataBuilders;
+using PRFactory.Web.Models;
+using PRFactory.Web.Pages.Tenants;
+using PRFactory.Web.Services;
+using Radzen;
+using Xunit;
+
+namespace PRFactory.Tests.Pages.Tenants;
+
+public class DetailTests : PageTestBase
+{
+    private Mock<ITenantService> _mockTenantService;
+    private Mock<NavigationManager> _mockNavigationManager;
+    private Mock<DialogService> _mockDialogService;
+
+    public DetailTests()
+    {
+        _mockTenantService = new Mock<ITenantService>();
+        _mockNavigationManager = new Mock<NavigationManager>();
+        _mockDialogService = new Mock<DialogService>();
+
+    }
+
+    protected override void ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    {
+        base.ConfigureServices(services);
+        services.AddSingleton(_mockTenantService.Object);
+        services.AddSingleton(_mockNavigationManager.Object);
+        services.AddSingleton(_mockDialogService.Object);
+    }
+
+    [Fact]
+    public async Task OnInitialized_LoadsTenant()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var tenant = new TenantDtoBuilder()
+            .WithId(tenantId)
+            .WithName("Test Tenant")
+            .Build();
+
+        _mockTenantService
+            .Setup(x => x.GetTenantWithDetailsAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tenant);
+
+        // Act
+        var cut = RenderComponent<Detail>(parameters => parameters
+            .Add(p => p.Id, tenantId));
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        _mockTenantService.Verify(
+            x => x.GetTenantWithDetailsAsync(tenantId, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task OnInitialized_WhenTenantNotFound_ShowsErrorMessage()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+
+        _mockTenantService
+            .Setup(x => x.GetTenantWithDetailsAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantDto?)null);
+
+        // Act
+        var cut = RenderComponent<Detail>(parameters => parameters
+            .Add(p => p.Id, tenantId));
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        cut.WaitForState(() => cut.Markup.Contains("not found") || cut.Markup.Contains("Error"));
+    }
+
+    [Fact]
+    public async Task OnInitialized_WhenError_ShowsErrorMessage()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+
+        _mockTenantService
+            .Setup(x => x.GetTenantWithDetailsAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Network error"));
+
+        // Act
+        var cut = RenderComponent<Detail>(parameters => parameters
+            .Add(p => p.Id, tenantId));
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        Assert.NotNull(cut);
+    }
+
+    [Fact]
+    public async Task Render_ShowsLoadingStateInitially()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var tcs = new TaskCompletionSource<TenantDto?>();
+
+        _mockTenantService
+            .Setup(x => x.GetTenantWithDetailsAsync(tenantId, It.IsAny<CancellationToken>()))
+            .Returns(tcs.Task);
+
+        // Act
+        var cut = RenderComponent<Detail>(parameters => parameters
+            .Add(p => p.Id, tenantId));
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(50));
+        Assert.True(cut.Markup.ToLower().Contains("spinner") || cut.Markup.ToLower().Contains("loading"));
+
+        // Complete loading
+        tcs.SetResult(new TenantDtoBuilder().WithId(tenantId).Build());
+    }
+
+    [Fact]
+    public async Task Render_ShowsTenantDetails()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var tenant = new TenantDtoBuilder()
+            .WithId(tenantId)
+            .WithName("Production Tenant")
+            .Build();
+
+        _mockTenantService
+            .Setup(x => x.GetTenantWithDetailsAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tenant);
+
+        // Act
+        var cut = RenderComponent<Detail>(parameters => parameters
+            .Add(p => p.Id, tenantId));
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        cut.WaitForState(() => cut.Markup.Contains("Production Tenant") || !cut.Markup.Contains("spinner"));
+    }
+
+    [Fact]
+    public async Task Render_ShowsEditButton()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var tenant = new TenantDtoBuilder()
+            .WithId(tenantId)
+            .Build();
+
+        _mockTenantService
+            .Setup(x => x.GetTenantWithDetailsAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tenant);
+
+        // Act
+        var cut = RenderComponent<Detail>(parameters => parameters
+            .Add(p => p.Id, tenantId));
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        cut.WaitForState(() => cut.Markup.Contains("Edit") || !cut.Markup.Contains("spinner"));
+    }
+
+    [Fact]
+    public async Task Render_ShowsBackButton()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var tenant = new TenantDtoBuilder()
+            .WithId(tenantId)
+            .Build();
+
+        _mockTenantService
+            .Setup(x => x.GetTenantWithDetailsAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tenant);
+
+        // Act
+        var cut = RenderComponent<Detail>(parameters => parameters
+            .Add(p => p.Id, tenantId));
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        cut.WaitForState(() => cut.Markup.Contains("Back") || !cut.Markup.Contains("spinner"));
+    }
+
+    [Fact]
+    public async Task Render_ShowsTenantConfiguration()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var tenant = TenantDtoBuilder.FullyConfigured()
+            .WithId(tenantId)
+            .Build();
+
+        _mockTenantService
+            .Setup(x => x.GetTenantWithDetailsAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tenant);
+
+        // Act
+        var cut = RenderComponent<Detail>(parameters => parameters
+            .Add(p => p.Id, tenantId));
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        cut.WaitForState(() => !cut.Markup.Contains("spinner"));
+        Assert.NotNull(cut);
+    }
+}

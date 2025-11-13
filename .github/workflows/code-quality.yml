@@ -27,7 +27,7 @@ jobs:
       run: dotnet restore PRFactory.sln
 
     - name: Check code formatting
-      run: dotnet format PRFactory.sln --verify-no-changes --verbosity diagnostic
+      run: dotnet format PRFactory.sln --verify-no-changes --verbosity diagnostic --diagnostics whitespace style
 
     - name: Format summary
       if: success()

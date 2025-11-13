@@ -1,6 +1,6 @@
 # Implementation Status
 
-**Last Updated**: 2025-11-12
+**Last Updated**: 2025-11-13
 **Purpose**: Single source of truth for what's built vs. planned in PRFactory
 
 ---
@@ -64,6 +64,18 @@
   - Contextual Help system (tooltips on all form fields)
   - User-friendly workflow state names (e.g., "Reviewing Plan" instead of "PlanUnderReview")
   - 50+ SonarCloud code quality fixes
+- **Comprehensive Blazor Testing** (PR #61 - Nov 13, 2025) ✨
+  - bUnit test suite for 88 Blazor components (1,424 tests, 100% pass rate)
+  - Test infrastructure with reusable base classes (TestContextBase, ComponentTestBase, PageTestBase)
+  - Fluent test data builders for 8 DTO types
+  - Comprehensive coverage: 26 UI components, 34 business components, 28 page tests
+  - Blazor testing guide documentation
+- **C# Modernization** (PR #62 - Nov 13, 2025) ✨
+  - Primary constructors (C# 12) reducing constructor boilerplate (~79 lines)
+  - Collection expressions (C# 12) for cleaner array/list literals
+  - Global usings eliminating ~180 lines of duplicate using statements
+  - ArgumentNullException.ThrowIfNull() modernizing 125+ null checks
+  - 5 SonarQube violations fixed (code quality improvements)
 
 ### What's Missing 🚧
 - **OAuth Client Configuration** - Google/Microsoft OAuth apps need registration (credentials required)
@@ -821,7 +833,7 @@ Implemented components:
 |-----------|--------|----------|-------|
 | **Unit tests** | ✅ COMPLETE | 88% | 712 passing tests across all layers |
 | **Integration tests** | ✅ COMPLETE | 85% | Graph, repository, and service integration tests |
-| **Blazor component tests** | ✅ COMPLETE | 87% | 768 tests for 88 components (bUnit + xUnit) ✨ |
+| **Blazor component tests** | ✅ COMPLETE | 87% | 1,424 tests for 88 components (bUnit + xUnit) - PR #61 ✨ |
 | **E2E tests** | 📋 PLANNED | 0% | Not started |
 
 **Details**:

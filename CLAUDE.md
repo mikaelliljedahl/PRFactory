@@ -61,6 +61,10 @@ The system uses a **multi-graph architecture** with four distinct graph types:
 - `/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Graphs/WorkflowOrchestrator.cs`
 - `/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Graphs/GraphBuilder.cs`
 
+**Current Implementation Status:**
+- For detailed implementation status of each graph, see [IMPLEMENTATION_STATUS.md - Workflow Engine](/home/user/PRFactory/docs/IMPLEMENTATION_STATUS.md#1-workflow-engine)
+- For technical architecture details, see [ARCHITECTURE.md - Agent System](/home/user/PRFactory/docs/ARCHITECTURE.md#agent-system)
+
 **DO NOT:**
 - Collapse multiple graphs into a single monolithic workflow
 - Remove the graph abstraction layer
@@ -122,6 +126,13 @@ public interface IGitPlatformProvider
 - `/home/user/PRFactory/src/PRFactory.Infrastructure/Git/Providers/BitbucketProvider.cs`
 - `/home/user/PRFactory/src/PRFactory.Infrastructure/Git/Providers/AzureDevOpsProvider.cs`
 - `/home/user/PRFactory/src/PRFactory.Infrastructure/Git/GitPlatformService.cs`
+
+**Current Implementation Status:**
+- **GitHub**: ✅ 100% complete (Octokit SDK)
+- **Bitbucket**: ✅ 100% complete (REST API)
+- **Azure DevOps**: ✅ 100% complete (Official SDK)
+- **GitLab**: 📋 Planned (architecture ready)
+- For detailed provider information, see [IMPLEMENTATION_STATUS.md - Git Platform Providers](/home/user/PRFactory/docs/IMPLEMENTATION_STATUS.md#2-git-platform-providers)
 
 **DO NOT:**
 - Remove provider implementations thinking they're unused

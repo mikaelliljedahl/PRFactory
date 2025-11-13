@@ -25,45 +25,12 @@
 
 **This is INTENTIONAL, NOT overengineering.**
 
-The system uses a **multi-graph architecture** with four distinct graph types:
+The system uses a **multi-graph architecture** (RefinementGraph, PlanningGraph, ImplementationGraph, CodeReviewGraph + WorkflowOrchestrator) that enables:
 
-1. **RefinementGraph** - Handles ticket analysis and requirement clarification
-2. **PlanningGraph** - Generates and manages implementation plans
-3. **ImplementationGraph** - Executes code implementation (optional)
-4. **WorkflowOrchestrator** - Coordinates transitions between graphs
-
-```
-┌────────────────────────────────────────────────────────┐
-│              WorkflowOrchestrator                      │
-│  (Manages graph transitions and workflow state)        │
-└──────────┬─────────────┬──────────────┬────────────────┘
-           │             │              │
-           ▼             ▼              ▼
-    RefinementGraph  PlanningGraph  ImplementationGraph
-```
-
-**Why This Matters:**
-
-- **Flexibility**: Each graph can evolve independently with different retry logic, parallel execution, and conditional branching
-- **Composability**: New graphs can be added for future workflows (e.g., CodeReviewGraph, TestingGraph, DeploymentGraph)
-- **Fault Tolerance**: Graphs can suspend and resume at different points independently
-- **Testability**: Each graph can be tested in isolation
-- **Future Extensibility**: The architecture supports complex workflows like:
-  - A/B testing different implementation strategies
-  - Multi-stage approval processes
-  - Parallel code generation with winner selection
-  - Automated code refinement loops
-
-**Key Files:**
-- `/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Graphs/RefinementGraph.cs`
-- `/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Graphs/PlanningGraph.cs`
-- `/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Graphs/ImplementationGraph.cs`
-- `/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Graphs/WorkflowOrchestrator.cs`
-- `/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Graphs/GraphBuilder.cs`
-
-**Current Implementation Status:**
-- For detailed implementation status of each graph, see [IMPLEMENTATION_STATUS.md - Workflow Engine](/home/user/PRFactory/docs/IMPLEMENTATION_STATUS.md#1-workflow-engine)
-- For technical architecture details, see [ARCHITECTURE.md - Agent System](/home/user/PRFactory/docs/ARCHITECTURE.md#agent-system)
+- **Flexibility**: Each graph evolves independently with different retry logic and execution patterns
+- **Composability**: New graphs can be added for future workflows (TestingGraph, DeploymentGraph)
+- **Fault Tolerance**: Graphs suspend/resume independently with checkpoint-based recovery
+- **Future Extensibility**: Supports A/B testing implementations, multi-stage approvals, parallel generation
 
 **DO NOT:**
 - Collapse multiple graphs into a single monolithic workflow
@@ -72,8 +39,9 @@ The system uses a **multi-graph architecture** with four distinct graph types:
 
 **DO:**
 - Add new specialized graphs for new workflow types
-- Extend GraphBuilder with new patterns (loops, fan-out/fan-in, etc.)
-- Implement graph-level retry and error handling strategies
+- Extend GraphBuilder with new patterns (loops, fan-out/fan-in)
+
+**For Details:** See [ARCHITECTURE.md - Agent System](/home/user/PRFactory/docs/ARCHITECTURE.md#agent-system) and [IMPLEMENTATION_STATUS.md - Workflow Engine](/home/user/PRFactory/docs/IMPLEMENTATION_STATUS.md#1-workflow-engine)
 
 ---
 
@@ -81,58 +49,12 @@ The system uses a **multi-graph architecture** with four distinct graph types:
 
 **This is a CORE PRODUCT FEATURE, NOT premature optimization.**
 
-The system is designed from the ground up to support multiple platforms:
-
-**Source Control Platforms:**
-- GitHub (via Octokit)
-- Bitbucket (via REST API)
-- Azure DevOps (via Azure DevOps SDK)
-- GitLab (planned)
-
-**Ticket Management Platforms:**
-- Jira (current implementation)
-- Azure DevOps Work Items (planned)
-- GitHub Issues (planned)
-- GitLab Issues (planned)
-
-**Architecture Pattern: Strategy Pattern**
-
-```csharp
-public interface IGitPlatformProvider
-{
-    string PlatformName { get; }
-    Task<PullRequestInfo> CreatePullRequestAsync(...);
-    Task AddPullRequestCommentAsync(...);
-    Task<RepositoryInfo> GetRepositoryInfoAsync(...);
-}
-
-// Implementations:
-// - GitHubProvider
-// - BitbucketProvider
-// - AzureDevOpsProvider
-// - GitLabProvider (future)
-```
+The system uses the **Strategy Pattern** (`IGitPlatformProvider`) to support multiple Git platforms (GitHub, Bitbucket, Azure DevOps, GitLab-planned) and ticket systems (Jira, Azure DevOps Work Items-planned).
 
 **Why This Matters:**
-
-- **Market Differentiation**: Enterprise customers use diverse toolchains. Supporting multiple platforms is a key selling point.
-- **Customer Requirements**: Large enterprises often standardize on Azure DevOps or GitLab, not GitHub.
-- **Migration Support**: Customers may be transitioning between platforms.
-- **Vendor Independence**: Avoid lock-in to any single platform provider.
-
-**Key Files:**
-- `/home/user/PRFactory/src/PRFactory.Infrastructure/Git/IGitPlatformProvider.cs`
-- `/home/user/PRFactory/src/PRFactory.Infrastructure/Git/Providers/GitHubProvider.cs`
-- `/home/user/PRFactory/src/PRFactory.Infrastructure/Git/Providers/BitbucketProvider.cs`
-- `/home/user/PRFactory/src/PRFactory.Infrastructure/Git/Providers/AzureDevOpsProvider.cs`
-- `/home/user/PRFactory/src/PRFactory.Infrastructure/Git/GitPlatformService.cs`
-
-**Current Implementation Status:**
-- **GitHub**: ✅ 100% complete (Octokit SDK)
-- **Bitbucket**: ✅ 100% complete (REST API)
-- **Azure DevOps**: ✅ 100% complete (Official SDK)
-- **GitLab**: 📋 Planned (architecture ready)
-- For detailed provider information, see [IMPLEMENTATION_STATUS.md - Git Platform Providers](/home/user/PRFactory/docs/IMPLEMENTATION_STATUS.md#2-git-platform-providers)
+- Enterprise customers use diverse toolchains (Azure DevOps, GitLab, not just GitHub)
+- Market differentiation and vendor independence
+- Customer migration support
 
 **DO NOT:**
 - Remove provider implementations thinking they're unused
@@ -142,9 +64,9 @@ public interface IGitPlatformProvider
 
 **DO:**
 - Complete GitLab provider implementation
-- Add missing platform features
-- Improve platform auto-detection logic
 - Extend the provider interface as new platform capabilities are needed
+
+**For Details:** See [IMPLEMENTATION_STATUS.md - Git Platform Providers](/home/user/PRFactory/docs/IMPLEMENTATION_STATUS.md#2-git-platform-providers)
 
 ---
 
@@ -1214,56 +1136,14 @@ Before committing and pushing any code changes, you **MUST** verify:
 
 **Documentation Maintenance (CRITICAL):**
 
-Before pushing any feature or code change, ensure documentation is synchronized:
+Before pushing, ensure documentation is synchronized:
 
-1. **Update Existing Documentation**
-   - Update `/docs/IMPLEMENTATION_STATUS.md` if feature status changed
-   - Update `/docs/ARCHITECTURE.md` if architectural patterns changed
-   - Update `/docs/WORKFLOW.md` if workflow behavior changed
-   - Update `README.md` if setup or usage changed
-   - Update `CLAUDE.md` if AI agent guidelines changed
-   - Update inline code comments if implementation logic changed
+1. **Update Existing Documentation** - Update `/docs/IMPLEMENTATION_STATUS.md`, `/docs/ARCHITECTURE.md`, `/docs/WORKFLOW.md`, `README.md`, `CLAUDE.md`, and inline code comments as needed
+2. **Remove Temporary Documents** - Delete session-specific notes, work-in-progress documents, `.tmp`/`.draft` files. Archive valuable insights to `/docs/archive/`
+3. **Verify Implementation Matches Documentation** - Code reflects what's documented, docs reflect what's coded, no feature drift
 
-2. **Remove Temporary/Irrelevant Documents**
-   - Delete session-specific notes (e.g., `plan-draft-2024-11-09.md`)
-   - Remove work-in-progress documents that are no longer relevant
-   - Archive valuable session notes to `/docs/archive/` if they contain lessons learned
-   - Delete duplicate or superseded documentation
-   - Remove any `.tmp`, `.draft`, or similar temporary files
-
-3. **Verify Implementation Matches Documentation**
-   - **Code reflects what's documented**: If docs say "Feature X does Y", verify code actually does Y
-   - **Documentation reflects what's coded**: If code implements Z, ensure docs describe Z
-   - **No feature drift**: Don't let implementation deviate from design without updating design docs
-   - **API contracts match**: If docs describe an API endpoint, ensure it exists and works as documented
-   - **Configuration examples work**: If docs show config examples, verify they're valid
-
-**Common Documentation Mistakes to Avoid:**
-
-❌ **DON'T**:
-- Push code without updating affected documentation
-- Leave session-specific notes (e.g., "TODO: Test this tomorrow") in committed docs
-- Document features that aren't actually implemented yet (unless clearly marked as "Planned")
-- Let documentation describe old behavior after changing implementation
-- Create duplicate documentation in multiple places
-- Leave temporary planning documents in the repository
-
-✅ **DO**:
-- Treat documentation as part of the deliverable (code + docs = complete)
-- Update docs in the same commit as the code change
-- Remove draft/planning documents once feature is complete
-- Keep one authoritative source for each piece of information
-- Archive valuable session insights to `/docs/archive/`
-- Ensure future developers can understand the system from docs alone
-
-**Documentation Verification Questions:**
-
-Before pushing, ask yourself:
-1. If a new developer reads the docs, will they understand what I just built?
-2. Are there any temporary files or notes I created during this session that should be removed?
-3. Does the documentation accurately describe the current implementation?
-4. Did I update all affected documentation files (not just one)?
-5. Are there any docs that now contain outdated or incorrect information?
+**DON'T**: Push code without updating docs, leave session-specific notes, let documentation describe old behavior after changing implementation
+**DO**: Update docs in same commit, remove draft/planning documents once feature complete, ensure newcomers can understand system from docs alone
 
 **Quick Verification Command:**
 ```bash
@@ -1286,145 +1166,26 @@ This is non-negotiable for professional software development.
 
 #### When Writing Documentation
 
-**Documentation Best Practices:**
+Write documentation for **newcomers and future developers**, not for tracking work sessions.
 
-All documentation in the `/docs` directory and root-level `.md` files should be written for **newcomers and future developers**, not for tracking specific work sessions.
-
-**CRITICAL: Think of newcomers to the project - they don't care about older sessions.**
-
-**DO**:
-- **UPDATE existing documents** instead of creating new ones
-  - Update `IMPLEMENTATION_STATUS.md` with what's built/planned
-  - Update `ROADMAP.md` with future plans
-  - Update `ARCHITECTURE.md` with design decisions
-- Write documentation that explains **what exists today** and **why it was designed this way**
-- Focus on concepts, architecture, and current implementation status
-- Use present tense ("The system uses X" not "We built X in session Y")
-- Include code examples, diagrams, and references to actual file paths
-- Keep documentation minimal and focused - fewer documents is better
-- Archive session-specific notes to `/docs/archive/YYYY-MM-DD/` if historically valuable
-
-**DON'T**:
-- ❌ **Create new documents** like "audit summaries", "proposals", "analyses", "restructure plans"
-- ❌ Reference specific Claude sessions, branch names, or temporary identifiers in permanent documentation
-- ❌ Use past tense descriptions of "what was built when" (save for changelog/release notes)
-- ❌ Include phrases like "Completed: November 8, 2025" or "Branch: claude/xyz-session-123" in core documentation
-- ❌ Write documentation as a "work log" or "session summary"
-- ❌ Say "we decided", "we implemented", "in this session" - focus on **what** exists, not **when/how** it was built
-- ❌ Create documents with dates in the filename (e.g., "DOCUMENTATION_RESTRUCTURE_PROPOSAL_2025-11-09.md")
+**DO**: UPDATE existing documents (IMPLEMENTATION_STATUS.md, ROADMAP.md, ARCHITECTURE.md), write in present tense, focus on what exists today and why, include code examples and file paths
+**DON'T**: Create new documents like "audit summaries" or "proposals", reference Claude sessions/branch names, use past tense ("we built"), write documentation as work logs
 
 **Documentation Categories**:
+- **Core Documentation** (`/docs/*.md`) - Timeless reference, architecture, current status, no session-specific information
+- **Archive** (`/docs/archive/*.md`) - Session-specific summaries, proposals, historical decisions (can include dates/branches)
 
-1. **Core Documentation** (`/docs/*.md`, `README.md`, `CLAUDE.md`)
-   - Timeless reference material
-   - Architecture explanations
-   - Current implementation status
-   - Setup and usage guides
-   - No session-specific information
-
-2. **Archive** (`/docs/archive/*.md`)
-   - Session-specific implementation summaries
-   - Original proposals and plans
-   - Historical architectural decisions
-   - Can include dates, session IDs, branches
-   - Useful for understanding project evolution
-
-**Example - BAD (Session-specific)**:
-```markdown
-# Ticket Refinement Implementation Summary
-**Completed**: November 8, 2025
-**Branch**: claude/refine-ticket-011CUv4WmefRiccxDkptydD9
-**Commit**: 606b388
-
-In this session, we implemented the ticket refinement workflow...
-```
-
-**Example - GOOD (Timeless reference)**:
-```markdown
-# Ticket Refinement Workflow
-
-The ticket refinement workflow provides AI-powered analysis and
-improvement of ticket descriptions using the RefinementGraph.
-
-## Architecture
-
-The system uses three specialized agents:
-1. TicketUpdateGenerationAgent - Generates refined tickets
-2. TicketUpdatePostAgent - Posts updates to ticket systems
-3. TicketUpdatePreview component - Web UI for review
-
-[See file paths, code examples, architecture diagrams...]
-```
-
-**When in doubt**: Ask yourself "Will a developer in 6 months care about which session this was built in?" If no, don't include session-specific details in permanent documentation.
+**When in doubt**: Ask "Will a developer in 6 months care about which session this was built in?" If no, don't include session-specific details.
 
 #### Updating Documentation After Merges
 
-**CRITICAL: When a feature branch is merged, both IMPLEMENTATION_STATUS.md and ROADMAP.md must be updated.**
+**CRITICAL: When a feature branch is merged, update both IMPLEMENTATION_STATUS.md and ROADMAP.md.**
 
-This prevents confusion about what's planned vs. what's completed, and ensures documentation accurately reflects the current state.
+**Required Updates:**
+1. **IMPLEMENTATION_STATUS.md** - Update "Quick Status" and "What Works Today" with new features (include PR number), add detailed sections for new components, update "What's Missing", update test coverage numbers
+2. **ROADMAP.md** - Add to "Recently Completed" section (max 2-3 most recent), mark completed items with ✅ in their original sections, keep entries brief
 
-**Required Updates After Merge:**
-
-1. **IMPLEMENTATION_STATUS.md** (Source of truth for what's built):
-   - Update "Quick Status" section with new features/capabilities
-   - Update "What Works Today" with new features (include PR number)
-   - Add detailed sections for new components/entities/services
-   - Update "What's Missing" to remove completed items, add new gaps
-   - Update test coverage numbers if tests were added
-   - Include file paths and line counts for new implementations
-
-2. **ROADMAP.md** (Future vision with recent completions):
-   - Add new items to "Recently Completed" section (max 2-3 most recent)
-   - Mark completed items with ✅ and checkboxes [x] in their original sections
-   - Update progress on partially completed features
-   - Remove very old items from "Recently Completed" (archive after 2-3 releases)
-   - Keep focus on future work - completed items should be brief
-
-**Pattern for "Recently Completed" Section in ROADMAP.md:**
-
-```markdown
-## Recently Completed ✅
-
-### Feature Name (PR #XX - YYYY-MM-DD)
-- ✅ Brief summary of what was implemented
-- ✅ Key capabilities added
-- ⚠️ Remaining gaps (if any)
-```
-
-**Why "Recently Completed" in ROADMAP:**
-- Prevents confusion when planned items are suddenly missing
-- Shows progress and momentum
-- Provides context for prioritizing remaining work
-- Helps readers understand what just changed
-
-**Example Workflow:**
-
-```bash
-# After branch claude/add-feature-XYZ is merged:
-
-# 1. Update IMPLEMENTATION_STATUS.md
-- Add feature to "What Works Today"
-- Add technical details in relevant component sections
-- Update test counts
-- Update "What's Missing" if new gaps identified
-
-# 2. Update ROADMAP.md
-- Add to "Recently Completed" section
-- Mark related items as [x] completed in their original sections
-- Update any affected future work items
-
-# 3. Commit with clear message
-git add docs/IMPLEMENTATION_STATUS.md docs/ROADMAP.md
-git commit -m "docs: Update documentation to reflect PR #XX (feature name)"
-git push
-```
-
-**DON'T:**
-- ❌ Update only IMPLEMENTATION_STATUS.md and forget ROADMAP.md
-- ❌ Leave planned items in ROADMAP.md without marking them completed
-- ❌ Add detailed implementation summaries to ROADMAP.md (keep brief)
-- ❌ Let "Recently Completed" grow indefinitely (archive old completions)
+**DON'T**: Update only one doc and forget the other, leave planned items in ROADMAP without marking them completed, add detailed implementation summaries to ROADMAP (keep brief)
 
 ---
 

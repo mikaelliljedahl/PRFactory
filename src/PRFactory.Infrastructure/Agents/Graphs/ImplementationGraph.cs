@@ -17,23 +17,13 @@ using PRFactory.Infrastructure.Configuration;
 /// - Parallel: PullRequest + JiraPost can run concurrently
 /// - Checkpoint after implementation and PR creation
 /// </summary>
-public class ImplementationGraph : AgentGraphBase
+public class ImplementationGraph(
+    ILogger<ImplementationGraph> logger,
+    Base.ICheckpointStore checkpointStore,
+    IAgentExecutor agentExecutor,
+    ITenantConfigurationService tenantConfigService) : AgentGraphBase(logger, checkpointStore)
 {
-    private readonly IAgentExecutor _agentExecutor;
-    private readonly ITenantConfigurationService _tenantConfigService;
-
     public override string GraphId => "ImplementationGraph";
-
-    public ImplementationGraph(
-        ILogger<ImplementationGraph> logger,
-        Base.ICheckpointStore checkpointStore,
-        IAgentExecutor agentExecutor,
-        ITenantConfigurationService tenantConfigService)
-        : base(logger, checkpointStore)
-    {
-        _agentExecutor = agentExecutor;
-        _tenantConfigService = tenantConfigService;
-    }
 
     protected override async Task<GraphExecutionResult> ExecuteCoreAsync(
         IAgentMessage inputMessage,
@@ -175,7 +165,7 @@ public class ImplementationGraph : AgentGraphBase
     {
         try
         {
-            var config = await _tenantConfigService.GetConfigurationForTicketAsync(
+            var config = await tenantConfigService.GetConfigurationForTicketAsync(
                 ticketId, cancellationToken);
 
             return config?.AutoImplementAfterPlanApproval ?? false;
@@ -200,7 +190,7 @@ public class ImplementationGraph : AgentGraphBase
         CancellationToken cancellationToken)
     {
         context.State["current_stage"] = stage;
-        return await _agentExecutor.ExecuteAsync<TAgent>(inputMessage, context, cancellationToken);
+        return await agentExecutor.ExecuteAsync<TAgent>(inputMessage, context, cancellationToken);
     }
 }
 

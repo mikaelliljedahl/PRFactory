@@ -67,7 +67,7 @@ namespace PRFactory.Infrastructure.Agents.Graphs
         /// </summary>
         public override string ToString()
         {
-            var parts = new List<string> { base.ToString() };
+            List<string> parts = [base.ToString()];
 
             if (!string.IsNullOrEmpty(AgentType))
             {

@@ -19,22 +19,15 @@ using PRFactory.Infrastructure.Agents.Messages;
 /// - Retry ticket update generation up to 3 times on rejection
 /// - Checkpoint after each agent
 /// </summary>
-public class RefinementGraph : AgentGraphBase
+public class RefinementGraph(
+    ILogger<RefinementGraph> logger,
+    Base.ICheckpointStore checkpointStore,
+    IAgentExecutor agentExecutor) : AgentGraphBase(logger, checkpointStore)
 {
     private const int MaxAnalysisRetries = 3;
     private const int MaxTicketUpdateRetries = 3;
-    private readonly IAgentExecutor _agentExecutor;
 
     public override string GraphId => "RefinementGraph";
-
-    public RefinementGraph(
-        ILogger<RefinementGraph> logger,
-        Base.ICheckpointStore checkpointStore,
-        IAgentExecutor agentExecutor)
-        : base(logger, checkpointStore)
-    {
-        _agentExecutor = agentExecutor;
-    }
 
     protected override async Task<GraphExecutionResult> ExecuteCoreAsync(
         IAgentMessage inputMessage,
@@ -263,6 +256,9 @@ public class RefinementGraph : AgentGraphBase
 
                 context.State["last_analysis_error"] = ex.Message;
                 await SaveCheckpointAsync(context, $"analysis_retry_{attempt}", "AnalysisAgent");
+
+                // Exception is intentionally not rethrown - retry loop will continue
+                // If this is the last attempt, exception will propagate and be wrapped below
             }
         }
 
@@ -305,7 +301,7 @@ public class RefinementGraph : AgentGraphBase
         CancellationToken cancellationToken)
     {
         context.State["current_stage"] = stage;
-        return await _agentExecutor.ExecuteAsync<TAgent>(inputMessage, context, cancellationToken);
+        return await agentExecutor.ExecuteAsync<TAgent>(inputMessage, context, cancellationToken);
     }
 }
 

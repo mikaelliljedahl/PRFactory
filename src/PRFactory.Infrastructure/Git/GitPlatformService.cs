@@ -271,7 +271,8 @@ public class GitPlatformService : IGitPlatformService
         var method = provider.GetType().GetMethod("SetRepositoryGetter");
         if (method != null)
         {
-            method.Invoke(provider, new object[] { _repositoryGetter });
+            object[] args = [_repositoryGetter];
+            method.Invoke(provider, args);
         }
     }
 }

@@ -41,7 +41,8 @@ public class AgentPromptService : IAgentPromptService
         try
         {
             var template = await _repository.GetByNameAsync(agentName, tenantId: null, ct);
-            return template != null ? new List<AgentPromptTemplateDto> { MapToDto(template) } : new List<AgentPromptTemplateDto>();
+            List<AgentPromptTemplateDto> result = template != null ? [MapToDto(template)] : [];
+            return result;
         }
         catch (Exception ex)
         {

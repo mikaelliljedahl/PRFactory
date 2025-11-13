@@ -14,40 +14,26 @@ namespace PRFactory.Infrastructure.Application;
 /// Application service for managing tickets.
 /// This service encapsulates business logic and coordinates between repositories and workflow orchestration.
 /// </summary>
-public class TicketApplicationService : ITicketApplicationService
+public class TicketApplicationService(
+    ILogger<TicketApplicationService> logger,
+    ITicketRepository ticketRepository,
+    IRepositoryRepository repositoryRepository,
+    IWorkflowOrchestrator workflowOrchestrator,
+    ITenantContext tenantContext) : ITicketApplicationService
 {
-    private readonly ILogger<TicketApplicationService> _logger;
-    private readonly ITicketRepository _ticketRepository;
-    private readonly IRepositoryRepository _repositoryRepository;
-    private readonly IWorkflowOrchestrator _workflowOrchestrator;
-    private readonly ITenantContext _tenantContext;
-
-    public TicketApplicationService(
-        ILogger<TicketApplicationService> logger,
-        ITicketRepository ticketRepository,
-        IRepositoryRepository repositoryRepository,
-        IWorkflowOrchestrator workflowOrchestrator,
-        ITenantContext tenantContext)
-    {
-        _logger = logger;
-        _ticketRepository = ticketRepository;
-        _repositoryRepository = repositoryRepository;
-        _workflowOrchestrator = workflowOrchestrator;
-        _tenantContext = tenantContext;
-    }
 
     /// <inheritdoc/>
     public async Task<List<Ticket>> GetAllTicketsAsync(CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("Getting all tickets");
+        logger.LogDebug("Getting all tickets");
 
         // Get current tenant ID from context
-        var tenantId = await _tenantContext.GetCurrentTenantIdAsync(cancellationToken);
+        var tenantId = await tenantContext.GetCurrentTenantIdAsync(cancellationToken);
 
         // Get all tickets for the current tenant
-        var tickets = await _ticketRepository.GetByTenantIdAsync(tenantId, cancellationToken);
+        var tickets = await ticketRepository.GetByTenantIdAsync(tenantId, cancellationToken);
 
-        _logger.LogDebug("Found {TicketCount} tickets for tenant {TenantId}", tickets.Count, tenantId);
+        logger.LogDebug("Found {TicketCount} tickets for tenant {TenantId}", tickets.Count, tenantId);
 
         return tickets;
     }
@@ -55,39 +41,39 @@ public class TicketApplicationService : ITicketApplicationService
     /// <inheritdoc/>
     public async Task<Ticket?> GetTicketByIdAsync(Guid ticketId, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("Getting ticket {TicketId}", ticketId);
-        return await _ticketRepository.GetByIdAsync(ticketId, cancellationToken);
+        logger.LogDebug("Getting ticket {TicketId}", ticketId);
+        return await ticketRepository.GetByIdAsync(ticketId, cancellationToken);
     }
 
     /// <inheritdoc/>
     public async Task<List<Ticket>> GetTicketsByRepositoryAsync(Guid repositoryId, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("Getting tickets for repository {RepositoryId}", repositoryId);
+        logger.LogDebug("Getting tickets for repository {RepositoryId}", repositoryId);
 
         // Verify repository exists
-        var repository = await _repositoryRepository.GetByIdAsync(repositoryId, cancellationToken);
+        var repository = await repositoryRepository.GetByIdAsync(repositoryId, cancellationToken);
         if (repository == null)
         {
-            _logger.LogWarning("Repository {RepositoryId} not found", repositoryId);
+            logger.LogWarning("Repository {RepositoryId} not found", repositoryId);
             return new List<Ticket>();
         }
 
-        return await _ticketRepository.GetByRepositoryIdAsync(repositoryId, cancellationToken);
+        return await ticketRepository.GetByRepositoryIdAsync(repositoryId, cancellationToken);
     }
 
     /// <inheritdoc/>
     public async Task TriggerWorkflowAsync(Guid ticketId, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Triggering workflow for ticket {TicketId}", ticketId);
+        logger.LogInformation("Triggering workflow for ticket {TicketId}", ticketId);
 
-        var ticket = await _ticketRepository.GetByIdAsync(ticketId, cancellationToken);
+        var ticket = await ticketRepository.GetByIdAsync(ticketId, cancellationToken);
         if (ticket == null)
         {
             throw new InvalidOperationException($"Ticket {ticketId} not found");
         }
 
         // Get repository for additional context
-        var repository = await _repositoryRepository.GetByIdAsync(ticket.RepositoryId, cancellationToken);
+        var repository = await repositoryRepository.GetByIdAsync(ticket.RepositoryId, cancellationToken);
         if (repository == null)
         {
             throw new InvalidOperationException($"Repository {ticket.RepositoryId} not found for ticket {ticketId}");
@@ -105,17 +91,17 @@ public class TicketApplicationService : ITicketApplicationService
         };
 
         // Start workflow
-        await _workflowOrchestrator.StartWorkflowAsync(triggerMessage, cancellationToken);
+        await workflowOrchestrator.StartWorkflowAsync(triggerMessage, cancellationToken);
 
-        _logger.LogInformation("Workflow triggered successfully for ticket {TicketKey}", ticket.TicketKey);
+        logger.LogInformation("Workflow triggered successfully for ticket {TicketKey}", ticket.TicketKey);
     }
 
     /// <inheritdoc/>
     public async Task ApprovePlanAsync(Guid ticketId, string? comments = null, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Approving plan for ticket {TicketId}, Comments={Comments}", ticketId, comments ?? "None");
+        logger.LogInformation("Approving plan for ticket {TicketId}, Comments={Comments}", ticketId, comments ?? "None");
 
-        var ticket = await _ticketRepository.GetByIdAsync(ticketId, cancellationToken);
+        var ticket = await ticketRepository.GetByIdAsync(ticketId, cancellationToken);
         if (ticket == null)
         {
             throw new InvalidOperationException($"Ticket {ticketId} not found");
@@ -130,7 +116,7 @@ public class TicketApplicationService : ITicketApplicationService
 
         // Update ticket state
         ticket.TransitionTo(WorkflowState.PlanApproved);
-        await _ticketRepository.UpdateAsync(ticket, cancellationToken);
+        await ticketRepository.UpdateAsync(ticket, cancellationToken);
 
         // Resume workflow with approval message
         var approvalMessage = new PlanApprovedMessage(
@@ -139,18 +125,18 @@ public class TicketApplicationService : ITicketApplicationService
             ApprovedBy: "User" // TODO: Get from current user context
         );
 
-        await _workflowOrchestrator.ResumeWorkflowAsync(ticket.Id, approvalMessage, cancellationToken);
+        await workflowOrchestrator.ResumeWorkflowAsync(ticket.Id, approvalMessage, cancellationToken);
 
-        _logger.LogInformation("Plan approved for ticket {TicketKey}", ticket.TicketKey);
+        logger.LogInformation("Plan approved for ticket {TicketKey}", ticket.TicketKey);
     }
 
     /// <inheritdoc/>
     public async Task RejectPlanAsync(Guid ticketId, string rejectionReason, bool regenerateCompletely = false, CancellationToken cancellationToken = default)
     {
         var action = regenerateCompletely ? "Rejecting and regenerating" : "Rejecting";
-        _logger.LogInformation("{Action} plan for ticket {TicketId}, Reason={Reason}", action, ticketId, rejectionReason);
+        logger.LogInformation("{Action} plan for ticket {TicketId}, Reason={Reason}", action, ticketId, rejectionReason);
 
-        var ticket = await _ticketRepository.GetByIdAsync(ticketId, cancellationToken);
+        var ticket = await ticketRepository.GetByIdAsync(ticketId, cancellationToken);
         if (ticket == null)
         {
             throw new InvalidOperationException($"Ticket {ticketId} not found");
@@ -165,7 +151,7 @@ public class TicketApplicationService : ITicketApplicationService
 
         // Update ticket state
         ticket.TransitionTo(WorkflowState.PlanRejected);
-        await _ticketRepository.UpdateAsync(ticket, cancellationToken);
+        await ticketRepository.UpdateAsync(ticket, cancellationToken);
 
         // Resume workflow with rejection message
         var rejectionMessage = new PlanRejectedMessage(
@@ -175,18 +161,18 @@ public class TicketApplicationService : ITicketApplicationService
             RegenerateCompletely: regenerateCompletely
         );
 
-        await _workflowOrchestrator.ResumeWorkflowAsync(ticket.Id, rejectionMessage, cancellationToken);
+        await workflowOrchestrator.ResumeWorkflowAsync(ticket.Id, rejectionMessage, cancellationToken);
 
         var actionComplete = regenerateCompletely ? "rejected and will regenerate" : "rejected";
-        _logger.LogInformation("Plan {ActionComplete} for ticket {TicketKey}", actionComplete, ticket.TicketKey);
+        logger.LogInformation("Plan {ActionComplete} for ticket {TicketKey}", actionComplete, ticket.TicketKey);
     }
 
     /// <inheritdoc/>
     public async Task RefinePlanAsync(Guid ticketId, string refinementInstructions, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Refining plan for ticket {TicketId} with instructions", ticketId);
+        logger.LogInformation("Refining plan for ticket {TicketId} with instructions", ticketId);
 
-        var ticket = await _ticketRepository.GetByIdAsync(ticketId, cancellationToken);
+        var ticket = await ticketRepository.GetByIdAsync(ticketId, cancellationToken);
         if (ticket == null)
         {
             throw new InvalidOperationException($"Ticket {ticketId} not found");
@@ -201,7 +187,7 @@ public class TicketApplicationService : ITicketApplicationService
 
         // Update ticket state
         ticket.TransitionTo(WorkflowState.PlanRejected);
-        await _ticketRepository.UpdateAsync(ticket, cancellationToken);
+        await ticketRepository.UpdateAsync(ticket, cancellationToken);
 
         // Resume workflow with refinement message
         var refinementMessage = new PlanRejectedMessage(
@@ -211,17 +197,17 @@ public class TicketApplicationService : ITicketApplicationService
             RegenerateCompletely: false
         );
 
-        await _workflowOrchestrator.ResumeWorkflowAsync(ticket.Id, refinementMessage, cancellationToken);
+        await workflowOrchestrator.ResumeWorkflowAsync(ticket.Id, refinementMessage, cancellationToken);
 
-        _logger.LogInformation("Plan refinement requested for ticket {TicketKey}", ticket.TicketKey);
+        logger.LogInformation("Plan refinement requested for ticket {TicketKey}", ticket.TicketKey);
     }
 
     /// <inheritdoc/>
     public async Task SubmitAnswersAsync(Guid ticketId, Dictionary<string, string> answers, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Submitting answers for ticket {TicketId}, AnswerCount={Count}", ticketId, answers.Count);
+        logger.LogInformation("Submitting answers for ticket {TicketId}, AnswerCount={Count}", ticketId, answers.Count);
 
-        var ticket = await _ticketRepository.GetByIdAsync(ticketId, cancellationToken);
+        var ticket = await ticketRepository.GetByIdAsync(ticketId, cancellationToken);
         if (ticket == null)
         {
             throw new InvalidOperationException($"Ticket {ticketId} not found");
@@ -236,7 +222,7 @@ public class TicketApplicationService : ITicketApplicationService
 
         // Update ticket state
         ticket.TransitionTo(WorkflowState.AnswersReceived);
-        await _ticketRepository.UpdateAsync(ticket, cancellationToken);
+        await ticketRepository.UpdateAsync(ticket, cancellationToken);
 
         // Resume workflow with answers
         var answersMessage = new AnswersReceivedMessage(
@@ -244,8 +230,8 @@ public class TicketApplicationService : ITicketApplicationService
             Answers: answers
         );
 
-        await _workflowOrchestrator.ResumeWorkflowAsync(ticket.Id, answersMessage, cancellationToken);
+        await workflowOrchestrator.ResumeWorkflowAsync(ticket.Id, answersMessage, cancellationToken);
 
-        _logger.LogInformation("Answers submitted for ticket {TicketKey}", ticket.TicketKey);
+        logger.LogInformation("Answers submitted for ticket {TicketKey}", ticket.TicketKey);
     }
 }

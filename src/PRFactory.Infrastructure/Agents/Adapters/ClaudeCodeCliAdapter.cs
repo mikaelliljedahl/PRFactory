@@ -279,7 +279,7 @@ public class ClaudeCodeCliAdapter : ICliAgent
     /// <summary>
     /// Parses the CLI response into a CliAgentResponse
     /// </summary>
-    private static CliAgentResponse ParseCliResponse(ProcessExecutionResult result)
+    private CliAgentResponse ParseCliResponse(ProcessExecutionResult result)
     {
         var response = new CliAgentResponse
         {
@@ -326,7 +326,7 @@ public class ClaudeCodeCliAdapter : ICliAgent
     /// <summary>
     /// Attempts to extract file operations from Claude's output
     /// </summary>
-    private static List<FileOperation> ExtractFileOperations(string output)
+    private List<FileOperation> ExtractFileOperations(string output)
     {
         var operations = new List<FileOperation>();
 
@@ -375,7 +375,7 @@ public class ClaudeCodeCliAdapter : ICliAgent
     /// <summary>
     /// Extracts metadata from Claude's output
     /// </summary>
-    private static void ExtractMetadata(string output, Dictionary<string, object> metadata)
+    private void ExtractMetadata(string output, Dictionary<string, object> metadata)
     {
         try
         {

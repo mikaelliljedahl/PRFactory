@@ -405,6 +405,8 @@ public class ErrorHandlingAgent : BaseAgent
                 ex,
                 "Failed to post error notification to Jira for ticket {JiraKey}",
                 ticket.TicketKey);
+            // Don't rethrow - posting notification failure shouldn't fail error handling
+            // The error has been logged for investigation
         }
     }
 

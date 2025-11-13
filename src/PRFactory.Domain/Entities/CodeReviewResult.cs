@@ -123,9 +123,9 @@ public class CodeReviewResult
         PullRequestUrl = pullRequestUrl;
         LlmProviderName = llmProviderName;
         ModelName = modelName;
-        CriticalIssues = criticalIssues ?? new List<string>();
-        Suggestions = suggestions ?? new List<string>();
-        Praise = praise ?? new List<string>();
+        CriticalIssues = criticalIssues ?? [];
+        Suggestions = suggestions ?? [];
+        Praise = praise ?? [];
         FullReviewContent = fullReviewContent ?? string.Empty;
         RetryAttempt = retryAttempt;
         ReviewedAt = DateTime.UtcNow;

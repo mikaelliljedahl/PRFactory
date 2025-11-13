@@ -95,8 +95,8 @@ public class User
 
     // Navigation properties
     public Tenant Tenant { get; private set; } = null!;
-    public ICollection<PlanReview> PlanReviews { get; private set; } = new List<PlanReview>();
-    public ICollection<ReviewComment> Comments { get; private set; } = new List<ReviewComment>();
+    public ICollection<PlanReview> PlanReviews { get; private set; } = [];
+    public ICollection<ReviewComment> Comments { get; private set; } = [];
 
     // EF Core constructor
     private User() { }

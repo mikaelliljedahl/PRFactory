@@ -17,20 +17,12 @@ using PRFactory.Infrastructure.Agents.Messages;
 /// - Parallel: GitPlan + JiraPost can run concurrently
 /// - Checkpoint after plan generation
 /// </summary>
-public class PlanningGraph : AgentGraphBase
+public class PlanningGraph(
+    ILogger<PlanningGraph> logger,
+    Base.ICheckpointStore checkpointStore,
+    IAgentExecutor agentExecutor) : AgentGraphBase(logger, checkpointStore)
 {
-    private readonly IAgentExecutor _agentExecutor;
-
     public override string GraphId => "PlanningGraph";
-
-    public PlanningGraph(
-        ILogger<PlanningGraph> logger,
-        Base.ICheckpointStore checkpointStore,
-        IAgentExecutor agentExecutor)
-        : base(logger, checkpointStore)
-    {
-        _agentExecutor = agentExecutor;
-    }
 
     protected override async Task<GraphExecutionResult> ExecuteCoreAsync(
         IAgentMessage inputMessage,
@@ -279,7 +271,7 @@ public class PlanningGraph : AgentGraphBase
         CancellationToken cancellationToken)
     {
         context.State["current_stage"] = stage;
-        return await _agentExecutor.ExecuteAsync<TAgent>(inputMessage, context, cancellationToken);
+        return await agentExecutor.ExecuteAsync<TAgent>(inputMessage, context, cancellationToken);
     }
 }
 

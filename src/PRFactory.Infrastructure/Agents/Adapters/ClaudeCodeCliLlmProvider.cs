@@ -44,13 +44,13 @@ public partial class ClaudeCodeCliLlmProvider : ILlmProvider
     /// <summary>
     /// Supported Claude models
     /// </summary>
-    public List<string> SupportedModels => new()
-    {
+    public List<string> SupportedModels =>
+    [
         "claude-sonnet-4-5-20250929",
         "claude-opus-4-20250514",
         "claude-3-5-sonnet-20241022",
         "claude-3-5-haiku-20241022"
-    };
+    ];
 
     /// <summary>
     /// Execute a prompt and return response
@@ -69,7 +69,7 @@ public partial class ClaudeCodeCliLlmProvider : ILlmProvider
         _logger.LogInformation("Executing prompt with Claude Code CLI (Provider: {Provider})", ProviderName);
 
         // Build command arguments
-        var args = new List<string> { "--headless", "--prompt", prompt };
+        List<string> args = ["--headless", "--prompt", prompt];
 
         // Add system prompt if provided
         if (!string.IsNullOrWhiteSpace(systemPrompt))
@@ -111,7 +111,7 @@ public partial class ClaudeCodeCliLlmProvider : ILlmProvider
         _logger.LogInformation("Executing streaming prompt with Claude Code CLI");
 
         // Build command arguments
-        var args = new List<string> { "--headless", "--prompt", prompt };
+        List<string> args = ["--headless", "--prompt", prompt];
 
         if (!string.IsNullOrWhiteSpace(systemPrompt))
         {
@@ -172,12 +172,12 @@ public partial class ClaudeCodeCliLlmProvider : ILlmProvider
             projectPath);
 
         // Build command arguments with project context
-        var args = new List<string>
-        {
+        List<string> args =
+        [
             "--headless",
             "--project-path", projectPath,
             "--prompt", prompt
-        };
+        ];
 
         if (!string.IsNullOrWhiteSpace(systemPrompt))
         {
@@ -271,7 +271,7 @@ public partial class ClaudeCodeCliLlmProvider : ILlmProvider
     /// <summary>
     /// Parses the CLI response into an LlmResponse
     /// </summary>
-    private static LlmResponse ParseCliResponse(ProcessExecutionResult result, TimeSpan latency)
+    private LlmResponse ParseCliResponse(ProcessExecutionResult result, TimeSpan latency)
     {
         if (!result.Success)
         {
@@ -302,7 +302,7 @@ public partial class ClaudeCodeCliLlmProvider : ILlmProvider
     /// <summary>
     /// Extracts usage metrics from CLI output
     /// </summary>
-    private static LlmUsageMetrics ExtractUsageMetrics(string output, TimeSpan latency)
+    private LlmUsageMetrics ExtractUsageMetrics(string output, TimeSpan latency)
     {
         var metrics = new LlmUsageMetrics
         {
@@ -339,8 +339,10 @@ public partial class ClaudeCodeCliLlmProvider : ILlmProvider
                 metrics.TotalTokens = metrics.InputTokens + metrics.OutputTokens;
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogWarning(ex, "Error extracting token usage metrics from Claude Code CLI output");
+            // Return default metrics with latency only - token parsing is optional
         }
 
         return metrics;

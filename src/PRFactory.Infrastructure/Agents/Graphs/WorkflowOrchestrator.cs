@@ -18,7 +18,17 @@ using PRFactory.Infrastructure.Configuration;
 /// - Maintains overall workflow state
 /// - Supports code review loop (Implementation ↔ CodeReview)
 /// </summary>
-public class WorkflowOrchestrator : IWorkflowOrchestrator
+[SuppressMessage("Design", "CA1062", Justification = "Workflow orchestrator requires multiple graph dependencies")]
+[SuppressMessage("Design", "S107", Justification = "WorkflowOrchestrator requires multiple graph dependencies for orchestration")]
+public class WorkflowOrchestrator(
+    ILogger<WorkflowOrchestrator> logger,
+    RefinementGraph refinementGraph,
+    PlanningGraph planningGraph,
+    ImplementationGraph implementationGraph,
+    CodeReviewGraph codeReviewGraph,
+    IWorkflowStateStore workflowStateStore,
+    IEventPublisher eventPublisher,
+    ITenantConfigurationService tenantConfigService) : IWorkflowOrchestrator
 {
     private const string ImplementationGraphName = "ImplementationGraph";
     private const string RefinementGraphName = "RefinementGraph";
@@ -26,37 +36,6 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
     private const string CodeReviewGraphName = "CodeReviewGraph";
     private const string WorkflowForTicketLogTemplate = "workflow for ticket {TicketId}";
     private const string NoWorkflowFoundErrorMessage = "No workflow found for ticket {TicketId}";
-
-    private readonly ILogger<WorkflowOrchestrator> _logger;
-    private readonly RefinementGraph _refinementGraph;
-    private readonly PlanningGraph _planningGraph;
-    private readonly ImplementationGraph _implementationGraph;
-    private readonly CodeReviewGraph _codeReviewGraph;
-    private readonly IWorkflowStateStore _workflowStateStore;
-    private readonly IEventPublisher _eventPublisher;
-    private readonly ITenantConfigurationService _tenantConfigService;
-
-    [SuppressMessage("Design", "CA1062", Justification = "Workflow orchestrator requires multiple graph dependencies")]
-    [SuppressMessage("Design", "S107", Justification = "WorkflowOrchestrator requires multiple graph dependencies for orchestration")]
-    public WorkflowOrchestrator(
-        ILogger<WorkflowOrchestrator> logger,
-        RefinementGraph refinementGraph,
-        PlanningGraph planningGraph,
-        ImplementationGraph implementationGraph,
-        CodeReviewGraph codeReviewGraph,
-        IWorkflowStateStore workflowStateStore,
-        IEventPublisher eventPublisher,
-        ITenantConfigurationService tenantConfigService)
-    {
-        _logger = logger;
-        _refinementGraph = refinementGraph;
-        _planningGraph = planningGraph;
-        _implementationGraph = implementationGraph;
-        _codeReviewGraph = codeReviewGraph;
-        _workflowStateStore = workflowStateStore;
-        _eventPublisher = eventPublisher;
-        _tenantConfigService = tenantConfigService;
-    }
 
     /// <summary>
     /// Start a new workflow from a trigger message
@@ -68,7 +47,7 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
         var workflowId = Guid.NewGuid();
         var ticketId = triggerMessage.TicketId;
 
-        _logger.LogInformation(
+        logger.LogInformation(
             "Starting workflow {WorkflowId} for ticket {TicketId}",
             workflowId, ticketId);
 
@@ -83,15 +62,15 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
                 Status = WorkflowStatus.Running,
                 StartedAt = DateTime.UtcNow
             };
-            await _workflowStateStore.SaveStateAsync(workflowState);
+            await workflowStateStore.SaveStateAsync(workflowState);
 
             // Execute RefinementGraph
-            var result = await _refinementGraph.ExecuteAsync(triggerMessage, cancellationToken);
+            var result = await refinementGraph.ExecuteAsync(triggerMessage, cancellationToken);
 
             // Update workflow state based on result
             await HandleGraphResultAsync(workflowState, result, cancellationToken);
 
-            _logger.LogInformation(
+            logger.LogInformation(
                 "Workflow {WorkflowId} for ticket {TicketId} started successfully, current state: {State}",
                 workflowId, ticketId, result.State);
 
@@ -99,12 +78,12 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
         }
         catch (Exception ex)
         {
-            _logger.LogError(
+            logger.LogError(
                 ex,
                 "Failed to start workflow for ticket {TicketId}",
                 ticketId);
 
-            await _workflowStateStore.UpdateStatusAsync(
+            await workflowStateStore.UpdateStatusAsync(
                 workflowId,
                 WorkflowStatus.Failed,
                 error: ex.Message);
@@ -121,14 +100,14 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
         IAgentMessage resumeMessage,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation(
+        logger.LogInformation(
             "Resuming workflow for ticket {TicketId} with message type {MessageType}",
             ticketId, resumeMessage.GetType().Name);
 
         try
         {
             // Load workflow state
-            var workflowState = await _workflowStateStore.GetByTicketIdAsync(ticketId);
+            var workflowState = await workflowStateStore.GetByTicketIdAsync(ticketId);
             if (workflowState == null)
             {
                 throw new InvalidOperationException(NoWorkflowFoundErrorMessage.Replace("{TicketId}", ticketId.ToString()));
@@ -142,26 +121,26 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
 
             // Update status to running
             workflowState.Status = WorkflowStatus.Running;
-            await _workflowStateStore.SaveStateAsync(workflowState);
+            await workflowStateStore.SaveStateAsync(workflowState);
 
             // Resume the appropriate graph based on current state
             GraphExecutionResult result;
             switch (workflowState.CurrentGraph)
             {
                 case RefinementGraphName:
-                    result = await _refinementGraph.ResumeAsync(ticketId, resumeMessage, cancellationToken);
+                    result = await refinementGraph.ResumeAsync(ticketId, resumeMessage, cancellationToken);
                     break;
 
                 case PlanningGraphName:
-                    result = await _planningGraph.ResumeAsync(ticketId, resumeMessage, cancellationToken);
+                    result = await planningGraph.ResumeAsync(ticketId, resumeMessage, cancellationToken);
                     break;
 
                 case ImplementationGraphName:
-                    result = await _implementationGraph.ResumeAsync(ticketId, resumeMessage, cancellationToken);
+                    result = await implementationGraph.ResumeAsync(ticketId, resumeMessage, cancellationToken);
                     break;
 
                 case CodeReviewGraphName:
-                    result = await _codeReviewGraph.ResumeAsync(ticketId, resumeMessage, cancellationToken);
+                    result = await codeReviewGraph.ResumeAsync(ticketId, resumeMessage, cancellationToken);
                     break;
 
                 default:
@@ -172,21 +151,21 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
             // Handle the result and potentially transition to next graph
             await HandleGraphResultAsync(workflowState, result, cancellationToken);
 
-            _logger.LogInformation(
+            logger.LogInformation(
                 "Workflow resumed for ticket {TicketId}, current state: {State}",
                 ticketId, result.State);
         }
         catch (Exception ex)
         {
-            _logger.LogError(
+            logger.LogError(
                 ex,
                 "Failed to resume workflow for ticket {TicketId}",
                 ticketId);
 
-            var workflowState = await _workflowStateStore.GetByTicketIdAsync(ticketId);
+            var workflowState = await workflowStateStore.GetByTicketIdAsync(ticketId);
             if (workflowState != null)
             {
-                await _workflowStateStore.UpdateStatusAsync(
+                await workflowStateStore.UpdateStatusAsync(
                     workflowState.WorkflowId,
                     WorkflowStatus.Failed,
                     error: ex.Message);
@@ -203,7 +182,7 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
         Guid ticketId,
         CancellationToken cancellationToken = default)
     {
-        var workflowState = await _workflowStateStore.GetByTicketIdAsync(ticketId);
+        var workflowState = await workflowStateStore.GetByTicketIdAsync(ticketId);
         return workflowState?.Status ?? WorkflowStatus.NotFound;
     }
 
@@ -214,19 +193,19 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
         Guid ticketId,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation($"Cancelling {WorkflowForTicketLogTemplate}", ticketId);
+        logger.LogInformation($"Cancelling {WorkflowForTicketLogTemplate}", ticketId);
 
-        var workflowState = await _workflowStateStore.GetByTicketIdAsync(ticketId);
+        var workflowState = await workflowStateStore.GetByTicketIdAsync(ticketId);
         if (workflowState == null)
         {
             throw new InvalidOperationException(NoWorkflowFoundErrorMessage.Replace("{TicketId}", ticketId.ToString()));
         }
 
-        await _workflowStateStore.UpdateStatusAsync(
+        await workflowStateStore.UpdateStatusAsync(
             workflowState.WorkflowId,
             WorkflowStatus.Cancelled);
 
-        await _eventPublisher.PublishAsync(new WorkflowCancelledEvent
+        await eventPublisher.PublishAsync(new WorkflowCancelledEvent
         {
             TicketId = ticketId,
             WorkflowId = workflowState.WorkflowId,
@@ -245,16 +224,16 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
         if (!result.IsSuccess)
         {
             // Graph failed
-            _logger.LogError(
+            logger.LogError(
                 "Graph {GraphId} failed for ticket {TicketId}: {Error}",
                 workflowState.CurrentGraph, workflowState.TicketId, result.Error?.Message);
 
             workflowState.Status = WorkflowStatus.Failed;
             workflowState.ErrorMessage = result.Error?.Message;
             workflowState.CompletedAt = DateTime.UtcNow;
-            await _workflowStateStore.SaveStateAsync(workflowState);
+            await workflowStateStore.SaveStateAsync(workflowState);
 
-            await _eventPublisher.PublishAsync(new WorkflowFailedEvent
+            await eventPublisher.PublishAsync(new WorkflowFailedEvent
             {
                 TicketId = workflowState.TicketId,
                 WorkflowId = workflowState.WorkflowId,
@@ -269,15 +248,15 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
         // Check if graph is suspended (awaiting human input)
         if (result.State.Contains("awaiting") || result.State.Contains("suspended"))
         {
-            _logger.LogInformation(
+            logger.LogInformation(
                 "Graph {GraphId} suspended for ticket {TicketId} at state {State}",
                 workflowState.CurrentGraph, workflowState.TicketId, result.State);
 
             workflowState.Status = WorkflowStatus.Suspended;
             workflowState.CurrentState = result.State;
-            await _workflowStateStore.SaveStateAsync(workflowState);
+            await workflowStateStore.SaveStateAsync(workflowState);
 
-            await _eventPublisher.PublishAsync(new WorkflowSuspendedEvent
+            await eventPublisher.PublishAsync(new WorkflowSuspendedEvent
             {
                 TicketId = workflowState.TicketId,
                 WorkflowId = workflowState.WorkflowId,
@@ -306,17 +285,17 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
             case RefinementGraphName:
                 if (result.OutputMessage is RefinementCompleteEvent)
                 {
-                    _logger.LogInformation(
+                    logger.LogInformation(
                         $"{RefinementGraphName} completed {WorkflowForTicketLogTemplate}, transitioning to {PlanningGraphName}",
                         workflowState.TicketId);
 
                     // Transition to PlanningGraph
                     workflowState.CurrentGraph = PlanningGraphName;
                     workflowState.Status = WorkflowStatus.Running;
-                    await _workflowStateStore.SaveStateAsync(workflowState);
+                    await workflowStateStore.SaveStateAsync(workflowState);
 
                     // Execute PlanningGraph with answers from RefinementGraph
-                    var planningResult = await _planningGraph.ExecuteAsync(
+                    var planningResult = await planningGraph.ExecuteAsync(
                         result.OutputMessage, cancellationToken);
                     await HandleGraphResultAsync(workflowState, planningResult, cancellationToken);
                 }
@@ -325,7 +304,7 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
             case PlanningGraphName:
                 if (result.OutputMessage is PlanApprovedEvent planApproved)
                 {
-                    _logger.LogInformation(
+                    logger.LogInformation(
                         $"{PlanningGraphName} completed with approval {WorkflowForTicketLogTemplate}, checking for implementation",
                         workflowState.TicketId);
 
@@ -339,10 +318,10 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
                     // Transition to ImplementationGraph
                     workflowState.CurrentGraph = ImplementationGraphName;
                     workflowState.Status = WorkflowStatus.Running;
-                    await _workflowStateStore.SaveStateAsync(workflowState);
+                    await workflowStateStore.SaveStateAsync(workflowState);
 
                     // Execute ImplementationGraph (it will check if auto-implementation is enabled)
-                    var implementationResult = await _implementationGraph.ExecuteAsync(
+                    var implementationResult = await implementationGraph.ExecuteAsync(
                         planApprovedMessage, cancellationToken);
                     await HandleGraphResultAsync(workflowState, implementationResult, cancellationToken);
                 }
@@ -372,7 +351,7 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
         if (result.OutputMessage is not PRCreatedMessage prCreated)
         {
             // No PR created, complete workflow
-            _logger.LogInformation(
+            logger.LogInformation(
                 $"{ImplementationGraphName} completed without PR {WorkflowForTicketLogTemplate}, workflow finished",
                 workflowState.TicketId);
 
@@ -381,12 +360,12 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
         }
 
         // Check if auto code review is enabled
-        var tenantConfig = await _tenantConfigService.GetConfigurationForTicketAsync(
+        var tenantConfig = await tenantConfigService.GetConfigurationForTicketAsync(
             workflowState.TicketId, cancellationToken);
 
         if (tenantConfig?.EnableAutoCodeReview != true)
         {
-            _logger.LogInformation(
+            logger.LogInformation(
                 $"Auto code review disabled {WorkflowForTicketLogTemplate}, workflow finished",
                 workflowState.TicketId);
 
@@ -395,13 +374,13 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
         }
 
         // Transition to CodeReviewGraph
-        _logger.LogInformation(
+        logger.LogInformation(
             $"{ImplementationGraphName} completed with PR #{{PrNumber}} {WorkflowForTicketLogTemplate}, transitioning to {CodeReviewGraphName}",
             prCreated.PullRequestNumber, workflowState.TicketId);
 
         workflowState.CurrentGraph = CodeReviewGraphName;
         workflowState.Status = WorkflowStatus.Running;
-        await _workflowStateStore.SaveStateAsync(workflowState);
+        await workflowStateStore.SaveStateAsync(workflowState);
 
         // Create ReviewCodeMessage and execute CodeReviewGraph
         // Note: BranchName and PlanPath are populated from PR metadata during review execution
@@ -413,7 +392,7 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
             PlanPath: null
         );
 
-        var reviewResult = await _codeReviewGraph.ExecuteAsync(reviewMessage, cancellationToken);
+        var reviewResult = await codeReviewGraph.ExecuteAsync(reviewMessage, cancellationToken);
         await HandleGraphResultAsync(workflowState, reviewResult, cancellationToken);
     }
 
@@ -427,7 +406,7 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
     {
         if (result.OutputMessage is not CodeReviewCompleteMessage reviewComplete)
         {
-            _logger.LogWarning(
+            logger.LogWarning(
                 $"{CodeReviewGraphName} completed with unexpected message type {WorkflowForTicketLogTemplate}",
                 workflowState.TicketId);
 
@@ -438,17 +417,17 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
         // Check if there are critical issues
         if (!reviewComplete.HasCriticalIssues || reviewComplete.CriticalIssues.Count == 0)
         {
-            _logger.LogInformation(
+            logger.LogInformation(
                 $"{CodeReviewGraphName} completed with no critical issues {WorkflowForTicketLogTemplate}, workflow finished",
                 workflowState.TicketId);
 
             // Check if auto-approval should be posted
-            var tenantConfig = await _tenantConfigService.GetConfigurationForTicketAsync(
+            var tenantConfig = await tenantConfigService.GetConfigurationForTicketAsync(
                 workflowState.TicketId, cancellationToken);
 
             if (tenantConfig?.AutoApproveIfNoIssues == true)
             {
-                _logger.LogInformation(
+                logger.LogInformation(
                     $"Auto-approval enabled {WorkflowForTicketLogTemplate}",
                     workflowState.TicketId);
 
@@ -465,13 +444,13 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
             ? int.Parse(workflowState.CurrentState.Split("retry_count:")[1].Split(',')[0])
             : 0;
 
-        var tenantConfig2 = await _tenantConfigService.GetConfigurationForTicketAsync(
+        var tenantConfig2 = await tenantConfigService.GetConfigurationForTicketAsync(
             workflowState.TicketId, cancellationToken);
         var maxIterations = tenantConfig2?.MaxCodeReviewIterations ?? 3;
 
         if (retryCount >= maxIterations)
         {
-            _logger.LogWarning(
+            logger.LogWarning(
                 $"{CodeReviewGraphName} max iterations ({{MaxIterations}}) reached {WorkflowForTicketLogTemplate}, completing with warnings",
                 maxIterations, workflowState.TicketId);
 
@@ -480,14 +459,14 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
         }
 
         // Loop back to ImplementationGraph to fix issues
-        _logger.LogInformation(
+        logger.LogInformation(
             $"{CodeReviewGraphName} found {{IssueCount}} issues {WorkflowForTicketLogTemplate}, looping back to {ImplementationGraphName} (attempt {{Attempt}}/{{MaxIterations}})",
             reviewComplete.CriticalIssues.Count, workflowState.TicketId, retryCount + 1, maxIterations);
 
         workflowState.CurrentGraph = ImplementationGraphName;
         workflowState.CurrentState = $"retry_count:{retryCount + 1},issues_found";
         workflowState.Status = WorkflowStatus.Running;
-        await _workflowStateStore.SaveStateAsync(workflowState);
+        await workflowStateStore.SaveStateAsync(workflowState);
 
         // Create FixCodeIssuesMessage and execute ImplementationGraph
         var fixMessage = new FixCodeIssuesMessage(
@@ -496,7 +475,7 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
             string.Join("\n", reviewComplete.CriticalIssues.Concat(reviewComplete.Suggestions))
         );
 
-        var implementationResult = await _implementationGraph.ExecuteAsync(fixMessage, cancellationToken);
+        var implementationResult = await implementationGraph.ExecuteAsync(fixMessage, cancellationToken);
         await HandleGraphResultAsync(workflowState, implementationResult, cancellationToken);
     }
 
@@ -511,9 +490,9 @@ public class WorkflowOrchestrator : IWorkflowOrchestrator
         {
             workflowState.CurrentState = "completed_with_warnings";
         }
-        await _workflowStateStore.SaveStateAsync(workflowState);
+        await workflowStateStore.SaveStateAsync(workflowState);
 
-        await _eventPublisher.PublishAsync(new WorkflowCompletedEvent
+        await eventPublisher.PublishAsync(new WorkflowCompletedEvent
         {
             TicketId = workflowState.TicketId,
             WorkflowId = workflowState.WorkflowId,

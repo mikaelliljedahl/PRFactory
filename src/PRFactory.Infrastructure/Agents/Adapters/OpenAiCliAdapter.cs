@@ -359,7 +359,7 @@ public partial class OpenAiCliAdapter : ILlmProvider
     /// <summary>
     /// Parses the CLI response into an LlmResponse
     /// </summary>
-    private static LlmResponse ParseCliResponse(ProcessExecutionResult result, TimeSpan latency)
+    private LlmResponse ParseCliResponse(ProcessExecutionResult result, TimeSpan latency)
     {
         if (!result.Success)
         {
@@ -401,7 +401,7 @@ public partial class OpenAiCliAdapter : ILlmProvider
     /// <summary>
     /// Extracts usage metrics from CLI output
     /// </summary>
-    private static LlmUsageMetrics ExtractUsageMetrics(string output, TimeSpan latency)
+    private LlmUsageMetrics ExtractUsageMetrics(string output, TimeSpan latency)
     {
         var metrics = new LlmUsageMetrics
         {

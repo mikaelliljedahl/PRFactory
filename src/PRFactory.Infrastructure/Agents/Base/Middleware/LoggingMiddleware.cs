@@ -9,6 +9,12 @@ namespace PRFactory.Infrastructure.Agents.Base.Middleware;
 /// </summary>
 public class LoggingMiddleware : IAgentMiddleware
 {
+    private const string AgentExecutionStartedMessage = "Agent execution started. Agent: {AgentName}, TicketId: {TicketId}, TenantId: {TenantId}, ExecutionId: {ExecutionId}";
+    private const string AgentExecutionCompletedMessage = "Agent execution completed successfully. Agent: {AgentName}, TicketId: {TicketId}, Status: {Status}, Duration: {DurationMs}ms, ExecutionId: {ExecutionId}";
+    private const string AgentExecutionCancelledMessage = "Agent execution cancelled. Agent: {AgentName}, TicketId: {TicketId}, Duration: {DurationMs}ms, ExecutionId: {ExecutionId}";
+    private const string AgentExecutionFailedMessage = "Agent execution failed. Agent: {AgentName}, TicketId: {TicketId}, ErrorType: {ErrorType}, Duration: {DurationMs}ms, ExecutionId: {ExecutionId}";
+    private const string AgentExecutionSlowMessage = "Agent execution took longer than expected. Agent: {AgentName}, TicketId: {TicketId}, Duration: {DurationMs}ms";
+
     private readonly ILogger<LoggingMiddleware> _logger;
 
     public LoggingMiddleware(ILogger<LoggingMiddleware> logger)
@@ -31,7 +37,7 @@ public class LoggingMiddleware : IAgentMiddleware
 
         // Log entry with structured data
         _logger.LogInformation(
-            "Agent execution started. Agent: {AgentName}, TicketId: {TicketId}, TenantId: {TenantId}, ExecutionId: {ExecutionId}",
+            AgentExecutionStartedMessage,
             agentName,
             context.TicketId,
             context.TenantId,
@@ -59,7 +65,7 @@ public class LoggingMiddleware : IAgentMiddleware
 
             // Log successful completion with metrics
             _logger.LogInformation(
-                "Agent execution completed successfully. Agent: {AgentName}, TicketId: {TicketId}, Status: {Status}, Duration: {DurationMs}ms, ExecutionId: {ExecutionId}",
+                AgentExecutionCompletedMessage,
                 agentName,
                 context.TicketId,
                 result.Status,
@@ -82,7 +88,7 @@ public class LoggingMiddleware : IAgentMiddleware
         {
             stopwatch.Stop();
             _logger.LogWarning(
-                "Agent execution cancelled. Agent: {AgentName}, TicketId: {TicketId}, Duration: {DurationMs}ms, ExecutionId: {ExecutionId}",
+                AgentExecutionCancelledMessage,
                 agentName,
                 context.TicketId,
                 stopwatch.ElapsedMilliseconds,
@@ -97,7 +103,7 @@ public class LoggingMiddleware : IAgentMiddleware
             // Log error with full exception details
             _logger.LogError(
                 ex,
-                "Agent execution failed. Agent: {AgentName}, TicketId: {TicketId}, ErrorType: {ErrorType}, Duration: {DurationMs}ms, ExecutionId: {ExecutionId}",
+                AgentExecutionFailedMessage,
                 agentName,
                 context.TicketId,
                 ex.GetType().Name,
@@ -112,7 +118,7 @@ public class LoggingMiddleware : IAgentMiddleware
             if (stopwatch.ElapsedMilliseconds > 10000) // Log as warning if > 10 seconds
             {
                 _logger.LogWarning(
-                    "Agent execution took longer than expected. Agent: {AgentName}, TicketId: {TicketId}, Duration: {DurationMs}ms",
+                    AgentExecutionSlowMessage,
                     agentName,
                     context.TicketId,
                     stopwatch.ElapsedMilliseconds);

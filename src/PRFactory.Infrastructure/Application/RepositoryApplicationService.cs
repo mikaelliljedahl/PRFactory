@@ -15,40 +15,24 @@ namespace PRFactory.Infrastructure.Application;
 /// Application service for managing repositories.
 /// This service encapsulates business logic and coordinates repository operations.
 /// </summary>
-public class RepositoryApplicationService : IRepositoryApplicationService
+public class RepositoryApplicationService(
+    ILogger<RepositoryApplicationService> logger,
+    IRepositoryRepository repositoryRepository,
+    ITicketRepository ticketRepository,
+    ITenantRepository tenantRepository,
+    ILocalGitService localGitService,
+    IEncryptionService encryptionService) : IRepositoryApplicationService
 {
-    private readonly ILogger<RepositoryApplicationService> _logger;
-    private readonly IRepositoryRepository _repositoryRepository;
-    private readonly ITicketRepository _ticketRepository;
-    private readonly ITenantRepository _tenantRepository;
-    private readonly ILocalGitService _localGitService;
-    private readonly IEncryptionService _encryptionService;
-
-    public RepositoryApplicationService(
-        ILogger<RepositoryApplicationService> logger,
-        IRepositoryRepository repositoryRepository,
-        ITicketRepository ticketRepository,
-        ITenantRepository tenantRepository,
-        ILocalGitService localGitService,
-        IEncryptionService encryptionService)
-    {
-        _logger = logger;
-        _repositoryRepository = repositoryRepository;
-        _ticketRepository = ticketRepository;
-        _tenantRepository = tenantRepository;
-        _localGitService = localGitService;
-        _encryptionService = encryptionService;
-    }
 
     /// <inheritdoc/>
     public async Task<List<DomainRepository>> GetAllRepositoriesAsync(CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("Getting all repositories");
+        logger.LogDebug("Getting all repositories");
 
         // Get all active repositories (for multi-tenant apps, this would be filtered by tenant from context)
-        var repositories = await _repositoryRepository.GetActiveRepositoriesAsync(cancellationToken);
+        var repositories = await repositoryRepository.GetActiveRepositoriesAsync(cancellationToken);
 
-        _logger.LogDebug("Found {Count} repositories", repositories.Count);
+        logger.LogDebug("Found {Count} repositories", repositories.Count);
 
         return repositories;
     }
@@ -56,17 +40,17 @@ public class RepositoryApplicationService : IRepositoryApplicationService
     /// <inheritdoc/>
     public async Task<DomainRepository?> GetRepositoryByIdAsync(Guid repositoryId, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("Getting repository {RepositoryId}", repositoryId);
-        return await _repositoryRepository.GetByIdAsync(repositoryId, cancellationToken);
+        logger.LogDebug("Getting repository {RepositoryId}", repositoryId);
+        return await repositoryRepository.GetByIdAsync(repositoryId, cancellationToken);
     }
 
     /// <inheritdoc/>
     public async Task<DomainRepository> CreateRepositoryAsync(DomainRepository repository, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Creating repository {RepositoryName}", repository.Name);
+        logger.LogInformation("Creating repository {RepositoryName}", repository.Name);
 
         // Validate repository doesn't already exist
-        var exists = await _repositoryRepository.ExistsAsync(repository.CloneUrl, cancellationToken);
+        var exists = await repositoryRepository.ExistsAsync(repository.CloneUrl, cancellationToken);
         if (exists)
         {
             throw new InvalidOperationException($"Repository with clone URL '{repository.CloneUrl}' already exists");
@@ -89,9 +73,9 @@ public class RepositoryApplicationService : IRepositoryApplicationService
         }
 
         // Create repository
-        var created = await _repositoryRepository.AddAsync(repository, cancellationToken);
+        var created = await repositoryRepository.AddAsync(repository, cancellationToken);
 
-        _logger.LogInformation("Created repository {RepositoryId}: {RepositoryName}", created.Id, created.Name);
+        logger.LogInformation("Created repository {RepositoryId}: {RepositoryName}", created.Id, created.Name);
 
         return created;
     }
@@ -99,10 +83,10 @@ public class RepositoryApplicationService : IRepositoryApplicationService
     /// <inheritdoc/>
     public async Task UpdateRepositoryAsync(Guid repositoryId, DomainRepository repository, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Updating repository {RepositoryId}", repositoryId);
+        logger.LogInformation("Updating repository {RepositoryId}", repositoryId);
 
         // Verify repository exists
-        var existing = await _repositoryRepository.GetByIdAsync(repositoryId, cancellationToken);
+        var existing = await repositoryRepository.GetByIdAsync(repositoryId, cancellationToken);
         if (existing == null)
         {
             throw new InvalidOperationException($"Repository {repositoryId} not found");
@@ -137,25 +121,25 @@ public class RepositoryApplicationService : IRepositoryApplicationService
 
         // For fields without specific update methods, we need to update via repository
         // Since the entity uses private setters, we'll update through the repository pattern
-        await _repositoryRepository.UpdateAsync(repository, cancellationToken);
+        await repositoryRepository.UpdateAsync(repository, cancellationToken);
 
-        _logger.LogInformation("Updated repository {RepositoryId}: {RepositoryName}", repositoryId, existing.Name);
+        logger.LogInformation("Updated repository {RepositoryId}: {RepositoryName}", repositoryId, existing.Name);
     }
 
     /// <inheritdoc/>
     public async Task DeleteRepositoryAsync(Guid repositoryId, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Deleting repository {RepositoryId}", repositoryId);
+        logger.LogInformation("Deleting repository {RepositoryId}", repositoryId);
 
         // Verify repository exists
-        var repository = await _repositoryRepository.GetByIdAsync(repositoryId, cancellationToken);
+        var repository = await repositoryRepository.GetByIdAsync(repositoryId, cancellationToken);
         if (repository == null)
         {
             throw new InvalidOperationException($"Repository {repositoryId} not found");
         }
 
         // Check if repository has any tickets
-        var tickets = await _ticketRepository.GetByRepositoryIdAsync(repositoryId, cancellationToken);
+        var tickets = await ticketRepository.GetByRepositoryIdAsync(repositoryId, cancellationToken);
         if (tickets.Any())
         {
             throw new InvalidOperationException(
@@ -164,9 +148,9 @@ public class RepositoryApplicationService : IRepositoryApplicationService
         }
 
         // Delete repository
-        await _repositoryRepository.DeleteAsync(repositoryId, cancellationToken);
+        await repositoryRepository.DeleteAsync(repositoryId, cancellationToken);
 
-        _logger.LogInformation("Deleted repository {RepositoryId}: {RepositoryName}", repositoryId, repository.Name);
+        logger.LogInformation("Deleted repository {RepositoryId}: {RepositoryName}", repositoryId, repository.Name);
     }
 
     /// <inheritdoc/>
@@ -175,13 +159,13 @@ public class RepositoryApplicationService : IRepositoryApplicationService
         string accessToken,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Testing connection to repository {CloneUrl}", cloneUrl);
+        logger.LogInformation("Testing connection to repository {CloneUrl}", cloneUrl);
 
         try
         {
-            var localPath = await _localGitService.CloneAsync(cloneUrl, accessToken, cancellationToken);
+            var localPath = await localGitService.CloneAsync(cloneUrl, accessToken, cancellationToken);
 
-            _logger.LogInformation("Successfully cloned repository to {LocalPath}", localPath);
+            logger.LogInformation("Successfully cloned repository to {LocalPath}", localPath);
 
             var branches = new List<string>();
             try
@@ -203,7 +187,7 @@ public class RepositoryApplicationService : IRepositoryApplicationService
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Could not retrieve branches, but connection succeeded");
+                logger.LogWarning(ex, "Could not retrieve branches, but connection succeeded");
             }
 
             try
@@ -211,19 +195,19 @@ public class RepositoryApplicationService : IRepositoryApplicationService
                 if (Directory.Exists(localPath))
                 {
                     Directory.Delete(localPath, true);
-                    _logger.LogDebug("Cleaned up test repository at {LocalPath}", localPath);
+                    logger.LogDebug("Cleaned up test repository at {LocalPath}", localPath);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Could not clean up test repository at {LocalPath}", localPath);
+                logger.LogWarning(ex, "Could not clean up test repository at {LocalPath}", localPath);
             }
 
             return (true, "Successfully connected to repository", branches, null);
         }
         catch (LibGit2SharpException ex)
         {
-            _logger.LogWarning(ex, "Failed to connect to repository {CloneUrl}", cloneUrl);
+            logger.LogWarning(ex, "Failed to connect to repository {CloneUrl}", cloneUrl);
 
             var errorMessage = ex.Message.Contains("authentication", StringComparison.OrdinalIgnoreCase)
                 ? "Authentication failed. Please check your access token."
@@ -235,7 +219,7 @@ public class RepositoryApplicationService : IRepositoryApplicationService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error testing connection to repository {CloneUrl}", cloneUrl);
+            logger.LogError(ex, "Unexpected error testing connection to repository {CloneUrl}", cloneUrl);
             return (false, "An unexpected error occurred while testing the connection.", new List<string>(), ex.ToString());
         }
     }
@@ -243,15 +227,15 @@ public class RepositoryApplicationService : IRepositoryApplicationService
     /// <inheritdoc/>
     public async Task<List<string>> GetRepositoryBranchesAsync(Guid repositoryId, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Getting branches for repository {RepositoryId}", repositoryId);
+        logger.LogInformation("Getting branches for repository {RepositoryId}", repositoryId);
 
-        var repository = await _repositoryRepository.GetByIdAsync(repositoryId, cancellationToken);
+        var repository = await repositoryRepository.GetByIdAsync(repositoryId, cancellationToken);
         if (repository == null)
         {
             throw new InvalidOperationException($"Repository {repositoryId} not found");
         }
 
-        var decryptedToken = _encryptionService.Decrypt(repository.AccessToken);
+        var decryptedToken = encryptionService.Decrypt(repository.AccessToken);
 
         var testResult = await TestRepositoryConnectionAsync(repository.CloneUrl, decryptedToken, cancellationToken);
 

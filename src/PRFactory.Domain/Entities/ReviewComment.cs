@@ -60,7 +60,7 @@ public class ReviewComment
         TicketId = ticketId;
         AuthorId = authorId;
         Content = content.Trim();
-        MentionedUserIds = mentionedUserIds ?? new List<Guid>();
+        MentionedUserIds = mentionedUserIds ?? [];
         CreatedAt = DateTime.UtcNow;
     }
 
@@ -73,7 +73,7 @@ public class ReviewComment
             throw new ArgumentException("Comment content cannot be empty", nameof(content));
 
         Content = content.Trim();
-        MentionedUserIds = mentionedUserIds ?? new List<Guid>();
+        MentionedUserIds = mentionedUserIds ?? [];
         UpdatedAt = DateTime.UtcNow;
     }
 

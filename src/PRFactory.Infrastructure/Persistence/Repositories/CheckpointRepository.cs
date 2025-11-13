@@ -11,6 +11,8 @@ namespace PRFactory.Infrastructure.Persistence.Repositories;
 /// </summary>
 public class CheckpointRepository : ICheckpointRepository
 {
+    private const string CheckpointForTicketLogMessageTemplate = "for ticket {TicketId}";
+
     private readonly ApplicationDbContext _context;
     private readonly ILogger<CheckpointRepository> _logger;
 
@@ -37,13 +39,13 @@ public class CheckpointRepository : ICheckpointRepository
             // Mark existing checkpoint as deleted and create new one
             existingCheckpoint.MarkAsDeleted();
 
-            _logger.LogDebug("Marked old checkpoint {CheckpointId} as deleted for ticket {TicketId} in graph {GraphId}",
+            _logger.LogDebug($"Marked old checkpoint {{CheckpointId}} as deleted {CheckpointForTicketLogMessageTemplate} in graph {{GraphId}}",
                 existingCheckpoint.CheckpointId, checkpoint.TicketId, checkpoint.GraphId);
         }
 
         // Add new checkpoint
         _context.Checkpoints.Add(checkpoint);
-        _logger.LogDebug("Created checkpoint {CheckpointId} for ticket {TicketId} in graph {GraphId}",
+        _logger.LogDebug($"Created checkpoint {{CheckpointId}} {CheckpointForTicketLogMessageTemplate} in graph {{GraphId}}",
             checkpoint.CheckpointId, checkpoint.TicketId, checkpoint.GraphId);
 
         await _context.SaveChangesAsync(cancellationToken);
@@ -105,7 +107,7 @@ public class CheckpointRepository : ICheckpointRepository
         _context.Checkpoints.Update(checkpoint);
         await _context.SaveChangesAsync(cancellationToken);
 
-        _logger.LogDebug("Marked checkpoint {CheckpointId} as resumed for ticket {TicketId}",
+        _logger.LogDebug($"Marked checkpoint {{CheckpointId}} as resumed {CheckpointForTicketLogMessageTemplate}",
             checkpoint.CheckpointId, checkpoint.TicketId);
     }
 
@@ -122,7 +124,7 @@ public class CheckpointRepository : ICheckpointRepository
         _context.Checkpoints.Update(checkpoint);
         await _context.SaveChangesAsync(cancellationToken);
 
-        _logger.LogDebug("Marked checkpoint {CheckpointId} as deleted for ticket {TicketId}",
+        _logger.LogDebug($"Marked checkpoint {{CheckpointId}} as deleted {CheckpointForTicketLogMessageTemplate}",
             checkpoint.CheckpointId, checkpoint.TicketId);
     }
 

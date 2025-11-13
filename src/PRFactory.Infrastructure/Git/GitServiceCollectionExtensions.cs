@@ -145,7 +145,8 @@ public static class GitServiceCollectionExtensions
                         $"Repository type {typeof(TRepository).Name} does not have a GetByIdAsync method");
                 }
 
-                var task = method.Invoke(repository, new object[] { id, ct }) as Task<object>;
+                object[] args = [id, ct];
+                var task = method.Invoke(repository, args) as Task<object>;
                 if (task == null)
                 {
                     throw new InvalidOperationException("GetByIdAsync did not return a Task");

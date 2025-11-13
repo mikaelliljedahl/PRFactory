@@ -11,39 +11,25 @@ namespace PRFactory.Web.Services;
 /// Uses direct application service injection (Blazor Server architecture).
 /// This is a facade service that converts between DTOs and domain entities.
 /// </summary>
-public class RepositoryService : IRepositoryService
+public class RepositoryService(
+    ILogger<RepositoryService> logger,
+    IRepositoryApplicationService repositoryApplicationService,
+    ITenantRepository tenantRepository,
+    ITicketRepository ticketRepository,
+    IEncryptionService encryptionService) : IRepositoryService
 {
-    private readonly ILogger<RepositoryService> _logger;
-    private readonly IRepositoryApplicationService _repositoryApplicationService;
-    private readonly ITenantRepository _tenantRepository;
-    private readonly ITicketRepository _ticketRepository;
-    private readonly IEncryptionService _encryptionService;
-
-    public RepositoryService(
-        ILogger<RepositoryService> logger,
-        IRepositoryApplicationService repositoryApplicationService,
-        ITenantRepository tenantRepository,
-        ITicketRepository ticketRepository,
-        IEncryptionService encryptionService)
-    {
-        _logger = logger;
-        _repositoryApplicationService = repositoryApplicationService;
-        _tenantRepository = tenantRepository;
-        _ticketRepository = ticketRepository;
-        _encryptionService = encryptionService;
-    }
 
     public async Task<List<RepositoryDto>> GetAllRepositoriesAsync(CancellationToken ct = default)
     {
         try
         {
-            var repositories = await _repositoryApplicationService.GetAllRepositoriesAsync(ct);
+            var repositories = await repositoryApplicationService.GetAllRepositoriesAsync(ct);
             var dtos = new List<RepositoryDto>();
 
             foreach (var repo in repositories)
             {
-                var ticketCount = (await _ticketRepository.GetByRepositoryIdAsync(repo.Id, ct)).Count;
-                var tenant = await _tenantRepository.GetByIdAsync(repo.TenantId, ct);
+                var ticketCount = (await ticketRepository.GetByRepositoryIdAsync(repo.Id, ct)).Count;
+                var tenant = await tenantRepository.GetByIdAsync(repo.TenantId, ct);
 
                 dtos.Add(MapToDto(repo, tenant?.Name ?? "Unknown", ticketCount));
             }
@@ -52,7 +38,7 @@ public class RepositoryService : IRepositoryService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching all repositories");
+            logger.LogError(ex, "Error fetching all repositories");
             throw;
         }
     }
@@ -61,20 +47,20 @@ public class RepositoryService : IRepositoryService
     {
         try
         {
-            var repository = await _repositoryApplicationService.GetRepositoryByIdAsync(repositoryId, ct);
+            var repository = await repositoryApplicationService.GetRepositoryByIdAsync(repositoryId, ct);
             if (repository == null)
             {
                 return null;
             }
 
-            var ticketCount = (await _ticketRepository.GetByRepositoryIdAsync(repositoryId, ct)).Count;
-            var tenant = await _tenantRepository.GetByIdAsync(repository.TenantId, ct);
+            var ticketCount = (await ticketRepository.GetByRepositoryIdAsync(repositoryId, ct)).Count;
+            var tenant = await tenantRepository.GetByIdAsync(repository.TenantId, ct);
 
             return MapToDto(repository, tenant?.Name ?? "Unknown", ticketCount);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching repository {RepositoryId}", repositoryId);
+            logger.LogError(ex, "Error fetching repository {RepositoryId}", repositoryId);
             throw;
         }
     }
@@ -83,7 +69,7 @@ public class RepositoryService : IRepositoryService
     {
         try
         {
-            var encryptedToken = _encryptionService.Encrypt(request.AccessToken);
+            var encryptedToken = encryptionService.Encrypt(request.AccessToken);
 
             var repository = Repository.Create(
                 request.TenantId,
@@ -94,16 +80,16 @@ public class RepositoryService : IRepositoryService
                 request.DefaultBranch
             );
 
-            var created = await _repositoryApplicationService.CreateRepositoryAsync(repository, ct);
-            var tenant = await _tenantRepository.GetByIdAsync(created.TenantId, ct);
+            var created = await repositoryApplicationService.CreateRepositoryAsync(repository, ct);
+            var tenant = await tenantRepository.GetByIdAsync(created.TenantId, ct);
 
-            _logger.LogInformation("Created repository {RepositoryName}", request.Name);
+            logger.LogInformation("Created repository {RepositoryName}", request.Name);
 
             return MapToDto(created, tenant?.Name ?? "Unknown", 0);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating repository {RepositoryName}", request.Name);
+            logger.LogError(ex, "Error creating repository {RepositoryName}", request.Name);
             throw;
         }
     }
@@ -112,7 +98,7 @@ public class RepositoryService : IRepositoryService
     {
         try
         {
-            var existing = await _repositoryApplicationService.GetRepositoryByIdAsync(repositoryId, ct);
+            var existing = await repositoryApplicationService.GetRepositoryByIdAsync(repositoryId, ct);
             if (existing == null)
             {
                 throw new InvalidOperationException($"Repository {repositoryId} not found");
@@ -120,7 +106,7 @@ public class RepositoryService : IRepositoryService
 
             var accessToken = string.IsNullOrWhiteSpace(request.AccessToken)
                 ? existing.AccessToken
-                : _encryptionService.Encrypt(request.AccessToken);
+                : encryptionService.Encrypt(request.AccessToken);
 
             var updated = Repository.Create(
                 existing.TenantId,
@@ -131,7 +117,7 @@ public class RepositoryService : IRepositoryService
                 request.DefaultBranch
             );
 
-            await _repositoryApplicationService.UpdateRepositoryAsync(repositoryId, updated, ct);
+            await repositoryApplicationService.UpdateRepositoryAsync(repositoryId, updated, ct);
 
             if (request.IsActive != existing.IsActive)
             {
@@ -145,11 +131,11 @@ public class RepositoryService : IRepositoryService
                 }
             }
 
-            _logger.LogInformation("Updated repository {RepositoryId}", repositoryId);
+            logger.LogInformation("Updated repository {RepositoryId}", repositoryId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating repository {RepositoryId}", repositoryId);
+            logger.LogError(ex, "Error updating repository {RepositoryId}", repositoryId);
             throw;
         }
     }
@@ -158,12 +144,12 @@ public class RepositoryService : IRepositoryService
     {
         try
         {
-            await _repositoryApplicationService.DeleteRepositoryAsync(repositoryId, ct);
-            _logger.LogInformation("Deleted repository {RepositoryId}", repositoryId);
+            await repositoryApplicationService.DeleteRepositoryAsync(repositoryId, ct);
+            logger.LogInformation("Deleted repository {RepositoryId}", repositoryId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting repository {RepositoryId}", repositoryId);
+            logger.LogError(ex, "Error deleting repository {RepositoryId}", repositoryId);
             throw;
         }
     }
@@ -172,7 +158,7 @@ public class RepositoryService : IRepositoryService
     {
         try
         {
-            var result = await _repositoryApplicationService.TestRepositoryConnectionAsync(cloneUrl, accessToken, ct);
+            var result = await repositoryApplicationService.TestRepositoryConnectionAsync(cloneUrl, accessToken, ct);
 
             return new RepositoryConnectionTestResult
             {
@@ -185,7 +171,7 @@ public class RepositoryService : IRepositoryService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error testing repository connection");
+            logger.LogError(ex, "Error testing repository connection");
             return new RepositoryConnectionTestResult
             {
                 Success = false,
@@ -200,11 +186,11 @@ public class RepositoryService : IRepositoryService
     {
         try
         {
-            return await _repositoryApplicationService.GetRepositoryBranchesAsync(repositoryId, ct);
+            return await repositoryApplicationService.GetRepositoryBranchesAsync(repositoryId, ct);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting branches for repository {RepositoryId}", repositoryId);
+            logger.LogError(ex, "Error getting branches for repository {RepositoryId}", repositoryId);
             throw;
         }
     }
@@ -213,7 +199,7 @@ public class RepositoryService : IRepositoryService
     {
         try
         {
-            var tenants = await _tenantRepository.GetAllAsync(ct);
+            var tenants = await tenantRepository.GetAllAsync(ct);
 
             return tenants.Select(t => new TenantDto
             {
@@ -225,7 +211,7 @@ public class RepositoryService : IRepositoryService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching all tenants");
+            logger.LogError(ex, "Error fetching all tenants");
             throw;
         }
     }

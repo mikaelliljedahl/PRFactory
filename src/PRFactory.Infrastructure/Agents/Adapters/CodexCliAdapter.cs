@@ -11,21 +11,14 @@ namespace PRFactory.Infrastructure.Agents.Adapters;
 /// </summary>
 public class CodexCliAdapter : ICliAgent
 {
-    private readonly IProcessExecutor _processExecutor;
     private readonly ILogger<CodexCliAdapter> _logger;
-    private readonly string _codexExecutablePath;
 
     public string AgentName => "Codex CLI";
     public bool SupportsStreaming => false;
 
-    public CodexCliAdapter(
-        IProcessExecutor processExecutor,
-        ILogger<CodexCliAdapter> logger,
-        string? codexExecutablePath = null)
+    public CodexCliAdapter(ILogger<CodexCliAdapter> logger)
     {
-        _processExecutor = processExecutor ?? throw new ArgumentNullException(nameof(processExecutor));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _codexExecutablePath = codexExecutablePath ?? "codex";
     }
 
     /// <summary>
@@ -88,14 +81,15 @@ public class CodexCliAdapter : ICliAgent
 ///
 /// To complete this adapter:
 /// 1. Research Codex CLI documentation and command-line interface
-/// 2. Implement BuildArguments() method to construct Codex CLI commands
-/// 3. Implement ParseCliResponse() to parse Codex output format
-/// 4. Add error handling specific to Codex CLI
-/// 5. Test with actual Codex CLI installation
-/// 6. Update capabilities in CliAgentCapabilities.ForCodexCli() if needed
+/// 2. Add an IProcessExecutor dependency if CLI execution is needed
+/// 3. Implement BuildArguments() method to construct Codex CLI commands
+/// 4. Implement ParseCliResponse() to parse Codex output format
+/// 5. Add error handling specific to Codex CLI
+/// 6. Test with actual Codex CLI installation
+/// 7. Update capabilities in CliAgentCapabilities.ForCodexCli() if needed
 ///
 /// Example implementation approach:
-/// - Use _processExecutor.ExecuteAsync() to run codex commands
+/// - Inject IProcessExecutor dependency for running codex commands
 /// - Parse JSON or text output from Codex
 /// - Extract file operations if Codex supports them
 /// - Handle Codex-specific errors and rate limits

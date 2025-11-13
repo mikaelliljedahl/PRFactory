@@ -16,6 +16,9 @@ public partial class Detail
     [Inject]
     private NavigationManager Navigation { get; set; } = null!;
 
+    [Inject]
+    private ILogger<Detail> Logger { get; set; } = null!;
+
     private ErrorDto? Error { get; set; }
     private List<ErrorDto>? RelatedErrors { get; set; }
     private bool IsLoading { get; set; } = true;
@@ -63,7 +66,7 @@ public partial class Detail
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to load related errors: {ex.Message}");
+                Logger.LogWarning(ex, "Failed to load related errors for entity {EntityType}:{EntityId}", Error.EntityType, Error.EntityId);
             }
         }
     }

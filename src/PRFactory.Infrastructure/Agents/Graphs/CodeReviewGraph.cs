@@ -21,20 +21,12 @@ namespace PRFactory.Infrastructure.Agents.Graphs;
 /// - Loops back to ImplementationGraph for fixes (max 3 iterations)
 /// - Posts approval comment if no issues
 /// </summary>
-public class CodeReviewGraph : AgentGraphBase
+public class CodeReviewGraph(
+    ILogger<CodeReviewGraph> logger,
+    Base.ICheckpointStore checkpointStore,
+    IAgentExecutor agentExecutor) : AgentGraphBase(logger, checkpointStore)
 {
-    private readonly IAgentExecutor _agentExecutor;
-
     public override string GraphId => "CodeReviewGraph";
-
-    public CodeReviewGraph(
-        ILogger<CodeReviewGraph> logger,
-        Base.ICheckpointStore checkpointStore,
-        IAgentExecutor agentExecutor)
-        : base(logger, checkpointStore)
-    {
-        _agentExecutor = agentExecutor ?? throw new ArgumentNullException(nameof(agentExecutor));
-    }
 
     protected override async Task<GraphExecutionResult> ExecuteCoreAsync(
         IAgentMessage inputMessage,
@@ -233,7 +225,7 @@ public class CodeReviewGraph : AgentGraphBase
         CancellationToken cancellationToken)
     {
         context.State["current_stage"] = stage;
-        return await _agentExecutor.ExecuteAsync<TAgent>(inputMessage, context, cancellationToken);
+        return await agentExecutor.ExecuteAsync<TAgent>(inputMessage, context, cancellationToken);
     }
 
     /// <summary>

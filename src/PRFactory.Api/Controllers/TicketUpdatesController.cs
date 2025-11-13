@@ -28,6 +28,9 @@ namespace PRFactory.Api.Controllers;
 [Produces("application/json")]
 public class TicketUpdatesController : ControllerBase
 {
+    private const string AssociatedTicketNotFoundErrorMessage = "Associated ticket not found";
+    private const string InvalidOperationLogMessageTemplate = "Invalid operation for ticket update {TicketUpdateId}";
+
     private readonly ILogger<TicketUpdatesController> _logger;
     private readonly ITicketUpdateService _ticketUpdateService;
     private readonly ITicketRepository _ticketRepository;
@@ -127,7 +130,7 @@ public class TicketUpdatesController : ControllerBase
             var ticket = await _ticketRepository.GetByIdAsync(ticketUpdate.TicketId);
             if (ticket == null)
             {
-                return NotFound(new { error = "Associated ticket not found" });
+                return NotFound(new { error = AssociatedTicketNotFoundErrorMessage });
             }
 
             _logger.LogInformation(
@@ -139,7 +142,7 @@ public class TicketUpdatesController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            _logger.LogWarning(ex, "Invalid operation for ticket update {TicketUpdateId}", ticketUpdateId);
+            _logger.LogWarning(ex, InvalidOperationLogMessageTemplate, ticketUpdateId);
             return BadRequest(new { error = ex.Message });
         }
         catch (Exception ex)
@@ -185,7 +188,7 @@ public class TicketUpdatesController : ControllerBase
             var ticket = await _ticketRepository.GetByIdAsync(ticketUpdate.TicketId);
             if (ticket == null)
             {
-                return NotFound(new { error = "Associated ticket not found" });
+                return NotFound(new { error = AssociatedTicketNotFoundErrorMessage });
             }
 
             _logger.LogInformation(
@@ -204,7 +207,7 @@ public class TicketUpdatesController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            _logger.LogWarning(ex, "Invalid operation for ticket update {TicketUpdateId}", ticketUpdateId);
+            _logger.LogWarning(ex, InvalidOperationLogMessageTemplate, ticketUpdateId);
             return BadRequest(new { error = ex.Message });
         }
         catch (Exception ex)
@@ -254,7 +257,7 @@ public class TicketUpdatesController : ControllerBase
             var ticket = await _ticketRepository.GetByIdAsync(ticketUpdate.TicketId);
             if (ticket == null)
             {
-                return NotFound(new { error = "Associated ticket not found" });
+                return NotFound(new { error = AssociatedTicketNotFoundErrorMessage });
             }
 
             _logger.LogInformation(
@@ -277,7 +280,7 @@ public class TicketUpdatesController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            _logger.LogWarning(ex, "Invalid operation for ticket update {TicketUpdateId}", ticketUpdateId);
+            _logger.LogWarning(ex, InvalidOperationLogMessageTemplate, ticketUpdateId);
             return BadRequest(new { error = ex.Message });
         }
         catch (Exception ex)

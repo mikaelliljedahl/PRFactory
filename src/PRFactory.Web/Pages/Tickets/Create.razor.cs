@@ -18,6 +18,9 @@ public partial class Create
     [Inject]
     private IToastService ToastService { get; set; } = null!;
 
+    [Inject]
+    private ILogger<Create> Logger { get; set; } = null!;
+
     private CreateTicketModel model = new();
     private List<RepositoryDto> repositories = new();
     private bool isSubmitting = false;
@@ -39,8 +42,9 @@ public partial class Create
                 Name = r.Name
             }).ToList();
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.LogError(ex, "Failed to load repositories");
             errorMessage = "Failed to load repositories. Please refresh the page.";
             ToastService.ShowError("Failed to load repositories. Please refresh the page.");
         }

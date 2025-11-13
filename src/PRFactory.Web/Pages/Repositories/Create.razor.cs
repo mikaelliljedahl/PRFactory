@@ -8,7 +8,7 @@ namespace PRFactory.Web.Pages.Repositories;
 public partial class Create
 {
     private CreateRepositoryRequest model = new() { DefaultBranch = "main" };
-    private List<TenantDto> tenants = new();
+    private List<TenantDto> tenants = [];
     private bool isSubmitting;
     private bool connectionTested;
     private string? errorMessage;

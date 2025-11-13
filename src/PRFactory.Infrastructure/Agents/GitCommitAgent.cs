@@ -104,7 +104,6 @@ public class GitCommitAgent : BaseAgent
             Logger.LogInformation("Committed implementation code");
 
             // Push to remote (TODO: need access token)
-            // await _localGitService.PushAsync(context.RepositoryPath, branchName, accessToken);
             Logger.LogWarning("Push to remote not yet implemented - missing access token");
 
             // Update ticket

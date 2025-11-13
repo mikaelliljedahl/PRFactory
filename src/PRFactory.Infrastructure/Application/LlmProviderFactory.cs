@@ -100,6 +100,7 @@ public class LlmProviderFactory : ILlmProviderFactory
     /// <returns>List of provider names</returns>
     public List<string> GetAvailableProviders()
     {
-        return new List<string> { AnthropicProviderName, "google", "openai" };
+        List<string> providers = [AnthropicProviderName, "google", "openai"];
+        return providers;
     }
 }

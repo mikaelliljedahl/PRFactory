@@ -11,55 +11,30 @@ namespace PRFactory.Web.Services;
 /// Uses direct application service injection (Blazor Server architecture).
 /// This is a facade service that converts between domain entities and DTOs.
 /// </summary>
-public class TicketService : ITicketService
+public class TicketService(
+    ILogger<TicketService> logger,
+    ITicketApplicationService ticketApplicationService,
+    ITicketUpdateService ticketUpdateService,
+    IQuestionApplicationService questionApplicationService,
+    IWorkflowEventApplicationService workflowEventApplicationService,
+    IPlanService planService,
+    ITenantContext tenantContext,
+    ITicketRepository ticketRepository,
+    IPlanReviewService planReviewService,
+    ICurrentUserService currentUserService) : ITicketService
 {
     private const string CheckCircleIcon = "check-circle";
-
-    private readonly ILogger<TicketService> _logger;
-    private readonly ITicketApplicationService _ticketApplicationService;
-    private readonly ITicketUpdateService _ticketUpdateService;
-    private readonly IQuestionApplicationService _questionApplicationService;
-    private readonly IWorkflowEventApplicationService _workflowEventApplicationService;
-    private readonly IPlanService _planService;
-    private readonly ITenantContext _tenantContext;
-    private readonly ITicketRepository _ticketRepository;
-    private readonly IPlanReviewService _planReviewService;
-    private readonly ICurrentUserService _currentUserService;
-
-    public TicketService(
-        ILogger<TicketService> logger,
-        ITicketApplicationService ticketApplicationService,
-        ITicketUpdateService ticketUpdateService,
-        IQuestionApplicationService questionApplicationService,
-        IWorkflowEventApplicationService workflowEventApplicationService,
-        IPlanService planService,
-        ITenantContext tenantContext,
-        ITicketRepository ticketRepository,
-        IPlanReviewService planReviewService,
-        ICurrentUserService currentUserService)
-    {
-        _logger = logger;
-        _ticketApplicationService = ticketApplicationService;
-        _ticketUpdateService = ticketUpdateService;
-        _questionApplicationService = questionApplicationService;
-        _workflowEventApplicationService = workflowEventApplicationService;
-        _planService = planService;
-        _tenantContext = tenantContext;
-        _ticketRepository = ticketRepository;
-        _planReviewService = planReviewService;
-        _currentUserService = currentUserService;
-    }
 
     public async Task<List<Ticket>> GetAllTicketsAsync(CancellationToken ct = default)
     {
         try
         {
             // Use application service directly (Blazor Server architecture)
-            return await _ticketApplicationService.GetAllTicketsAsync(ct);
+            return await ticketApplicationService.GetAllTicketsAsync(ct);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching all tickets");
+            logger.LogError(ex, "Error fetching all tickets");
             throw;
         }
     }
@@ -69,11 +44,11 @@ public class TicketService : ITicketService
         try
         {
             // Use application service directly (Blazor Server architecture)
-            return await _ticketApplicationService.GetTicketByIdAsync(ticketId, ct);
+            return await ticketApplicationService.GetTicketByIdAsync(ticketId, ct);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching ticket {TicketId}", ticketId);
+            logger.LogError(ex, "Error fetching ticket {TicketId}", ticketId);
             throw;
         }
     }
@@ -83,7 +58,7 @@ public class TicketService : ITicketService
         try
         {
             // Use application service to get entity
-            var ticket = await _ticketApplicationService.GetTicketByIdAsync(ticketId, ct);
+            var ticket = await ticketApplicationService.GetTicketByIdAsync(ticketId, ct);
 
             if (ticket == null)
             {
@@ -113,7 +88,7 @@ public class TicketService : ITicketService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching ticket DTO for {TicketId}", ticketId);
+            logger.LogError(ex, "Error fetching ticket DTO for {TicketId}", ticketId);
             throw;
         }
     }
@@ -123,11 +98,11 @@ public class TicketService : ITicketService
         try
         {
             // Use application service directly (Blazor Server architecture)
-            return await _ticketApplicationService.GetTicketsByRepositoryAsync(repositoryId, ct);
+            return await ticketApplicationService.GetTicketsByRepositoryAsync(repositoryId, ct);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching tickets for repository {RepositoryId}", repositoryId);
+            logger.LogError(ex, "Error fetching tickets for repository {RepositoryId}", repositoryId);
             throw;
         }
     }
@@ -137,12 +112,12 @@ public class TicketService : ITicketService
         try
         {
             // Use application service directly (Blazor Server architecture)
-            await _ticketApplicationService.TriggerWorkflowAsync(ticketId, ct);
-            _logger.LogInformation("Triggered workflow for ticket {TicketId}", ticketId);
+            await ticketApplicationService.TriggerWorkflowAsync(ticketId, ct);
+            logger.LogInformation("Triggered workflow for ticket {TicketId}", ticketId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error triggering workflow for ticket {TicketId}", ticketId);
+            logger.LogError(ex, "Error triggering workflow for ticket {TicketId}", ticketId);
             throw;
         }
     }
@@ -152,12 +127,12 @@ public class TicketService : ITicketService
         try
         {
             // Use application service directly (Blazor Server architecture)
-            await _ticketApplicationService.ApprovePlanAsync(ticketId, comments, ct);
-            _logger.LogInformation("Approved plan for ticket {TicketId}", ticketId);
+            await ticketApplicationService.ApprovePlanAsync(ticketId, comments, ct);
+            logger.LogInformation("Approved plan for ticket {TicketId}", ticketId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error approving plan for ticket {TicketId}", ticketId);
+            logger.LogError(ex, "Error approving plan for ticket {TicketId}", ticketId);
             throw;
         }
     }
@@ -167,13 +142,13 @@ public class TicketService : ITicketService
         try
         {
             // Use application service directly (Blazor Server architecture)
-            await _ticketApplicationService.RejectPlanAsync(ticketId, rejectionReason, regenerateCompletely, ct);
+            await ticketApplicationService.RejectPlanAsync(ticketId, rejectionReason, regenerateCompletely, ct);
             var action = regenerateCompletely ? "Rejected and regenerating" : "Rejected";
-            _logger.LogInformation("{Action} plan for ticket {TicketId}", action, ticketId);
+            logger.LogInformation("{Action} plan for ticket {TicketId}", action, ticketId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error rejecting plan for ticket {TicketId}", ticketId);
+            logger.LogError(ex, "Error rejecting plan for ticket {TicketId}", ticketId);
             throw;
         }
     }
@@ -183,12 +158,12 @@ public class TicketService : ITicketService
         try
         {
             // Use application service directly (Blazor Server architecture)
-            await _ticketApplicationService.RefinePlanAsync(ticketId, refinementInstructions, ct);
-            _logger.LogInformation("Refining plan for ticket {TicketId} with instructions", ticketId);
+            await ticketApplicationService.RefinePlanAsync(ticketId, refinementInstructions, ct);
+            logger.LogInformation("Refining plan for ticket {TicketId} with instructions", ticketId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error refining plan for ticket {TicketId}", ticketId);
+            logger.LogError(ex, "Error refining plan for ticket {TicketId}", ticketId);
             throw;
         }
     }
@@ -198,12 +173,12 @@ public class TicketService : ITicketService
         try
         {
             // Use application service directly (Blazor Server architecture)
-            await _ticketApplicationService.SubmitAnswersAsync(ticketId, answers, ct);
-            _logger.LogInformation("Submitted answers for ticket {TicketId}", ticketId);
+            await ticketApplicationService.SubmitAnswersAsync(ticketId, answers, ct);
+            logger.LogInformation("Submitted answers for ticket {TicketId}", ticketId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error submitting answers for ticket {TicketId}", ticketId);
+            logger.LogError(ex, "Error submitting answers for ticket {TicketId}", ticketId);
             throw;
         }
     }
@@ -213,10 +188,10 @@ public class TicketService : ITicketService
         try
         {
             // Use application service directly (Blazor Server architecture)
-            var ticketUpdate = await _ticketUpdateService.GetLatestTicketUpdateAsync(ticketId, ct);
+            var ticketUpdate = await ticketUpdateService.GetLatestTicketUpdateAsync(ticketId, ct);
             if (ticketUpdate == null)
             {
-                _logger.LogWarning("No ticket update found for ticket {TicketId}", ticketId);
+                logger.LogWarning("No ticket update found for ticket {TicketId}", ticketId);
                 return null;
             }
 
@@ -225,7 +200,7 @@ public class TicketService : ITicketService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching ticket update for ticket {TicketId}", ticketId);
+            logger.LogError(ex, "Error fetching ticket update for ticket {TicketId}", ticketId);
             throw;
         }
     }
@@ -235,18 +210,18 @@ public class TicketService : ITicketService
         try
         {
             // Use application service directly (Blazor Server architecture)
-            await _ticketUpdateService.UpdateTicketUpdateAsync(
+            await ticketUpdateService.UpdateTicketUpdateAsync(
                 ticketUpdateId,
                 ticketUpdate.UpdatedTitle,
                 ticketUpdate.UpdatedDescription,
                 ticketUpdate.AcceptanceCriteria,
                 ct);
 
-            _logger.LogInformation("Updated ticket update {TicketUpdateId}", ticketUpdateId);
+            logger.LogInformation("Updated ticket update {TicketUpdateId}", ticketUpdateId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating ticket update {TicketUpdateId}", ticketUpdateId);
+            logger.LogError(ex, "Error updating ticket update {TicketUpdateId}", ticketUpdateId);
             throw;
         }
     }
@@ -256,12 +231,12 @@ public class TicketService : ITicketService
         try
         {
             // Use application service directly (Blazor Server architecture)
-            await _ticketUpdateService.ApproveTicketUpdateAsync(ticketUpdateId, approvedBy: null, ct);
-            _logger.LogInformation("Approved ticket update {TicketUpdateId}", ticketUpdateId);
+            await ticketUpdateService.ApproveTicketUpdateAsync(ticketUpdateId, approvedBy: null, ct);
+            logger.LogInformation("Approved ticket update {TicketUpdateId}", ticketUpdateId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error approving ticket update {TicketUpdateId}", ticketUpdateId);
+            logger.LogError(ex, "Error approving ticket update {TicketUpdateId}", ticketUpdateId);
             throw;
         }
     }
@@ -271,18 +246,18 @@ public class TicketService : ITicketService
         try
         {
             // Use application service directly (Blazor Server architecture)
-            await _ticketUpdateService.RejectTicketUpdateAsync(
+            await ticketUpdateService.RejectTicketUpdateAsync(
                 ticketUpdateId,
                 rejectionReason,
                 rejectedBy: null,
                 regenerate: true,
                 ct);
 
-            _logger.LogInformation("Rejected ticket update {TicketUpdateId}", ticketUpdateId);
+            logger.LogInformation("Rejected ticket update {TicketUpdateId}", ticketUpdateId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error rejecting ticket update {TicketUpdateId}", ticketUpdateId);
+            logger.LogError(ex, "Error rejecting ticket update {TicketUpdateId}", ticketUpdateId);
             throw;
         }
     }
@@ -292,7 +267,7 @@ public class TicketService : ITicketService
         try
         {
             // Use application service directly (Blazor Server architecture)
-            var questionsWithAnswers = await _questionApplicationService.GetQuestionsWithAnswersAsync(ticketId, ct);
+            var questionsWithAnswers = await questionApplicationService.GetQuestionsWithAnswersAsync(ticketId, ct);
 
             // Map to DTOs
             return questionsWithAnswers.Select(qa => new QuestionDto
@@ -308,7 +283,7 @@ public class TicketService : ITicketService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching questions for ticket {TicketId}", ticketId);
+            logger.LogError(ex, "Error fetching questions for ticket {TicketId}", ticketId);
             throw;
         }
     }
@@ -318,14 +293,14 @@ public class TicketService : ITicketService
         try
         {
             // Use application service directly (Blazor Server architecture)
-            var events = await _workflowEventApplicationService.GetEventsAsync(ticketId, ct);
+            var events = await workflowEventApplicationService.GetEventsAsync(ticketId, ct);
 
             // Map to DTOs
             return events.Select(MapEventToDto).ToList();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching events for ticket {TicketId}", ticketId);
+            logger.LogError(ex, "Error fetching events for ticket {TicketId}", ticketId);
             throw;
         }
     }
@@ -335,7 +310,7 @@ public class TicketService : ITicketService
         try
         {
             // Use application service directly (Blazor Server architecture)
-            var planInfo = await _planService.GetPlanAsync(ticketId, ct);
+            var planInfo = await planService.GetPlanAsync(ticketId, ct);
 
             if (planInfo == null)
             {
@@ -355,7 +330,7 @@ public class TicketService : ITicketService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching plan for ticket {TicketId}", ticketId);
+            logger.LogError(ex, "Error fetching plan for ticket {TicketId}", ticketId);
             throw;
         }
     }
@@ -365,7 +340,7 @@ public class TicketService : ITicketService
         try
         {
             // Get current tenant ID
-            var tenantId = await _tenantContext.GetCurrentTenantIdAsync(ct);
+            var tenantId = await tenantContext.GetCurrentTenantIdAsync(ct);
 
             // Create ticket using domain factory method
             var ticket = Ticket.Create(
@@ -379,15 +354,15 @@ public class TicketService : ITicketService
             ticket.UpdateTicketInfo(title, description);
 
             // Save to repository
-            var savedTicket = await _ticketRepository.AddAsync(ticket, ct);
+            var savedTicket = await ticketRepository.AddAsync(ticket, ct);
 
-            _logger.LogInformation("Created ticket {TicketKey} with ID {TicketId}", ticketKey, savedTicket.Id);
+            logger.LogInformation("Created ticket {TicketKey} with ID {TicketId}", ticketKey, savedTicket.Id);
 
             return savedTicket;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating ticket {TicketKey}", ticketKey);
+            logger.LogError(ex, "Error creating ticket {TicketKey}", ticketKey);
             throw;
         }
     }
@@ -538,12 +513,12 @@ public class TicketService : ITicketService
     {
         try
         {
-            var reviews = await _planReviewService.GetReviewsByTicketIdAsync(ticketId, ct);
+            var reviews = await planReviewService.GetReviewsByTicketIdAsync(ticketId, ct);
             return reviews.Select(ReviewerDto.FromEntity).ToList();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching reviewers for ticket {TicketId}", ticketId);
+            logger.LogError(ex, "Error fetching reviewers for ticket {TicketId}", ticketId);
             throw;
         }
     }
@@ -552,12 +527,12 @@ public class TicketService : ITicketService
     {
         try
         {
-            await _planReviewService.AssignReviewersAsync(ticketId, requiredReviewerIds, optionalReviewerIds, ct);
-            _logger.LogInformation("Assigned reviewers to ticket {TicketId}", ticketId);
+            await planReviewService.AssignReviewersAsync(ticketId, requiredReviewerIds, optionalReviewerIds, ct);
+            logger.LogInformation("Assigned reviewers to ticket {TicketId}", ticketId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error assigning reviewers to ticket {TicketId}", ticketId);
+            logger.LogError(ex, "Error assigning reviewers to ticket {TicketId}", ticketId);
             throw;
         }
     }
@@ -567,7 +542,7 @@ public class TicketService : ITicketService
         try
         {
             // Find the review for this ticket and reviewer
-            var reviews = await _planReviewService.GetReviewsByTicketIdAsync(ticketId, ct);
+            var reviews = await planReviewService.GetReviewsByTicketIdAsync(ticketId, ct);
             var review = reviews.FirstOrDefault(r => r.ReviewerId == reviewerId);
 
             if (review == null)
@@ -575,12 +550,12 @@ public class TicketService : ITicketService
                 throw new InvalidOperationException($"No review found for ticket {ticketId} and reviewer {reviewerId}");
             }
 
-            await _planReviewService.ApproveReviewAsync(review.Id, decision, ct);
-            _logger.LogInformation("Approved review for ticket {TicketId} by reviewer {ReviewerId}", ticketId, reviewerId);
+            await planReviewService.ApproveReviewAsync(review.Id, decision, ct);
+            logger.LogInformation("Approved review for ticket {TicketId} by reviewer {ReviewerId}", ticketId, reviewerId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error approving review for ticket {TicketId}", ticketId);
+            logger.LogError(ex, "Error approving review for ticket {TicketId}", ticketId);
             throw;
         }
     }
@@ -590,7 +565,7 @@ public class TicketService : ITicketService
         try
         {
             // Find the review for this ticket and reviewer
-            var reviews = await _planReviewService.GetReviewsByTicketIdAsync(ticketId, ct);
+            var reviews = await planReviewService.GetReviewsByTicketIdAsync(ticketId, ct);
             var review = reviews.FirstOrDefault(r => r.ReviewerId == reviewerId);
 
             if (review == null)
@@ -598,12 +573,12 @@ public class TicketService : ITicketService
                 throw new InvalidOperationException($"No review found for ticket {ticketId} and reviewer {reviewerId}");
             }
 
-            await _planReviewService.RejectReviewAsync(review.Id, reason, regenerateCompletely, ct);
-            _logger.LogInformation("Rejected review for ticket {TicketId} by reviewer {ReviewerId}", ticketId, reviewerId);
+            await planReviewService.RejectReviewAsync(review.Id, reason, regenerateCompletely, ct);
+            logger.LogInformation("Rejected review for ticket {TicketId} by reviewer {ReviewerId}", ticketId, reviewerId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error rejecting review for ticket {TicketId}", ticketId);
+            logger.LogError(ex, "Error rejecting review for ticket {TicketId}", ticketId);
             throw;
         }
     }
@@ -612,12 +587,12 @@ public class TicketService : ITicketService
     {
         try
         {
-            var comments = await _planReviewService.GetCommentsByTicketIdAsync(ticketId, ct);
+            var comments = await planReviewService.GetCommentsByTicketIdAsync(ticketId, ct);
             return comments.Select(ReviewCommentDto.FromEntity).ToList();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching comments for ticket {TicketId}", ticketId);
+            logger.LogError(ex, "Error fetching comments for ticket {TicketId}", ticketId);
             throw;
         }
     }
@@ -626,20 +601,20 @@ public class TicketService : ITicketService
     {
         try
         {
-            var currentUserId = await _currentUserService.GetCurrentUserIdAsync(ct);
+            var currentUserId = await currentUserService.GetCurrentUserIdAsync(ct);
             if (!currentUserId.HasValue)
             {
                 throw new InvalidOperationException("No authenticated user found");
             }
 
-            var comment = await _planReviewService.AddCommentAsync(ticketId, currentUserId.Value, content, mentionedUserIds, ct);
-            _logger.LogInformation("Added comment to ticket {TicketId} by user {UserId}", ticketId, currentUserId.Value);
+            var comment = await planReviewService.AddCommentAsync(ticketId, currentUserId.Value, content, mentionedUserIds, ct);
+            logger.LogInformation("Added comment to ticket {TicketId} by user {UserId}", ticketId, currentUserId.Value);
 
             return ReviewCommentDto.FromEntity(comment);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error adding comment to ticket {TicketId}", ticketId);
+            logger.LogError(ex, "Error adding comment to ticket {TicketId}", ticketId);
             throw;
         }
     }
@@ -648,11 +623,11 @@ public class TicketService : ITicketService
     {
         try
         {
-            return await _planReviewService.HasSufficientApprovalsAsync(ticketId, ct);
+            return await planReviewService.HasSufficientApprovalsAsync(ticketId, ct);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error checking approvals for ticket {TicketId}", ticketId);
+            logger.LogError(ex, "Error checking approvals for ticket {TicketId}", ticketId);
             throw;
         }
     }

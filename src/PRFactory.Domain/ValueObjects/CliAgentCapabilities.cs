@@ -65,7 +65,7 @@ public class CliAgentCapabilities
             SupportsProjectContext = supportsProjectContext,
             SupportsStreaming = supportsStreaming,
             MaxTokens = maxTokens,
-            SupportedFormats = supportedFormats ?? new List<string>(),
+            SupportedFormats = supportedFormats ?? [],
             ModelName = modelName
         };
     }
@@ -82,7 +82,7 @@ public class CliAgentCapabilities
             SupportsProjectContext = true,
             SupportsStreaming = true,
             MaxTokens = 200000,
-            SupportedFormats = new List<string> { "json", "markdown", "text" },
+            SupportedFormats = ["json", "markdown", "text"],
             ModelName = "claude-sonnet-4-5"
         };
     }
@@ -99,7 +99,7 @@ public class CliAgentCapabilities
             SupportsProjectContext = true,
             SupportsStreaming = false,
             MaxTokens = 8000,
-            SupportedFormats = new List<string> { "json", "text" },
+            SupportedFormats = ["json", "text"],
             ModelName = "codex"
         };
     }

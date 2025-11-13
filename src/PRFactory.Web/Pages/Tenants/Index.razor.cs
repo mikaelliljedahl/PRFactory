@@ -17,6 +17,9 @@ public partial class Index
     [Inject]
     private DialogService DialogService { get; set; } = null!;
 
+    [Inject]
+    private ILogger<Index> Logger { get; set; } = null!;
+
     private List<TenantDto>? tenants;
     private List<TenantDto>? filteredTenants;
     private (int Active, int Inactive)? stats;
@@ -66,8 +69,8 @@ public partial class Index
         }
         catch (Exception ex)
         {
-            // Non-critical, just log
-            Console.WriteLine($"Failed to load stats: {ex.Message}");
+            // Non-critical, log the error but don't fail the page load
+            Logger.LogWarning(ex, "Failed to load tenant statistics");
         }
     }
 

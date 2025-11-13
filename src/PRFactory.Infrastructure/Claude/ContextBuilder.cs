@@ -236,7 +236,7 @@ public class ContextBuilder : IContextBuilder
     /// <summary>
     /// Check if a directory should be ignored
     /// </summary>
-    private bool IsIgnoredDirectory(string name)
+    private static bool IsIgnoredDirectory(string name)
     {
         var ignored = new[]
         {
@@ -249,7 +249,7 @@ public class ContextBuilder : IContextBuilder
     /// <summary>
     /// Truncate content to a maximum number of lines
     /// </summary>
-    public string TruncateContent(string content, int maxLines)
+    public static string TruncateContent(string content, int maxLines)
     {
         if (string.IsNullOrEmpty(content))
             return content;
@@ -264,7 +264,7 @@ public class ContextBuilder : IContextBuilder
     /// <summary>
     /// Try to read a file, returning null if it doesn't exist or can't be read
     /// </summary>
-    private async Task<string?> TryReadFileAsync(string repoPath, string relativePath)
+    private static async Task<string?> TryReadFileAsync(string repoPath, string relativePath)
     {
         var fullPath = Path.Combine(repoPath, relativePath);
         if (!File.Exists(fullPath))
@@ -274,9 +274,8 @@ public class ContextBuilder : IContextBuilder
         {
             return await File.ReadAllTextAsync(fullPath);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            _logger.LogWarning(ex, "Failed to read file: {Path}", fullPath);
             return null;
         }
     }

@@ -99,7 +99,7 @@ public class BaseCheckpointStoreAdapter : BaseCheckpointStore
             .ToList();
     }
 
-    private BaseCheckpoint MapToBaseCheckpoint(DomainCheckpoint domainCheckpoint)
+    private static BaseCheckpoint MapToBaseCheckpoint(DomainCheckpoint domainCheckpoint)
     {
         // Deserialize state from JSON
         var state = JsonSerializer.Deserialize<Dictionary<string, object>>(domainCheckpoint.StateJson)

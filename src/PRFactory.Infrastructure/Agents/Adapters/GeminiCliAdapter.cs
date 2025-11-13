@@ -362,11 +362,6 @@ public partial class GeminiCliAdapter : ILlmProvider
                 ? $"Gemini CLI failed with exit code {result.ExitCode}"
                 : result.Error;
 
-            _logger.LogError(
-                "Gemini CLI execution failed with exit code {ExitCode}: {Error}",
-                result.ExitCode,
-                errorMessage);
-
             return new LlmResponse
             {
                 Success = false,
@@ -377,12 +372,6 @@ public partial class GeminiCliAdapter : ILlmProvider
         }
 
         var usage = ExtractUsageMetrics(result.Output, latency);
-
-        _logger.LogInformation(
-            "Gemini CLI execution completed successfully in {Latency}ms (Tokens: {InputTokens} in, {OutputTokens} out)",
-            latency.TotalMilliseconds,
-            usage.InputTokens,
-            usage.OutputTokens);
 
         return new LlmResponse
         {

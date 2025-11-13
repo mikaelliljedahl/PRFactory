@@ -59,7 +59,6 @@ public class RepositoryCloneAgent : BaseAgent
                 // Clone repository - TODO: Update CloneAsync to accept target path parameter
                 // For now, just log that cloning would happen here
                 Logger.LogWarning("Repository cloning implementation incomplete - using workspace path");
-                // await _localGitService.CloneAsync(cloneUrl, accessToken, cancellationToken);
 
                 // Create directory structure as placeholder
                 Directory.CreateDirectory(localPath);

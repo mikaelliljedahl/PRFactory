@@ -7,6 +7,15 @@ namespace PRFactory.Web.Hubs;
 /// </summary>
 public class TicketHub : Hub
 {
+    private const string ClientLogMessagePrefix = "Client {ConnectionId}";
+    private const string SubscribedToTenantMessage = "Client {ConnectionId} subscribed to tenant {TenantId}";
+    private const string SubscribedToTicketMessage = "Client {ConnectionId} subscribed to ticket {TicketId}";
+    private const string UnsubscribedFromTicketMessage = "Client {ConnectionId} unsubscribed from ticket {TicketId}";
+    private const string SubscribedToAllTicketsMessage = "Client {ConnectionId} subscribed to all tickets";
+    private const string UnsubscribedFromAllTicketsMessage = "Client {ConnectionId} unsubscribed from all tickets";
+    private const string DisconnectedWithErrorMessage = "Client {ConnectionId} disconnected with error";
+    private const string DisconnectedMessage = "Client {ConnectionId} disconnected";
+
     private readonly ILogger<TicketHub> _logger;
 
     public TicketHub(ILogger<TicketHub> logger)
@@ -20,7 +29,7 @@ public class TicketHub : Hub
     public async Task SubscribeToTenant(Guid tenantId)
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, $"tenant-{tenantId}");
-        _logger.LogInformation("Client {ConnectionId} subscribed to tenant {TenantId}",
+        _logger.LogInformation(SubscribedToTenantMessage,
             Context.ConnectionId, tenantId);
     }
 
@@ -31,7 +40,7 @@ public class TicketHub : Hub
     public async Task SubscribeToTicket(Guid ticketId)
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, $"ticket-{ticketId}");
-        _logger.LogInformation("Client {ConnectionId} subscribed to ticket {TicketId}",
+        _logger.LogInformation(SubscribedToTicketMessage,
             Context.ConnectionId, ticketId);
     }
 
@@ -41,7 +50,7 @@ public class TicketHub : Hub
     public async Task UnsubscribeFromTicket(Guid ticketId)
     {
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"ticket-{ticketId}");
-        _logger.LogInformation("Client {ConnectionId} unsubscribed from ticket {TicketId}",
+        _logger.LogInformation(UnsubscribedFromTicketMessage,
             Context.ConnectionId, ticketId);
     }
 
@@ -51,7 +60,7 @@ public class TicketHub : Hub
     public async Task SubscribeToAllTickets()
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, "all-tickets");
-        _logger.LogInformation("Client {ConnectionId} subscribed to all tickets",
+        _logger.LogInformation(SubscribedToAllTicketsMessage,
             Context.ConnectionId);
     }
 
@@ -61,13 +70,13 @@ public class TicketHub : Hub
     public async Task UnsubscribeFromAllTickets()
     {
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, "all-tickets");
-        _logger.LogInformation("Client {ConnectionId} unsubscribed from all tickets",
+        _logger.LogInformation(UnsubscribedFromAllTicketsMessage,
             Context.ConnectionId);
     }
 
     public override async Task OnConnectedAsync()
     {
-        _logger.LogInformation("Client {ConnectionId} connected", Context.ConnectionId);
+        _logger.LogInformation(ClientLogMessagePrefix + " connected", Context.ConnectionId);
         await base.OnConnectedAsync();
     }
 
@@ -75,12 +84,12 @@ public class TicketHub : Hub
     {
         if (exception != null)
         {
-            _logger.LogError(exception, "Client {ConnectionId} disconnected with error",
+            _logger.LogError(exception, DisconnectedWithErrorMessage,
                 Context.ConnectionId);
         }
         else
         {
-            _logger.LogInformation("Client {ConnectionId} disconnected", Context.ConnectionId);
+            _logger.LogInformation(DisconnectedMessage, Context.ConnectionId);
         }
         await base.OnDisconnectedAsync(exception);
     }

@@ -200,7 +200,7 @@ public class TicketBuilder
 
     private void TransitionToState(Ticket ticket, WorkflowState targetState)
     {
-        var statePath = GetStatePath(WorkflowState.Triggered, targetState);
+        var statePath = GetStatePath(targetState);
         foreach (var state in statePath)
         {
             if (ticket.State != state)

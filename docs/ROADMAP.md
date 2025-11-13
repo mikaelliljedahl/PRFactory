@@ -20,6 +20,18 @@ This document outlines planned enhancements beyond the current MVP implementatio
 
 ## Recently Completed ✅
 
+### Epic 02: Multi-LLM Support with Code Review (PR #59 - Nov 12, 2025)
+- ✅ **Multi-LLM Provider Infrastructure** - ILlmProvider interface, factory pattern, 3 providers (Claude, OpenAI, Gemini)
+- ✅ **Automated Code Review Workflow** - CodeReviewGraph with AI-powered PR review
+- ✅ **Cross-Provider Review** - One LLM can review code written by another (e.g., GPT-4 reviews Claude code)
+- ✅ **Prompt Template System** - 24 Handlebars templates for 4 agents × 3 providers
+- ✅ **Per-Agent Provider Configuration** - Different agents can use different LLMs
+- ✅ **Iteration Loop** - Implementation → CodeReview → Fix (max 3 iterations)
+- ✅ **Agent Configuration UI** - Admin page for managing agent-provider mapping
+- ✅ **Git Platform Enhancements** - GetPullRequestDetailsAsync() for all providers
+- ✅ **68 new tests** - CodeReviewAgent tests, 712 total tests passing
+- ⚠️ OpenAI and Gemini adapters are placeholders (need full implementation)
+
 ### Authentication & User Management (PR #52 - Nov 11, 2025)
 - ✅ OAuth 2.0 integration with Microsoft Azure AD and Google Workspace
 - ✅ Auto-provisioning of tenants and users from identity providers
@@ -196,12 +208,12 @@ This document outlines planned enhancements beyond the current MVP implementatio
 
 **Goal**: Support complex enterprise approval and quality processes
 
-- [ ] **Code Review Graph**
-  - [ ] Automated code review agent (Claude-based)
-  - [ ] Human review and feedback loop
-  - [ ] Iterative improvement before PR creation
-  - [ ] Code quality scoring
-  - [ ] Security vulnerability detection
+- [x] **Code Review Graph** ✅ **COMPLETED (PR #59 - Epic 02)**
+  - [x] Automated code review agent with configurable LLM provider
+  - [x] Feedback posted to PR as comments
+  - [x] Iterative improvement loop (Implementation → CodeReview → Fix, max 3 iterations)
+  - [ ] Code quality scoring with metrics
+  - [ ] Security vulnerability detection (OWASP, dependency scanning)
 
 - [ ] **Testing Graph**
   - [ ] Automated test generation
@@ -342,14 +354,17 @@ This document outlines planned enhancements beyond the current MVP implementatio
   - [ ] GCP deployment templates
   - [ ] Terraform modules
 
-- [x] **Custom LLM Provider Support** ✅ **COMPLETED** (PR #48 - Nov 10, 2025)
-  - [x] Abstraction layer for LLM providers (TenantLlmProvider entity)
-  - [x] Multi-provider support (Anthropic, Z.ai, Minimax M2, OpenRouter, Together AI)
+- [x] **Custom LLM Provider Support** ✅ **COMPLETED** (PR #48, #59 - Nov 2025)
+  - [x] Abstraction layer for LLM providers (ILlmProvider, factory pattern)
+  - [x] Multi-provider support (Anthropic/Claude, OpenAI/GPT, Google/Gemini)
   - [x] Custom LLM endpoint configuration
-  - [ ] OpenAI (GPT-4) integration (supported via OpenRouter or Z.ai)
+  - [x] OpenAI (GPT-4) integration via CLI adapter (placeholder)
+  - [x] Google Gemini integration via CLI adapter (placeholder)
+  - [x] Per-agent provider configuration (Analysis, Planning, Implementation, CodeReview)
+  - [x] Admin UI for managing agent-provider mapping (/admin/agent-configuration)
   - [ ] Azure OpenAI integration (supported via OpenRouter or Z.ai)
   - [ ] Self-hosted LLMs (Ollama, vLLM) - can be configured as Custom provider
-  - [ ] Admin UI for managing tenant LLM providers
+  - [ ] Full implementation of OpenAI and Gemini CLI adapters
 
 **Success Criteria**: Customers can deploy in any environment
 

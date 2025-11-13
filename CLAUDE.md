@@ -800,91 +800,17 @@ These architectural decisions should be **PRESERVED**:
 
 These items CAN be simplified or removed:
 
-### 1. OpenTelemetry / Distributed Tracing ⚠️
+### 1. Redundant Middleware Layers 🔄
 
-**Status**: OVERENGINEERED for current use case
+**Review:** Check if multiple middleware layers duplicate logging or error handling. Consolidate into fewer layers as needed. Keep essential cross-cutting concerns (authentication, authorization, tenant context).
 
-**Why it's overengineered:**
-- Most workflows involve human review (suspended states)
-- Workflow durations are measured in hours/days, not milliseconds
-- Humans review Jira comments, not Jaeger traces
-- Adds complexity without proportional value for current scale
+### 2. Duplicate Configuration Keys 📋
 
-**Files to simplify:**
-- `/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Base/Middleware/TelemetryMiddleware.cs`
-- OpenTelemetry configuration in `Program.cs` files
-- Jaeger setup in `docker-compose.yml`
+**Review:** Audit appsettings.json files for unused keys. Remove deprecated sections and document required vs optional configuration.
 
-**Recommendation:**
-- Keep structured logging (Serilog) - this is valuable
-- Remove OpenTelemetry ActivitySource and Meter
-- Remove Jaeger container from docker-compose
-- Keep basic metrics (execution counts, durations) in logs
+### 3. Placeholder Agent Types 🤖
 
-**What to keep:**
-- Structured logging with correlation IDs
-- Basic timing information in logs
-- Error tracking and reporting
-
-### 2. Stub Implementations 🔧
-
-**Status**: ✅ Completed - All stub implementations have been removed
-
-**Removed files:**
-- `/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Stubs/` directory (deleted)
-  - `CheckpointStore.cs`
-  - `AgentGraphExecutor.cs`
-  - `AgentExecutionQueue.cs`
-  - `GraphCheckpointStore.cs`
-- `/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/IAgentGraphBuilder.cs` (deleted)
-  - Removed `AgentGraph` class with NotImplementedException
-  - Removed `AgentGraphBuilder` and `IAgentGraphBuilder` interface
-
-**Also removed:**
-- Empty placeholder agent classes from graph implementation files
-- `ResumeFromCheckpointAsync` extension method that only threw NotImplementedException
-
-**Next steps when needed:**
-- Implement proper checkpoint persistence using EF Core
-- Implement agent execution queue with database or message broker
-- Complete graph executor implementation or integrate with Microsoft.Agents.AI
-
-### 3. Redundant Middleware Layers 🔄
-
-**Status**: May have redundant logging/error handling middleware
-
-**Review these:**
-- Check if multiple middleware layers duplicate logging
-- Consolidate error handling into fewer layers
-- Remove middleware that doesn't add value
-
-**Keep:**
-- Essential middleware for cross-cutting concerns
-- Authentication/authorization middleware
-- Tenant context middleware
-
-### 4. Duplicate Configuration Keys 📋
-
-**Status**: Configuration may have redundant or unused keys
-
-**Recommendation:**
-- Audit appsettings.json files for unused keys
-- Remove deprecated configuration sections
-- Document required vs optional configuration
-- Ensure configuration schema is validated on startup
-
-### 5. Placeholder Agent Types 🤖
-
-**Status**: Some agent types are declared but not fully implemented
-
-**Files to review:**
-- Agent placeholder classes at end of graph files (e.g., `public class PlanningAgent { }`)
-- These should be replaced with actual implementations
-
-**Recommendation:**
-- Implement proper agent classes
-- Remove placeholder declarations once real agents exist
-- Ensure each agent has proper error handling and logging
+**Review:** Agent placeholder classes should be replaced with actual implementations. Ensure each agent has proper error handling and logging.
 
 ---
 
@@ -1086,8 +1012,6 @@ If `dotnet format` reports a CHARSET error:
 - ❌ "This inline Bootstrap markup is fine, no need for components"
 
 **GREEN FLAGS** (Safe to simplify):
-- ✅ "OpenTelemetry isn't adding value for human-reviewed workflows"
-- ✅ "These stub implementations should be completed or removed"
 - ✅ "This middleware duplicates logging from another layer"
 - ✅ "These configuration keys are unused"
 - ✅ "This Bootstrap markup is repeated, let's extract a component"
@@ -1098,7 +1022,6 @@ If `dotnet format` reports a CHARSET error:
 **DO**:
 - Add new graphs for new workflow types
 - Implement missing platform providers
-- Complete stub implementations
 - Add configuration options for tenant customization
 - Extend existing patterns (don't reinvent)
 - Extract repetitive UI markup into /UI/* components
@@ -1508,8 +1431,6 @@ git push
 | **Checkpoint-Based Resume** | Fault tolerance | ✅ YES |
 | **LibGit2Sharp** | Cross-platform git | ✅ YES |
 | **UI Component Library** | Reusable, consistent UI | ✅ YES |
-| **OpenTelemetry** | Distributed tracing | ❌ REMOVE |
-| **Stub Implementations** | Incomplete code | ⚠️ COMPLETE OR REMOVE |
 
 ### File Locations
 
@@ -1546,10 +1467,8 @@ git push
 7. ✅ UI Component Library structure (/UI/* for pure components, code-behind pattern)
 
 **SIMPLIFY OR REMOVE:**
-1. ❌ OpenTelemetry / Jaeger tracing (keep structured logging)
-2. ❌ Stub implementations (complete or remove)
-3. ❌ Redundant middleware layers
-4. ❌ Unused configuration keys
+1. ❌ Redundant middleware layers
+2. ❌ Unused configuration keys
 
 **The Bottom Line:**
 

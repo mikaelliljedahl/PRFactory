@@ -18,8 +18,8 @@ public class TicketBuilder
     private WorkflowState _state = WorkflowState.Triggered;
     private string? _title;
     private string? _description;
-    private List<Question> _questions = new();
-    private List<Answer> _answers = new();
+    private readonly List<Question> _questions = new();
+    private readonly List<Answer> _answers = new();
     private string? _planBranchName;
     private string? _planMarkdownPath;
     private string? _implementationBranchName;
@@ -214,7 +214,7 @@ public class TicketBuilder
         }
     }
 
-    private List<WorkflowState> GetStatePath(WorkflowState from, WorkflowState to)
+    private List<WorkflowState> GetStatePath(WorkflowState to)
     {
         // Simple path mapping for common test scenarios
         var paths = new Dictionary<WorkflowState, List<WorkflowState>>

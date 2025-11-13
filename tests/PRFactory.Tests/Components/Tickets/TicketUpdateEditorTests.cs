@@ -116,7 +116,10 @@ public class TicketUpdateEditorTests : ComponentTestBase
     }
 
     [Fact(Skip = "WaitForState timeout - component doesn't render error message as expected")]
-    public async Task SaveButton_Click_HandlesServiceError() { }
+    public async Task SaveButton_Click_HandlesServiceError()
+    {
+        // Method intentionally left empty.
+    }
 
     [Fact]
     public void HandlesSuccessCriteriaChanged()

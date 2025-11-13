@@ -15,13 +15,6 @@ public abstract class PageTestBase : TestContextBase
         // Tests should mock the service layer that interacts with SignalR instead
     }
 
-    protected override void ConfigureServices(IServiceCollection services)
-    {
-        base.ConfigureServices(services);
-
-        // Override in specific test classes to add page-specific services
-    }
-
     /// <summary>
     /// Simulates real-time updates by calling the service layer directly
     /// </summary>

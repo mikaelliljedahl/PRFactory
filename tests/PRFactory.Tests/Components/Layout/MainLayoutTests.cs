@@ -19,14 +19,26 @@ public class MainLayoutTests : ComponentTestBase
     }
 
     [Fact(Skip = "MainLayout requires IConfiguration dependency - needs test environment setup")]
-    public void Render_DisplaysLayoutStructure() { }
+    public void Render_DisplaysLayoutStructure()
+    {
+        // Method intentionally left empty.
+    }
 
     [Fact(Skip = "MainLayout doesn't have ChildContent parameter - test needs redesign")]
-    public void Render_IncludesNavMenu() { }
+    public void Render_IncludesNavMenu()
+    {
+        // Method intentionally left empty.
+    }
 
     [Fact(Skip = "MainLayout doesn't have ChildContent parameter - test needs redesign")]
-    public void Render_IncludesMainContentArea() { }
+    public void Render_IncludesMainContentArea()
+    {
+        // Method intentionally left empty.
+    }
 
     [Fact(Skip = "MainLayout requires IConfiguration dependency - needs test environment setup")]
-    public void Render_WithUnauthenticatedUser_StillRendersLayout() { }
+    public void Render_WithUnauthenticatedUser_StillRendersLayout()
+    {
+        // Method intentionally left empty.
+    }
 }

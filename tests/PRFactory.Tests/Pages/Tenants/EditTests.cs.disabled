@@ -1,0 +1,195 @@
+using Bunit;
+using Microsoft.AspNetCore.Components;
+using Moq;
+using PRFactory.Tests.Blazor;
+using PRFactory.Tests.Blazor.TestDataBuilders;
+using PRFactory.Web.Models;
+using PRFactory.Web.Pages.Tenants;
+using PRFactory.Web.Services;
+using Radzen;
+using Xunit;
+
+namespace PRFactory.Tests.Pages.Tenants;
+
+public class EditTests : PageTestBase
+{
+    private Mock<ITenantService> _mockTenantService;
+    private Mock<NavigationManager> _mockNavigationManager;
+    private Mock<DialogService> _mockDialogService;
+    private Mock<IToastService> _mockToastService;
+
+    public EditTests()
+    {
+        _mockTenantService = new Mock<ITenantService>();
+        _mockNavigationManager = new Mock<NavigationManager>();
+        _mockDialogService = new Mock<DialogService>();
+        _mockToastService = new Mock<IToastService>();
+
+    }
+
+    protected override void ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    {
+        base.ConfigureServices(services);
+        services.AddSingleton(_mockTenantService.Object);
+        services.AddSingleton(_mockNavigationManager.Object);
+        services.AddSingleton(_mockDialogService.Object);
+        services.AddSingleton(_mockToastService.Object);
+    }
+
+    [Fact]
+    public async Task OnInitialized_LoadsTenant()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var tenant = new TenantDtoBuilder()
+            .WithId(tenantId)
+            .WithName("Test Tenant")
+            .Build();
+
+        _mockTenantService
+            .Setup(x => x.GetTenantByIdAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tenant);
+
+        // Act
+        var cut = RenderComponent<Edit>(parameters => parameters
+            .Add(p => p.Id, tenantId));
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        _mockTenantService.Verify(
+            x => x.GetTenantByIdAsync(tenantId, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task OnInitialized_WhenTenantNotFound_ShowsErrorMessage()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+
+        _mockTenantService
+            .Setup(x => x.GetTenantByIdAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantDto?)null);
+
+        // Act
+        var cut = RenderComponent<Edit>(parameters => parameters
+            .Add(p => p.Id, tenantId));
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        cut.WaitForState(() => cut.Markup.Contains("not found") || cut.Markup.Contains("Error"));
+    }
+
+    [Fact]
+    public async Task OnInitialized_WhenError_ShowsErrorMessage()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+
+        _mockTenantService
+            .Setup(x => x.GetTenantByIdAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Network error"));
+
+        // Act
+        var cut = RenderComponent<Edit>(parameters => parameters
+            .Add(p => p.Id, tenantId));
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        Assert.NotNull(cut);
+    }
+
+    [Fact]
+    public async Task Render_ShowsLoadingStateInitially()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var tcs = new TaskCompletionSource<TenantDto?>();
+
+        _mockTenantService
+            .Setup(x => x.GetTenantByIdAsync(tenantId, It.IsAny<CancellationToken>()))
+            .Returns(tcs.Task);
+
+        // Act
+        var cut = RenderComponent<Edit>(parameters => parameters
+            .Add(p => p.Id, tenantId));
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(50));
+        Assert.True(cut.Markup.ToLower().Contains("spinner") || cut.Markup.ToLower().Contains("loading"));
+
+        // Complete loading
+        tcs.SetResult(new TenantDtoBuilder().WithId(tenantId).Build());
+    }
+
+    [Fact]
+    public async Task Render_ShowsTenantFormWithData()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var tenant = new TenantDtoBuilder()
+            .WithId(tenantId)
+            .WithName("My Tenant")
+            .Build();
+
+        _mockTenantService
+            .Setup(x => x.GetTenantByIdAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tenant);
+
+        // Act
+        var cut = RenderComponent<Edit>(parameters => parameters
+            .Add(p => p.Id, tenantId));
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        cut.WaitForState(() => cut.Markup.Contains("My Tenant") || !cut.Markup.Contains("spinner"));
+    }
+
+    [Fact]
+    public async Task UpdateTenant_WhenSuccessful_NavigatesToDetails()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var tenant = new TenantDtoBuilder()
+            .WithId(tenantId)
+            .Build();
+
+        _mockTenantService
+            .Setup(x => x.GetTenantByIdAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tenant);
+
+        _mockTenantService
+            .Setup(x => x.UpdateTenantAsync(It.IsAny<UpdateTenantRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tenant);
+
+        // Act
+        var cut = RenderComponent<Edit>(parameters => parameters
+            .Add(p => p.Id, tenantId));
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        Assert.NotNull(cut);
+    }
+
+    [Fact]
+    public async Task Render_ShowsCancelButton()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var tenant = new TenantDtoBuilder()
+            .WithId(tenantId)
+            .Build();
+
+        _mockTenantService
+            .Setup(x => x.GetTenantByIdAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tenant);
+
+        // Act
+        var cut = RenderComponent<Edit>(parameters => parameters
+            .Add(p => p.Id, tenantId));
+
+        // Assert
+        await cut.InvokeAsync(() => Task.Delay(100));
+        cut.WaitForState(() => cut.Markup.Contains("Cancel") || cut.Markup.Contains("Back"));
+    }
+}

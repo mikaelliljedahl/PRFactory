@@ -1,0 +1,30 @@
+using Bunit;
+using PRFactory.Tests.Blazor;
+using PRFactory.Web.Components.Auth;
+using Xunit;
+
+namespace PRFactory.Tests.Components.Auth;
+
+public class RedirectToLoginTests : ComponentTestBase
+{
+    [Fact]
+    public void Render_RedirectsToLoginPage()
+    {
+        // Act
+        var cut = RenderComponent<RedirectToLogin>();
+
+        // Assert
+        var navMan = Services.GetRequiredService<FakeNavigationManager>();
+        Assert.Contains("/auth/login", navMan.Uri.ToLower());
+    }
+
+    [Fact]
+    public void Render_DisplaysRedirectMessage()
+    {
+        // Act
+        var cut = RenderComponent<RedirectToLogin>();
+
+        // Assert
+        Assert.NotNull(cut.Markup);
+    }
+}

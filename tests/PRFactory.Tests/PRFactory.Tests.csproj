@@ -31,6 +31,11 @@
     <!-- Mocking and Assertions -->
     <PackageReference Include="Moq" Version="4.20.70" />
 
+    <!-- Blazor Testing -->
+    <PackageReference Include="bunit" Version="1.32.7" />
+    <PackageReference Include="bunit.web" Version="1.32.7" />
+    <PackageReference Include="AngleSharp" Version="1.1.2" />
+
     <!-- Integration Testing -->
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.0" />
 

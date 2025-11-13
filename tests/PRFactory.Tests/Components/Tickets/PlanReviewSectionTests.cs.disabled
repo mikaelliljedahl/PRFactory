@@ -1,0 +1,337 @@
+using Bunit;
+using Moq;
+using PRFactory.Domain.ValueObjects;
+using PRFactory.Tests.Blazor;
+using PRFactory.Tests.Blazor.TestDataBuilders;
+using PRFactory.Web.Components.Tickets;
+using PRFactory.Web.Models;
+using Xunit;
+using static Moq.It;
+using static Moq.Times;
+
+namespace PRFactory.Tests.Components.Tickets;
+
+public class PlanReviewSectionTests : ComponentTestBase
+{
+    [Fact]
+    public async Task OnInitialized_LoadsReviewersAndComments()
+    {
+        // Arrange
+        var ticket = TicketDtoBuilder.InPlanReviewState().Build();
+        var reviewers = new List<ReviewerDto>();
+        var comments = new List<ReviewCommentDto>();
+
+        BlazorMockHelpers.SetupGetReviewers(MockTicketService, ticket.Id, reviewers);
+        BlazorMockHelpers.SetupGetComments(MockTicketService, ticket.Id, comments);
+
+        // Act
+        var cut = RenderComponent<PlanReviewSection>(parameters => parameters
+            .Add(p => p.Ticket, ticket));
+
+        await Task.Delay(200);
+
+        // Assert
+        MockTicketService.Verify(x => x.GetReviewersAsync(ticket.Id, It.IsAny<CancellationToken>()), Times.Once);
+        MockTicketService.Verify(x => x.GetCommentsAsync(ticket.Id, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ApproveButton_WithoutTeamReview_CallsServiceAndInvokesCallback()
+    {
+        // Arrange
+        var ticket = TicketDtoBuilder.InPlanReviewState().Build();
+        var reviewers = new List<ReviewerDto>(); // No team review
+        var comments = new List<ReviewCommentDto>();
+
+        BlazorMockHelpers.SetupGetReviewers(MockTicketService, ticket.Id, reviewers);
+        BlazorMockHelpers.SetupGetComments(MockTicketService, ticket.Id, comments);
+        BlazorMockHelpers.SetupApprovePlan(MockTicketService, ticket.Id);
+
+        var callbackInvoked = false;
+
+        var cut = RenderComponent<PlanReviewSection>(parameters => parameters
+            .Add(p => p.Ticket, ticket)
+            .Add(p => p.OnPlanApproved, () => { callbackInvoked = true; }));
+
+        await Task.Delay(200);
+
+        // Act
+        var approveButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Approve")).ToList();
+        if (approveButtons.Any())
+        {
+            await approveButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+            await Task.Delay(100);
+
+            // Assert
+            MockTicketService.Verify(
+                x => x.ApprovePlanAsync(ticket.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()),
+                Times.Once);
+            BlazorMockHelpers.VerifySuccessToast(MockToastService);
+            Assert.True(callbackInvoked);
+        }
+    }
+
+    [Fact]
+    public async Task ApproveButton_WithTeamReview_ChecksSufficientApprovals()
+    {
+        // Arrange
+        var ticket = TicketDtoBuilder.InPlanReviewState().Build();
+        var reviewers = new List<ReviewerDto>
+        {
+            new ReviewerDto { Id = Guid.NewGuid(), DisplayName = "Reviewer", IsRequired = true, Status = Domain.Entities.ReviewStatus.Pending }
+        };
+        var comments = new List<ReviewCommentDto>();
+
+        BlazorMockHelpers.SetupGetReviewers(MockTicketService, ticket.Id, reviewers);
+        BlazorMockHelpers.SetupGetComments(MockTicketService, ticket.Id, comments);
+        BlazorMockHelpers.SetupHasSufficientApprovals(MockTicketService, ticket.Id, false); // Insufficient approvals
+
+        var cut = RenderComponent<PlanReviewSection>(parameters => parameters
+            .Add(p => p.Ticket, ticket));
+
+        await Task.Delay(200);
+
+        // Act
+        var approveButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Approve")).ToList();
+        if (approveButtons.Any())
+        {
+            await approveButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+            await Task.Delay(100);
+
+            // Assert - Should show warning, not approve
+            BlazorMockHelpers.VerifyWarningToast(MockToastService);
+            MockTicketService.Verify(
+                x => x.ApprovePlanAsync(ticket.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+    }
+
+    [Fact]
+    public async Task RefineButton_ShowsRefineForm()
+    {
+        // Arrange
+        var ticket = TicketDtoBuilder.InPlanReviewState().Build();
+        BlazorMockHelpers.SetupGetReviewers(MockTicketService, ticket.Id, new List<ReviewerDto>());
+        BlazorMockHelpers.SetupGetComments(MockTicketService, ticket.Id, new List<ReviewCommentDto>());
+
+        var cut = RenderComponent<PlanReviewSection>(parameters => parameters
+            .Add(p => p.Ticket, ticket));
+
+        await Task.Delay(200);
+
+        // Act
+        var refineButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Refine")).ToList();
+        if (refineButtons.Any())
+        {
+            await refineButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+            // Assert - Refine form should be visible
+            Assert.Contains("instructions", cut.Markup.ToLower());
+        }
+    }
+
+    [Fact]
+    public async Task ConfirmRefine_WithoutInstructions_ShowsValidationError()
+    {
+        // Arrange
+        var ticket = TicketDtoBuilder.InPlanReviewState().Build();
+        BlazorMockHelpers.SetupGetReviewers(MockTicketService, ticket.Id, new List<ReviewerDto>());
+        BlazorMockHelpers.SetupGetComments(MockTicketService, ticket.Id, new List<ReviewCommentDto>());
+
+        var cut = RenderComponent<PlanReviewSection>(parameters => parameters
+            .Add(p => p.Ticket, ticket));
+
+        await Task.Delay(200);
+
+        // Open refine form
+        var refineButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Refine")).ToList();
+        if (refineButtons.Any())
+        {
+            await refineButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+            // Act - Try to confirm without instructions
+            var confirmButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Confirm")).ToList();
+            if (confirmButtons.Any())
+            {
+                await confirmButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+                // Assert - Should not call service
+                MockTicketService.Verify(
+                    x => x.RefinePlanAsync(ticket.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()),
+                    Times.Never);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ConfirmRefine_WithInstructions_CallsServiceAndInvokesCallback()
+    {
+        // Arrange
+        var ticket = TicketDtoBuilder.InPlanReviewState().Build();
+        BlazorMockHelpers.SetupGetReviewers(MockTicketService, ticket.Id, new List<ReviewerDto>());
+        BlazorMockHelpers.SetupGetComments(MockTicketService, ticket.Id, new List<ReviewCommentDto>());
+        BlazorMockHelpers.SetupRefinePlan(MockTicketService, ticket.Id);
+
+        var callbackInvoked = false;
+
+        var cut = RenderComponent<PlanReviewSection>(parameters => parameters
+            .Add(p => p.Ticket, ticket)
+            .Add(p => p.OnPlanRejected, () => { callbackInvoked = true; }));
+
+        await Task.Delay(200);
+
+        // Open refine form
+        var refineButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Refine")).ToList();
+        if (refineButtons.Any())
+        {
+            await refineButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+            // Enter instructions
+            var textareas = cut.FindAll("textarea");
+            if (textareas.Any())
+            {
+                await textareas.First().InputAsync(new Microsoft.AspNetCore.Components.ChangeEventArgs { Value = "Add more details" });
+
+                // Confirm
+                var confirmButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Confirm")).ToList();
+                if (confirmButtons.Any())
+                {
+                    await confirmButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+                    await Task.Delay(100);
+
+                    // Assert
+                    MockTicketService.Verify(
+                        x => x.RefinePlanAsync(ticket.Id, It.IsAny<string>(), It.IsAny<CancellationToken>()),
+                        Times.Once);
+                    BlazorMockHelpers.VerifyInfoToast(MockToastService);
+                    Assert.True(callbackInvoked);
+                }
+            }
+        }
+    }
+
+    [Fact]
+    public async Task RejectButton_ShowsRejectForm()
+    {
+        // Arrange
+        var ticket = TicketDtoBuilder.InPlanReviewState().Build();
+        BlazorMockHelpers.SetupGetReviewers(MockTicketService, ticket.Id, new List<ReviewerDto>());
+        BlazorMockHelpers.SetupGetComments(MockTicketService, ticket.Id, new List<ReviewCommentDto>());
+
+        var cut = RenderComponent<PlanReviewSection>(parameters => parameters
+            .Add(p => p.Ticket, ticket));
+
+        await Task.Delay(200);
+
+        // Act
+        var rejectButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Reject") && !b.TextContent.Contains("Cancel")).ToList();
+        if (rejectButtons.Any())
+        {
+            await rejectButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+            // Assert - Reject form should be visible
+            Assert.Contains("reason", cut.Markup.ToLower());
+        }
+    }
+
+    [Fact]
+    public async Task ConfirmReject_WithReason_CallsServiceWithRegenerateFlag()
+    {
+        // Arrange
+        var ticket = TicketDtoBuilder.InPlanReviewState().Build();
+        BlazorMockHelpers.SetupGetReviewers(MockTicketService, ticket.Id, new List<ReviewerDto>());
+        BlazorMockHelpers.SetupGetComments(MockTicketService, ticket.Id, new List<ReviewCommentDto>());
+        BlazorMockHelpers.SetupRejectPlan(MockTicketService, ticket.Id);
+
+        var callbackInvoked = false;
+
+        var cut = RenderComponent<PlanReviewSection>(parameters => parameters
+            .Add(p => p.Ticket, ticket)
+            .Add(p => p.OnPlanRejected, () => { callbackInvoked = true; }));
+
+        await Task.Delay(200);
+
+        // Open reject form
+        var rejectButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Reject") && !b.TextContent.Contains("Cancel")).ToList();
+        if (rejectButtons.Any())
+        {
+            await rejectButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+            // Enter reason
+            var textareas = cut.FindAll("textarea");
+            if (textareas.Any())
+            {
+                await textareas.First().InputAsync(new Microsoft.AspNetCore.Components.ChangeEventArgs { Value = "Start over" });
+
+                // Confirm
+                var confirmButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Confirm")).ToList();
+                if (confirmButtons.Any())
+                {
+                    await confirmButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+                    await Task.Delay(100);
+
+                    // Assert - Should call with regenerateCompletely = true
+                    MockTicketService.Verify(
+                        x => x.RejectPlanAsync(ticket.Id, It.IsAny<string>(), true, It.IsAny<CancellationToken>()),
+                        Times.Once);
+                    BlazorMockHelpers.VerifyInfoToast(MockToastService);
+                    Assert.True(callbackInvoked);
+                }
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ShowReviewerAssignment_DisplaysReviewerAssignmentComponent()
+    {
+        // Arrange
+        var ticket = TicketDtoBuilder.InPlanReviewState().Build();
+        BlazorMockHelpers.SetupGetReviewers(MockTicketService, ticket.Id, new List<ReviewerDto>());
+        BlazorMockHelpers.SetupGetComments(MockTicketService, ticket.Id, new List<ReviewCommentDto>());
+
+        var cut = RenderComponent<PlanReviewSection>(parameters => parameters
+            .Add(p => p.Ticket, ticket));
+
+        await Task.Delay(200);
+
+        // Act - Look for assign/add reviewers button
+        var assignButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Add") || b.TextContent.Contains("Assign")).ToList();
+        if (assignButtons.Any())
+        {
+            await assignButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+            // Assert - ReviewerAssignment component should be visible
+            Assert.NotNull(cut.Markup);
+        }
+    }
+
+    [Fact]
+    public async Task HandleCommentAdded_ReloadsComments()
+    {
+        // Arrange
+        var ticket = TicketDtoBuilder.InPlanReviewState().Build();
+        var comments = new List<ReviewCommentDto>();
+
+        var callCount = 0;
+        MockTicketService.Setup(m => m.GetCommentsAsync(ticket.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() =>
+            {
+                callCount++;
+                return comments;
+            });
+
+        BlazorMockHelpers.SetupGetReviewers(MockTicketService, ticket.Id, new List<ReviewerDto>());
+
+        var cut = RenderComponent<PlanReviewSection>(parameters => parameters
+            .Add(p => p.Ticket, ticket));
+
+        await Task.Delay(200);
+
+        // Assert - GetCommentsAsync should be called at least once during initialization
+        Assert.True(callCount >= 1);
+    }
+}

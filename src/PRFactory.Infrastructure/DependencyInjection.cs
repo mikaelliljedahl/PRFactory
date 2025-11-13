@@ -93,6 +93,9 @@ public static class DependencyInjection
         services.AddScoped<IPlanReviewRepository, PlanReviewRepository>();
         services.AddScoped<IReviewCommentRepository, ReviewCommentRepository>();
 
+        // Multi-LLM provider repositories
+        services.AddScoped<ITenantLlmProviderRepository, TenantLlmProviderRepository>();
+
         // Register checkpoint store adapters
         services.AddScoped<WorkflowCheckpointStore, GraphCheckpointStoreAdapter>();
         services.AddScoped<Agents.Base.ICheckpointStore, BaseCheckpointStoreAdapter>();
@@ -107,12 +110,14 @@ public static class DependencyInjection
         services.AddMemoryCache();
 
         // Register configuration services
-        services.AddScoped<ITenantConfigurationService, TenantConfigurationService>();
+        services.AddScoped<PRFactory.Infrastructure.Configuration.ITenantConfigurationService, PRFactory.Infrastructure.Configuration.TenantConfigurationService>();
+        services.AddScoped<PRFactory.Core.Application.Services.ITenantConfigurationService, Application.TenantConfigurationService>();
 
         // Register application services
         services.AddScoped<ITicketUpdateService, Application.TicketUpdateService>();
         services.AddScoped<ITicketApplicationService, Application.TicketApplicationService>();
         services.AddScoped<IRepositoryApplicationService, Application.RepositoryApplicationService>();
+        services.AddScoped<IRepositoryService, Application.RepositoryService>();
         services.AddScoped<ITenantApplicationService, Application.TenantApplicationService>();
         services.AddScoped<IErrorApplicationService, Application.ErrorApplicationService>();
         services.AddScoped<ITenantContext, Application.TenantContext>();
@@ -125,6 +130,10 @@ public static class DependencyInjection
         services.AddScoped<IPlanReviewService, Application.PlanReviewService>();
         services.AddScoped<ICurrentUserService, Application.CurrentUserService>();
         services.AddScoped<IProvisioningService, Application.ProvisioningService>();
+        services.AddScoped<IUserManagementService, Application.UserManagementService>();
+
+        // Multi-LLM provider services
+        services.AddScoped<ITenantLlmProviderService, Application.TenantLlmProviderService>();
 
         // Register IHttpContextAccessor for CurrentUserService
         services.AddHttpContextAccessor();

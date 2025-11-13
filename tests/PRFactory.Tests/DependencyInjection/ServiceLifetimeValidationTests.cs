@@ -181,7 +181,8 @@ public class ServiceLifetimeValidationTests : DIValidationTestBase
         var services = CreateInfrastructureServiceCollection();
 
         // Assert
-        AssertServiceLifetime<ITenantConfigurationService>(services, ServiceLifetime.Scoped);
+        AssertServiceLifetime<PRFactory.Core.Application.Services.ITenantConfigurationService>(services, ServiceLifetime.Scoped);
+        AssertServiceLifetime<PRFactory.Infrastructure.Configuration.ITenantConfigurationService>(services, ServiceLifetime.Scoped);
     }
 
     [Fact]

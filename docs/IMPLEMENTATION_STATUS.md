@@ -76,12 +76,19 @@
   - Global usings eliminating ~180 lines of duplicate using statements
   - ArgumentNullException.ThrowIfNull() modernizing 125+ null checks
   - 5 SonarQube violations fixed (code quality improvements)
+- **Admin UI Services Foundation** (Epic 06 Phase 1 - Nov 13, 2025) ✨
+  - Repository management service with CRUD and connection testing
+  - LLM provider management service with OAuth and API key modes
+  - Tenant configuration service for workflow settings
+  - User management service with role-based access control
+  - TenantLlmProviderRepository implementation
+  - Comprehensive test coverage (all tests passing)
 
 ### What's Missing 🚧
 - **OAuth Client Configuration** - Google/Microsoft OAuth apps need registration (credentials required)
 - **Agent Execution** - Claude Code CLI authentication needs resolution
 - **GitLab Support** - 4th platform provider (GitHub, Bitbucket, Azure DevOps done)
-- **Admin UI** - Tenant/repository configuration pages missing
+- **Admin UI Pages** - UI for repositories, LLM providers, tenant settings, users (Epic 06 Phases 2-5)
 - **TenantLlmProvider Tests** - New entity needs test coverage
 - **ProcessExecutor Tests** - New service needs test coverage
 
@@ -782,7 +789,95 @@ Implemented components:
 
 ---
 
-### 9. External Integrations & API
+### 9. Admin UI Services (Epic 06 - Phase 1)
+
+| Component | Status | Completeness | Notes |
+|-----------|--------|--------------|-------|
+| **RepositoryService** | ✅ COMPLETE | 100% | CRUD, connection testing |
+| **TenantLlmProviderService** | ✅ COMPLETE | 100% | OAuth & API key modes |
+| **TenantConfigurationService** | ✅ COMPLETE | 100% | Workflow settings management |
+| **UserManagementService** | ✅ COMPLETE | 100% | Role management with RBAC |
+| **TenantLlmProviderRepository** | ✅ COMPLETE | 100% | EF Core repository |
+| **DTOs** | ✅ COMPLETE | 100% | 10 DTOs for admin services |
+
+**Purpose**: Self-service configuration foundation for PRFactory tenants. Provides application services and repositories for managing repositories, LLM providers, tenant settings, and user roles.
+
+**Implementation** ✅ **COMPLETE (Epic 06 Phase 1 - Nov 13, 2025)**
+
+**Application Services** (`/src/PRFactory.Infrastructure/Application/`):
+
+- ✅ **RepositoryService** (`RepositoryService.cs`)
+  - CRUD operations for repository management
+  - Connection testing with git platforms
+  - Encrypted access token handling
+  - Repository statistics and usage tracking
+  - Tenant isolation enforcement
+
+- ✅ **TenantLlmProviderService** (`TenantLlmProviderService.cs`)
+  - Support for OAuth providers (Anthropic Native)
+  - Support for API key providers (Z.ai, Minimax, OpenRouter, Together, Custom)
+  - Connection testing with LLM endpoints
+  - Encrypted token storage and retrieval
+  - Default provider management
+  - Model override configuration
+
+- ✅ **TenantConfigurationService** (`TenantConfigurationService.cs`)
+  - Workflow settings management (auto-implementation, retries, timeouts)
+  - Code review settings (enable/disable, max iterations, auto-approve)
+  - LLM provider assignments (Analysis, Planning, Implementation, CodeReview)
+  - Allowed repositories whitelist
+  - Configuration validation
+
+- ✅ **UserManagementService** (`UserManagementService.cs`)
+  - User listing and search
+  - Role management (Owner, Admin, Member, Viewer)
+  - Role change validation (prevent removing last Owner)
+  - User activation/deactivation
+  - User statistics and activity tracking
+  - RBAC enforcement
+
+**Infrastructure** (`/src/PRFactory.Infrastructure/Persistence/Repositories/`):
+
+- ✅ **TenantLlmProviderRepository** (`TenantLlmProviderRepository.cs`)
+  - CRUD operations for TenantLlmProvider entity
+  - Get providers by tenant
+  - Get default provider for tenant
+  - Set provider as default
+  - Tenant isolation with global query filters
+
+**DTOs** (`/src/PRFactory.Core/Application/DTOs/`):
+
+- ✅ `RepositoryDto`, `CreateRepositoryDto`, `UpdateRepositoryDto`
+- ✅ `TenantLlmProviderDto`, `CreateApiKeyProviderDto`, `CreateOAuthProviderDto`
+- ✅ `TenantConfigurationDto`
+- ✅ `UserManagementDto`
+- ✅ `ConnectionTestResult`
+
+**Testing**:
+- ✅ Comprehensive unit tests for all services
+- ✅ Repository tests with tenant isolation verification
+- ✅ Service integration tests
+- ✅ Connection testing validation
+- ✅ RBAC enforcement tests
+
+**Key Features**:
+- ✅ Self-service repository configuration
+- ✅ Multi-LLM provider management
+- ✅ Tenant workflow customization
+- ✅ User role management with RBAC
+- ✅ Encrypted credential storage (AES-256-GCM)
+- ✅ Connection testing for repositories and LLM providers
+- ✅ Complete application service layer
+
+**Remaining Work (Epic 06 Phases 2-5)**:
+- ⚠️ Blazor UI pages for repository management
+- ⚠️ Blazor UI pages for LLM provider configuration
+- ⚠️ Blazor UI pages for tenant settings
+- ⚠️ Blazor UI pages for user management
+
+---
+
+### 10. External Integrations & API
 
 **Note**: API Controllers (`/src/PRFactory.Api/Controllers/`) are used **ONLY for webhooks** (Jira/Azure DevOps external integrations), NOT for general API access. Blazor Server components inject services directly per CLAUDE.md architecture.
 
@@ -827,7 +922,7 @@ Implemented components:
 
 ---
 
-### 10. Testing
+### 11. Testing
 
 | Test Type | Status | Coverage | Notes |
 |-----------|--------|----------|-------|

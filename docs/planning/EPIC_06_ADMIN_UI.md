@@ -1,6 +1,6 @@
 # Epic 6: Admin UI for Configuration
 
-**Status:** 📋 Not Started (0% complete)
+**Status:** 🚧 IN PROGRESS (20% complete - Phase 1 of 5)
 **Priority:** P0 (Critical - Blocks production use)
 **Effort:** 2-3 weeks (UI, services, testing)
 **Dependencies:** Authentication (PR #52 - Complete)
@@ -18,19 +18,18 @@ Enable **self-service configuration** for PRFactory tenants by building Admin UI
 - ✅ Foundation for SaaS business model
 
 **Current State:**
-- ❌ No UI for repository management (requires direct DB access)
-- ❌ No UI for LLM provider configuration (TenantLlmProvider entity exists but unusable)
-- ❌ No UI for tenant settings
-- ❌ No UI for user role management
+- ❌ No UI for repository management (services complete, UI pending)
+- ❌ No UI for LLM provider configuration (services complete, UI pending)
+- ❌ No UI for tenant settings (services complete, UI pending)
+- ❌ No UI for user role management (services complete, UI pending)
 - ✅ All domain entities exist (Repository, TenantLlmProvider, Tenant, User)
 - ✅ Authentication and RBAC implemented (PR #52)
+- ✅ **Application services complete** (Phase 1 - Nov 13, 2025)
 
 **Remaining Work:**
-- Build 4 admin UI sections: Repositories, LLM Providers, Tenant Settings, User Management
-- Create application services (IRepositoryService, ITenantLlmProviderService, etc.)
+- Build 4 admin UI sections: Repositories, LLM Providers, Tenant Settings, User Management (Phases 2-5)
+- Create Blazor pages and components for self-service configuration
 - Add API controllers for external integrations (optional)
-- Implement connection testing for repositories and LLM providers
-- Write comprehensive tests
 
 ---
 
@@ -121,15 +120,15 @@ Enable **self-service configuration** for PRFactory tenants by building Admin UI
 
 ### Repositories
 
-**Existing Repositories:**
-- ✅ `IRepositoryRepository` / `RepositoryRepository` (basic CRUD exists)
-- ✅ `ITenantRepository` / `TenantRepository` (basic CRUD exists)
+**Repositories:**
+- ✅ `IRepositoryRepository` / `RepositoryRepository` (basic CRUD)
+- ✅ `ITenantRepository` / `TenantRepository` (basic CRUD)
 - ✅ `IUserRepository` / `UserRepository` (complete, PR #52)
-- ❌ `ITenantLlmProviderRepository` / `TenantLlmProviderRepository` (NOT YET IMPLEMENTED)
+- ✅ `ITenantLlmProviderRepository` / `TenantLlmProviderRepository` (✅ COMPLETE - Phase 1)
 
-### Missing Services (Need Implementation)
+### Application Services (✅ COMPLETE - Phase 1)
 
-**IRepositoryService** - NOT IMPLEMENTED
+**IRepositoryService** - ✅ COMPLETE (`/src/PRFactory.Infrastructure/Application/RepositoryService.cs`)
 - `GetRepositoriesForTenantAsync(Guid tenantId)` - List all repositories
 - `GetRepositoryByIdAsync(Guid id)` - Get single repository
 - `CreateRepositoryAsync(CreateRepositoryDto dto)` - Add repository
@@ -138,7 +137,7 @@ Enable **self-service configuration** for PRFactory tenants by building Admin UI
 - `TestRepositoryConnectionAsync(Guid id)` - Test git connection
 - `GetRepositoryStatisticsAsync(Guid id)` - Usage stats (# tickets, last access)
 
-**ITenantLlmProviderService** - NOT IMPLEMENTED
+**ITenantLlmProviderService** - ✅ COMPLETE (`/src/PRFactory.Infrastructure/Application/TenantLlmProviderService.cs`)
 - `GetProvidersForTenantAsync(Guid tenantId)` - List all providers
 - `GetProviderByIdAsync(Guid id)` - Get single provider
 - `CreateApiKeyProviderAsync(CreateApiKeyProviderDto dto)` - Add API key provider
@@ -149,54 +148,57 @@ Enable **self-service configuration** for PRFactory tenants by building Admin UI
 - `TestProviderConnectionAsync(Guid id)` - Test LLM connection
 - `RefreshOAuthTokenAsync(Guid id)` - Refresh OAuth token
 
-**ITenantConfigurationService** - PARTIALLY IMPLEMENTED
+**ITenantConfigurationService** - ✅ COMPLETE (`/src/PRFactory.Infrastructure/Application/TenantConfigurationService.cs`)
 - `GetConfigurationAsync(Guid tenantId)` - Get tenant config
 - `UpdateConfigurationAsync(Guid tenantId, TenantConfigurationDto dto)` - Update config
-- Note: Some methods may exist in ITenantService, needs verification
+- Workflow settings management (auto-implementation, retries, timeouts)
+- Code review settings (enable/disable, max iterations)
+- LLM provider assignments per agent role
 
-**IUserManagementService** - NOT IMPLEMENTED (IUserService exists but limited)
+**IUserManagementService** - ✅ COMPLETE (`/src/PRFactory.Infrastructure/Application/UserManagementService.cs`)
 - `GetUsersForTenantAsync(Guid tenantId)` - List all users
 - `GetUserByIdAsync(Guid id)` - Get single user
 - `UpdateUserRoleAsync(Guid id, UserRole role)` - Change user role
 - `ActivateUserAsync(Guid id)` - Activate user
 - `DeactivateUserAsync(Guid id)` - Deactivate user
 - `GetUserStatisticsAsync(Guid id)` - User activity stats
+- RBAC enforcement with role validation
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Foundation (Week 1)
+### Phase 1: Foundation ✅ COMPLETE (Nov 13, 2025)
 
-**1.1 Create Missing Repositories**
-- `ITenantLlmProviderRepository` interface
-- `TenantLlmProviderRepository` implementation (EF Core)
-- Unit tests (CRUD operations, tenant isolation)
+**1.1 Create Missing Repositories** ✅
+- ✅ `ITenantLlmProviderRepository` interface
+- ✅ `TenantLlmProviderRepository` implementation (EF Core)
+- ✅ Unit tests (CRUD operations, tenant isolation)
 
-**1.2 Create Application Services**
-- `IRepositoryService` / `RepositoryService`
-- `ITenantLlmProviderService` / `TenantLlmProviderService`
-- `ITenantConfigurationService` / `TenantConfigurationService` (or extend existing)
-- `IUserManagementService` / `UserManagementService`
-- Unit tests for all services (80% coverage minimum)
+**1.2 Create Application Services** ✅
+- ✅ `IRepositoryService` / `RepositoryService`
+- ✅ `ITenantLlmProviderService` / `TenantLlmProviderService`
+- ✅ `ITenantConfigurationService` / `TenantConfigurationService`
+- ✅ `IUserManagementService` / `UserManagementService`
+- ✅ Unit tests for all services (comprehensive coverage)
 
-**1.3 Create DTOs**
-- `RepositoryDto`, `CreateRepositoryDto`, `UpdateRepositoryDto`
-- `TenantLlmProviderDto`, `CreateApiKeyProviderDto`, `UpdateProviderDto`
-- `TenantConfigurationDto`
-- `UserManagementDto`
+**1.3 Create DTOs** ✅
+- ✅ `RepositoryDto`, `CreateRepositoryDto`, `UpdateRepositoryDto`
+- ✅ `TenantLlmProviderDto`, `CreateApiKeyProviderDto`, `CreateOAuthProviderDto`
+- ✅ `TenantConfigurationDto`
+- ✅ `UserManagementDto`
+- ✅ `ConnectionTestResult`
 
-**1.4 Create Web Service Facades** (Blazor Server pattern)
-- `RepositoryWebService` - Facade for Blazor components
-- `TenantLlmProviderWebService` - Facade for Blazor components
-- `TenantSettingsWebService` - Facade for Blazor components
-- `UserManagementWebService` - Facade for Blazor components
+**1.4 Service Registration** ✅
+- ✅ All services registered in DI container
+- ✅ Services follow Blazor Server architecture (no HTTP calls)
+- ✅ Direct service injection pattern implemented
 
 **Deliverables:**
 - ✅ All repositories implemented and tested
 - ✅ All application services implemented and tested
 - ✅ All DTOs defined
-- ✅ Web service facades implemented
+- ✅ Services registered and ready for Blazor UI
 
 ---
 

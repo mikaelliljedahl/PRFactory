@@ -13,6 +13,8 @@ namespace PRFactory.Api.Controllers;
 [Produces("application/json")]
 public class AgentPromptTemplatesController : ControllerBase
 {
+    private const string TemplateNotFoundErrorMessage = "Template with ID {id} not found";
+
     private readonly IAgentPromptTemplateRepository _repository;
     private readonly IAgentPromptService _promptService;
     private readonly ILogger<AgentPromptTemplatesController> _logger;
@@ -85,7 +87,7 @@ public class AgentPromptTemplatesController : ControllerBase
         var template = await _repository.GetByIdAsync(id, ct);
         if (template == null)
         {
-            return NotFound(new { error = $"Template with ID {id} not found" });
+            return NotFound(new { error = TemplateNotFoundErrorMessage });
         }
 
         return Ok(template);
@@ -182,7 +184,7 @@ public class AgentPromptTemplatesController : ControllerBase
         var sourceTemplate = await _repository.GetByIdAsync(id, ct);
         if (sourceTemplate == null)
         {
-            return NotFound(new { error = $"Template with ID {id} not found" });
+            return NotFound(new { error = TemplateNotFoundErrorMessage });
         }
 
         // Check if clone already exists
@@ -227,7 +229,7 @@ public class AgentPromptTemplatesController : ControllerBase
         var template = await _repository.GetByIdAsync(id, ct);
         if (template == null)
         {
-            return NotFound(new { error = $"Template with ID {id} not found" });
+            return NotFound(new { error = TemplateNotFoundErrorMessage });
         }
 
         if (template.IsSystemTemplate)
@@ -265,7 +267,7 @@ public class AgentPromptTemplatesController : ControllerBase
         var template = await _repository.GetByIdAsync(id, ct);
         if (template == null)
         {
-            return NotFound(new { error = $"Template with ID {id} not found" });
+            return NotFound(new { error = TemplateNotFoundErrorMessage });
         }
 
         if (template.IsSystemTemplate)

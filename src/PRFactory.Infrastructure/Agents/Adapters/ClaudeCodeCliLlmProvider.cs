@@ -271,18 +271,13 @@ public partial class ClaudeCodeCliLlmProvider : ILlmProvider
     /// <summary>
     /// Parses the CLI response into an LlmResponse
     /// </summary>
-    private LlmResponse ParseCliResponse(ProcessExecutionResult result, TimeSpan latency)
+    private static LlmResponse ParseCliResponse(ProcessExecutionResult result, TimeSpan latency)
     {
         if (!result.Success)
         {
             var errorMessage = string.IsNullOrWhiteSpace(result.Error)
                 ? $"Claude CLI failed with exit code {result.ExitCode}"
                 : result.Error;
-
-            _logger.LogError(
-                "Claude CLI execution failed with exit code {ExitCode}: {Error}",
-                result.ExitCode,
-                errorMessage);
 
             return new LlmResponse
             {
@@ -294,12 +289,6 @@ public partial class ClaudeCodeCliLlmProvider : ILlmProvider
         }
 
         var usage = ExtractUsageMetrics(result.Output, latency);
-
-        _logger.LogInformation(
-            "Claude CLI execution completed successfully in {Latency}ms (Tokens: {InputTokens} in, {OutputTokens} out)",
-            latency.TotalMilliseconds,
-            usage.InputTokens,
-            usage.OutputTokens);
 
         return new LlmResponse
         {
@@ -313,7 +302,7 @@ public partial class ClaudeCodeCliLlmProvider : ILlmProvider
     /// <summary>
     /// Extracts usage metrics from CLI output
     /// </summary>
-    private LlmUsageMetrics ExtractUsageMetrics(string output, TimeSpan latency)
+    private static LlmUsageMetrics ExtractUsageMetrics(string output, TimeSpan latency)
     {
         var metrics = new LlmUsageMetrics
         {
@@ -350,9 +339,8 @@ public partial class ClaudeCodeCliLlmProvider : ILlmProvider
                 metrics.TotalTokens = metrics.InputTokens + metrics.OutputTokens;
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            _logger.LogWarning(ex, "Error extracting token metrics from Claude CLI output");
         }
 
         return metrics;

@@ -65,7 +65,7 @@ public class ToastService : IToastService
         }
     }
 
-    private string GetDefaultIcon(ToastType type)
+    private static string GetDefaultIcon(ToastType type)
     {
         return type switch
         {

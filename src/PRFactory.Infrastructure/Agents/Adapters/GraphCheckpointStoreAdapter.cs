@@ -127,7 +127,7 @@ public class GraphCheckpointStoreAdapter : ICheckpointStore
         }
     }
 
-    private CheckpointData MapToCheckpointData(DomainCheckpoint domainCheckpoint)
+    private static CheckpointData MapToCheckpointData(DomainCheckpoint domainCheckpoint)
     {
         // Deserialize state from JSON
         var state = JsonSerializer.Deserialize<Dictionary<string, object>>(domainCheckpoint.StateJson)

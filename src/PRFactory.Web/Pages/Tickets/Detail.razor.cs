@@ -20,6 +20,9 @@ public partial class Detail : IAsyncDisposable
     [Inject]
     private IToastService ToastService { get; set; } = null!;
 
+    [Inject]
+    private ILogger<Detail> Logger { get; set; } = null!;
+
     private TicketDto? ticket;
     private List<QuestionDto>? questions;
     private List<WorkflowEventDto>? events;
@@ -91,7 +94,7 @@ public partial class Detail : IAsyncDisposable
         catch (Exception ex)
         {
             // Log but don't fail the page load
-            Console.WriteLine($"Error loading questions: {ex.Message}");
+            Logger.LogWarning(ex, "Failed to load questions for ticket {TicketId}", Id);
             questions = new List<QuestionDto>();
         }
     }
@@ -113,7 +116,7 @@ public partial class Detail : IAsyncDisposable
         catch (Exception ex)
         {
             // Log but don't fail the page load
-            Console.WriteLine($"Error loading events: {ex.Message}");
+            Logger.LogWarning(ex, "Failed to load events for ticket {TicketId}", Id);
             events = new List<WorkflowEventDto>();
         }
     }
@@ -169,7 +172,7 @@ public partial class Detail : IAsyncDisposable
         catch (Exception ex)
         {
             connectionState = HubConnectionState.Disconnected;
-            Console.WriteLine($"Error initializing SignalR: {ex.Message}");
+            Logger.LogWarning(ex, "Failed to initialize SignalR connection for ticket {TicketId}", Id);
             StateHasChanged();
         }
     }

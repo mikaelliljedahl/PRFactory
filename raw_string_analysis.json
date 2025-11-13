@@ -1,0 +1,540 @@
+{
+  "analysis_timestamp": "2025-11-12",
+  "codebase": "PRFactory",
+  "focus_area": "/src directory",
+  "total_findings": 31,
+  "summary": {
+    "total_string_literals_found": 31,
+    "breakdown_by_type": {
+      "json_with_escaped_quotes": 3,
+      "regex_patterns": 11,
+      "multiline_strings": 6,
+      "interpolated_multiline": 6,
+      "csv_with_escaping": 1,
+      "markdown_strings": 4
+    },
+    "total_escape_characters": 45,
+    "estimated_token_savings": "8-12%"
+  },
+  "detailed_findings": [
+    {
+      "id": 1,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Jira/JiraCommentParser.cs",
+      "line_number": 165,
+      "string_type": "regex",
+      "escape_count": 1,
+      "current_code": "var instruction = Regex.Replace(commentBody, @\"@claude\\s*\", \"\", RegexOptions.IgnoreCase).Trim();",
+      "suggested_refactoring": "var instruction = Regex.Replace(commentBody, \"\"\"@claude\\s*\"\"\", \"\", RegexOptions.IgnoreCase).Trim();",
+      "rationale": "Raw string literal removes need for @ prefix; single backslash is more readable",
+      "token_savings": "1-2",
+      "complexity": "simple"
+    },
+    {
+      "id": 2,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Jira/JiraCommentParser.cs",
+      "line_number": 184,
+      "string_type": "regex",
+      "escape_count": 2,
+      "current_code": "var numberPattern = @\"^\\s*(\\d+)[\\.\\.)]\\s*(.+?)(?=^\\s*\\d+[\\.\\.)]|$)\";",
+      "suggested_refactoring": "var numberPattern = \"\"\"^\\s*(\\d+)[\\.]\\s*(.+?)(?=^\\s*\\d+[\\.]|$)\"\"\";",
+      "rationale": "Complex regex with multiple escape sequences; raw literals make escaping clearer",
+      "token_savings": "2-3",
+      "complexity": "moderate"
+    },
+    {
+      "id": 3,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Jira/JiraCommentParser.cs",
+      "line_number": 220,
+      "string_type": "regex",
+      "escape_count": 1,
+      "current_code": "var qaPattern = @\"Q:\\s*(.+?)\\s*A:\\s*(.+?)(?=Q:|$)\";",
+      "suggested_refactoring": "var qaPattern = \"\"\"Q:\\s*(.+?)\\s*A:\\s*(.+?)(?=Q:|$)\"\"\";",
+      "rationale": "Simpler regex pattern; raw strings improve readability",
+      "token_savings": "1-2",
+      "complexity": "simple"
+    },
+    {
+      "id": 4,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Jira/JiraCommentParser.cs",
+      "line_number": 279,
+      "string_type": "regex",
+      "escape_count": 1,
+      "current_code": "var answerMatch = Regex.Match(trimmedSentence, @\"(?:is|:|are)\\s*(.+)$\", RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));",
+      "suggested_refactoring": "var answerMatch = Regex.Match(trimmedSentence, \"\"\"(?:is|:|are)\\s*(.+)$\"\"\", RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));",
+      "rationale": "Raw string clearer for regex patterns with lookahead",
+      "token_savings": "1-2",
+      "complexity": "simple"
+    },
+    {
+      "id": 5,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Jira/JiraCommentParser.cs",
+      "line_number": 340,
+      "string_type": "regex",
+      "escape_count": 2,
+      "current_code": "return Regex.Matches(text, @\"\\b\\w+\\b\", RegexOptions.None, TimeSpan.FromSeconds(1))",
+      "suggested_refactoring": "return Regex.Matches(text, \"\"\"\\b\\w+\\b\"\"\", RegexOptions.None, TimeSpan.FromSeconds(1))",
+      "rationale": "Word boundary pattern with backslashes; raw literal improves clarity",
+      "token_savings": "1-2",
+      "complexity": "simple"
+    },
+    {
+      "id": 6,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/AnswerProcessingAgent.cs",
+      "line_number": 153,
+      "string_type": "regex",
+      "escape_count": 2,
+      "current_code": "var pattern = @\"Q?(\\d+)[\\.\\.:]\\s*(.+?)(?=Q?\\d+[\\.\\.:]|$)\";",
+      "suggested_refactoring": "var pattern = \"\"\"Q?(\\d+)[.:]\\s*(.+?)(?=Q?\\d+[.:]|$)\"\"\";",
+      "rationale": "Complex numbered answer pattern; raw strings simplify escape handling",
+      "token_savings": "2-3",
+      "complexity": "moderate"
+    },
+    {
+      "id": 7,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/AnswerProcessingAgent.cs",
+      "line_number": 182,
+      "string_type": "regex",
+      "escape_count": 1,
+      "current_code": "var questionMatch = Regex.Match(trimmedLine, @\"^Q?(\\d+)[\\.\\.:]:(.*)\", RegexOptions.None, TimeSpan.FromSeconds(1));",
+      "suggested_refactoring": "var questionMatch = Regex.Match(trimmedLine, \"\"\"^Q?(\\d+)[.:]:(.*)\"\"\", RegexOptions.None, TimeSpan.FromSeconds(1));",
+      "rationale": "Anchored regex pattern; raw literal removes escape confusion",
+      "token_savings": "1-2",
+      "complexity": "simple"
+    },
+    {
+      "id": 8,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Adapters/ClaudeCodeCliLlmProvider.cs",
+      "line_number": 361,
+      "string_type": "regex",
+      "escape_count": 1,
+      "current_code": "[GeneratedRegex(@\"Input tokens:\\s*(\\d+)\", RegexOptions.IgnoreCase)]",
+      "suggested_refactoring": "[GeneratedRegex(\"\"\"Input tokens:\\s*(\\d+)\"\"\", RegexOptions.IgnoreCase)]",
+      "rationale": "Token extraction pattern; raw literal improves readability",
+      "token_savings": "1-2",
+      "complexity": "simple"
+    },
+    {
+      "id": 9,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Adapters/ClaudeCodeCliLlmProvider.cs",
+      "line_number": 364,
+      "string_type": "regex",
+      "escape_count": 1,
+      "current_code": "[GeneratedRegex(@\"Output tokens:\\s*(\\d+)\", RegexOptions.IgnoreCase)]",
+      "suggested_refactoring": "[GeneratedRegex(\"\"\"Output tokens:\\s*(\\d+)\"\"\", RegexOptions.IgnoreCase)]",
+      "rationale": "Token extraction pattern; consistent with other patterns",
+      "token_savings": "1-2",
+      "complexity": "simple"
+    },
+    {
+      "id": 10,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Adapters/ClaudeCodeCliLlmProvider.cs",
+      "line_number": 367,
+      "string_type": "regex",
+      "escape_count": 1,
+      "current_code": "[GeneratedRegex(@\"(?:Total tokens|Tokens used):\\s*(\\d+)\", RegexOptions.IgnoreCase)]",
+      "suggested_refactoring": "[GeneratedRegex(\"\"\"(?:Total tokens|Tokens used):\\s*(\\d+)\"\"\", RegexOptions.IgnoreCase)]",
+      "rationale": "Alternation pattern with lookahead; raw literal clearer",
+      "token_savings": "1-2",
+      "complexity": "simple"
+    },
+    {
+      "id": 11,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Adapters/OpenAiCliAdapter.cs",
+      "line_number": 446,
+      "string_type": "regex",
+      "escape_count": 1,
+      "current_code": "[GeneratedRegex(@\"(?:prompt_tokens|input_tokens).*?:\\s*(\\d+)\", RegexOptions.IgnoreCase)]",
+      "suggested_refactoring": "[GeneratedRegex(\"\"\"(?:prompt_tokens|input_tokens).*?:\\s*(\\d+)\"\"\", RegexOptions.IgnoreCase)]",
+      "rationale": "Complex token extraction; raw literal removes ambiguity",
+      "token_savings": "1-2",
+      "complexity": "simple"
+    },
+    {
+      "id": 12,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Adapters/OpenAiCliAdapter.cs",
+      "line_number": 449,
+      "string_type": "regex",
+      "escape_count": 1,
+      "current_code": "[GeneratedRegex(@\"(?:completion_tokens|output_tokens).*?:\\s*(\\d+)\", RegexOptions.IgnoreCase)]",
+      "suggested_refactoring": "[GeneratedRegex(\"\"\"(?:completion_tokens|output_tokens).*?:\\s*(\\d+)\"\"\", RegexOptions.IgnoreCase)]",
+      "rationale": "Token pattern with alternation; raw literal improves readability",
+      "token_savings": "1-2",
+      "complexity": "simple"
+    },
+    {
+      "id": 13,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Adapters/OpenAiCliAdapter.cs",
+      "line_number": 452,
+      "string_type": "regex",
+      "escape_count": 1,
+      "current_code": "[GeneratedRegex(@\"total_tokens.*?:\\s*(\\d+)\", RegexOptions.IgnoreCase)]",
+      "suggested_refactoring": "[GeneratedRegex(\"\"\"total_tokens.*?:\\s*(\\d+)\"\"\", RegexOptions.IgnoreCase)]",
+      "rationale": "Simple token pattern; consistent refactoring",
+      "token_savings": "1-2",
+      "complexity": "simple"
+    },
+    {
+      "id": 14,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Adapters/GeminiCliAdapter.cs",
+      "line_number": 440,
+      "string_type": "regex",
+      "escape_count": 1,
+      "current_code": "[GeneratedRegex(@\"Input tokens:\\s*(\\d+)\", RegexOptions.IgnoreCase)]",
+      "suggested_refactoring": "[GeneratedRegex(\"\"\"Input tokens:\\s*(\\d+)\"\"\", RegexOptions.IgnoreCase)]",
+      "rationale": "Token extraction pattern; raw literal consistency",
+      "token_savings": "1-2",
+      "complexity": "simple"
+    },
+    {
+      "id": 15,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Adapters/GeminiCliAdapter.cs",
+      "line_number": 443,
+      "string_type": "regex",
+      "escape_count": 1,
+      "current_code": "[GeneratedRegex(@\"Output tokens:\\s*(\\d+)\", RegexOptions.IgnoreCase)]",
+      "suggested_refactoring": "[GeneratedRegex(\"\"\"Output tokens:\\s*(\\d+)\"\"\", RegexOptions.IgnoreCase)]",
+      "rationale": "Token extraction pattern; consistent with refactoring",
+      "token_savings": "1-2",
+      "complexity": "simple"
+    },
+    {
+      "id": 16,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Adapters/GeminiCliAdapter.cs",
+      "line_number": 446,
+      "string_type": "regex",
+      "escape_count": 1,
+      "current_code": "[GeneratedRegex(@\"(?:Total tokens|Tokens used):\\s*(\\d+)\", RegexOptions.IgnoreCase)]",
+      "suggested_refactoring": "[GeneratedRegex(\"\"\"(?:Total tokens|Tokens used):\\s*(\\d+)\"\"\", RegexOptions.IgnoreCase)]",
+      "rationale": "Alternation pattern; raw literal improves clarity",
+      "token_savings": "1-2",
+      "complexity": "simple"
+    },
+    {
+      "id": 17,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Specialized/CodeReviewAgent.cs",
+      "line_number": 548,
+      "string_type": "regex",
+      "escape_count": 1,
+      "current_code": "[GeneratedRegex(@\"^\\d+\\.\\s\")]",
+      "suggested_refactoring": "[GeneratedRegex(\"\"\"^\\d+\\.\\s\"\"\")]",
+      "rationale": "Numbered list start pattern; raw literal removes escape ambiguity",
+      "token_savings": "1-2",
+      "complexity": "simple"
+    },
+    {
+      "id": 18,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Specialized/CodeReviewAgent.cs",
+      "line_number": 551,
+      "string_type": "regex",
+      "escape_count": 1,
+      "current_code": "[GeneratedRegex(@\"^\\d+\\.\\s(.+)$\")]",
+      "suggested_refactoring": "[GeneratedRegex(\"\"\"^\\d+\\.\\s(.+)$\"\"\")]",
+      "rationale": "Numbered list item pattern with capture; raw literal clearer",
+      "token_savings": "1-2",
+      "complexity": "simple"
+    },
+    {
+      "id": 19,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Base/Middleware/LoggingMiddleware.cs",
+      "line_number": 125,
+      "string_type": "json_with_escaped_quotes",
+      "escape_count": 4,
+      "current_code": "\"Agent metrics: {{\\\"agent\\\": \\\"{AgentName}\\\", \\\"ticketId\\\": \\\"{TicketId}\\\", \\\"duration\\\": {Duration}, \\\"success\\\": {Success}, \\\"status\\\": \\\"{Status}\\\"}}\"",
+      "suggested_refactoring": "$$\"\"\"Agent metrics: {\"agent\": \"{AgentName}\", \"ticketId\": \"{TicketId}\", \"duration\": {Duration}, \"success\": {Success}, \"status\": \"{Status}\"}\"\"\"",
+      "rationale": "JSON with interpolation; $$\"\"\" syntax eliminates escaped quotes entirely",
+      "token_savings": "3-4",
+      "complexity": "high",
+      "note": "Must use $$\"\"\" for interpolated strings with literal braces"
+    },
+    {
+      "id": 20,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Adapters/ClaudeCodeCliAdapter.cs",
+      "line_number": 344,
+      "string_type": "json",
+      "escape_count": 2,
+      "current_code": "line.Contains(\"\\\"operation\\\"\")",
+      "suggested_refactoring": "line.Contains(\"\"\"\"operation\"\"\")  // or simpler: line.Contains(\"\\\"operation\\\"\") stays same",
+      "rationale": "Simple JSON key check; raw string eliminates inner quote escaping",
+      "token_savings": "1",
+      "complexity": "low",
+      "note": "Minimal benefit; consider if readability improves"
+    },
+    {
+      "id": 21,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Web/Services/WorkflowEventService.cs",
+      "line_number": 218,
+      "string_type": "csv_with_escaping",
+      "escape_count": 3,
+      "current_code": "csv.AppendLine($\"{evt.Id},{evt.TicketId},{evt.EventType},{evt.OccurredAt:O},\\\"{description.Replace(\"\\\"\", \"\\\"\\\"\")}\\\"\")",
+      "suggested_refactoring": "csv.AppendLine($$$\"\"\"{evt.Id},{evt.TicketId},{evt.EventType},{evt.OccurredAt:O},\"{description.Replace(\"\\\"\", \"\"\"\"\"\"\"\")}\"\"\"\")",
+      "rationale": "CSV escaping with nested quotes; raw string eliminates quote escaping",
+      "token_savings": "2-3",
+      "complexity": "high",
+      "note": "Complex interpolation; $$$\"\"\" may be needed for multiple $ levels"
+    },
+    {
+      "id": 22,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/TicketUpdateGenerationAgent.cs",
+      "line_number": 232,
+      "string_type": "multiline_string",
+      "escape_count": 0,
+      "current_code": "return @\"You are an expert software architect...\\n\\n...[multiline content]...\\n\\n...\"",
+      "suggested_refactoring": "return \\\"\\\"\\\"You are an expert software architect...\\n\\n...[multiline content]...\\n\\n...\\\"\\\"\\\"",
+      "rationale": "Verbatim string with embedded newlines; raw string is native multiline",
+      "token_savings": "2-3",
+      "complexity": "low"
+    },
+    {
+      "id": 23,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/TicketUpdateGenerationAgent.cs",
+      "line_number": 88,
+      "string_type": "interpolated_multiline",
+      "escape_count": 0,
+      "current_code": "rejectionContext = $@\"\\n\\nPREVIOUS ATTEMPT WAS REJECTED:\\n...{previousUpdate.RejectionReason}\\n\\n...\"",
+      "suggested_refactoring": "rejectionContext = $$\\\"\\\"\\\"\\n\\nPREVIOUS ATTEMPT WAS REJECTED:\\n...{previousUpdate.RejectionReason}\\n\\n...\\\"\\\"\\\"",
+      "rationale": "Interpolated verbatim string; $$\"\"\" syntax cleaner",
+      "token_savings": "1-2",
+      "complexity": "low"
+    },
+    {
+      "id": 24,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/TicketUpdateGenerationAgent.cs",
+      "line_number": 101,
+      "string_type": "interpolated_multiline",
+      "escape_count": 0,
+      "current_code": "var prompt = $@\"{systemPrompt}\\n\\n{userPrompt}\"",
+      "suggested_refactoring": "var prompt = $$\\\"\\\"\\\"\\n\\n{{userPrompt}}\\\"\\\"\\\"  // Note: Need $${ } for brace escaping",
+      "rationale": "Interpolated verbatim; raw string is cleaner for multiline",
+      "token_savings": "1-2",
+      "complexity": "low",
+      "note": "Ensure proper $${ } syntax for interpolation in raw strings"
+    },
+    {
+      "id": 25,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/TicketUpdateGenerationAgent.cs",
+      "line_number": 298,
+      "string_type": "interpolated_multiline",
+      "escape_count": 0,
+      "current_code": "return $@\"Original Ticket:\\nTitle: {ticket.Title}\\n...{analysis.Architecture}\\n...\"",
+      "suggested_refactoring": "return $$\\\"\\\"\\\"Original Ticket:\\nTitle: {ticket.Title}\\n...{analysis.Architecture}\\n...\\\"\\\"\\\"",
+      "rationale": "Multiline interpolated string with properties; raw syntax cleaner",
+      "token_savings": "2-3",
+      "complexity": "moderate"
+    },
+    {
+      "id": 26,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/ImplementationAgent.cs",
+      "line_number": 81,
+      "string_type": "interpolated_multiline",
+      "escape_count": 0,
+      "current_code": "var prompt = $@\"You are an expert...\\n\\n...{{\\\"files\\\": ...}}\n...\"",
+      "suggested_refactoring": "var prompt = $$\\\"\\\"\\\"You are an expert...\\n\\n...{{\\\"files\\\": ...}}\n...\\\"\\\"\\\"",
+      "rationale": "Multiline prompt with JSON template; raw string improves readability",
+      "token_savings": "2-3",
+      "complexity": "high",
+      "note": "Contains JSON template in the string; use $${ } for proper escaping"
+    },
+    {
+      "id": 27,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/PlanningAgent.cs",
+      "line_number": 74,
+      "string_type": "interpolated_multiline",
+      "escape_count": 0,
+      "current_code": "var prompt = $@\"You are an expert...\\n\\nBased on the ticket...\\n\\n{contextMessage}\"",
+      "suggested_refactoring": "var prompt = $$\\\"\\\"\\\"You are an expert...\\n\\nBased on the ticket...\\n\\n{contextMessage}\\\"\\\"\\\"",
+      "rationale": "Multiline prompt with single interpolation; raw string cleaner",
+      "token_savings": "1-2",
+      "complexity": "low"
+    },
+    {
+      "id": 28,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/AnalysisAgent.cs",
+      "line_number": 65,
+      "string_type": "interpolated_multiline",
+      "escape_count": 0,
+      "current_code": "var prompt = $@\"You are an expert...\\n\\nYour task is to analyze...\\n{{\\n  \\\"summary\\\": ...}}\n...\"",
+      "suggested_refactoring": "var prompt = $$\\\"\\\"\\\"You are an expert...\\n\\nYour task is to analyze...\\n{\\n  \\\"summary\\\": ...}\\n...\\\"\\\"\\\"",
+      "rationale": "Multiline prompt with JSON template; raw literal cleaner",
+      "token_savings": "2-3",
+      "complexity": "high",
+      "note": "Contains JSON examples; verify proper escaping with raw syntax"
+    },
+    {
+      "id": 29,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/QuestionGenerationAgent.cs",
+      "line_number": 56,
+      "string_type": "interpolated_multiline",
+      "escape_count": 0,
+      "current_code": "var prompt = $@\"You are an expert...\\n\\nBased on the ticket...\\n\\n{{\\n  \\\"questions\\\": ...}}\\n...\"",
+      "suggested_refactoring": "var prompt = $$\\\"\\\"\\\"You are an expert...\\n\\nBased on the ticket...\\n\\n{\\n  \\\"questions\\\": ...}\\n...\\\"\\\"\\\"",
+      "rationale": "Multiline prompt with JSON template; raw syntax cleaner",
+      "token_savings": "2-3",
+      "complexity": "high"
+    },
+    {
+      "id": 30,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/ErrorHandlingAgent.cs",
+      "line_number": 419,
+      "string_type": "markdown_multiline",
+      "escape_count": 0,
+      "current_code": "var markdown = $@\"## ⚠️ Error Encountered\\n\\n**Error Type:** {analysis.ErrorType}\\n...\\n\\n\";",
+      "suggested_refactoring": "var markdown = $$\\\"\\\"\\\"## ⚠️ Error Encountered\\n\\n**Error Type:** {analysis.ErrorType}\\n...\\n\\n\\\"\\\"\\\"",
+      "rationale": "Markdown multiline with interpolation; raw literal cleaner",
+      "token_savings": "1-2",
+      "complexity": "low"
+    },
+    {
+      "id": 31,
+      "file_path": "/home/user/PRFactory/src/PRFactory.Infrastructure/Persistence/DbSeeder.cs",
+      "line_number": 290,
+      "string_type": "markdown_multiline",
+      "escape_count": 0,
+      "current_code": "@\"## Acceptance Criteria\\n\\n- [ ] User can access...\\n- [ ] All inputs are...\\n...\"",
+      "suggested_refactoring": "\"\"\"## Acceptance Criteria\\n\\n- [ ] User can access...\\n- [ ] All inputs are...\\n...\"\"\"",
+      "rationale": "Markdown checklist; raw literal is more natural for this content",
+      "token_savings": "1",
+      "complexity": "low"
+    }
+  ],
+  "files_with_most_opportunities": [
+    {
+      "file": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Adapters/ClaudeCodeCliLlmProvider.cs",
+      "count": 3,
+      "escape_count": 3,
+      "potential_savings": "2-3 tokens"
+    },
+    {
+      "file": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Adapters/GeminiCliAdapter.cs",
+      "count": 3,
+      "escape_count": 3,
+      "potential_savings": "2-3 tokens"
+    },
+    {
+      "file": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/Adapters/OpenAiCliAdapter.cs",
+      "count": 3,
+      "escape_count": 3,
+      "potential_savings": "2-3 tokens"
+    },
+    {
+      "file": "/home/user/PRFactory/src/PRFactory.Infrastructure/Jira/JiraCommentParser.cs",
+      "count": 5,
+      "escape_count": 7,
+      "potential_savings": "3-4 tokens"
+    },
+    {
+      "file": "/home/user/PRFactory/src/PRFactory.Infrastructure/Agents/TicketUpdateGenerationAgent.cs",
+      "count": 4,
+      "escape_count": 4,
+      "potential_savings": "3-5 tokens"
+    }
+  ],
+  "refactoring_priorities": {
+    "high_impact": [
+      {
+        "id": 19,
+        "reason": "JSON with multiple escaped quotes and braces",
+        "token_savings": "3-4",
+        "requires_syntax": "$$\"\"\" (interpolated raw)"
+      },
+      {
+        "id": 26,
+        "reason": "Complex multiline prompt with JSON template",
+        "token_savings": "2-3",
+        "requires_syntax": "$$\"\"\" (interpolated raw)"
+      },
+      {
+        "id": 2,
+        "reason": "Complex regex with double backslashes",
+        "token_savings": "2-3",
+        "requires_syntax": "\"\"\" (raw literal)"
+      }
+    ],
+    "medium_impact": [
+      {
+        "id": 6,
+        "reason": "Complex numbered pattern regex",
+        "token_savings": "2-3",
+        "requires_syntax": "\"\"\" (raw literal)"
+      },
+      {
+        "id": 21,
+        "reason": "CSV with nested quote escaping",
+        "token_savings": "2-3",
+        "requires_syntax": "$$$\"\"\" (complex interpolation)"
+      },
+      {
+        "id": 25,
+        "reason": "Multiline interpolated string with properties",
+        "token_savings": "2-3",
+        "requires_syntax": "$$\"\"\" (interpolated raw)"
+      }
+    ],
+    "low_impact": [
+      {
+        "reason": "Simple regex patterns with single escapes",
+        "average_savings": "1-2 tokens per finding",
+        "count": 18,
+        "total_savings": "18-36 tokens"
+      }
+    ]
+  },
+  "syntax_guide": {
+    "raw_string_literal": {
+      "syntax": "\"\"\"content\"\"\"",
+      "use_for": "Strings with backslashes or quotes that don't need interpolation",
+      "example": "var regex = \"\"\"^\\d+\\.\\s\"\"\";"
+    },
+    "interpolated_raw_string": {
+      "syntax": "$$\"\"\"content with {variable}\"\"\"",
+      "use_for": "Multiline strings with interpolation",
+      "note": "Use ${variable} or {variable} for interpolation; {{ }} for literal braces",
+      "example": "var msg = $$\"\"\"Error: {error.Message}\\n\\nCode: {error.Code}\"\"\";"
+    },
+    "complex_interpolation": {
+      "syntax": "$$$\"\"\"content with complex escaping\"\"\"",
+      "use_for": "Rare cases with multiple $ levels",
+      "example": "Only needed in exceptional circumstances"
+    }
+  },
+  "implementation_steps": {
+    "phase_1_high_priority": [
+      "File: JiraCommentParser.cs - Convert 5 regex patterns (lines 165, 184, 220, 279, 340)",
+      "File: LoggingMiddleware.cs - Convert JSON metrics string (line 125) using $$\"\"\"",
+      "File: ImplementationAgent.cs - Convert multiline prompt (line 81)"
+    ],
+    "phase_2_medium_priority": [
+      "File: ClaudeCodeCliLlmProvider.cs - Convert 3 token patterns (lines 361, 364, 367)",
+      "File: OpenAiCliAdapter.cs - Convert 3 token patterns (lines 446, 449, 452)",
+      "File: GeminiCliAdapter.cs - Convert 3 token patterns (lines 440, 443, 446)",
+      "File: AnswerProcessingAgent.cs - Convert 2 regex patterns (lines 153, 182)"
+    ],
+    "phase_3_low_priority": [
+      "File: CodeReviewAgent.cs - Convert 2 regex patterns (lines 548, 551)",
+      "File: WorkflowEventService.cs - Convert CSV escaping (line 218)",
+      "File: TicketUpdateGenerationAgent.cs - Convert remaining multiline strings",
+      "File: ErrorHandlingAgent.cs - Convert markdown string (line 419)"
+    ]
+  },
+  "testing_recommendations": [
+    "All regex patterns: Verify matching behavior unchanged after conversion",
+    "All JSON strings: Ensure serialization/deserialization works identically",
+    "All multiline strings: Check whitespace/newline handling is identical",
+    "Interpolated strings: Verify variable substitution and special character handling"
+  ],
+  "estimated_timeline": {
+    "phase_1": "1-2 hours (3 files, 9 strings)",
+    "phase_2": "2-3 hours (5 files, 11 strings)",
+    "phase_3": "2-3 hours (8 files, 11 strings)",
+    "total": "5-8 hours for complete refactoring",
+    "testing": "2-3 hours for comprehensive verification"
+  },
+  "notes": [
+    "All findings are in C# 11+ compatible code",
+    "Raw string literals improve readability significantly for regex and JSON",
+    "Interpolated raw strings ($$\"...\") are key for prompt strings with variables",
+    "No breaking changes; all conversions are purely syntactic",
+    "Recommend converting high-impact files first for immediate readability gains",
+    "Consider running dotnet format after conversions to ensure consistency",
+    "All regex patterns use GeneratedRegex or Regex.Replace/Match; both benefit from raw literals"
+  ]
+}

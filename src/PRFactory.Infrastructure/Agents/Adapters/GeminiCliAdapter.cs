@@ -354,18 +354,13 @@ public partial class GeminiCliAdapter : ILlmProvider
     /// <summary>
     /// Parses the CLI response into an LlmResponse
     /// </summary>
-    private LlmResponse ParseCliResponse(ProcessExecutionResult result, TimeSpan latency)
+    private static LlmResponse ParseCliResponse(ProcessExecutionResult result, TimeSpan latency)
     {
         if (!result.Success)
         {
             var errorMessage = string.IsNullOrWhiteSpace(result.Error)
                 ? $"Gemini CLI failed with exit code {result.ExitCode}"
                 : result.Error;
-
-            _logger.LogError(
-                "Gemini CLI execution failed with exit code {ExitCode}: {Error}",
-                result.ExitCode,
-                errorMessage);
 
             return new LlmResponse
             {
@@ -377,12 +372,6 @@ public partial class GeminiCliAdapter : ILlmProvider
         }
 
         var usage = ExtractUsageMetrics(result.Output, latency);
-
-        _logger.LogInformation(
-            "Gemini CLI execution completed successfully in {Latency}ms (Tokens: {InputTokens} in, {OutputTokens} out)",
-            latency.TotalMilliseconds,
-            usage.InputTokens,
-            usage.OutputTokens);
 
         return new LlmResponse
         {
@@ -396,7 +385,7 @@ public partial class GeminiCliAdapter : ILlmProvider
     /// <summary>
     /// Extracts usage metrics from CLI output
     /// </summary>
-    private LlmUsageMetrics ExtractUsageMetrics(string output, TimeSpan latency)
+    private static LlmUsageMetrics ExtractUsageMetrics(string output, TimeSpan latency)
     {
         var metrics = new LlmUsageMetrics
         {

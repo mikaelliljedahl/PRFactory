@@ -15,6 +15,9 @@ public partial class Index
     [Inject]
     private NavigationManager Navigation { get; set; } = null!;
 
+    [Inject]
+    private ILogger<Index> Logger { get; set; } = null!;
+
     private List<ErrorDto> Errors { get; set; } = new();
     private ErrorStatisticsDto? Statistics { get; set; }
     private HashSet<Guid> SelectedErrorIds { get; set; } = new();
@@ -50,7 +53,7 @@ public partial class Index
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading statistics: {ex.Message}");
+            Logger.LogWarning(ex, "Failed to load error statistics");
         }
     }
 
@@ -75,7 +78,7 @@ public partial class Index
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading errors: {ex.Message}");
+            Logger.LogError(ex, "Failed to load errors");
         }
         finally
         {
@@ -123,7 +126,7 @@ public partial class Index
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error resolving error: {ex.Message}");
+            Logger.LogError(ex, "Failed to resolve error {ErrorId}", errorId);
         }
     }
 
@@ -137,7 +140,7 @@ public partial class Index
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error bulk resolving errors: {ex.Message}");
+            Logger.LogError(ex, "Failed to bulk mark errors as resolved");
         }
     }
 
@@ -153,7 +156,7 @@ public partial class Index
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error retrying operation: {ex.Message}");
+            Logger.LogError(ex, "Failed to retry operation for error {ErrorId}", errorId);
         }
     }
 

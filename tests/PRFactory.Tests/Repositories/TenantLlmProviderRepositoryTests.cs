@@ -590,8 +590,11 @@ public class TenantLlmProviderRepositoryTests : TestBase
         // Arrange
         var nonExistentId = Guid.NewGuid();
 
-        // Act & Assert - should not throw
-        await _repository.DeleteAsync(nonExistentId);
+        // Act
+        var exception = await Record.ExceptionAsync(async () => await _repository.DeleteAsync(nonExistentId));
+
+        // Assert - should not throw
+        Assert.Null(exception);
     }
 
     #endregion

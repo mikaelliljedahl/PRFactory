@@ -18,6 +18,7 @@ public abstract class TestBase : IDisposable
     protected IServiceProvider ServiceProvider { get; }
     protected ApplicationDbContext DbContext { get; }
     protected IConfiguration Configuration { get; }
+    private bool _disposed;
 
     protected TestBase()
     {
@@ -75,12 +76,25 @@ public abstract class TestBase : IDisposable
             .Build();
     }
 
-    public virtual void Dispose()
+    public void Dispose()
     {
-        DbContext?.Dispose();
-        if (ServiceProvider is IDisposable disposable)
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed) return;
+
+        if (disposing)
         {
-            disposable.Dispose();
+            DbContext?.Dispose();
+            if (ServiceProvider is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
         }
+
+        _disposed = true;
     }
 }

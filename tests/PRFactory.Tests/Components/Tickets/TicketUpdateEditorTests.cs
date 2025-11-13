@@ -56,7 +56,7 @@ public class TicketUpdateEditorTests : ComponentTestBase
         var saveButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Save")).ToList();
         if (saveButtons.Any())
         {
-            await saveButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+            await saveButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
             // Assert - Should show validation error
             cut.WaitForState(() => cut.Markup.Contains("required"), timeout: TimeSpan.FromSeconds(2));
@@ -79,7 +79,7 @@ public class TicketUpdateEditorTests : ComponentTestBase
         var saveButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Save")).ToList();
         if (saveButtons.Any())
         {
-            await saveButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+            await saveButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
             // Assert - Should show validation error
             cut.WaitForState(() => cut.Markup.Contains("description"), timeout: TimeSpan.FromSeconds(2));
@@ -103,7 +103,7 @@ public class TicketUpdateEditorTests : ComponentTestBase
         var saveButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Save")).ToList();
         if (saveButtons.Any())
         {
-            await saveButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+            await saveButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
             await Task.Delay(100);
 
@@ -149,7 +149,7 @@ public class TicketUpdateEditorTests : ComponentTestBase
         var saveButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Save")).ToList();
         if (saveButtons.Any())
         {
-            await saveButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+            await saveButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
             await Task.Delay(100);
 

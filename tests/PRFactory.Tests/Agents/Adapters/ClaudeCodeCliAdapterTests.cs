@@ -27,6 +27,7 @@ public class ClaudeCodeCliAdapterTests : IDisposable
     private readonly ClaudeCodeCliOptions _options;
     private readonly ApplicationDbContext _dbContext;
     private readonly Guid _tenantId = Guid.NewGuid();
+    private bool _disposed;
 
     public ClaudeCodeCliAdapterTests()
     {
@@ -95,7 +96,20 @@ public class ClaudeCodeCliAdapterTests : IDisposable
 
     public void Dispose()
     {
-        _dbContext.Dispose();
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed) return;
+
+        if (disposing)
+        {
+            _dbContext?.Dispose();
+        }
+
+        _disposed = true;
     }
 
     private ClaudeCodeCliAdapter CreateAdapter()

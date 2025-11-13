@@ -261,13 +261,13 @@ public class PlanReviewTests
     #region ResetForNewPlan Tests
 
     [Fact]
-    public void ResetForNewPlan_AfterApproval_ResetsToPending()
+    public async Task ResetForNewPlan_AfterApproval_ResetsToPending()
     {
         // Arrange
         var review = new PlanReview(_ticketId, _reviewerId, isRequired: true);
         review.Approve("Looks good");
         var originalAssignedAt = review.AssignedAt;
-        Thread.Sleep(10); // Ensure time difference
+        await Task.Delay(10); // Ensure time difference
 
         // Act
         review.ResetForNewPlan();
@@ -281,13 +281,13 @@ public class PlanReviewTests
     }
 
     [Fact]
-    public void ResetForNewPlan_AfterRejection_ResetsToPending()
+    public async Task ResetForNewPlan_AfterRejection_ResetsToPending()
     {
         // Arrange
         var review = new PlanReview(_ticketId, _reviewerId, isRequired: true);
         review.Reject("Needs changes", regenerateCompletely: false);
         var originalAssignedAt = review.AssignedAt;
-        Thread.Sleep(10); // Ensure time difference
+        await Task.Delay(10); // Ensure time difference
 
         // Act
         review.ResetForNewPlan();

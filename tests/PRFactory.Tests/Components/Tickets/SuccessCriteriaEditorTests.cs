@@ -117,7 +117,7 @@ public class SuccessCriteriaEditorTests : ComponentTestBase
         var removeButtons = cut.FindAll("button.btn-danger, button.btn-outline-danger");
         if (removeButtons.Any())
         {
-            await removeButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+            await removeButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
         }
 
         // Assert

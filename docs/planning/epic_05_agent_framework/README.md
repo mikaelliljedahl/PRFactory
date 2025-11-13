@@ -99,32 +99,35 @@ This directory contains detailed implementation plans for integrating Microsoft 
 Comprehensive research was conducted before creating these implementation plans:
 
 ### Agent Framework Research
-- **[AGENT_FRAMEWORK_RESEARCH.md](../../AGENT_FRAMEWORK_RESEARCH.md)** (58 KB, 1,960 lines)
+- **[AGENT_FRAMEWORK_RESEARCH.md](./AGENT_FRAMEWORK_RESEARCH.md)** (58 KB, 1,960 lines)
   - Technical deep-dive into Microsoft Agent Framework
   - 14 major topics covered
   - Production-ready patterns and best practices
 
-- **[AGENT_FRAMEWORK_RECOMMENDATIONS.md](../../AGENT_FRAMEWORK_RECOMMENDATIONS.md)** (17 KB, 503 lines)
+- **[AGENT_FRAMEWORK_RECOMMENDATIONS.md](./AGENT_FRAMEWORK_RECOMMENDATIONS.md)** (17 KB, 503 lines)
   - Executive summary and decision rationale
   - Risk assessment and cost-benefit analysis
   - Success criteria and approval gates
 
-- **[AGENT_FRAMEWORK_INTEGRATION_MAP.md](../../AGENT_FRAMEWORK_INTEGRATION_MAP.md)** (71 KB, 1,732 lines)
+- **[AGENT_FRAMEWORK_INTEGRATION_MAP.md](./AGENT_FRAMEWORK_INTEGRATION_MAP.md)** (71 KB, 1,732 lines)
   - Detailed mapping to PRFactory architecture
   - Integration points for each workflow phase
   - Migration strategies
 
 ### Saturn Fork Research
-- **[SATURN_TOOLS_ANALYSIS.md](../../SATURN_TOOLS_ANALYSIS.md)** (61 KB, 1,848 lines)
+- **[SATURN_TOOLS_ANALYSIS.md](./SATURN_TOOLS_ANALYSIS.md)** (61 KB, 1,848 lines)
   - Complete analysis of Saturn's tool architecture
   - 16 production-ready tool patterns
   - Multi-agent coordination patterns
   - What to adopt vs. avoid
 
-- **[SATURN_QUICK_REFERENCE.md](../../SATURN_QUICK_REFERENCE.md)** (16 KB, 470 lines)
+- **[SATURN_QUICK_REFERENCE.md](./SATURN_QUICK_REFERENCE.md)** (16 KB, 470 lines)
   - Quick reference for Saturn patterns
   - Tool categories and examples
   - Security patterns to port
+
+- **[SATURN_EXPLORATION_INDEX.md](./SATURN_EXPLORATION_INDEX.md)** (11 KB, 325 lines)
+  - Navigation guide to all Saturn documentation
 
 ---
 

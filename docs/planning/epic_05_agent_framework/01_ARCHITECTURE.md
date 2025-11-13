@@ -1295,3 +1295,89 @@ public abstract class ToolBase : ITool
 6. **Set up observability** - OpenTelemetry integration
 
 **See:** `02_TOOLS_LIBRARY.md` for detailed tool implementation specs.
+
+---
+
+## Appendix: Agent Framework API Verification
+
+### Required NuGet Packages
+
+**To be installed in Week 2:**
+```xml
+<ItemGroup>
+  <!-- Microsoft Agent Framework (verify exact package names) -->
+  <PackageReference Include="Microsoft.SemanticKernel" Version="1.0.0" />
+  <PackageReference Include="Microsoft.SemanticKernel.Connectors.Anthropic" Version="1.0.0" />
+  <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureOpenAI" Version="1.0.0" />
+  <PackageReference Include="Microsoft.SemanticKernel.Plugins.Core" Version="1.0.0" />
+</ItemGroup>
+```
+
+**Note:** Package names and versions are assumptions based on preliminary research. **Must be verified before Week 2 implementation.**
+
+### API Assumptions Requiring Verification
+
+The code examples in this document assume the following APIs exist in Microsoft Agent Framework. **These must be verified against the actual SDK before implementation:**
+
+| Assumed API | Location in Docs | Status | Verified API (TBD) |
+|-------------|------------------|--------|-------------------|
+| `IChatClient.CreateAIAgent()` | 01_ARCHITECTURE.md:236 | ⚠️ Unverified | ___ |
+| `AIAgent.WithMiddleware()` | 01_ARCHITECTURE.md:339 | ⚠️ Unverified | ___ |
+| `ITool.ToAIFunction()` | 02_TOOLS_LIBRARY.md:248 | ⚠️ Unverified | ___ |
+| `AIFunctionFactory.Create()` | 02_TOOLS_LIBRARY.md:250 | ⚠️ Unverified | ___ |
+| `AIAgent.RunAsync()` | 03_AGENT_ROLES.md:150 | ⚠️ Unverified | ___ |
+| `AIAgent.RunStreamingAsync()` | 04_UI_INTEGRATION.md:245 | ⚠️ Unverified | ___ |
+| `AgentThread` class | Multiple locations | ⚠️ Unverified | ___ |
+| `AIFunctionParameterSchema` | 02_TOOLS_LIBRARY.md:265 | ⚠️ Unverified | ___ |
+
+### Verification Checklist (Week 1, Day 5)
+
+**Before proceeding to Week 2, verify:**
+
+- [ ] Install Microsoft.SemanticKernel package (confirm exact package name)
+- [ ] Verify `IChatClient` interface exists and has agent creation methods
+- [ ] Verify middleware API (may be different pattern than assumed)
+- [ ] Verify tool/function registration API (AIFunctionFactory or alternative)
+- [ ] Verify streaming API exists for real-time responses
+- [ ] Verify AgentThread or equivalent for conversation state management
+- [ ] Document actual APIs in this appendix
+- [ ] Update all code examples with verified APIs
+
+### Alternative Approaches if APIs Don't Match
+
+**If assumed APIs don't exist:**
+
+1. **Chat Client Creation:**
+   - Fallback: Use `Kernel.CreateBuilder().Build()` pattern
+   - Reference: https://learn.microsoft.com/en-us/semantic-kernel/concepts/kernel
+
+2. **Function Registration:**
+   - Fallback: Use `kernel.ImportPluginFromType<T>()` pattern
+   - Reference: https://learn.microsoft.com/en-us/semantic-kernel/concepts/plugins
+
+3. **Middleware:**
+   - Fallback: Use custom wrapper class around kernel
+   - Implement cross-cutting concerns in wrapper
+
+4. **Streaming:**
+   - Fallback: Polling approach if streaming not available
+   - Use `InvokeAsync()` with periodic state checks
+
+### Recommended Resources for Verification
+
+- **Official Docs:** https://learn.microsoft.com/en-us/semantic-kernel/
+- **GitHub Samples:** https://github.com/microsoft/semantic-kernel/tree/main/dotnet/samples
+- **NuGet Gallery:** https://www.nuget.org/packages/Microsoft.SemanticKernel
+- **AG-UI Integration:** https://learn.microsoft.com/en-us/agent-framework/integrations/ag-ui/
+
+### Action Items (Week 1)
+
+**Engineer 1 - Day 5:**
+1. Install Microsoft.SemanticKernel via NuGet
+2. Create simple "Hello World" agent to verify APIs
+3. Document actual API signatures
+4. Update all code examples in implementation plans
+5. Create GitHub issue if APIs significantly different from assumptions
+6. Get architect review before proceeding to Week 2
+
+**Deliverable:** API Verification Report with actual signatures and any needed plan updates.

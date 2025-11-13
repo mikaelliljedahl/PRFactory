@@ -151,26 +151,30 @@ flowchart TB
 
 2. **Configure the application**
 
-   Create `appsettings.json` or use environment variables:
+   Create `appsettings.json` with minimal system-wide settings:
    ```json
    {
      "ConnectionStrings": {
        "DefaultConnection": "Data Source=prfactory.db"
      },
-     "Jira": {
-       "BaseUrl": "https://yourcompany.atlassian.net",
-       "WebhookSecret": "your-webhook-secret"
-     },
      "ClaudeCodeCli": {
        "ExecutablePath": "claude",
        "DefaultTimeoutSeconds": 120,
        "ProjectContextTimeoutSeconds": 300
-     },
-     "GitHub": {
-       "Token": "ghp_..."
      }
    }
    ```
+
+   **Repository Configuration**: PRFactory supports multiple repositories across multiple platforms (GitHub, Bitbucket, Azure DevOps). Repositories, credentials, and platform-specific settings are configured through the **Web UI** after startup, not in appsettings.json.
+
+   For each repository you can configure:
+   - Git platform (GitHub, Bitbucket, Azure DevOps, GitLab)
+   - Platform credentials (stored encrypted)
+   - Branch naming conventions
+   - Approval workflows
+   - External system integrations (Jira, Azure DevOps Work Items)
+
+   See [docs/SETUP.md](docs/SETUP.md) for detailed configuration instructions.
 
 3. **Run with Docker Compose** (recommended)
    ```bash

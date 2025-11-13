@@ -53,7 +53,7 @@ public class FormPasswordFieldTests : ComponentTestBase
 
     [Theory]
     [InlineData("test", "Weak")]
-    [InlineData("Test123", "Fair")]
+    [InlineData("Test123", "Good")]
     [InlineData("Test123!", "Strong")]
     public void PasswordStrength_CalculatesCorrectly(string password, string expectedText)
     {

@@ -16,7 +16,8 @@ public class StackTraceViewerTests : ComponentTestBase
 
         // Assert
         Assert.Contains("No stack trace available", cut.Markup);
-        Assert.DoesNotContain("stack-trace-viewer", cut.Markup);
+        var stackTraceViewers = cut.FindAll(".stack-trace-viewer");
+        Assert.Empty(stackTraceViewers);
     }
 
     [Fact]

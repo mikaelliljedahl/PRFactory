@@ -18,7 +18,8 @@ public class EventTimelineTests : ComponentTestBase
 
         // Assert
         Assert.Contains("No events to display", cut.Markup);
-        Assert.DoesNotContain("timeline", cut.Markup);
+        var timelineItems = cut.FindAll(".timeline-item");
+        Assert.Empty(timelineItems);
     }
 
     [Fact]

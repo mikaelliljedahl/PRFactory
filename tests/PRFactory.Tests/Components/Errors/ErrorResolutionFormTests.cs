@@ -12,16 +12,16 @@ namespace PRFactory.Tests.Components.Errors;
 
 public class ErrorResolutionFormTests : ComponentTestBase
 {
-    private readonly Mock<IErrorService> _mockErrorService;
-    private readonly Mock<IToastService> _mockToastService;
+    private readonly Mock<IErrorService> _mockErrorService = new Mock<IErrorService>();
+    private readonly Mock<IToastService> _mockToastService = new Mock<IToastService>();
 
-    public ErrorResolutionFormTests()
+    protected override void ConfigureServices(IServiceCollection services)
     {
-        _mockErrorService = new Mock<IErrorService>();
-        _mockToastService = new Mock<IToastService>();
+        base.ConfigureServices(services);
 
-        Services.AddSingleton(_mockErrorService.Object);
-        Services.AddSingleton(_mockToastService.Object);
+        // Register mocks BEFORE service provider is locked
+        services.AddSingleton(_mockErrorService.Object);
+        services.AddSingleton(_mockToastService.Object);
     }
 
     [Fact]

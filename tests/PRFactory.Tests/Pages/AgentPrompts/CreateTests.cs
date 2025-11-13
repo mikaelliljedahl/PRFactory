@@ -11,16 +11,15 @@ namespace PRFactory.Tests.Pages.AgentPrompts;
 
 public class CreateTests : PageTestBase
 {
-    private readonly Mock<IAgentPromptService> _mockPromptService;
-    private readonly Mock<ILogger<Create>> _mockLogger;
+    private readonly Mock<IAgentPromptService> _mockPromptService = new();
+    private readonly Mock<ILogger<Create>> _mockLogger = new();
 
-    public CreateTests()
+    protected override void ConfigureServices(IServiceCollection services)
     {
-        _mockPromptService = new Mock<IAgentPromptService>();
-        _mockLogger = new Mock<ILogger<Create>>();
-
-        Services.AddSingleton(_mockPromptService.Object);
-        Services.AddSingleton(_mockLogger.Object);
+        base.ConfigureServices(services);
+        services.AddSingleton(_mockPromptService.Object);
+        services.AddSingleton(_mockLogger.Object);
+        services.AddScoped<Radzen.DialogService>();
     }
 
     [Fact]
@@ -30,7 +29,7 @@ public class CreateTests : PageTestBase
         var cut = RenderComponent<Create>();
 
         // Assert
-        Assert.Contains("Create Prompt Template", cut.Markup);
+        Assert.Contains("Create Agent Prompt Template", cut.Markup);
     }
 
     [Fact]
@@ -40,6 +39,6 @@ public class CreateTests : PageTestBase
         var cut = RenderComponent<Create>();
 
         // Assert
-        Assert.Contains("Save", cut.Markup);
+        Assert.Contains("Create Template", cut.Markup);
     }
 }

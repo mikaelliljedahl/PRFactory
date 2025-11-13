@@ -10,18 +10,16 @@ namespace PRFactory.Tests.Components.Tickets;
 
 public class ReviewerAssignmentTests : ComponentTestBase
 {
-    private Mock<IUserService> MockUserService { get; set; } = null!;
-    private Mock<ITenantContext> MockTenantContext { get; set; } = null!;
+    private Mock<IUserService> MockUserService { get; set; } = new Mock<IUserService>();
+    private Mock<ITenantContext> MockTenantContext { get; set; } = new Mock<ITenantContext>();
 
-    public ReviewerAssignmentTests()
+    protected override void ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection services)
     {
-        // Create mocks for additional services
-        MockUserService = new Mock<IUserService>();
-        MockTenantContext = new Mock<ITenantContext>();
+        base.ConfigureServices(services);
 
-        // Register mocks
-        Services.AddScoped(_ => MockUserService.Object);
-        Services.AddScoped(_ => MockTenantContext.Object);
+        // Register mocks BEFORE service provider is locked
+        services.AddScoped(_ => MockUserService.Object);
+        services.AddScoped(_ => MockTenantContext.Object);
     }
 
     [Fact]

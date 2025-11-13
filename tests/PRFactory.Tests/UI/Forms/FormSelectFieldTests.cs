@@ -22,7 +22,9 @@ public class FormSelectFieldTests : ComponentTestBase
             .Add(x => x.Label, "Country")
             .Add(x => x.DefaultOptionText, "Select a country"));
         Assert.Contains("Select a country", cut.Markup);
-        Assert.Contains("<option value=\"\">", cut.Markup);
+        var defaultOption = cut.Find("option");
+        Assert.NotNull(defaultOption);
+        Assert.Equal("", defaultOption.GetAttribute("value"));
     }
 
     [Fact]

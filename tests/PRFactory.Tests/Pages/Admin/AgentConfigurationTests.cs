@@ -12,16 +12,15 @@ namespace PRFactory.Tests.Pages.Admin;
 
 public class AgentConfigurationTests : PageTestBase
 {
-    private readonly Mock<IAgentConfigurationService> _mockConfigService;
-    private readonly Mock<ILogger<AgentConfiguration>> _mockLogger;
+    private readonly Mock<IAgentConfigurationService> _mockConfigService = new();
+    private readonly Mock<ILogger<AgentConfiguration>> _mockLogger = new();
 
-    public AgentConfigurationTests()
+    protected override void ConfigureServices(IServiceCollection services)
     {
-        _mockConfigService = new Mock<IAgentConfigurationService>();
-        _mockLogger = new Mock<ILogger<AgentConfiguration>>();
-
-        Services.AddSingleton(_mockConfigService.Object);
-        Services.AddSingleton(_mockLogger.Object);
+        base.ConfigureServices(services);
+        services.AddSingleton(_mockConfigService.Object);
+        services.AddSingleton(_mockLogger.Object);
+        services.AddScoped<Radzen.DialogService>();
     }
 
     [Fact]
@@ -60,8 +59,15 @@ public class AgentConfigurationTests : PageTestBase
             RequireHumanApprovalAfterReview = true
         };
 
+        var providers = new List<LlmProviderSummaryDto>
+        {
+            new() { Id = Guid.NewGuid(), Name = "Provider 1" }
+        };
+
         _mockConfigService.Setup(s => s.GetConfigurationAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(config);
+        _mockConfigService.Setup(s => s.GetAvailableProvidersAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(providers);
 
         // Act
         var cut = RenderComponent<AgentConfiguration>();

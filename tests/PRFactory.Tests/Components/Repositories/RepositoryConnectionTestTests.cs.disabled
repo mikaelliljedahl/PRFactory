@@ -19,6 +19,10 @@ public class RepositoryConnectionTestTests : ComponentTestBase
         services.AddSingleton(_mockLogger.Object);
 
         // Note: IRepositoryService is already registered by TestContextBase
+
+        // Setup JSInterop for Radzen components
+        JSInterop.SetupVoid("Radzen.preventArrows", _ => true);
+        JSInterop.Mode = JSRuntimeMode.Loose;
     }
 
     [Fact]

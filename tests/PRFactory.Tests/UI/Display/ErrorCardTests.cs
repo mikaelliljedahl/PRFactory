@@ -226,7 +226,8 @@ public class ErrorCardTests : ComponentTestBase
             .Add(p => p.OnResolve, EventCallback.Factory.Create<Guid>(this, _ => { })));
 
         // Assert
-        Assert.DoesNotContain("Resolve", cut.Markup);
+        var resolveButtons = cut.FindAll("button").Where(b => b.TextContent.Trim() == "Resolve");
+        Assert.Empty(resolveButtons);
     }
 
     [Fact]

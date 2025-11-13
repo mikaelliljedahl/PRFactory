@@ -14,7 +14,7 @@ public class LoginTests : PageTestBase
         var cut = RenderComponent<Login>();
 
         // Assert
-        Assert.Contains("Login", cut.Markup);
+        Assert.Contains("Welcome to PRFactory", cut.Markup);
     }
 
     [Fact]

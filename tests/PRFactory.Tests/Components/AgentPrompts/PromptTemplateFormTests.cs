@@ -11,12 +11,14 @@ namespace PRFactory.Tests.Components.AgentPrompts;
 
 public class PromptTemplateFormTests : ComponentTestBase
 {
-    private readonly Mock<IAgentPromptService> _mockPromptService;
+    private readonly Mock<IAgentPromptService> _mockPromptService = new Mock<IAgentPromptService>();
 
-    public PromptTemplateFormTests()
+    protected override void ConfigureServices(IServiceCollection services)
     {
-        _mockPromptService = new Mock<IAgentPromptService>();
-        Services.AddSingleton(_mockPromptService.Object);
+        base.ConfigureServices(services);
+
+        // Register mock BEFORE service provider is locked
+        services.AddSingleton(_mockPromptService.Object);
     }
 
     [Fact]

@@ -13,16 +13,14 @@ namespace PRFactory.Tests.Pages.Errors;
 
 public class DetailTests : PageTestBase
 {
-    private readonly Mock<IErrorService> _mockErrorService;
-    private readonly Mock<ILogger<Detail>> _mockLogger;
+    private readonly Mock<IErrorService> _mockErrorService = new();
+    private readonly Mock<ILogger<Detail>> _mockLogger = new();
 
-    public DetailTests()
+    protected override void ConfigureServices(IServiceCollection services)
     {
-        _mockErrorService = new Mock<IErrorService>();
-        _mockLogger = new Mock<ILogger<Detail>>();
-
-        Services.AddSingleton(_mockErrorService.Object);
-        Services.AddSingleton(_mockLogger.Object);
+        base.ConfigureServices(services);
+        services.AddSingleton(_mockErrorService.Object);
+        services.AddSingleton(_mockLogger.Object);
     }
 
     [Fact]

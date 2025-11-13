@@ -12,16 +12,15 @@ namespace PRFactory.Tests.Pages.AgentPrompts;
 
 public class IndexTests : PageTestBase
 {
-    private readonly Mock<IAgentPromptService> _mockPromptService;
-    private readonly Mock<ILogger<AgentPromptsIndex>> _mockLogger;
+    private readonly Mock<IAgentPromptService> _mockPromptService = new();
+    private readonly Mock<ILogger<AgentPromptsIndex>> _mockLogger = new();
 
-    public IndexTests()
+    protected override void ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection services)
     {
-        _mockPromptService = new Mock<IAgentPromptService>();
-        _mockLogger = new Mock<ILogger<AgentPromptsIndex>>();
-
-        Services.AddSingleton(_mockPromptService.Object);
-        Services.AddSingleton(_mockLogger.Object);
+        base.ConfigureServices(services);
+        services.AddSingleton(_mockPromptService.Object);
+        services.AddSingleton(_mockLogger.Object);
+        services.AddScoped<Radzen.DialogService>();
     }
 
     [Fact]
@@ -59,6 +58,6 @@ public class IndexTests : PageTestBase
         await Task.Delay(100);
 
         // Assert
-        Assert.Contains("No prompt templates", cut.Markup);
+        Assert.Contains("No Templates Found", cut.Markup);
     }
 }

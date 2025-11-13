@@ -35,7 +35,8 @@ public class RepositoryFormTests : ComponentTestBase
         // Assert
         Assert.Contains("test-repo", cut.Markup);
         Assert.Contains("GitHub", cut.Markup);
-        var inputName = cut.Find("input[name*='Name']");
+        // FormTextField uses id="field-repository-name" (based on label)
+        var inputName = cut.Find("input[id*='repository-name']");
         Assert.NotNull(inputName);
     }
 

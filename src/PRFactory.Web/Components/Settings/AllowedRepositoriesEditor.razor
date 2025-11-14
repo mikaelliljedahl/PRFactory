@@ -1,0 +1,50 @@
+@using PRFactory.Web.UI.Buttons
+
+<div class="mb-3">
+    <label class="form-label">
+        Allowed Repositories
+    </label>
+    <div class="mb-2">
+        @if (Value != null && Value.Length > 0)
+        {
+            @foreach (var repo in Value)
+            {
+                <span class="badge bg-primary me-2 mb-2">
+                    @repo
+                    @if (!Disabled)
+                    {
+                        <button type="button"
+                                class="btn-close btn-close-white ms-1"
+                                style="font-size: 0.5rem; vertical-align: middle;"
+                                @onclick="@(() => RemoveRepository(repo))"
+                                aria-label="Remove">
+                        </button>
+                    }
+                </span>
+            }
+        }
+        else
+        {
+            <span class="text-muted">All repositories allowed</span>
+        }
+    </div>
+
+    @if (!Disabled)
+    {
+        <div class="input-group">
+            <input type="text"
+                   class="form-control"
+                   placeholder="repository-name"
+                   @bind="newRepository"
+                   @onkeyup="HandleKeyUp" />
+            <button class="btn btn-outline-secondary"
+                    type="button"
+                    @onclick="AddRepository"
+                    disabled="@string.IsNullOrWhiteSpace(newRepository)">
+                <i class="bi bi-plus-lg"></i> Add
+            </button>
+        </div>
+    }
+
+    <small class="form-text text-muted">Whitelist of repository names (leave empty to allow all)</small>
+</div>

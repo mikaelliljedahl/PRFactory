@@ -1,0 +1,31 @@
+<div class="mb-3">
+    <label class="form-label">
+        Model Overrides (JSON)
+        @if (!string.IsNullOrEmpty(HelpText))
+        {
+            <small class="text-muted ms-2">@HelpText</small>
+        }
+    </label>
+
+    <textarea class="form-control font-monospace"
+              rows="8"
+              @oninput="OnJsonTextChanged"
+              placeholder='{ "model-name": "provider-specific-name" }'>@jsonText</textarea>
+
+    @if (!string.IsNullOrEmpty(validationError))
+    {
+        <div class="invalid-feedback d-block">
+            @validationError
+        </div>
+    }
+
+    <div class="mt-2">
+        <small class="text-muted">
+            <strong>Example:</strong>
+        </small>
+        <pre class="bg-light p-2 rounded mt-1"><code>{
+  "claude-3-5-sonnet": "claude-sonnet-3-5-20250101",
+  "gpt-4": "gpt-4-turbo-2024-04-09"
+}</code></pre>
+    </div>
+</div>

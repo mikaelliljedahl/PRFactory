@@ -3,7 +3,7 @@
 **Feature:** Track and compare plan revisions when refined or regenerated
 **Priority:** P2
 **Estimated Effort:** 3-4 days
-**Dependencies:** Existing plan service, LibGit2Sharp integration
+**Dependencies:** Existing plan service, LibGit2Sharp integration, Epic 7 MarkdownEditor component
 
 ---
 
@@ -14,8 +14,15 @@ Track all versions of implementation plans as they evolve through refinement and
 - Compare two revisions side-by-side (diff viewer)
 - See what triggered each revision (initial, refined, regenerated)
 - Optionally restore a previous revision
+- View who made changes (AI vs human attribution)
 
 This provides full audit trail and helps teams understand plan evolution.
+
+**Note on Storage Strategy:**
+- **Git is source of truth** - Plans stored as markdown files in git branches
+- **Database stores metadata** - `PlanRevisions` table for fast queries, attribution
+- **Hybrid approach** - `CommitHash` links database revisions to git history
+- Users can view git blame for detailed attribution
 
 ---
 
@@ -547,243 +554,62 @@ public enum DiffLineType
 
 ---
 
-## Blazor Component
+## Blazor Components
+
+### PlanRevisionHistory Component (Business Logic)
 
 **File:** `/src/PRFactory.Web/Components/Plans/PlanRevisionHistory.razor`
 
 ```razor
 @namespace PRFactory.Web.Components.Plans
 @using PRFactory.Web.Models
+@using PRFactory.Web.UI.Display
+@using PRFactory.Web.UI.Dialogs
 
-<div class="card">
-    <div class="card-header bg-secondary text-white">
-        <h5 class="mb-0">
-            <i class="bi bi-clock-history me-2"></i>
-            Plan Revision History
-        </h5>
-    </div>
-    <div class="card-body">
-        @if (revisions.Any())
-        {
-            <div class="timeline">
-                @foreach (var revision in revisions.OrderByDescending(r => r.RevisionNumber))
-                {
-                    <div class="timeline-item mb-3">
-                        <div class="timeline-marker bg-@GetReasonColor(revision.Reason)"></div>
-                        <div class="timeline-content">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <strong>Revision #@revision.RevisionNumber</strong>
-                                    <span class="badge bg-@GetReasonColor(revision.Reason) ms-2">
-                                        @revision.Reason
-                                    </span>
-                                </div>
-                                <div class="btn-group btn-group-sm">
-                                    <button class="btn btn-outline-primary" @onclick="() => ViewRevision(revision.Id)">
-                                        <i class="bi bi-eye me-1"></i> View
-                                    </button>
-                                    @if (selectedRevision1 == null || selectedRevision2 != null)
-                                    {
-                                        <button class="btn btn-outline-secondary"
-                                                @onclick="() => SelectForComparison(revision.Id)">
-                                            <i class="bi bi-check2-square me-1"></i> Compare
-                                        </button>
-                                    }
-                                </div>
-                            </div>
-                            <div class="text-muted small mt-1">
-                                <i class="bi bi-calendar3 me-1"></i>
-                                @revision.CreatedAt.ToString("MMM d, yyyy 'at' h:mm tt")
-                                <i class="bi bi-person ms-3 me-1"></i>
-                                @revision.CreatedByName
-                            </div>
-                            <div class="text-muted small">
-                                <i class="bi bi-git me-1"></i>
-                                Branch: <code>@revision.BranchName</code>
-                            </div>
-                        </div>
-                    </div>
-                }
-            </div>
+<Card Title="Plan Revision History" Icon="clock-history" Variant="secondary">
+    @if (revisions.Any())
+    {
+        <RevisionTimeline Revisions="@revisions"
+                          OnViewRevision="@ViewRevision"
+                          OnSelectForComparison="@SelectForComparison"
+                          SelectedRevision1="@selectedRevision1"
+                          SelectedRevision2="@selectedRevision2" />
 
-            @if (selectedRevision1 != null && selectedRevision2 != null)
-            {
-                <div class="alert alert-info mt-3">
-                    <strong>Comparing revisions selected.</strong>
-                    <button class="btn btn-primary btn-sm ms-3" @onclick="CompareSelected">
-                        <i class="bi bi-compare me-1"></i> Show Comparison
-                    </button>
-                    <button class="btn btn-outline-secondary btn-sm ms-2" @onclick="ClearSelection">
-                        Clear
-                    </button>
-                </div>
-            }
-        }
-        else
+        @if (selectedRevision1 != null && selectedRevision2 != null)
         {
-            <div class="text-center text-muted">
-                <i class="bi bi-inbox fs-1"></i>
-                <p class="mt-2">No revision history available</p>
+            <div class="alert alert-info mt-3">
+                <strong>Comparing revisions selected.</strong>
+                <button class="btn btn-primary btn-sm ms-3" @onclick="CompareSelected">
+                    <i class="bi bi-compare me-1"></i> Show Comparison
+                </button>
+                <button class="btn btn-outline-secondary btn-sm ms-2" @onclick="ClearSelection">
+                    Clear
+                </button>
             </div>
         }
+    }
+    else
+    {
+        <EmptyState Icon="inbox" Message="No revision history available" />
+    }
 
-        @if (!string.IsNullOrEmpty(errorMessage))
-        {
-            <div class="alert alert-danger mt-3">
-                <i class="bi bi-exclamation-triangle me-2"></i>
-                @errorMessage
-            </div>
-        }
-    </div>
-</div>
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <AlertMessage Type="AlertType.Danger" Message="@errorMessage" Icon="exclamation-triangle" />
+    }
+</Card>
 
-<!-- Revision Viewer Modal -->
 @if (viewingRevision != null)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        Revision #@viewingRevision.RevisionNumber - @viewingRevision.Reason
-                    </h5>
-                    <button type="button" class="btn-close" @onclick="CloseViewer"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="markdown-preview">
-                        <pre>@viewingRevision.Content</pre>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="CloseViewer">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <RevisionViewerModal Revision="@viewingRevision"
+                         OnClose="@CloseViewer" />
 }
 
-<!-- Comparison Modal -->
 @if (comparison != null)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        Compare Revision #@comparison.Revision1.RevisionNumber vs #@comparison.Revision2.RevisionNumber
-                    </h5>
-                    <button type="button" class="btn-close" @onclick="CloseComparison"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="diff-viewer">
-                        @foreach (var line in comparison.DiffLines)
-                        {
-                            <div class="diff-line diff-@line.Type.ToString().ToLower()">
-                                <span class="line-number">@line.LineNumber</span>
-                                <span class="line-content">
-                                    @if (line.Type == DiffLineType.Modified && !string.IsNullOrEmpty(line.OldContent))
-                                    {
-                                        <del class="text-danger">@line.OldContent</del>
-                                        <ins class="text-success">@line.Content</ins>
-                                    }
-                                    else
-                                    {
-                                        @line.Content
-                                    }
-                                </span>
-                            </div>
-                        }
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="CloseComparison">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <RevisionComparisonModal Comparison="@comparison"
+                             OnClose="@CloseComparison" />
 }
-
-<style>
-    .timeline {
-        position: relative;
-        padding-left: 30px;
-    }
-
-    .timeline::before {
-        content: '';
-        position: absolute;
-        left: 10px;
-        top: 0;
-        bottom: 0;
-        width: 2px;
-        background: #dee2e6;
-    }
-
-    .timeline-item {
-        position: relative;
-    }
-
-    .timeline-marker {
-        position: absolute;
-        left: -24px;
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        border: 2px solid white;
-    }
-
-    .timeline-content {
-        background: #f8f9fa;
-        padding: 1rem;
-        border-radius: 0.375rem;
-        border: 1px solid #dee2e6;
-    }
-
-    .diff-viewer {
-        font-family: 'Courier New', monospace;
-        font-size: 0.875rem;
-        line-height: 1.5;
-    }
-
-    .diff-line {
-        display: flex;
-        padding: 2px 0;
-    }
-
-    .line-number {
-        min-width: 50px;
-        padding-right: 10px;
-        color: #6c757d;
-        text-align: right;
-        user-select: none;
-    }
-
-    .line-content {
-        flex: 1;
-        white-space: pre-wrap;
-    }
-
-    .diff-unchanged {
-        background-color: white;
-    }
-
-    .diff-added {
-        background-color: #d4edda;
-    }
-
-    .diff-removed {
-        background-color: #f8d7da;
-    }
-
-    .diff-modified {
-        background-color: #fff3cd;
-    }
-
-    .markdown-preview pre {
-        white-space: pre-wrap;
-        word-wrap: break-word;
-    }
-</style>
 ```
 
 **Code-behind:** `PlanRevisionHistory.razor.cs`
@@ -888,6 +714,98 @@ public partial class PlanRevisionHistory
         selectedRevision2 = null;
     }
 
+}
+```
+
+**Lines of Code:** ~40 lines (razor) + ~80 lines (code-behind) = ~120 lines
+
+**Note:** All timeline, modal UI extracted to pure components following CLAUDE.md patterns.
+
+---
+
+### RevisionTimeline Component (Pure UI)
+
+**File:** `/src/PRFactory.Web/UI/Display/RevisionTimeline.razor`
+
+```razor
+@namespace PRFactory.Web.UI.Display
+@using PRFactory.Web.Models
+
+<div class="revision-timeline">
+    @foreach (var revision in Revisions.OrderByDescending(r => r.RevisionNumber))
+    {
+        <div class="timeline-item mb-3">
+            <div class="timeline-marker bg-@GetReasonColor(revision.Reason)"></div>
+            <div class="timeline-content">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <strong>Revision #@revision.RevisionNumber</strong>
+                        <span class="badge bg-@GetReasonColor(revision.Reason) ms-2">
+                            @revision.Reason
+                        </span>
+                    </div>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary" @onclick="() => HandleViewRevision(revision.Id)">
+                            <i class="bi bi-eye me-1"></i> View
+                        </button>
+                        @if (SelectedRevision1 == null || SelectedRevision2 != null)
+                        {
+                            <button class="btn btn-outline-secondary"
+                                    @onclick="() => HandleSelectForComparison(revision.Id)">
+                                <i class="bi bi-check2-square me-1"></i> Compare
+                            </button>
+                        }
+                    </div>
+                </div>
+                <div class="text-muted small mt-1">
+                    <i class="bi bi-calendar3 me-1"></i>
+                    @revision.CreatedAt.ToString("MMM d, yyyy 'at' h:mm tt")
+                    <i class="bi bi-person ms-3 me-1"></i>
+                    @revision.CreatedByName
+                </div>
+                <div class="text-muted small">
+                    <i class="bi bi-git me-1"></i>
+                    Branch: <code>@revision.BranchName</code>
+                    <i class="bi bi-hash ms-3 me-1"></i>
+                    Commit: <code class="small">@revision.CommitHash.Substring(0, 8)</code>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public List<PlanRevisionDto> Revisions { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<Guid> OnViewRevision { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid> OnSelectForComparison { get; set; }
+
+    [Parameter]
+    public Guid? SelectedRevision1 { get; set; }
+
+    [Parameter]
+    public Guid? SelectedRevision2 { get; set; }
+
+    private async Task HandleViewRevision(Guid revisionId)
+    {
+        if (OnViewRevision.HasDelegate)
+        {
+            await OnViewRevision.InvokeAsync(revisionId);
+        }
+    }
+
+    private async Task HandleSelectForComparison(Guid revisionId)
+    {
+        if (OnSelectForComparison.HasDelegate)
+        {
+            await OnSelectForComparison.InvokeAsync(revisionId);
+        }
+    }
+
     private string GetReasonColor(string reason)
     {
         return reason switch
@@ -901,7 +819,248 @@ public partial class PlanRevisionHistory
 }
 ```
 
-**Lines of Code:** ~220 lines (razor) + ~100 lines (code-behind) = ~320 lines
+**Lines of Code:** ~80 lines
+
+---
+
+### RevisionViewerModal Component (Pure UI)
+
+**File:** `/src/PRFactory.Web/UI/Dialogs/RevisionViewerModal.razor`
+
+**Note:** Uses Epic 7's `MarkdownEditor` in preview-only mode for proper rendering.
+
+```razor
+@namespace PRFactory.Web.UI.Dialogs
+@using PRFactory.Web.Models
+@using PRFactory.Web.UI.Editors
+
+<Modal IsOpen="true"
+       Title="@($"Revision #{Revision.RevisionNumber} - {Revision.Reason}")"
+       Size="ModalSize.ExtraLarge"
+       OnClose="@HandleClose">
+    <Body>
+        <div class="mb-3">
+            <div class="text-muted small">
+                <i class="bi bi-calendar3 me-1"></i>
+                @Revision.CreatedAt.ToString("MMM d, yyyy 'at' h:mm tt")
+                <i class="bi bi-person ms-3 me-1"></i>
+                @Revision.CreatedByName
+                <i class="bi bi-git ms-3 me-1"></i>
+                <code>@Revision.CommitHash.Substring(0, 8)</code>
+            </div>
+        </div>
+
+        <!-- Use Epic 7 MarkdownEditor in preview-only mode -->
+        <MarkdownEditor Value="@Revision.Content"
+                        Height="600px"
+                        ShowToolbar="false"
+                        InitialViewMode="ViewMode.PreviewOnly"
+                        @bind-Value="@dummyValue" />
+    </Body>
+    <Footer>
+        <button type="button" class="btn btn-secondary" @onclick="HandleClose">Close</button>
+    </Footer>
+</Modal>
+
+@code {
+    [Parameter, EditorRequired]
+    public PlanRevisionDto Revision { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private string dummyValue = string.Empty; // MarkdownEditor requires @bind-Value
+
+    private async Task HandleClose()
+    {
+        if (OnClose.HasDelegate)
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+}
+```
+
+**Lines of Code:** ~45 lines
+
+---
+
+### RevisionComparisonModal Component (Pure UI)
+
+**File:** `/src/PRFactory.Web/UI/Dialogs/RevisionComparisonModal.razor`
+
+```razor
+@namespace PRFactory.Web.UI.Dialogs
+@using PRFactory.Web.Models
+
+<Modal IsOpen="true"
+       Title="@($"Compare Revision #{Comparison.Revision1.RevisionNumber} vs #{Comparison.Revision2.RevisionNumber}")"
+       Size="ModalSize.ExtraLarge"
+       OnClose="@HandleClose">
+    <Body>
+        <DiffViewer DiffLines="@Comparison.DiffLines" />
+    </Body>
+    <Footer>
+        <button type="button" class="btn btn-secondary" @onclick="HandleClose">Close</button>
+    </Footer>
+</Modal>
+
+@code {
+    [Parameter, EditorRequired]
+    public PlanRevisionComparisonDto Comparison { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private async Task HandleClose()
+    {
+        if (OnClose.HasDelegate)
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+}
+```
+
+**Lines of Code:** ~30 lines
+
+---
+
+### DiffViewer Component (Pure UI)
+
+**File:** `/src/PRFactory.Web/UI/Display/DiffViewer.razor`
+
+```razor
+@namespace PRFactory.Web.UI.Display
+@using PRFactory.Web.Models
+
+<div class="diff-viewer">
+    @foreach (var line in DiffLines)
+    {
+        <div class="diff-line diff-@line.Type.ToString().ToLower()">
+            <span class="line-number">@line.LineNumber</span>
+            <span class="line-content">
+                @if (line.Type == DiffLineType.Modified && !string.IsNullOrEmpty(line.OldContent))
+                {
+                    <del class="text-danger">@line.OldContent</del>
+                    <ins class="text-success">@line.Content</ins>
+                }
+                else
+                {
+                    @line.Content
+                }
+            </span>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public List<DiffLine> DiffLines { get; set; } = new();
+}
+```
+
+**Lines of Code:** ~30 lines
+
+---
+
+### Styling (Separate CSS File)
+
+**File:** `/src/PRFactory.Web/wwwroot/css/revision-timeline.css`
+
+```css
+/* Revision Timeline */
+.revision-timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.revision-timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.timeline-item {
+    position: relative;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -24px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    border: 1px solid #dee2e6;
+}
+
+/* Diff Viewer */
+.diff-viewer {
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    overflow-x: auto;
+}
+
+.diff-line {
+    display: flex;
+    padding: 2px 0;
+}
+
+.line-number {
+    min-width: 50px;
+    padding-right: 10px;
+    color: #6c757d;
+    text-align: right;
+    user-select: none;
+}
+
+.line-content {
+    flex: 1;
+    white-space: pre-wrap;
+}
+
+.diff-unchanged {
+    background-color: white;
+}
+
+.diff-added {
+    background-color: #d4edda;
+}
+
+.diff-removed {
+    background-color: #f8d7da;
+}
+
+.diff-modified {
+    background-color: #fff3cd;
+}
+```
+
+**Lines of Code:** ~75 lines
+
+**Total Component Lines:** ~120 (business) + ~80 (timeline) + ~45 (viewer modal) + ~30 (comparison modal) + ~30 (diff viewer) + ~75 (CSS) = ~380 lines
+
+**Benefits:**
+- ✅ Follows CLAUDE.md component architecture
+- ✅ Pure UI components reusable elsewhere
+- ✅ Uses Epic 7 MarkdownEditor for rendering
+- ✅ Clean separation of concerns
+- ✅ No inline styles in business components
 
 ---
 
@@ -952,34 +1111,95 @@ await _planService.CreateRevisionAsync(
 - Repository Implementation: ~85 lines
 - Service Extension: ~150 lines
 - DTOs: ~65 lines
-- Blazor Component: ~320 lines
+- PlanRevisionHistory Component: ~120 lines (business logic)
+- RevisionTimeline Component: ~80 lines (pure UI)
+- RevisionViewerModal Component: ~45 lines (pure UI)
+- RevisionComparisonModal Component: ~30 lines (pure UI)
+- DiffViewer Component: ~30 lines (pure UI)
+- CSS file: ~75 lines
 - Integration hooks: ~15 lines
 - Migration: ~30 lines
 
-**Total: ~745 lines of code**
+**Total: ~805 lines of code**
 
 **Estimated Effort:** 3-4 days
 - Day 1: Database schema, entity, repository
-- Day 2: Service extension for revisions and comparison
-- Day 3: Blazor component with timeline and diff viewer
-- Day 4: Integration, testing, and refinement
+- Day 2: Service extension for revisions and comparison (use proper diff algorithm)
+- Day 3: Pure UI components (timeline, diff viewer, modals)
+- Day 4: Business component integration, testing, and refinement
+
+**Note:** Reuses Epic 7's MarkdownEditor for rendering revision content.
+
+---
+
+## User Attribution via Git
+
+To enable tracking who made manual changes to plans:
+
+**Update LocalGitService.CommitAsync():**
+
+```csharp
+public async Task CommitAsync(
+    string repoPath,
+    Dictionary<string, string> files,
+    string message,
+    string author,
+    string? email = null) // Add optional email parameter
+{
+    // Use real user signature for manual edits
+    var signature = email != null
+        ? new Signature(author, email, DateTimeOffset.Now)
+        : new Signature("Claude", "claude@prfactory.ai", DateTimeOffset.Now);
+
+    // ... rest of commit logic
+}
+```
+
+**When creating manual plan revisions:**
+
+```csharp
+await _localGitService.CommitAsync(
+    repoPath,
+    files,
+    "Manual plan edit via UI",
+    currentUser.DisplayName,
+    currentUser.Email); // Pass real user email
+
+await _planRevisionRepo.CreateAsync(
+    PlanRevision.Create(
+        ticketId: ticketId,
+        revisionNumber: nextRevisionNumber,
+        // ...
+        reason: PlanRevisionReason.Refined,
+        createdByUserId: currentUser.Id)); // Track user in DB
+```
+
+**Result:** Git blame shows actual user attribution:
+```bash
+git blame PLAN.md
+# Shows: John Doe <john.doe@company.com> 2025-11-14 ...
+```
 
 ---
 
 ## Future Enhancements
 
-1. **Better Diff Algorithm**
-   - Use DiffPlex or diff-match-patch library
-   - Syntax highlighting for markdown
+1. **Better Diff Algorithm** (P1)
+   - ✅ Current: Simple line-by-line comparison
+   - 🎯 Use DiffPlex NuGet package for proper diff algorithm
+   - Add syntax highlighting for markdown diffs
 
-2. **Restore Previous Revision**
+2. **Restore Previous Revision** (P2)
    - Allow restoring an old revision as current
-   - Create new revision when restoring
+   - Create new revision when restoring (don't overwrite history)
+   - Track restoration in audit trail
 
-3. **Revision Comments**
+3. **Revision Comments** (P3)
    - Allow users to add notes to revisions
    - Track why each change was made
+   - Link to review comments that triggered changes
 
-4. **Export Revisions**
-   - Download revision as markdown
-   - Export comparison as PDF
+4. **Export Revisions** (P3)
+   - Download revision as markdown file
+   - Export comparison as PDF with diff highlighting
+   - Generate revision history report

@@ -1,0 +1,98 @@
+name: "Database Implementation Review"
+domain: "database"
+version: "1.0"
+categories:
+  - name: "Completeness"
+    items:
+      - title: "Entity classes defined"
+        description: "All domain entities specified with properties and relationships"
+        severity: "required"
+        sort_order: 1
+
+      - title: "EF configurations created"
+        description: "IEntityTypeConfiguration classes for table mappings"
+        severity: "required"
+        sort_order: 2
+
+      - title: "Migration specified"
+        description: "Plan includes dotnet ef migrations add command"
+        severity: "required"
+        sort_order: 3
+
+      - title: "Seed data if needed"
+        description: "Initial data requirements identified"
+        severity: "recommended"
+        sort_order: 4
+
+  - name: "Schema Design"
+    items:
+      - title: "Primary keys defined"
+        description: "All entities have primary key properties"
+        severity: "required"
+        sort_order: 1
+
+      - title: "Foreign keys specified"
+        description: "Relationships configured with proper foreign keys"
+        severity: "required"
+        sort_order: 2
+
+      - title: "Indexes defined"
+        description: "Indexes created for frequently queried columns"
+        severity: "required"
+        sort_order: 3
+
+      - title: "Constraints specified"
+        description: "Unique constraints, check constraints, and defaults documented"
+        severity: "recommended"
+        sort_order: 4
+
+  - name: "Performance"
+    items:
+      - title: "Query optimization"
+        description: "Plan addresses N+1 query problems with .Include() or projections"
+        severity: "required"
+        sort_order: 1
+
+      - title: "Pagination support"
+        description: "Large result sets use Skip/Take for pagination"
+        severity: "required"
+        sort_order: 2
+
+      - title: "Composite indexes"
+        description: "Multi-column queries have composite indexes"
+        severity: "recommended"
+        sort_order: 3
+
+  - name: "Data Integrity"
+    items:
+      - title: "Cascade delete behavior"
+        description: "OnDelete behavior specified for relationships"
+        severity: "required"
+        sort_order: 1
+
+      - title: "Required fields"
+        description: "Non-nullable columns identified with IsRequired()"
+        severity: "required"
+        sort_order: 2
+
+      - title: "MaxLength constraints"
+        description: "String columns have appropriate length limits"
+        severity: "required"
+        sort_order: 3
+
+  - name: "Testing"
+    items:
+      - title: "Repository tests"
+        description: "Unit tests for repository methods with InMemory provider"
+        severity: "required"
+        sort_order: 1
+
+      - title: "Migration validation"
+        description: "Plan includes testing migration up and down"
+        severity: "required"
+        sort_order: 2
+
+      - title: "80% coverage target"
+        description: "Tests cover CRUD operations and queries (80% minimum)"
+        severity: "required"
+        sort_order: 3

@@ -3,7 +3,7 @@
 **Feature:** AI-powered plan validation with security, completeness, and performance checks
 **Priority:** P1 (Highest Value)
 **Estimated Effort:** 3-5 days
-**Dependencies:** Existing agent infrastructure, prompt loading system
+**Dependencies:** Existing agent infrastructure, AgentPromptTemplate database system
 
 ---
 
@@ -34,7 +34,7 @@ Create a service that uses AI (Claude) to validate implementation plans against 
 │                                                               │
 │  Dependencies:                                               │
 │  - IPlanService (read plan content)                          │
-│  - IAgentPromptService (load validation prompts)             │
+│  - IAgentPromptTemplateRepository (load validation prompts)  │
 │  - ILlmProvider (call Claude API)                            │
 │  - ILogger (logging)                                         │
 └─────────────────────────────────────────────────────────────┘
@@ -135,23 +135,24 @@ namespace PRFactory.Infrastructure.Application;
 public class PlanValidationService : IPlanValidationService
 {
     private readonly IPlanService _planService;
-    private readonly IAgentPromptService _promptService;
+    private readonly IAgentPromptTemplateRepository _promptTemplateRepo;
     private readonly ILlmProvider _llmProvider;
     private readonly ILogger<PlanValidationService> _logger;
 
-    private const string SecurityCheckPrompt = "review/anthropic/plan_security_check.txt";
-    private const string CompletenessCheckPrompt = "review/anthropic/plan_completeness_check.txt";
-    private const string PerformanceCheckPrompt = "review/anthropic/plan_performance_check.txt";
-    private const string CodeValidationPrompt = "review/anthropic/code_plan_validation.txt";
+    // Prompt template names (stored in database via AgentPromptTemplates)
+    private const string SecurityCheckPrompt = "plan-security-check";
+    private const string CompletenessCheckPrompt = "plan-completeness-check";
+    private const string PerformanceCheckPrompt = "plan-performance-check";
+    private const string CodeValidationPrompt = "code-plan-validation";
 
     public PlanValidationService(
         IPlanService planService,
-        IAgentPromptService promptService,
+        IAgentPromptTemplateRepository promptTemplateRepo,
         ILlmProvider llmProvider,
         ILogger<PlanValidationService> logger)
     {
         _planService = planService;
-        _promptService = promptService;
+        _promptTemplateRepo = promptTemplateRepo;
         _llmProvider = llmProvider;
         _logger = logger;
     }
@@ -168,8 +169,8 @@ public class PlanValidationService : IPlanValidationService
             throw new InvalidOperationException($"No plan found for ticket {ticketId}");
         }
 
-        // Select prompt based on check type
-        var promptPath = checkType.ToLowerInvariant() switch
+        // Select prompt template name based on check type
+        var promptTemplateName = checkType.ToLowerInvariant() switch
         {
             "security" => SecurityCheckPrompt,
             "completeness" => CompletenessCheckPrompt,
@@ -177,9 +178,14 @@ public class PlanValidationService : IPlanValidationService
             _ => throw new ArgumentException($"Unknown check type: {checkType}")
         };
 
-        // Load prompt template
-        var promptTemplate = await _promptService.LoadPromptAsync(promptPath);
-        var prompt = promptTemplate.Replace("{plan_content}", plan.Content);
+        // Load prompt template from database
+        var promptTemplate = await _promptTemplateRepo.GetByNameAsync(promptTemplateName);
+        if (promptTemplate == null)
+        {
+            throw new InvalidOperationException($"Prompt template '{promptTemplateName}' not found in database");
+        }
+
+        var prompt = promptTemplate.PromptContent.Replace("{plan_content}", plan.Content);
 
         // Call LLM
         var response = await _llmProvider.SendMessageAsync(prompt);
@@ -242,9 +248,14 @@ public class PlanValidationService : IPlanValidationService
                 $"Cannot validate code against unapproved plan for ticket {ticketId}");
         }
 
-        // Load validation prompt
-        var promptTemplate = await _promptService.LoadPromptAsync(CodeValidationPrompt);
-        var prompt = promptTemplate
+        // Load validation prompt template from database
+        var promptTemplate = await _promptTemplateRepo.GetByNameAsync(CodeValidationPrompt);
+        if (promptTemplate == null)
+        {
+            throw new InvalidOperationException($"Prompt template '{CodeValidationPrompt}' not found in database");
+        }
+
+        var prompt = promptTemplate.PromptContent
             .Replace("{plan_artifacts}", plan.Content)
             .Replace("{code_diff}", diffContent);
 
@@ -379,13 +390,21 @@ public class PlanValidationService : IPlanValidationService
 
 ---
 
-### 3. Prompt Templates
+### 3. Prompt Templates (Database Seeding)
 
-Create directory: `/prompts/review/anthropic/`
+**Note:** PRFactory uses a database-backed prompt library system. These prompts should be seeded into the `AgentPromptTemplates` table during installation or via the `/agent-prompts` UI.
 
-**File 1:** `plan_security_check.txt`
+**Seeding Method:** Add to `/src/PRFactory.Infrastructure/Persistence/DemoData/DemoPromptData.cs`
+
+**Template 1:** `plan-security-check`
 
 ```
+Category: Review
+Name: plan-security-check
+Description: Security expert review for implementation plans
+RecommendedModel: claude-sonnet-3-5
+
+Content:
 You are a security expert reviewing an implementation plan.
 
 Your task is to analyze the provided implementation plan and identify potential security vulnerabilities, risks, and gaps in security controls.
@@ -418,13 +437,17 @@ Recommendations:
 Score: [0-100, where 100 = no security issues found]
 ```
 
-**Lines of Code:** ~30 lines
-
 ---
 
-**File 2:** `plan_completeness_check.txt`
+**Template 2:** `plan-completeness-check`
 
 ```
+Category: Review
+Name: plan-completeness-check
+Description: Technical architect review for plan completeness
+RecommendedModel: claude-sonnet-3-5
+
+Content:
 You are a technical architect reviewing an implementation plan for completeness.
 
 Your task is to analyze the provided implementation plan and identify gaps, missing requirements, and areas that need more detail.
@@ -459,13 +482,17 @@ Summary:
 [Brief 2-3 sentence summary of overall completeness]
 ```
 
-**Lines of Code:** ~35 lines
-
 ---
 
-**File 3:** `plan_performance_check.txt`
+**Template 3:** `plan-performance-check`
 
 ```
+Category: Review
+Name: plan-performance-check
+Description: Performance engineering expert review
+RecommendedModel: claude-sonnet-3-5
+
+Content:
 You are a performance engineering expert reviewing an implementation plan.
 
 Your task is to analyze the provided implementation plan and identify potential performance bottlenecks, scalability issues, and optimization opportunities.
@@ -498,13 +525,17 @@ Recommendations:
 Score: [0-100, where 100 = excellent performance design]
 ```
 
-**Lines of Code:** ~35 lines
-
 ---
 
-**File 4:** `code_plan_validation.txt`
+**Template 4:** `code-plan-validation`
 
 ```
+Category: Review
+Name: code-plan-validation
+Description: Code vs plan alignment validator
+RecommendedModel: claude-sonnet-3-5
+
+Content:
 You are a meticulous code reviewer validating that code implementation matches an approved implementation plan.
 
 Your task is to compare the code changes (git diff) against the approved plan and verify alignment.
@@ -546,7 +577,65 @@ Summary:
 [2-3 sentence summary of alignment quality]
 ```
 
-**Lines of Code:** ~40 lines
+---
+
+### Seeding Example Code
+
+Add to `DemoPromptData.cs`:
+
+```csharp
+public static List<AgentPromptTemplate> GetPlanValidationPrompts()
+{
+    return new List<AgentPromptTemplate>
+    {
+        AgentPromptTemplate.CreateSystemTemplate(
+            name: "plan-security-check",
+            description: "Security expert review for implementation plans",
+            category: "Review",
+            promptContent: @"You are a security expert reviewing an implementation plan...
+[Full prompt content from above]",
+            recommendedModel: "claude-sonnet-3-5",
+            color: "#dc3545"),
+
+        AgentPromptTemplate.CreateSystemTemplate(
+            name: "plan-completeness-check",
+            description: "Technical architect review for plan completeness",
+            category: "Review",
+            promptContent: @"You are a technical architect reviewing an implementation plan for completeness...
+[Full prompt content from above]",
+            recommendedModel: "claude-sonnet-3-5",
+            color: "#0d6efd"),
+
+        AgentPromptTemplate.CreateSystemTemplate(
+            name: "plan-performance-check",
+            description: "Performance engineering expert review",
+            category: "Review",
+            promptContent: @"You are a performance engineering expert reviewing an implementation plan...
+[Full prompt content from above]",
+            recommendedModel: "claude-sonnet-3-5",
+            color: "#ffc107"),
+
+        AgentPromptTemplate.CreateSystemTemplate(
+            name: "code-plan-validation",
+            description: "Code vs plan alignment validator",
+            category: "Review",
+            promptContent: @"You are a meticulous code reviewer validating that code implementation matches an approved implementation plan...
+[Full prompt content from above]",
+            recommendedModel: "claude-sonnet-3-5",
+            color: "#6c757d")
+    };
+}
+```
+
+Update `DbSeeder.SeedAgentPromptTemplatesAsync()`:
+
+```csharp
+// Add plan validation prompts
+var validationPrompts = DemoPromptData.GetPlanValidationPrompts();
+await _promptTemplateRepo.AddRangeAsync(validationPrompts);
+```
+
+**Benefit:** Users can edit these prompts via `/agent-prompts` UI as LLMs evolve.
 
 ---
 
@@ -822,14 +911,14 @@ Test cases:
 
 **Total Estimated Lines of Code:**
 - Interface: ~80 lines
-- Service Implementation: ~250 lines
-- Prompt Templates: ~140 lines (4 files)
+- Service Implementation: ~270 lines (includes prompt template error handling)
+- Prompt Template Seeding: ~100 lines (in DemoPromptData.cs)
 - Web Service Integration: ~30 lines
 - Blazor Component: ~190 lines
 - Service Registration: ~2 lines
 - Unit Tests: ~300 lines
 
-**Total: ~992 lines of code**
+**Total: ~972 lines of code**
 
 **Estimated Effort:** 3-5 days
 - Day 1: Create interface, implementation, and prompt templates
@@ -843,7 +932,9 @@ Test cases:
 
 **Existing Infrastructure:**
 - ✅ `IPlanService` - for reading plan content
-- ✅ `IAgentPromptService` - for loading prompt templates
+- ✅ `IAgentPromptTemplateRepository` - database-backed prompt library
+- ✅ `AgentPromptTemplate` entity - prompt storage with multi-tenant support
+- ✅ `/agent-prompts` UI - users can edit prompts as LLMs evolve
 - ✅ `ILlmProvider` - for calling Claude API
 - ✅ Logging infrastructure
 

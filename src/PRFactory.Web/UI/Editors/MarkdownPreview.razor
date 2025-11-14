@@ -1,0 +1,37 @@
+@namespace PRFactory.Web.UI.Editors
+@using Markdig
+
+<div class="markdown-preview">
+    @if (!string.IsNullOrWhiteSpace(Content))
+    {
+        @((MarkupString)RenderMarkdown(Content))
+    }
+    else
+    {
+        <div class="empty-state text-muted text-center py-5">
+            <i class="bi bi-eye fs-1"></i>
+            <p class="mt-2">Preview will appear here</p>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string Content { get; set; } = string.Empty;
+
+    private static readonly MarkdownPipeline Pipeline = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .Build();
+
+    private string RenderMarkdown(string markdown)
+    {
+        try
+        {
+            return Markdown.ToHtml(markdown, Pipeline);
+        }
+        catch
+        {
+            return "<p class='text-danger'>Error rendering markdown</p>";
+        }
+    }
+}

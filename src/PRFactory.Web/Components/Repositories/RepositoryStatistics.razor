@@ -1,0 +1,40 @@
+@using PRFactory.Web.UI.Cards
+@using PRFactory.Web.UI.Display
+
+<Card Title="Repository Statistics" Icon="bar-chart">
+    <ChildContent>
+        <div class="row text-center g-3">
+            <div class="col-6">
+                <div class="statistics-item">
+                    <div class="h2 mb-0 text-primary">@Statistics.TotalTickets</div>
+                    <small class="text-muted">Total Tickets</small>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="statistics-item">
+                    <div class="h2 mb-0 text-success">@Statistics.TotalPullRequests</div>
+                    <small class="text-muted">Pull Requests</small>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-3" />
+
+        <dl class="mb-0">
+            @if (Statistics.LastAccessedAt.HasValue)
+            {
+                <dt class="text-muted small">Last Accessed</dt>
+                <dd>
+                    <RelativeTime Timestamp="@Statistics.LastAccessedAt.Value" />
+                </dd>
+            }
+            else
+            {
+                <dt class="text-muted small">Last Accessed</dt>
+                <dd>
+                    <span class="text-muted">Never</span>
+                </dd>
+            }
+        </dl>
+    </ChildContent>
+</Card>

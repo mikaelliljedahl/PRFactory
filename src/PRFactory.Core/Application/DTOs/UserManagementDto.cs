@@ -1,3 +1,5 @@
+using PRFactory.Domain.Entities;
+
 namespace PRFactory.Core.Application.DTOs;
 
 /// <summary>
@@ -33,7 +35,12 @@ public class UserManagementDto
     /// <summary>
     /// User's role within the tenant (Owner, Admin, Member, Viewer)
     /// </summary>
-    public string Role { get; set; } = string.Empty;
+    public UserRole Role { get; set; }
+
+    /// <summary>
+    /// Identity provider used by this user (AzureAD, GoogleWorkspace, Personal)
+    /// </summary>
+    public string IdentityProvider { get; set; } = string.Empty;
 
     /// <summary>
     /// Whether this user is active and can access the system

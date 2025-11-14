@@ -1,6 +1,7 @@
 @namespace PRFactory.Web.Components.Tickets
 @using PRFactory.Web.UI.Display
 @using PRFactory.Web.Models
+@using PRFactory.Web.UI.Editors
 
 <div class="card">
     <div class="card-header">
@@ -76,11 +77,10 @@
             <div class="new-comment-form">
                 <div class="mb-2">
                     <label class="form-label fw-bold">Add Comment</label>
-                    <textarea class="form-control"
-                              rows="3"
-                              placeholder="Share your thoughts on this plan (Markdown supported)"
-                              @bind="NewCommentContent"
-                              disabled="@IsSubmitting"></textarea>
+                    <MarkdownEditor @bind-Value="NewCommentContent"
+                                    Height="300px"
+                                    ShowToolbar="true"
+                                    ShowPreview="true" />
                     <div class="form-text">
                         Use Markdown formatting. Mentions not yet supported in this version.
                     </div>

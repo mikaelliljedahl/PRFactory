@@ -14,7 +14,7 @@
                         <span class="timeline-title">@evt.EventType</span>
                         <span class="timeline-time text-muted">
                             <i class="bi bi-clock me-1"></i>
-                            @evt.OccurredAt.ToString("MMM dd, yyyy HH:mm:ss")
+                            @evt.OccurredAt.ToString("MMM dd, yyyy HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture)
                         </span>
                     </div>
                     <div class="timeline-body">

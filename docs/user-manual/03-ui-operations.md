@@ -530,6 +530,117 @@ Configure which AI model each agent type uses.
 
 ---
 
+## Admin UI (`/admin/*`)
+
+**Access**: Owner and Admin roles only
+
+The Admin UI provides self-service configuration for repositories, LLM providers, tenant settings, and user management.
+
+### Repository Management (`/admin/repositories`)
+
+Manage Git repositories for PRFactory to use.
+
+**Features**:
+- Add repositories (GitHub, Bitbucket, Azure DevOps, GitLab)
+- Test repository connections before saving
+- Edit repository settings
+- View repository statistics
+- Encrypted credential storage (AES-256-GCM)
+
+**Actions**:
+- **Create Repository**: Add new Git repository with connection testing
+- **Edit Repository**: Update access tokens, default branch
+- **Test Connection**: Verify credentials work
+- **Deactivate**: Soft delete repository
+
+### LLM Provider Configuration (`/admin/settings/llm-providers`)
+
+Configure AI providers for different agent types.
+
+**Supported Provider Types**:
+1. **Anthropic Native** - OAuth 2.0 authentication
+2. **Z.ai Unified API** - API key with multi-model support
+3. **Minimax M2** - API key authentication
+4. **OpenRouter** - API key with 100+ models
+5. **Together AI** - API key authentication
+6. **Custom** - Fully configurable endpoint
+
+**Features**:
+- Multi-step wizard for adding providers
+- Connection testing before save
+- Default provider management
+- Model override configuration (JSON)
+- Encrypted API keys/tokens
+
+**Actions**:
+- **Create Provider**: Multi-step wizard with type selection
+- **Edit Provider**: Update configuration, model overrides
+- **Set as Default**: Make provider the tenant default
+- **Test Connection**: Verify provider credentials
+
+### Tenant Settings (`/admin/settings/general`)
+
+Configure tenant-wide workflow behavior.
+
+**Settings Tabs**:
+
+**1. General** (Read-only)
+- Tenant information
+- User statistics
+- Repository and provider counts
+
+**2. Workflow Settings**
+- Auto-implementation after plan approval
+- Max retries for failed operations
+- API timeout settings
+- Verbose logging toggle
+- Allowed repositories whitelist
+
+**3. Code Review Settings**
+- Enable/disable automated code review
+- Max code review iterations
+- Auto-approve if no issues
+- Security scan requirements
+
+**4. LLM Provider Assignment**
+- Assign providers to agent roles:
+  - Analysis agents
+  - Planning agents
+  - Implementation agents
+  - Code Review agents
+- Per-workflow provider overrides
+
+**Access**: Only Owner role can edit settings (Admin/Member can view read-only)
+
+### User Management (`/admin/settings/users`)
+
+Manage user roles and permissions.
+
+**User Roles**:
+- **Owner**: Full admin access (can manage everything)
+- **Admin**: Repository & provider management (cannot change settings/roles)
+- **Member**: Read-only access to admin UI
+- **Viewer**: Read-only access (no admin UI)
+
+**Features**:
+- Auto-provisioning from OAuth (first user becomes Owner)
+- Search and filter users by role/status
+- Change user roles (Owner only)
+- Activate/deactivate users
+- User statistics and activity
+
+**Business Rules**:
+- ❌ Cannot remove the last Owner from a tenant
+- ❌ Cannot demote yourself if you are the last Owner
+- ✅ Owner can assign multiple Owners for redundancy
+
+**Actions**:
+- **Edit User Role**: Change role with validation
+- **Activate/Deactivate**: Toggle user active status
+- **View Statistics**: See user activity metrics
+
+---
+
 ## Real-Time Updates
 
 All pages use **SignalR** for real-time updates. You'll see changes automatically without refreshing:

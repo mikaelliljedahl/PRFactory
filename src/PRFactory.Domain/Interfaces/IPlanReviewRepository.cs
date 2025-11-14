@@ -13,6 +13,11 @@ public interface IPlanReviewRepository
     Task<PlanReview?> GetByIdAsync(Guid reviewId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets a plan review by its unique ID including checklist items
+    /// </summary>
+    Task<PlanReview?> GetByIdWithChecklistAsync(Guid reviewId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets all reviews for a specific ticket
     /// </summary>
     Task<List<PlanReview>> GetByTicketIdAsync(Guid ticketId, CancellationToken cancellationToken = default);

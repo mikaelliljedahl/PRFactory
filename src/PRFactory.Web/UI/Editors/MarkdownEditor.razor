@@ -1,0 +1,36 @@
+@namespace PRFactory.Web.UI.Editors
+
+<div class="markdown-editor @GetEditorClass()">
+    @if (ShowToolbar)
+    {
+        <MarkdownToolbar OnCommand="HandleToolbarCommand"
+                         CurrentViewMode="@currentViewMode"
+                         OnViewModeChanged="HandleViewModeChange" />
+    }
+
+    <div class="editor-container" style="height: @Height;">
+        @if (currentViewMode != ViewMode.PreviewOnly)
+        {
+            <div class="editor-pane">
+                <div class="line-numbers" @ref="lineNumbersRef">
+                    @for (int i = 1; i <= lineCount; i++)
+                    {
+                        <div>@i</div>
+                    }
+                </div>
+                <textarea @ref="textareaRef"
+                          value="@currentValue"
+                          @oninput="OnInput"
+                          @onkeydown="HandleKeyDown"
+                          class="editor-textarea"
+                          placeholder="Write markdown here..."
+                          spellcheck="false"></textarea>
+            </div>
+        }
+
+        @if (currentViewMode != ViewMode.EditorOnly)
+        {
+            <MarkdownPreview Content="@previewContent" @ref="previewRef" />
+        }
+    </div>
+</div>

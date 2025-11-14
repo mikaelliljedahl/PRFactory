@@ -1,0 +1,48 @@
+@namespace PRFactory.Web.UI.Checklists
+@using PRFactory.Web.Models
+
+<div class="checklist-item form-check mb-2">
+    <input type="checkbox"
+           class="form-check-input"
+           id="item-@Item.Id"
+           checked="@Item.IsChecked"
+           @onchange="HandleCheckedChange" />
+    <label class="form-check-label" for="item-@Item.Id">
+        <strong>@Item.Title</strong>
+        @if (Item.Severity == "required")
+        {
+            <span class="badge bg-danger ms-2">Required</span>
+        }
+        else
+        {
+            <span class="badge bg-secondary ms-2">Recommended</span>
+        }
+        <div class="small text-muted mt-1">@Item.Description</div>
+        @if (Item.CheckedAt.HasValue)
+        {
+            <div class="small text-success mt-1">
+                <i class="bi bi-check-circle-fill me-1"></i>
+                Checked @Item.CheckedAt.Value.ToString("g")
+            </div>
+        }
+    </label>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public ChecklistItemDto Item { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback<ChecklistItemDto> OnCheckedChanged { get; set; }
+
+    private async Task HandleCheckedChange(ChangeEventArgs e)
+    {
+        Item.IsChecked = (bool)(e.Value ?? false);
+        Item.CheckedAt = Item.IsChecked ? DateTime.UtcNow : null;
+
+        if (OnCheckedChanged.HasDelegate)
+        {
+            await OnCheckedChanged.InvokeAsync(Item);
+        }
+    }
+}

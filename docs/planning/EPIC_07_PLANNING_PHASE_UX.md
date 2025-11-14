@@ -1,20 +1,37 @@
 # EPIC 07: Planning Phase UX & Collaboration Improvements
 
-> **Status**: Draft
+> **Status**: In Planning
 > **Priority**: High
-> **Estimated Effort**: 8-12 weeks
-> **Dependencies**: None (enhances existing planning phase)
+> **Estimated Effort**: 5-7 weeks (reduced from 8-12 weeks due to Epic 1 overlap)
+> **Dependencies**: Epic 1 (Team Review & Collaboration) - provides foundation for AI validation, notifications, and revision history
 > **Target Audience**: Development teams using PRFactory for collaborative planning
+> **Related Epics**: Epic 1 (Team Review), Epic 5 (Agent Framework), Epic 6 (Admin UI)
 
 ---
 
 ## Executive Summary
 
-Enhance the planning phase with AI-powered plan review, rich markdown editing, and collaborative features to enable teams to iteratively refine implementation plans in a web browser before code implementation begins.
+Enhance the planning phase UX with rich markdown editing, inline commenting, and structured review checklists to provide a professional, Notion-like experience for collaborative plan refinement.
 
-**Current State**: Planning phase generates plans and supports multi-reviewer approval, but uses plain textarea editing, lacks AI quality checks, and has limited collaboration features.
+**Current State** (as of 2025-11-14):
+- ✅ Multi-reviewer approval system implemented (required/optional reviewers)
+- ✅ Basic comment support with markdown rendering
+- ✅ PlanningGraph with checkpoint/resume
+- ✅ Side-by-side diff viewer
+- ⚠️ Plain textarea editing (limited UX)
+- ❌ No rich markdown editor with live preview
+- ❌ No inline comment anchoring
+- ❌ No review checklists
 
-**Future State**: Teams can collaboratively edit plans in a rich markdown editor with live preview, receive AI-powered quality feedback, track version history, and use structured review criteria.
+**Future State**:
+Teams can collaboratively edit plans in a rich split-view markdown editor with formatting toolbar, anchor comments to specific lines, follow structured review checklists, and benefit from AI-powered quality validation (Epic 1).
+
+**Note on Epic 1 Overlap**: Many features originally scoped in early EPIC 07 drafts are now being implemented in **Epic 1 (Team Review & Collaboration)**:
+- AI Plan Validation Service (Epic 1)
+- Notification System for @mentions and assignments (Epic 1)
+- Plan Revision History with diff comparison (Epic 1)
+
+EPIC 07 focuses specifically on **UX improvements** for the planning phase editor and review experience.
 
 ---
 
@@ -22,26 +39,103 @@ Enhance the planning phase with AI-powered plan review, rich markdown editing, a
 
 ### Problems Being Solved
 
-1. **Quality Assurance Gap**: Plans go straight to human review without AI validation
-2. **Poor Editing Experience**: Plain textareas make it hard to edit large markdown documents
-3. **Inefficient Collaboration**: No inline comments, threading, or structured discussion
-4. **Lack of Transparency**: Teams can't see how plans evolved through refinements
-5. **Unstructured Reviews**: Reviewers lack clear criteria for evaluating plan quality
+1. **Poor Editing Experience**: Plain textareas make it hard to edit large markdown documents
+   - No formatting toolbar (users must know markdown syntax)
+   - No live preview (must toggle between edit and view)
+   - No syntax highlighting for code blocks
+
+2. **Inefficient Inline Discussions**: Comments apply to entire plan, not specific sections
+   - Can't anchor comments to specific lines or paragraphs
+   - Difficult to discuss specific implementation details
+   - Reviewers must quote text manually
+
+3. **Unstructured Reviews**: Reviewers lack clear criteria for plan evaluation
+   - No checklist of what to verify
+   - Inconsistent review quality across reviewers
+   - Missing items not caught until implementation
+
+4. **Poor Codebase Context**: Planning prompts don't provide enough architectural guidance
+   - Generated plans don't follow project patterns
+   - Missing domain-specific considerations (web/API/database)
+   - Repetitive refinement requests
 
 ### Expected Benefits
 
-- **Faster Review Cycles**: AI catches quality issues before human review (estimated 30% time savings)
-- **Better Plan Quality**: Structured prompts and review checklists improve completeness
-- **Improved Collaboration**: Rich editor and inline comments enable team refinement
-- **Audit Trail**: Version history provides transparency and learning opportunities
-- **User Satisfaction**: Professional editing experience comparable to Notion/Confluence
+- **Better User Experience**: Professional markdown editor comparable to Notion/Confluence
+- **Faster Reviews**: Inline comments with line anchors reduce back-and-forth
+- **Consistent Quality**: Review checklists ensure completeness
+- **Higher Plan Quality**: Enhanced prompts with architectural context reduce refinements
+- **User Satisfaction**: Modern editing experience reduces friction
 
 ### Success Metrics
 
-- Average review cycles reduced from 2.5 to 1.5 iterations
-- Plan completeness score (AI-evaluated) > 85% before human review
 - User satisfaction score > 4.0/5.0 for editing experience
-- 80% of plans use collaborative editing features
+- Average characters per plan edit session increases by 50% (easier to make larger edits)
+- Review comment specificity improves (% of comments with line anchors > 60%)
+- First-time plan acceptance rate increases by 20%
+
+---
+
+## Current Implementation Status
+
+### What Exists Today (✅ Implemented)
+
+From exploration of the codebase (2025-11-14):
+
+**Review System Core** (35 files, ~1,765 LOC in UI components):
+- `PlanReview` entity - Multi-reviewer support (required/optional)
+- `ReviewComment` entity - Markdown comments with @mention field
+- `ReviewStatus` enum - Pending, Approved, RejectedForRefinement, RejectedForRegeneration
+- `PlanReviewService` - Assign reviewers, add comments, approval logic
+- `Ticket.HasSufficientApprovals()` - Domain logic for approval gates
+
+**UI Components**:
+- `PlanReviewSection.razor` - Main review container with approve/refine/regenerate actions
+- `PlanReviewStatus.razor` - Shows reviewer progress (required/optional split)
+- `ReviewerAssignment.razor` - Multi-reviewer assignment UI
+- `ReviewCommentThread.razor` - Linear comment list with markdown rendering (Markdig)
+- `TicketUpdateEditor.razor` - ⚠️ Plain textarea (8 rows) with validation
+- `TicketDiffViewer.razor` - Side-by-side original vs updated comparison
+
+**Agent Infrastructure** (from Epic 5):
+- CLI-based agent architecture (LLM-agnostic)
+- 5 graphs: RefinementGraph, PlanningGraph, ImplementationGraph, CodeReviewGraph, WorkflowOrchestrator
+- Checkpoint/resume system across all phases
+- 20+ specialized agents
+
+**Markdown Support**:
+- Markdig library (v0.40.0) with advanced extensions
+- Rendering in comments, ticket descriptions, plan content
+- No WYSIWYG or live preview editing
+
+### What's Missing (❌ Not Implemented)
+
+**Epic 7 Scope**:
+- Rich Markdown Editor with split-view and formatting toolbar
+- Inline comment anchoring to specific line ranges
+- Review checklists with structured criteria
+- Enhanced planning prompts with domain-specific templates
+
+**Epic 1 Scope** (separate epic, in planning):
+- AI Plan Validation Service
+- Notification system for @mentions
+- Plan revision history with timeline
+- Threaded comment discussions (parent-child relationships)
+
+### Architecture Changes Since Initial Draft
+
+**Original EPIC 07 (early draft)**: Assumed custom agent framework with explicit tool system
+
+**Current Reality (as of Epic 5 implementation)**:
+- **CLI-based agents**: Simpler, LLM-agnostic architecture
+- **Prompt-based execution**: Agents receive comprehensive prompts with all context
+- **Markdown output**: Plans generated as Markdown (not JSON)
+- **Cross-provider workflows**: Can use GPT-4, Claude, or other LLMs interchangeably
+
+**Impact on EPIC 07**:
+- PlanReviewAgent (AI validation) moved to Epic 1
+- Focus shifts to UX/UI improvements vs agent infrastructure
+- Prompts are text files in `/prompts/` directory, not C# classes
 
 ---
 
@@ -49,551 +143,228 @@ Enhance the planning phase with AI-powered plan review, rich markdown editing, a
 
 ### Epic-Level User Stories
 
-1. **As a developer**, I want AI to review generated plans for quality issues before I review them, so I can focus on business logic rather than catching basic mistakes.
+1. **As a developer**, I want to edit plans in a split-view markdown editor with live preview, so I can see formatted output as I type without toggling views.
 
-2. **As a team lead**, I want my team to collaboratively edit plans in a rich markdown editor with live preview, so we can iterate quickly without context switching.
+2. **As a reviewer**, I want to anchor comments to specific lines in the plan, so discussions stay contextual and I don't have to quote text manually.
 
-3. **As a reviewer**, I want structured review criteria and checklists, so I can consistently evaluate plan quality.
+3. **As a reviewer**, I want a structured checklist when reviewing plans (completeness, security, testability), so I consistently evaluate all important criteria.
 
-4. **As a project manager**, I want to see version history of plan refinements, so I can understand how decisions evolved and learn from past iterations.
+4. **As a team lead**, I want planning prompts to include our architectural patterns and domain-specific guidance, so generated plans follow our standards from the start.
 
-5. **As a developer**, I want better planning prompts that guide the AI to generate more complete plans, so I spend less time requesting refinements.
-
----
-
-## Architecture Overview
-
-### Components to Build
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    PLANNING PHASE                            │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│  Phase 1: Plan Generation (Enhanced)                        │
-│  ─────────────────────────────────────────                  │
-│  • PlanningAgent with improved prompts                      │
-│  • Structured output format (JSON + Markdown)               │
-│  • Domain-specific templates (web, API, infrastructure)     │
-└──────────────────────┬──────────────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────────────┐
-│  Phase 2: AI Plan Review (NEW)                              │
-│  ─────────────────────────────────────                      │
-│  • PlanReviewAgent validates generated plan                 │
-│  • Checks completeness, consistency, best practices         │
-│  • Generates quality score (0-100) and feedback             │
-│  • Auto-requests refinement if score < threshold            │
-└──────────────────────┬──────────────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────────────┐
-│  Phase 3: Git Commit + Jira Post (Existing)                 │
-│  ─────────────────────────────────────────                  │
-│  • GitPlanAgent commits to feature branch                   │
-│  • JiraPostAgent posts to ticket with AI review summary     │
-└──────────────────────┬──────────────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────────────┐
-│  Phase 4: Human Collaborative Review (Enhanced)             │
-│  ─────────────────────────────────────────                  │
-│  • Rich Markdown Editor with live preview                   │
-│  • Inline comments and threaded discussions                 │
-│  • Review checklist with structured criteria                │
-│  • Version history and diff viewer                          │
-│  • @Mention notifications for collaboration                 │
-└──────────────────────┬──────────────────────────────────────┘
-                       │
-                       ▼
-                  [Approve/Refine/Regenerate]
-```
-
-### Technology Stack
-
-**Approved Libraries** (per CLAUDE.md):
-- **Markdig**: Existing markdown parser (already installed)
-- **Blazor Server**: Existing UI framework
-- **Radzen Blazor**: Existing component library
-- **SignalR**: Existing real-time framework
-- **Bootstrap 5**: Existing CSS framework
-
-**NO NEW UI LIBRARIES REQUIRED** - All features can be built with approved stack.
+5. **As a developer**, I want a formatting toolbar in the editor (bold, headings, lists, code blocks), so I don't have to remember markdown syntax.
 
 ---
 
-## Detailed Requirements
+## Features (Updated Scope)
 
-### Feature 1: Enhanced Planning Prompts
+### Feature 1: Enhanced Planning Prompts ✨ NEW
 
-**Goal**: Improve plan generation quality through better AI prompts.
+**Goal**: Improve plan generation quality through better prompt engineering with domain-specific templates and architectural context.
 
-#### Requirements
+**Current State**:
+- Prompts in `/prompts/plan/anthropic/` directory
+- Single system and user template
+- Generic context (file list, ticket description)
 
-1. **Structured Prompt Templates**
-   - System prompt defines role, output format, quality criteria
-   - User prompt includes codebase context, patterns, architecture
-   - Templates for different domains (web UI, REST API, background jobs, database)
-   - Handlebars templates for dynamic context injection
+**Proposed Enhancement**:
+- Domain-specific prompt templates:
+  - `web_ui.txt` - Blazor component guidance, routing, state management
+  - `rest_api.txt` - Controller patterns, DTO mapping, error handling
+  - `background_jobs.txt` - Hangfire patterns, retry logic, idempotency
+  - `database.txt` - Migration patterns, EF configuration, indexing strategies
+- Codebase architectural patterns (from `/docs/ARCHITECTURE.md`)
+- Technology stack with versions
+- Code style guidelines (from `.editorconfig`)
+- Example code snippets from similar features
 
-2. **Prompt Includes Quality Criteria**
-   - Completeness: All sections required (overview, steps, tests, risks)
-   - Specificity: File paths, line numbers, method signatures
-   - Testability: Clear test cases for each change
-   - Rollback: How to undo changes if needed
-   - Dependencies: External packages, services, configurations
-
-3. **Codebase Context Enrichment**
-   - Include relevant file snippets (not just file names)
-   - Architectural patterns used in the project
-   - Technology stack with versions
-   - Existing testing patterns
-   - Code style guidelines
-
-#### Acceptance Criteria
-
-- [ ] New prompt templates in `/prompts/plan/anthropic/v2/`
+**Acceptance Criteria**:
+- [ ] Domain-specific prompt templates in `/prompts/plan/anthropic/domains/`
+- [ ] TicketType field drives template selection (Web UI, REST API, Background Job, Database)
 - [ ] System prompt includes quality criteria checklist
-- [ ] User prompt includes 3+ code snippets from relevant files
-- [ ] Domain-specific templates for web/API/jobs/database
-- [ ] Template tests validate all variables render correctly
+- [ ] User prompt includes 3+ relevant code snippets
+- [ ] Generated plans reference actual project patterns
 
-#### Files to Create/Modify
+**Files to Create**:
+- `/prompts/plan/anthropic/domains/web_ui.txt`
+- `/prompts/plan/anthropic/domains/rest_api.txt`
+- `/prompts/plan/anthropic/domains/background_jobs.txt`
+- `/prompts/plan/anthropic/domains/database.txt`
+- `/prompts/plan/anthropic/domains/refactoring.txt`
 
-**New Files**:
-- `/prompts/plan/anthropic/v2/system.txt` - Enhanced system prompt
-- `/prompts/plan/anthropic/v2/user_template.hbs` - Enhanced user template
-- `/prompts/plan/anthropic/v2/web_domain.txt` - Web UI-specific guidance
-- `/prompts/plan/anthropic/v2/api_domain.txt` - REST API-specific guidance
-- `/prompts/plan/anthropic/v2/background_domain.txt` - Background jobs guidance
-- `/prompts/plan/anthropic/v2/database_domain.txt` - Database schema guidance
+**Files to Modify**:
+- `/src/PRFactory.Infrastructure/Agents/PlanningAgent.cs` - Load domain templates based on ticket type
 
-**Modified Files**:
-- `/src/PRFactory.Infrastructure/Agents/PlanningAgent.cs` - Load new prompt templates
-
-#### Estimated Effort: 1 week
+**Estimated Effort**: 1 week
 
 ---
 
-### Feature 2: AI Plan Review Agent
+### Feature 2: Rich Markdown Editor Component ✨ NEW
 
-**Goal**: Automatically validate generated plans before human review.
+**Goal**: Provide professional split-view markdown editing with live preview, formatting toolbar, and keyboard shortcuts.
 
-#### Requirements
+**Current State**:
+- `TicketUpdateEditor.razor` - Plain `<textarea>` with 8 rows
+- No toolbar, no preview, no shortcuts
+- Markdown rendering only after save
 
-1. **PlanReviewAgent Implementation**
-   - New agent that executes after PlanningAgent
-   - Uses Claude to analyze generated plan
-   - Evaluates against quality criteria checklist
-   - Returns structured feedback with score (0-100)
+**Proposed Component**: `MarkdownEditor.razor`
 
-2. **Quality Evaluation Criteria**
-   - **Completeness** (25 points): All required sections present
-   - **Specificity** (25 points): File paths, signatures, clear instructions
-   - **Testability** (20 points): Test cases cover changes
-   - **Safety** (15 points): Rollback plan, error handling, security
-   - **Dependencies** (15 points): Packages, configs, prerequisites
+**Features**:
+- **Split-view layout**: Editor (left) + Live Preview (right)
+- **View modes**: Split, Editor-only, Preview-only, Fullscreen
+- **Formatting toolbar**:
+  - Text: Bold, Italic, Strikethrough
+  - Structure: H1-H6, Blockquote, Horizontal Rule
+  - Lists: Unordered, Ordered, Checklist
+  - Insert: Link, Image, Table, Code Block
+  - Actions: Undo, Redo, Fullscreen
+- **Keyboard shortcuts**: Ctrl+B (bold), Ctrl+I (italic), Ctrl+K (link), etc.
+- **Live preview**: Debounced 300ms, uses Markdig with advanced extensions
+- **Responsive**: Desktop (side-by-side), Tablet (tabs), Mobile (editor-only with preview button)
+- **Line numbers** in editor pane
+- **Scroll sync** between editor and preview
 
-3. **Automated Refinement Loop**
-   - If score < 70: Auto-request refinement with specific feedback
-   - If score >= 70: Proceed to human review
-   - Max 3 automated refinement attempts
-   - After 3 attempts: Proceed to human review with warnings
+**Technology**:
+- Pure Blazor Server (no JavaScript required per CLAUDE.md)
+- `<textarea>` with `@oninput` for live updates
+- `@bind` for two-way binding
+- Radzen components for toolbar buttons
+- CSS Grid for split layout
+- Markdig for preview rendering
 
-4. **Review Summary Storage**
-   - Store AI review results in database
-   - Include score, feedback, timestamp
-   - Display in UI before human review
-
-#### Acceptance Criteria
-
-- [ ] PlanReviewAgent class implemented
-- [ ] Quality scoring algorithm with 5 criteria
-- [ ] Automated refinement loop (max 3 attempts)
-- [ ] PlanReviewResult entity with score + feedback
-- [ ] PlanningGraph updated with review stage
-- [ ] UI displays AI review summary before human review
-- [ ] Audit log tracks automated refinements
-
-#### Files to Create/Modify
-
-**New Files**:
-- `/src/PRFactory.Infrastructure/Agents/PlanReviewAgent.cs`
-- `/src/PRFactory.Domain/Entities/PlanReviewResult.cs`
-- `/src/PRFactory.Infrastructure/Persistence/Configurations/PlanReviewResultConfiguration.cs`
-- `/prompts/plan_review/anthropic/system.txt`
-- `/prompts/plan_review/anthropic/user_template.hbs`
-- `/src/PRFactory.Core/Application/DTOs/PlanReviewResultDto.cs`
-
-**Modified Files**:
-- `/src/PRFactory.Infrastructure/Agents/Graphs/PlanningGraph.cs` - Add review stage
-- `/src/PRFactory.Domain/Entities/Ticket.cs` - Add `LatestPlanReviewResult` property
-- `/src/PRFactory.Infrastructure/Application/TicketApplicationService.cs` - Expose review results
-- `/src/PRFactory.Web/Components/Tickets/PlanReviewSection.razor` - Display AI review
-
-#### Database Schema
-
-```sql
-CREATE TABLE PlanReviewResults (
-    Id UUID PRIMARY KEY,
-    TicketId UUID NOT NULL REFERENCES Tickets(Id) ON DELETE CASCADE,
-    ReviewedAt TIMESTAMP NOT NULL,
-    OverallScore INT NOT NULL CHECK (OverallScore >= 0 AND OverallScore <= 100),
-    CompletenessScore INT NOT NULL,
-    SpecificityScore INT NOT NULL,
-    TestabilityScore INT NOT NULL,
-    SafetyScore INT NOT NULL,
-    DependencyScore INT NOT NULL,
-    Feedback TEXT NOT NULL,
-    AutoRefinementAttempt INT NOT NULL DEFAULT 0,
-    CreatedAt TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX idx_planreviewresults_ticketid ON PlanReviewResults(TicketId);
-```
-
-#### Estimated Effort: 2 weeks
-
----
-
-### Feature 3: Rich Markdown Editor Component
-
-**Goal**: Provide professional markdown editing experience in the browser.
-
-#### Requirements
-
-1. **MarkdownEditor.razor Component**
-   - Split-view layout: Editor (left) + Live Preview (right)
-   - Toggle between split, editor-only, preview-only modes
-   - Formatting toolbar with common markdown buttons
-   - Syntax highlighting in editor pane
-   - Live preview updates as user types (debounced 300ms)
-
-2. **Formatting Toolbar**
-   - Bold (**text**), Italic (*text*), Strikethrough (~~text~~)
-   - Headings (H1-H6), Blockquote, Code block
-   - Unordered list, Ordered list, Checklist
-   - Link, Image, Table
-   - Undo/Redo
-   - Keyboard shortcuts (Ctrl+B, Ctrl+I, etc.)
-
-3. **Editor Features**
-   - Line numbers
-   - Auto-indent
-   - Tab key inserts spaces (configurable)
-   - Bracket matching
-   - Search/replace (Ctrl+F)
-   - Full-screen mode
-
-4. **Preview Features**
-   - Consistent rendering using Markdig advanced pipeline
-   - Syntax highlighting for code blocks (using highlight.js or Prism)
-   - Scroll synchronization between editor and preview
-   - CSS styling matching ticket display
-
-5. **Responsive Design**
-   - Desktop: Side-by-side split view
-   - Tablet: Tabbed view (switch between edit/preview)
-   - Mobile: Edit-only with preview button
-
-#### Acceptance Criteria
-
-- [ ] MarkdownEditor.razor component in `/UI/Editors/`
+**Acceptance Criteria**:
+- [ ] MarkdownEditor.razor component in `/src/PRFactory.Web/UI/Editors/`
 - [ ] Formatting toolbar with 15+ buttons
 - [ ] Split-view with live preview (300ms debounce)
-- [ ] Keyboard shortcuts for common formatting
-- [ ] Syntax highlighting in code blocks
+- [ ] Keyboard shortcuts (Ctrl+B, Ctrl+I, Ctrl+K, etc.)
+- [ ] View mode toggle (split/editor/preview/fullscreen)
 - [ ] Responsive layout (desktop/tablet/mobile)
-- [ ] Full-screen mode toggle
-- [ ] Search/replace functionality
-- [ ] Scroll sync between editor and preview
-- [ ] Unit tests for markdown parsing and toolbar actions
+- [ ] Line numbers in editor
+- [ ] Scroll synchronization between panes
+- [ ] Unit tests for toolbar actions
+- [ ] Integration with TicketUpdateEditor and PlanReviewSection
 
-#### Files to Create/Modify
-
-**New Files**:
+**Files to Create**:
 - `/src/PRFactory.Web/UI/Editors/MarkdownEditor.razor`
 - `/src/PRFactory.Web/UI/Editors/MarkdownEditor.razor.cs`
 - `/src/PRFactory.Web/UI/Editors/MarkdownToolbar.razor`
 - `/src/PRFactory.Web/UI/Editors/MarkdownPreview.razor`
 - `/src/PRFactory.Web/wwwroot/css/markdown-editor.css`
+- `/tests/PRFactory.Web.Tests/UI/Editors/MarkdownEditorTests.cs`
 
-**Modified Files**:
-- `/src/PRFactory.Web/Components/Tickets/PlanReviewSection.razor` - Use MarkdownEditor
-- `/src/PRFactory.Web/Components/Tickets/ReviewCommentThread.razor` - Use MarkdownEditor
-- `/src/PRFactory.Web/Components/Tickets/TicketUpdateEditor.razor` - Use MarkdownEditor
+**Files to Modify**:
+- `/src/PRFactory.Web/Components/Tickets/TicketUpdateEditor.razor` - Replace textarea with MarkdownEditor
+- `/src/PRFactory.Web/Components/Tickets/PlanReviewSection.razor` - Use MarkdownEditor for plan editing
+- `/src/PRFactory.Web/Components/Tickets/ReviewCommentThread.razor` - Use MarkdownEditor for comment replies
 
-#### Technology Notes
-
-**NO JAVASCRIPT REQUIRED** (per CLAUDE.md):
-- Use Blazor's `@bind` for two-way binding
-- Use `@oninput` event for live preview
-- Use CSS for layout and toolbar styling
-- Use Radzen components for toolbar buttons/dropdowns
-
-**Minimal JavaScript ONLY for**:
-- Textarea focus management
-- Scroll position sync (if unavoidable in pure Blazor)
-
-#### Estimated Effort: 3 weeks
+**Estimated Effort**: 3 weeks
 
 ---
 
-### Feature 4: Inline Comments & Threaded Discussions
+### Feature 3: Inline Comment Anchoring ✨ NEW (Partial overlap with Epic 1)
 
-**Goal**: Enable reviewers to comment on specific sections of the plan.
+**Goal**: Enable reviewers to anchor comments to specific lines or text selections in plans.
 
-#### Requirements
+**Current State**:
+- `ReviewComment` entity - comments apply to entire ticket
+- No line number or text range fields
+- Reviewers must manually quote context
 
-1. **Inline Comment Anchors**
-   - Users can select text in markdown preview
-   - Click "Add Comment" to create anchor at selection
-   - Anchor stored with line range (start/end) or text snippet
-   - Comments displayed in right sidebar aligned with anchors
+**Proposed Enhancement**:
 
-2. **Comment Threading**
-   - Comments can have replies (parent-child relationship)
-   - Nested replies up to 3 levels deep
-   - Resolve/unresolve comment threads
-   - Only show unresolved threads by default (toggle to show all)
+**Domain Model**:
+```csharp
+// New entity
+public class InlineCommentAnchor
+{
+    public Guid Id { get; private set; }
+    public Guid ReviewCommentId { get; private set; }
+    public int StartLine { get; private set; }
+    public int EndLine { get; private set; }
+    public string TextSnippet { get; private set; }  // First 100 chars for display
+}
+```
 
-3. **@Mention Notifications**
-   - Type `@username` to mention team members
-   - Autocomplete dropdown shows matching users
-   - Mentioned users receive in-app notification
-   - Email notification (optional, configurable)
+**UI Flow**:
+1. User selects text in markdown preview pane
+2. "Add Comment" button appears next to selection
+3. Click opens comment editor with anchor metadata
+4. Comment saved with line range
+5. Anchored comments displayed in right sidebar aligned with text
 
-4. **Comment UI Improvements**
-   - Rich comment display with user avatars
-   - Edit/delete own comments
-   - Timestamp with relative time ("2 hours ago")
-   - Reaction emojis (👍 👎 ✅ ❌)
-   - Comment count badge on plan sections
+**Features**:
+- Text selection detection in preview pane
+- Floating "Add Comment" button on selection
+- Inline comment indicators (icons/highlights) in preview
+- Right sidebar with anchored comment threads
+- Click comment to scroll to anchor location
+- Filter: Show All / Show Unresolved
 
-#### Acceptance Criteria
+**Acceptance Criteria**:
+- [ ] InlineCommentAnchor entity created
+- [ ] Text selection handler in MarkdownPreview component
+- [ ] Comment editor accepts line range metadata
+- [ ] Right sidebar component (InlineCommentPanel.razor)
+- [ ] Visual indicators for anchored comments in preview
+- [ ] Click-to-scroll navigation
+- [ ] Filter controls for resolved/unresolved
 
-- [ ] InlineCommentAnchor entity with line range
-- [ ] ReviewComment parent-child relationship (threading)
-- [ ] Comment resolution status (resolved/unresolved)
-- [ ] @Mention parsing and user lookup
-- [ ] In-app notification system for mentions
-- [ ] Email notification service (optional)
-- [ ] UI: Inline comment sidebar in plan viewer
-- [ ] UI: Threaded comment display with nesting
-- [ ] UI: @Mention autocomplete in comment editor
-- [ ] UI: Comment edit/delete with permissions
-- [ ] UI: Reaction emojis on comments
-- [ ] SignalR real-time updates for new comments
-
-#### Files to Create/Modify
-
-**New Files**:
+**Files to Create**:
 - `/src/PRFactory.Domain/Entities/InlineCommentAnchor.cs`
-- `/src/PRFactory.Domain/Entities/Notification.cs`
-- `/src/PRFactory.Core/Application/Services/INotificationService.cs`
-- `/src/PRFactory.Infrastructure/Application/NotificationService.cs`
+- `/src/PRFactory.Domain/Interfaces/IInlineCommentAnchorRepository.cs`
+- `/src/PRFactory.Infrastructure/Persistence/Repositories/InlineCommentAnchorRepository.cs`
 - `/src/PRFactory.Web/UI/Comments/InlineCommentPanel.razor`
-- `/src/PRFactory.Web/UI/Comments/CommentThread.razor`
-- `/src/PRFactory.Web/UI/Comments/CommentEditor.razor`
-- `/src/PRFactory.Web/UI/Layout/NotificationBell.razor`
+- `/src/PRFactory.Web/UI/Comments/InlineCommentPanel.razor.cs`
+- `/src/PRFactory.Web/UI/Comments/CommentAnchorIndicator.razor`
 
-**Modified Files**:
-- `/src/PRFactory.Domain/Entities/ReviewComment.cs` - Add ParentCommentId, IsResolved, Reactions
-- `/src/PRFactory.Infrastructure/Persistence/Configurations/ReviewCommentConfiguration.cs`
+**Files to Modify**:
+- `/src/PRFactory.Domain/Entities/ReviewComment.cs` - Add navigation to InlineCommentAnchor
+- `/src/PRFactory.Infrastructure/Application/PlanReviewService.cs` - Handle anchor metadata
 - `/src/PRFactory.Web/Components/Tickets/PlanReviewSection.razor` - Add inline comment panel
-- `/src/PRFactory.Web/Hubs/TicketHub.cs` - Broadcast comment events
 
-#### Database Schema
-
+**Database Migration**:
 ```sql
--- Extend ReviewComment table
-ALTER TABLE ReviewComments ADD COLUMN ParentCommentId UUID REFERENCES ReviewComments(Id);
-ALTER TABLE ReviewComments ADD COLUMN IsResolved BOOLEAN NOT NULL DEFAULT FALSE;
-ALTER TABLE ReviewComments ADD COLUMN ResolvedAt TIMESTAMP;
-ALTER TABLE ReviewComments ADD COLUMN ResolvedByUserId UUID REFERENCES Users(Id);
-
--- New table for inline comment anchors
 CREATE TABLE InlineCommentAnchors (
     Id UUID PRIMARY KEY,
     ReviewCommentId UUID NOT NULL REFERENCES ReviewComments(Id) ON DELETE CASCADE,
     StartLine INT NOT NULL,
     EndLine INT NOT NULL,
-    TextSnippet TEXT NOT NULL,
+    TextSnippet VARCHAR(200) NOT NULL,
     CreatedAt TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- New table for notifications
-CREATE TABLE Notifications (
-    Id UUID PRIMARY KEY,
-    UserId UUID NOT NULL REFERENCES Users(Id) ON DELETE CASCADE,
-    Type VARCHAR(50) NOT NULL, -- 'Mention', 'CommentReply', 'ReviewRequest', etc.
-    TicketId UUID NOT NULL REFERENCES Tickets(Id) ON DELETE CASCADE,
-    CommentId UUID REFERENCES ReviewComments(Id) ON DELETE CASCADE,
-    Message TEXT NOT NULL,
-    IsRead BOOLEAN NOT NULL DEFAULT FALSE,
-    CreatedAt TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX idx_notifications_userid_isread ON Notifications(UserId, IsRead);
-CREATE INDEX idx_inlinecommentanchors_commentid ON InlineCommentAnchors(ReviewCommentId);
+CREATE INDEX IX_InlineCommentAnchors_ReviewCommentId
+    ON InlineCommentAnchors(ReviewCommentId);
 ```
 
-#### Estimated Effort: 3 weeks
+**Note**: Comment threading (parent-child relationships) and @mention notifications are in **Epic 1** scope.
+
+**Estimated Effort**: 2 weeks
 
 ---
 
-### Feature 5: Plan Version History & Diff Viewer
+### Feature 4: Review Checklist Templates ✨ NEW
 
-**Goal**: Track plan evolution through refinements with visual diffs.
+**Goal**: Provide reviewers with structured, domain-specific checklists to ensure consistent plan evaluation.
 
-#### Requirements
+**Current State**:
+- No structured review criteria
+- Reviewers use ad-hoc evaluation
+- Inconsistent review quality
 
-1. **Plan Version Storage**
-   - Store every plan version (not just latest)
-   - Version metadata: author (human/AI), timestamp, change reason
-   - Link to parent version (refinement chain)
-   - Store as markdown in git commits (leverage existing git history)
+**Proposed Enhancement**:
 
-2. **Version History UI**
-   - Timeline view showing all versions
-   - Each version shows: timestamp, author, AI review score, change summary
-   - Click version to view full plan at that point in time
-   - Compare any two versions side-by-side
+**Checklist Template System**:
+- YAML-based templates in `/config/checklists/`
+- Domain-specific checklists (web_ui, rest_api, database, background_jobs)
+- Configurable per repository or per tenant
+- Items marked as "required" or "recommended"
+- Checklist completion tracked in PlanReview entity
 
-3. **Visual Diff Viewer**
-   - Side-by-side markdown diff (before/after)
-   - Syntax-highlighted diff (added=green, removed=red, changed=yellow)
-   - Word-level diff for changed lines
-   - Navigation: Jump to next/previous change
-   - Toggle between unified/split view
-
-4. **Audit Trail**
-   - Track who approved/rejected each version
-   - Track AI refinement attempts
-   - Export history as PDF/HTML report
-
-#### Acceptance Criteria
-
-- [ ] PlanVersion entity with version number, author, parent link
-- [ ] Git history used for plan storage (one commit per version)
-- [ ] Version history API returns all versions with metadata
-- [ ] UI: Timeline component showing version history
-- [ ] UI: Diff viewer comparing two plan versions
-- [ ] UI: Export audit trail as PDF
-- [ ] Integration with existing TicketDiffViewer component
-- [ ] Git service methods to retrieve historical commits
-
-#### Files to Create/Modify
-
-**New Files**:
-- `/src/PRFactory.Domain/Entities/PlanVersion.cs`
-- `/src/PRFactory.Infrastructure/Persistence/Configurations/PlanVersionConfiguration.cs`
-- `/src/PRFactory.Core/Application/Services/IPlanVersionService.cs`
-- `/src/PRFactory.Infrastructure/Application/PlanVersionService.cs`
-- `/src/PRFactory.Web/UI/Display/VersionTimeline.razor`
-- `/src/PRFactory.Web/UI/Display/PlanDiffViewer.razor`
-- `/src/PRFactory.Web/Pages/Plans/History.razor`
-
-**Modified Files**:
-- `/src/PRFactory.Infrastructure/Git/LocalGitService.cs` - Add GetCommitHistory, GetFileAtCommit
-- `/src/PRFactory.Infrastructure/Agents/GitPlanAgent.cs` - Create version commit
-- `/src/PRFactory.Web/Components/Tickets/PlanReviewSection.razor` - Add version history link
-- `/src/PRFactory.Web/Components/Tickets/TicketDiffViewer.razor` - Enhance for plan diffs
-
-#### Database Schema
-
-```sql
-CREATE TABLE PlanVersions (
-    Id UUID PRIMARY KEY,
-    TicketId UUID NOT NULL REFERENCES Tickets(Id) ON DELETE CASCADE,
-    VersionNumber INT NOT NULL,
-    GitCommitSha VARCHAR(40) NOT NULL,
-    AuthorType VARCHAR(20) NOT NULL, -- 'Human', 'AI'
-    AuthorUserId UUID REFERENCES Users(Id),
-    ParentVersionId UUID REFERENCES PlanVersions(Id),
-    ChangeReason TEXT,
-    AIReviewScore INT,
-    CreatedAt TIMESTAMP NOT NULL DEFAULT NOW(),
-    UNIQUE (TicketId, VersionNumber)
-);
-
-CREATE INDEX idx_planversions_ticketid ON PlanVersions(TicketId);
-CREATE INDEX idx_planversions_parentid ON PlanVersions(ParentVersionId);
-```
-
-#### Estimated Effort: 2 weeks
-
----
-
-### Feature 6: Review Checklist & Structured Criteria
-
-**Goal**: Provide reviewers with clear, structured evaluation criteria.
-
-#### Requirements
-
-1. **Review Checklist Template**
-   - Domain-specific checklist (web UI, API, database, etc.)
-   - Checklist items map to plan quality criteria
-   - Each item has: title, description, severity (required/recommended)
-   - Reviewer checks off items as they review
-
-2. **Checklist Categories**
-   - **Completeness**: All sections present, sufficient detail
-   - **Correctness**: Accurate file paths, method signatures, logic
-   - **Testability**: Clear test cases, edge cases covered
-   - **Security**: Auth/authz, input validation, secrets handling
-   - **Performance**: Scalability, caching, database indexes
-   - **Maintainability**: Code organization, documentation, logging
-
-3. **Checklist UI**
-   - Display checklist in review panel
-   - Track completion percentage
-   - Require all "required" items checked before approval
-   - Optional items show warnings if unchecked
-   - Comments can reference checklist items
-
-4. **Custom Checklists**
-   - Admins can create custom checklist templates
-   - Per-repository or per-tenant customization
-   - Version controlled in git (YAML files)
-
-#### Acceptance Criteria
-
-- [ ] ReviewChecklist entity with template reference
-- [ ] ChecklistItem entity with status (checked/unchecked/n/a)
-- [ ] Default checklist templates in `/config/checklists/`
-- [ ] UI: Checklist panel in plan review
-- [ ] UI: Completion percentage tracker
-- [ ] Validation: Block approval if required items unchecked
-- [ ] Admin UI: Create/edit custom checklists
-- [ ] YAML schema for checklist templates
-
-#### Files to Create/Modify
-
-**New Files**:
-- `/src/PRFactory.Domain/Entities/ReviewChecklist.cs`
-- `/src/PRFactory.Domain/Entities/ChecklistItem.cs`
-- `/src/PRFactory.Core/Application/Services/IChecklistTemplateService.cs`
-- `/src/PRFactory.Infrastructure/Application/ChecklistTemplateService.cs`
-- `/config/checklists/default_web.yaml`
-- `/config/checklists/default_api.yaml`
-- `/config/checklists/default_database.yaml`
-- `/src/PRFactory.Web/UI/Checklists/ReviewChecklistPanel.razor`
-- `/src/PRFactory.Web/UI/Checklists/ChecklistItemRow.razor`
-- `/src/PRFactory.Web/Pages/Admin/Checklists.razor`
-
-**Modified Files**:
-- `/src/PRFactory.Web/Components/Tickets/PlanReviewSection.razor` - Add checklist panel
-- `/src/PRFactory.Infrastructure/Application/TicketApplicationService.cs` - Validate checklist before approval
-
-#### Checklist Template YAML Example
-
+**Example Template** (`web_ui.yaml`):
 ```yaml
 name: "Web UI Implementation Review"
-domain: "web"
+domain: "web_ui"
 version: "1.0"
 categories:
   - name: "Completeness"
@@ -608,15 +379,6 @@ categories:
         description: "How component state will be managed"
         severity: "recommended"
 
-  - name: "Correctness"
-    items:
-      - title: "File paths are accurate"
-        description: "All referenced files exist in codebase or will be created"
-        severity: "required"
-      - title: "Dependencies available"
-        description: "NuGet packages, services, models are available"
-        severity: "required"
-
   - name: "Security"
     items:
       - title: "Authorization checks present"
@@ -627,47 +389,174 @@ categories:
         severity: "required"
 ```
 
-#### Estimated Effort: 2 weeks
+**Domain Model**:
+```csharp
+public class ReviewChecklist
+{
+    public Guid Id { get; private set; }
+    public Guid PlanReviewId { get; private set; }
+    public string TemplateName { get; private set; }
+    public List<ChecklistItem> Items { get; private set; }
+
+    public int CompletionPercentage =>
+        Items.Any() ? (Items.Count(i => i.IsChecked) * 100) / Items.Count : 0;
+}
+
+public class ChecklistItem
+{
+    public Guid Id { get; private set; }
+    public string Category { get; private set; }
+    public string Title { get; private set; }
+    public string Description { get; private set; }
+    public string Severity { get; private set; }  // "required" or "recommended"
+    public bool IsChecked { get; private set; }
+    public DateTime? CheckedAt { get; private set; }
+}
+```
+
+**UI Features**:
+- Checklist panel in review page
+- Collapsible categories
+- Progress indicator (% complete)
+- Validation: Block approval if required items unchecked
+- Warning: Show alerts if recommended items unchecked
+
+**Acceptance Criteria**:
+- [ ] ReviewChecklist and ChecklistItem entities
+- [ ] YAML template loader service
+- [ ] Default templates for web/API/database/jobs domains
+- [ ] ReviewChecklistPanel.razor component
+- [ ] Progress tracking (% complete)
+- [ ] Approval validation (required items must be checked)
+- [ ] Admin UI to create/edit custom templates (optional)
+
+**Files to Create**:
+- `/config/checklists/web_ui.yaml`
+- `/config/checklists/rest_api.yaml`
+- `/config/checklists/database.yaml`
+- `/config/checklists/background_jobs.yaml`
+- `/src/PRFactory.Domain/Entities/ReviewChecklist.cs`
+- `/src/PRFactory.Domain/Entities/ChecklistItem.cs`
+- `/src/PRFactory.Core/Application/Services/IChecklistTemplateService.cs`
+- `/src/PRFactory.Infrastructure/Application/ChecklistTemplateService.cs`
+- `/src/PRFactory.Web/UI/Checklists/ReviewChecklistPanel.razor`
+- `/src/PRFactory.Web/UI/Checklists/ReviewChecklistPanel.razor.cs`
+- `/src/PRFactory.Web/UI/Checklists/ChecklistItemRow.razor`
+
+**Files to Modify**:
+- `/src/PRFactory.Domain/Entities/PlanReview.cs` - Add ReviewChecklist navigation
+- `/src/PRFactory.Infrastructure/Application/PlanReviewService.cs` - Validate checklist before approval
+- `/src/PRFactory.Web/Components/Tickets/PlanReviewSection.razor` - Add checklist panel
+
+**Database Migration**:
+```sql
+CREATE TABLE ReviewChecklists (
+    Id UUID PRIMARY KEY,
+    PlanReviewId UUID NOT NULL REFERENCES PlanReviews(Id) ON DELETE CASCADE,
+    TemplateName VARCHAR(100) NOT NULL,
+    CreatedAt TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE ChecklistItems (
+    Id UUID PRIMARY KEY,
+    ReviewChecklistId UUID NOT NULL REFERENCES ReviewChecklists(Id) ON DELETE CASCADE,
+    Category VARCHAR(100) NOT NULL,
+    Title VARCHAR(255) NOT NULL,
+    Description TEXT NOT NULL,
+    Severity VARCHAR(20) NOT NULL,
+    IsChecked BOOLEAN NOT NULL DEFAULT FALSE,
+    CheckedAt TIMESTAMP,
+    SortOrder INT NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IX_ReviewChecklists_PlanReviewId
+    ON ReviewChecklists(PlanReviewId);
+CREATE INDEX IX_ChecklistItems_ReviewChecklistId
+    ON ChecklistItems(ReviewChecklistId);
+```
+
+**Estimated Effort**: 2 weeks
 
 ---
 
 ## Implementation Phases
 
-### Phase 1: Foundation (Weeks 1-3)
-**Goal**: Enhanced prompts and AI review agent
+### Phase 1: Enhanced Prompts (Week 1)
+**Goal**: Improve plan quality through better prompt engineering
 
-- Feature 1: Enhanced Planning Prompts (1 week)
-- Feature 2: AI Plan Review Agent (2 weeks)
+- Feature 1: Enhanced Planning Prompts
+- Domain-specific templates
+- Architectural pattern injection
+- Code snippet examples
 
-**Deliverable**: Plans are auto-reviewed by AI before human review
+**Deliverable**: Plans reference actual project patterns and generate with higher quality
 
 ---
 
-### Phase 2: Rich Editing (Weeks 4-6)
+### Phase 2: Rich Editor Foundation (Weeks 2-4)
 **Goal**: Professional markdown editing experience
 
-- Feature 3: Rich Markdown Editor Component (3 weeks)
+- Feature 2: Rich Markdown Editor Component
+  - Week 2: Core split-view editor with basic toolbar
+  - Week 3: Live preview, keyboard shortcuts, responsive design
+  - Week 4: Polish, scroll sync, integration, testing
 
-**Deliverable**: Teams can edit plans in split-view editor with live preview
-
----
-
-### Phase 3: Collaboration (Weeks 7-9)
-**Goal**: Team-based plan refinement
-
-- Feature 4: Inline Comments & Threaded Discussions (3 weeks)
-
-**Deliverable**: Teams can discuss plans inline with @mentions and threading
+**Deliverable**: Teams can edit plans in split-view editor with live preview and formatting toolbar
 
 ---
 
-### Phase 4: Transparency (Weeks 10-12)
-**Goal**: Audit trail and structured reviews
+### Phase 3: Inline Collaboration (Weeks 5-6)
+**Goal**: Contextual discussions on specific plan sections
 
-- Feature 5: Plan Version History & Diff Viewer (2 weeks)
-- Feature 6: Review Checklist & Structured Criteria (2 weeks)
+- Feature 3: Inline Comment Anchoring
+  - Week 5: InlineCommentAnchor entity, text selection handler, comment editor
+  - Week 6: Inline comment panel, visual indicators, navigation
 
-**Deliverable**: Full version history with diffs and structured review criteria
+**Deliverable**: Reviewers can anchor comments to specific lines with visual indicators
+
+---
+
+### Phase 4: Structured Reviews (Weeks 7)
+**Goal**: Consistent plan evaluation
+
+- Feature 4: Review Checklist Templates
+  - YAML template system
+  - Checklist UI component
+  - Approval validation
+
+**Deliverable**: Reviewers follow structured checklists with progress tracking
+
+---
+
+## Epic 1 (Team Review) Features (Reference)
+
+These features are **NOT in EPIC 07 scope** - they are part of Epic 1:
+
+### From `/docs/planning/team_review/`:
+
+1. **Plan Validation Service** (P1, 3-5 days)
+   - AI-powered plan validation (security, completeness, performance)
+   - Quality scoring (0-100)
+   - Auto-refinement loop
+
+2. **Notification System** (P1, 3-4 days)
+   - In-app notifications
+   - @mention alerts
+   - Reviewer assignment notifications
+   - Plan approval/rejection notifications
+
+3. **Plan Revision History** (P2, 3-4 days)
+   - PlanRevision entity with version tracking
+   - Timeline view
+   - Side-by-side diff viewer
+   - Compare arbitrary versions
+
+### Epic 1 Status (as of 2025-11-14):
+- Status: 🟡 Partially Implemented
+- Core infrastructure exists (PlanReview, ReviewComment entities)
+- ✅ Application services implemented
+- ✅ Blazor components exist
+- ⚠️ Features need implementation (validation, notifications, history)
 
 ---
 
@@ -675,37 +564,34 @@ categories:
 
 ### Unit Tests
 
-**Coverage Target**: 80% minimum
+**Coverage Target**: 80% minimum (per CLAUDE.md)
 
-- PlanReviewAgent scoring algorithm
-- Markdown editor toolbar actions
-- Comment threading logic
-- Version diff calculation
-- Checklist validation rules
+- Enhanced prompt template loading
+- MarkdownEditor toolbar actions
+- Inline comment anchor creation
+- Checklist validation logic
+- Line range parsing
 
 ### Integration Tests
 
-- PlanningGraph with AI review stage
 - MarkdownEditor component rendering
-- SignalR comment broadcasting
-- Git history retrieval for versions
+- Inline comment panel with anchored comments
+- Checklist progress tracking
+- Domain template selection based on ticket type
 
 ### Manual Testing Scenarios
 
-1. **Plan Generation & Review**
-   - Create ticket → Generate plan → AI reviews with score < 70 → Auto-refines → Score >= 70 → Human review
+1. **Rich Editor Experience**
+   - User edits plan in split view → Live preview updates → Formatting toolbar works → Keyboard shortcuts work → Fullscreen mode toggles
 
-2. **Collaborative Editing**
-   - Reviewer edits plan in markdown editor → Real-time preview updates → Saves changes → Other reviewers see updates via SignalR
+2. **Inline Comments**
+   - User selects text → Clicks "Add Comment" → Comment anchored to line range → Visual indicator appears → Click scrolls to anchor
 
-3. **Inline Comments**
-   - Reviewer selects text → Adds comment → Mentions teammate → Teammate receives notification → Replies to thread → Resolves thread
+3. **Review Checklist**
+   - Reviewer opens checklist → Checks items → Progress updates → Tries to approve with required items unchecked → Validation blocks → Checks all required → Approval succeeds
 
-4. **Version History**
-   - Plan refined 3 times → View version timeline → Compare v1 vs v3 → See word-level diffs → Export audit trail PDF
-
-5. **Review Checklist**
-   - Reviewer opens checklist → Checks off items → Tries to approve with required items unchecked → Validation blocks → Checks all required → Approval succeeds
+4. **Enhanced Prompts**
+   - Create Web UI ticket → PlanningAgent loads web_ui template → Generated plan references Blazor patterns → Includes code-behind guidance
 
 ---
 
@@ -713,18 +599,19 @@ categories:
 
 ### Feature Flags
 
-- `EnableAIPlanReview` - AI plan review agent (default: true)
-- `EnableRichMarkdownEditor` - Rich editor vs plain textarea (default: true)
-- `EnableInlineComments` - Inline comments and threading (default: true)
-- `EnablePlanVersionHistory` - Version history tracking (default: true)
-- `EnableReviewChecklists` - Structured review checklists (default: false - opt-in)
+- `EnableRichMarkdownEditor` - Split-view editor vs plain textarea (default: true)
+- `EnableInlineCommentAnchors` - Inline anchoring vs full-ticket comments (default: true)
+- `EnableReviewChecklists` - Structured checklists (default: false - opt-in initially)
+- `EnableEnhancedPlanningPrompts` - Domain-specific prompts (default: true)
 
 ### Migration Strategy
 
 1. **No Breaking Changes**: All features are additive
 2. **Backward Compatibility**: Plain textarea still works if rich editor disabled
 3. **Gradual Adoption**: Feature flags allow teams to opt-in per feature
-4. **Data Migration**: None required (new tables only)
+4. **Data Migration**:
+   - ReviewComment table: No changes (InlineCommentAnchor is separate table)
+   - New tables only: InlineCommentAnchors, ReviewChecklists, ChecklistItems
 
 ### Deployment Phases
 
@@ -738,34 +625,44 @@ categories:
 
 | Risk | Impact | Likelihood | Mitigation |
 |------|--------|-----------|-----------|
-| **AI review agent generates false positives** | Medium | Medium | Tune scoring thresholds based on real data; allow bypass |
-| **Rich editor performance issues on large plans** | High | Low | Debounce preview updates; lazy load for plans > 100KB |
-| **Comment threading complexity** | Medium | Medium | Limit nesting to 3 levels; provide "flatten" view option |
-| **Version history storage growth** | Medium | Medium | Use git commits (already compressed); prune old versions after 90 days |
-| **Review checklist too rigid** | Low | Medium | Allow custom templates; make most items "recommended" not "required" |
-| **SignalR connection stability** | High | Low | Existing infrastructure proven; use exponential backoff reconnect |
+| **Rich editor performance on large plans** | High | Low | Debounce preview updates (300ms); lazy load for plans > 100KB; virtualization for very long documents |
+| **Inline comment positioning accuracy** | Medium | Medium | Store both line range AND text snippet for anchor verification; graceful degradation if text changed |
+| **Checklist rigidity** | Low | Medium | Make most items "recommended" not "required"; allow custom templates; provide "skip checklist" option for admins |
+| **Browser compatibility** | Medium | Low | Test on Chrome, Firefox, Safari, Edge; use standard CSS Grid (widely supported); graceful fallback for older browsers |
+| **Prompt template maintenance** | Medium | Medium | Version control templates; document template variables; provide template validation in admin UI |
+| **User adoption resistance** | Medium | Medium | Provide tutorials/onboarding; maintain plain textarea fallback; gather user feedback early |
 
 ---
 
 ## Dependencies
 
 ### Internal Dependencies
-- Existing PlanningGraph and agent infrastructure
-- Existing multi-reviewer system (PlanReview entity)
-- Existing SignalR TicketHub for real-time updates
-- Existing Markdig markdown rendering
+
+- ✅ Epic 1 (Team Review) - Provides AI validation, notifications, revision history
+- ✅ Epic 5 (Agent Framework) - CLI-based agents, checkpoint/resume, PlanningGraph
+- ✅ Epic 6 (Admin UI) - UI component library structure, Blazor patterns
+- ✅ Existing multi-reviewer system (PlanReview entity)
+- ✅ Existing Markdig markdown rendering
+- ✅ Existing PlanReviewService and TicketService
 
 ### External Dependencies
-- None (uses approved libraries only per CLAUDE.md)
+
+- ✅ Blazor Server (existing)
+- ✅ Radzen.Blazor v5.9.0 (existing)
+- ✅ Bootstrap 5 (existing)
+- ✅ Markdig v0.40.0 (existing)
+- **No new UI libraries required** (per CLAUDE.md restrictions)
 
 ---
 
 ## Documentation Updates Required
 
-- `/docs/ARCHITECTURE.md` - Add AI review agent architecture
-- `/docs/WORKFLOW.md` - Update planning phase workflow diagram
-- `/docs/IMPLEMENTATION_STATUS.md` - Mark features as implemented
-- `/docs/USER_GUIDE.md` - Add markdown editor and collaboration features
+After EPIC 07 implementation:
+
+- `/docs/ARCHITECTURE.md` - Add rich editor component architecture
+- `/docs/WORKFLOW.md` - Update planning phase workflow with new UX
+- `/docs/IMPLEMENTATION_STATUS.md` - Mark EPIC 07 features as implemented
+- `/docs/USER_GUIDE.md` - Add markdown editor and inline comment guides
 - `/docs/ADMIN_GUIDE.md` - Add checklist template customization
 - `/README.md` - Update feature list with planning UX improvements
 
@@ -774,271 +671,143 @@ categories:
 ## Success Criteria
 
 ### Must Have (MVP)
-- ✅ AI plan review agent with quality scoring
-- ✅ Rich markdown editor with live preview
-- ✅ Inline comments with @mentions
-- ✅ Version history with basic diff viewer
+
+- ✅ Enhanced planning prompts with domain templates
+- ✅ Rich markdown editor with live preview and toolbar
+- ✅ Inline comment anchoring with line ranges
+- ✅ Review checklists with YAML templates
 
 ### Should Have (Full Epic)
-- ✅ Threaded comment discussions
-- ✅ Review checklist with templates
-- ✅ Comment reactions and resolution
-- ✅ Enhanced planning prompts
+
+- ✅ Keyboard shortcuts in editor
+- ✅ Fullscreen mode
+- ✅ Scroll synchronization
+- ✅ Responsive design (desktop/tablet/mobile)
+- ✅ Visual indicators for anchored comments
+- ✅ Checklist progress tracking
 
 ### Nice to Have (Future)
-- Collaborative real-time editing (Google Docs-style)
-- Plan templates library (common patterns)
-- AI suggestions during editing ("Did you consider...?")
+
+- Real-time collaborative editing (Google Docs-style with CRDT)
+- Plan template library (common patterns for new projects)
+- AI suggestions during editing ("Did you consider error handling?")
 - Export plans as Confluence/Notion pages
+- Rich diff viewer with syntax highlighting (beyond current TicketDiffViewer)
 
 ---
 
 ## Open Questions
 
-1. **AI Review Threshold**: Should score threshold be configurable per tenant or global?
-   - **Recommendation**: Configurable per tenant (default: 70)
+1. **Markdown Editor Library**: Should we use a third-party library (Monaco, CodeMirror) or build pure Blazor?
+   - **Recommendation**: Start with pure Blazor (per CLAUDE.md), evaluate third-party later if performance issues
 
-2. **Max Inline Comments**: Should we limit comments per plan to avoid clutter?
-   - **Recommendation**: No hard limit, but UI groups by section
+2. **Inline Comment Limits**: Should we limit comments per plan to avoid clutter?
+   - **Recommendation**: No hard limit, but UI groups by section and supports collapse/expand
 
-3. **Email Notifications**: Should @mentions always send email or make it optional?
-   - **Recommendation**: User preference setting (default: in-app only)
+3. **Checklist Customization**: Should custom checklists be repository-level or tenant-level?
+   - **Recommendation**: Both - tenant default, per-repository override
 
-4. **Version Retention**: How long to keep plan version history?
-   - **Recommendation**: Keep all versions (git storage is cheap); allow manual cleanup
+4. **Prompt Template Versioning**: How to handle template updates without breaking existing plans?
+   - **Recommendation**: Version templates (v1, v2), store template version used in Ticket entity
 
-5. **Checklist Enforcement**: Should required checklist items block approval?
-   - **Recommendation**: Yes for "required" items, warnings for "recommended"
+5. **Rich Editor vs Plain Textarea**: Provide toggle or force migration?
+   - **Recommendation**: Feature flag with toggle in user preferences, default to rich editor
 
 ---
 
-## Appendix A: UI Mockups
+## Related Documentation
 
-### Markdown Editor Split View
+- **Epic 1 Overview**: [/docs/planning/team_review/README.md](/home/user/PRFactory/docs/planning/team_review/README.md)
+- **Epic 5 Agent Framework**: [/docs/planning/epic_05_agent_framework/README.md](/home/user/PRFactory/docs/planning/epic_05_agent_framework/README.md)
+- **Epic 6 Admin UI**: [/docs/planning/epic_06_admin_ui/README.md](/home/user/PRFactory/docs/planning/epic_06_admin_ui/README.md)
+- **Current Implementation Status**: [/docs/IMPLEMENTATION_STATUS.md](/home/user/PRFactory/docs/IMPLEMENTATION_STATUS.md)
+- **Architecture Guidelines**: [/CLAUDE.md](/home/user/PRFactory/CLAUDE.md)
+- **Roadmap**: [/docs/ROADMAP.md](/home/user/PRFactory/docs/ROADMAP.md)
+
+---
+
+## Appendix A: Component Hierarchy
+
+### Rich Markdown Editor Component Tree
 
 ```
-┌────────────────────────────────────────────────────────────────┐
-│ IMPLEMENTATION_PLAN.md                          [Split] [▢] [×]│
-├────────────────────────────────────────────────────────────────┤
-│ [B][I][H1][▼]  [··] [•·] [☑] [🔗] [📷] [⊞]    [←][→] [⊗]    │
-├─────────────────────────────┬──────────────────────────────────┤
-│ Editor                      │ Preview                          │
-├─────────────────────────────┼──────────────────────────────────┤
-│  1  ## Overview             │  Overview                        │
-│  2                          │  ─────────                       │
-│  3  This plan implements... │  This plan implements...         │
-│  4                          │                                  │
-│  5  ### Objectives          │  Objectives                      │
-│  6                          │  • Add user authentication       │
-│  7  - Add user auth         │  • Implement JWT tokens          │
-│  8  - Implement JWT tokens  │                                  │
-│  9                          │                                  │
-│ 10  ## Implementation       │  Implementation Steps            │
-│ 11                          │  ─────────────────               │
-│ 12  **Step 1**: Create...   │  Step 1: Create AuthController  │
-│ 13                          │                                  │
-│ 14  File: `src/Auth...`     │  File: src/AuthController.cs     │
-│                             │                                  │
-└─────────────────────────────┴──────────────────────────────────┘
+MarkdownEditor.razor (root component)
+├── MarkdownToolbar.razor (formatting buttons)
+│   ├── ButtonGroup: Text Formatting (Bold, Italic, Strikethrough)
+│   ├── ButtonGroup: Structure (H1-H6, Blockquote, HR)
+│   ├── ButtonGroup: Lists (UL, OL, Checklist)
+│   ├── ButtonGroup: Insert (Link, Image, Table, Code)
+│   └── ButtonGroup: Actions (Undo, Redo, Fullscreen)
+├── EditorPane (textarea with line numbers)
+└── MarkdownPreview.razor (Markdig rendering)
+    └── InlineCommentIndicator.razor (anchored comment icons)
 ```
 
 ### Inline Comment Panel
 
 ```
-┌────────────────────────────────────────────────────────────────┐
-│ Plan Preview                             Comments (3) [+] [▼]  │
-├──────────────────────────────────────────┬─────────────────────┤
-│ Implementation Steps                     │ 💬 Line 12-15       │
-│ ─────────────────────                    │ @john: Should we... │
-│                                          │ ↳ @jane: Good point │
-│ Step 1: Create AuthController            │   [Resolve]         │
-│                                          │                     │
-│ File: src/AuthController.cs              │ 💬 Line 24 ⚠️      │
-│                                          │ @mike: Missing...   │
-│ Add the following methods:               │ [Reply] [Resolve]   │
-│ • Login(username, password)              │                     │
-│ • Logout()                               │                     │
-│ • RefreshToken(token) ← 📌 Highlighted   │                     │
-│                                          │                     │
-└──────────────────────────────────────────┴─────────────────────┘
+InlineCommentPanel.razor (sidebar)
+├── CommentAnchorIndicator.razor (highlight in preview)
+├── CommentThread.razor (comment list at anchor)
+│   └── CommentEditor.razor (reply form)
+└── FilterControls (All / Unresolved)
 ```
 
-### Review Checklist
+### Review Checklist Panel
 
 ```
-┌────────────────────────────────────────────────────────────────┐
-│ Review Checklist (Web UI Implementation)        [80% Complete] │
-├────────────────────────────────────────────────────────────────┤
-│ ✅ Completeness (4/4)                                          │
-│    ✅ All UI components identified                            │
-│    ✅ Routing defined                                         │
-│    ✅ State management specified                              │
-│    ✅ Props and events documented                             │
-│                                                                │
-│ ⚠️  Correctness (2/3)                                          │
-│    ✅ File paths are accurate                                 │
-│    ✅ Dependencies available                                  │
-│    ❌ Method signatures match existing code      [Required]   │
-│                                                                │
-│ ✅ Security (2/2)                                              │
-│    ✅ Authorization checks present                            │
-│    ✅ Input validation specified                              │
-│                                                                │
-│ [ Approve Plan ] (disabled - complete required items first)   │
-└────────────────────────────────────────────────────────────────┘
-```
-
-### Version History Timeline
-
-```
-┌────────────────────────────────────────────────────────────────┐
-│ Plan Version History                               [Export PDF]│
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  ●═════●═════●═════●═════● (v4 - current)                    │
-│  v1    v2    v3    v4                                         │
-│                                                                │
-│  ┌────────────────────────────────────┐                       │
-│  │ v4 - Current (Approved)            │                       │
-│  │ 2025-11-14 10:30 AM               │                       │
-│  │ Author: @jane (Human)              │                       │
-│  │ AI Score: 88/100                   │                       │
-│  │ • Added error handling details     │                       │
-│  │ [View] [Compare with v3]           │                       │
-│  └────────────────────────────────────┘                       │
-│                                                                │
-│  ┌────────────────────────────────────┐                       │
-│  │ v3 - Refined                       │                       │
-│  │ 2025-11-14 9:45 AM                │                       │
-│  │ Author: AI (Auto-refinement)       │                       │
-│  │ AI Score: 75/100                   │                       │
-│  │ • Improved test coverage section   │                       │
-│  │ [View] [Compare with v4]           │                       │
-│  └────────────────────────────────────┘                       │
-│                                                                │
-└────────────────────────────────────────────────────────────────┘
+ReviewChecklistPanel.razor (panel)
+├── ProgressBar (completion %)
+├── ChecklistCategory.razor (collapsible section)
+│   └── ChecklistItemRow.razor (checkbox + title + description)
+└── ValidationMessage (required items warning)
 ```
 
 ---
 
-## Appendix B: API Specifications
+## Appendix B: Prompt Template Variables
 
-### PlanReviewAgent API
+### Available Variables for Domain Templates
 
-```csharp
-public interface IPlanReviewAgent
-{
-    /// <summary>
-    /// Reviews a generated plan and returns quality score with feedback
-    /// </summary>
-    Task<PlanReviewResult> ReviewPlanAsync(
-        string planMarkdown,
-        TicketContext context,
-        CancellationToken cancellationToken = default);
-}
+All domain-specific prompt templates have access to:
 
-public class PlanReviewResult
-{
-    public int OverallScore { get; set; }          // 0-100
-    public int CompletenessScore { get; set; }     // 0-25
-    public int SpecificityScore { get; set; }      // 0-25
-    public int TestabilityScore { get; set; }      // 0-20
-    public int SafetyScore { get; set; }           // 0-15
-    public int DependencyScore { get; set; }       // 0-15
-    public string Feedback { get; set; }           // Markdown formatted
-    public List<string> SpecificIssues { get; set; }
-    public List<string> Suggestions { get; set; }
-}
+```handlebars
+{{ticketId}}              - Ticket GUID
+{{ticketTitle}}           - Ticket title
+{{ticketDescription}}     - Original ticket description
+{{acceptanceCriteria}}    - Success criteria
+{{ticketType}}            - Web UI, REST API, Background Job, Database, etc.
+{{repositoryName}}        - Repository name
+{{branchName}}            - Feature branch name
+{{relevantFiles}}         - List of potentially relevant file paths
+{{codeSnippets}}          - Array of code examples from similar features
+{{architecturePatterns}}  - Project architectural patterns
+{{technologyStack}}       - Tech stack with versions
+{{codeStyleGuidelines}}   - Formatting and naming conventions
 ```
 
-### MarkdownEditor Component API
+### Example Template Usage
 
-```razor
-<MarkdownEditor @bind-Value="@planContent"
-                Height="600px"
-                ShowToolbar="true"
-                ShowPreview="true"
-                SplitViewMode="SideBySide"
-                OnSave="HandleSave"
-                OnCancel="HandleCancel">
-</MarkdownEditor>
+```text
+You are an expert {{ticketType}} developer working on the {{repositoryName}} project.
 
-@code {
-    [Parameter]
-    public string Value { get; set; } = string.Empty;
+The project uses {{technologyStack}} and follows these architectural patterns:
+{{architecturePatterns}}
 
-    [Parameter]
-    public EventCallback<string> ValueChanged { get; set; }
+Analyze this ticket:
+Title: {{ticketTitle}}
+Description: {{ticketDescription}}
+Acceptance Criteria: {{acceptanceCriteria}}
 
-    [Parameter]
-    public EventCallback OnSave { get; set; }
-
-    [Parameter]
-    public EventCallback OnCancel { get; set; }
-
-    [Parameter]
-    public string Height { get; set; } = "400px";
-
-    [Parameter]
-    public bool ShowToolbar { get; set; } = true;
-
-    [Parameter]
-    public bool ShowPreview { get; set; } = true;
-
-    [Parameter]
-    public SplitViewMode SplitViewMode { get; set; } = SplitViewMode.SideBySide;
-}
-
-public enum SplitViewMode
-{
-    SideBySide,   // Editor left, preview right
-    EditorOnly,   // Editor only (no preview)
-    PreviewOnly,  // Preview only (read-only)
-    Tabs          // Tabbed (mobile-friendly)
-}
+Relevant code examples from the codebase:
+{{#each codeSnippets}}
+File: {{this.filePath}}
+```{{this.language}}
+{{this.code}}
 ```
+{{/each}}
 
-### Plan Version Service API
-
-```csharp
-public interface IPlanVersionService
-{
-    Task<PlanVersion> CreateVersionAsync(
-        Guid ticketId,
-        string commitSha,
-        AuthorType authorType,
-        Guid? authorUserId,
-        Guid? parentVersionId,
-        string? changeReason,
-        int? aiReviewScore,
-        CancellationToken cancellationToken = default);
-
-    Task<List<PlanVersionDto>> GetVersionHistoryAsync(
-        Guid ticketId,
-        CancellationToken cancellationToken = default);
-
-    Task<PlanDiffDto> ComparePlansAsync(
-        Guid ticketId,
-        int fromVersion,
-        int toVersion,
-        CancellationToken cancellationToken = default);
-}
-
-public class PlanDiffDto
-{
-    public int FromVersion { get; set; }
-    public int ToVersion { get; set; }
-    public List<DiffHunk> Hunks { get; set; }
-}
-
-public class DiffHunk
-{
-    public int StartLine { get; set; }
-    public int EndLine { get; set; }
-    public DiffType Type { get; set; }  // Added, Removed, Modified
-    public string OldText { get; set; }
-    public string NewText { get; set; }
-}
+Generate an implementation plan that follows the project's patterns...
 ```
 
 ---

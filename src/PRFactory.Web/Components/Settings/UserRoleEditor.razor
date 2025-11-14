@@ -1,0 +1,53 @@
+@using PRFactory.Web.UI.Help
+@using PRFactory.Domain.Entities
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label class="form-label">
+                Role
+                <ContextualHelp HelpText="Owner: Full access. Admin: Manage repositories/LLM providers. Member: Create tickets. Viewer: Read-only." />
+            </label>
+            <select class="form-select" value="@SelectedRole" @onchange="HandleRoleChanged">
+                <option value="@UserRole.Owner" selected="@(SelectedRole == UserRole.Owner)">
+                    Owner
+                </option>
+                <option value="@UserRole.Admin" selected="@(SelectedRole == UserRole.Admin)">
+                    Admin
+                </option>
+                <option value="@UserRole.Member" selected="@(SelectedRole == UserRole.Member)">
+                    Member
+                </option>
+                <option value="@UserRole.Viewer" selected="@(SelectedRole == UserRole.Viewer)">
+                    Viewer
+                </option>
+            </select>
+            <small class="form-text text-muted">
+                @GetRoleDescription(SelectedRole)
+            </small>
+        </div>
+
+        @if (showOwnerWarning)
+        {
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <strong>Warning:</strong> This is the last Owner. At least one Owner must exist.
+                This change will be blocked.
+            </div>
+        }
+    </div>
+
+    <div class="col-md-6">
+        <div class="form-check mt-4">
+            <input class="form-check-input" type="checkbox" id="isActive"
+                   checked="@IsActive"
+                   @onchange="HandleActiveChanged" />
+            <label class="form-check-label" for="isActive">
+                Active
+            </label>
+            <small class="form-text text-muted d-block">
+                Inactive users cannot access the system
+            </small>
+        </div>
+    </div>
+</div>

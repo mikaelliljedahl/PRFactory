@@ -1,0 +1,24 @@
+@using PRFactory.Web.UI.Cards
+@using PRFactory.Web.UI.Display
+
+<Card Title="Activity Statistics" Icon="bar-chart">
+    <div class="row text-center">
+        <div class="col-6 mb-3">
+            <div class="display-6">@Statistics.TotalPlanReviews</div>
+            <small class="text-muted">Plan Reviews</small>
+        </div>
+        <div class="col-6 mb-3">
+            <div class="display-6">@Statistics.TotalComments</div>
+            <small class="text-muted">Comments</small>
+        </div>
+    </div>
+
+    @if (Statistics.LastSeenAt.HasValue)
+    {
+        <hr />
+        <dl class="mb-0">
+            <dt>Last Activity</dt>
+            <dd><RelativeTime Timestamp="Statistics.LastSeenAt.Value" /></dd>
+        </dl>
+    }
+</Card>

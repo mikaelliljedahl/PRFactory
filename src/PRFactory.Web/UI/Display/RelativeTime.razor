@@ -1,4 +1,4 @@
-<span title="@Timestamp.ToString("F")">
+<span title="@Timestamp.ToString("F", System.Globalization.CultureInfo.InvariantCulture)">
     @if (ShowIcon && !string.IsNullOrEmpty(Icon))
     {
         <i class="bi bi-@Icon me-1"></i>
@@ -28,6 +28,6 @@
         if (diff.TotalDays < 7)
             return prefix + $"{(int)diff.TotalDays} days ago";
 
-        return prefix + Timestamp.ToString("MMM dd, yyyy 'at' h:mm tt");
+        return prefix + Timestamp.ToString("MMM dd, yyyy 'at' h:mm tt", System.Globalization.CultureInfo.InvariantCulture);
     }
 }

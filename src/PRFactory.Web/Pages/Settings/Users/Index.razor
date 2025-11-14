@@ -1,0 +1,110 @@
+@page "/settings/users"
+@attribute [Authorize(Roles = "Owner,Admin")]
+@using PRFactory.Web.Components.Settings
+@using PRFactory.Web.UI.Display
+@using PRFactory.Web.UI.Alerts
+@using PRFactory.Web.UI.Cards
+@using PRFactory.Web.UI.Forms
+@using PRFactory.Domain.Entities
+@using Microsoft.AspNetCore.Authorization
+
+<PageTitle>Users - PRFactory</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-6">
+                <i class="bi bi-people"></i> Users
+            </h1>
+            <p class="text-muted">
+                <i class="bi bi-info-circle me-1"></i>
+                Users are auto-provisioned via OAuth. Change roles below.
+            </p>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <LoadingSpinner IsLoading="true" Message="Loading users..." />
+    }
+    else if (!filteredUsers.Any())
+    {
+        @if (users.Any())
+        {
+            <AlertMessage Type="AlertType.Info"
+                         Message="No users match your filters." />
+        }
+        else
+        {
+            <EmptyState Icon="people"
+                       Title="No users found"
+                       Message="Users will appear here after they sign in via OAuth." />
+        }
+    }
+    else
+    {
+        <Card>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <input type="text"
+                           class="form-control"
+                           placeholder="Search by name or email..."
+                           @bind="searchTerm"
+                           @bind:event="oninput"
+                           @onkeyup="OnSearchChanged" />
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" @bind="selectedRole" @bind:after="@(() => OnRoleFilterChanged(selectedRole))">
+                        <option value="">All Roles</option>
+                        <option value="@UserRole.Owner">Owner</option>
+                        <option value="@UserRole.Admin">Admin</option>
+                        <option value="@UserRole.Member">Member</option>
+                        <option value="@UserRole.Viewer">Viewer</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox"
+                               id="showActiveOnly"
+                               @bind="showActiveOnly"
+                               @bind:after="@(() => OnShowActiveOnlyChanged(showActiveOnly))" />
+                        <label class="form-check-label" for="showActiveOnly">
+                            Active only
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Identity Provider</th>
+                            <th>Last Seen</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in filteredUsers)
+                        {
+                            <UserListItem User="user"
+                                        CanEdit="canEditUsers"
+                                        OnEdit="@(() => NavigateToEdit(user.Id))"
+                                        OnActivate="@(() => HandleActivateAsync(user.Id))"
+                                        OnDeactivate="@(() => HandleDeactivateAsync(user.Id))"
+                                        OnViewDetails="@(() => NavigateToDetail(user.Id))" />
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-3 text-muted">
+                Showing @filteredUsers.Count of @users.Count users
+            </div>
+        </Card>
+    }
+</div>

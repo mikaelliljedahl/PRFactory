@@ -17,8 +17,6 @@ public class TicketRepositoryTests : TestBase
 {
     private readonly TicketRepository _repository;
     private readonly Mock<ILogger<TicketRepository>> _mockLogger;
-    private readonly Guid _tenantId = Guid.NewGuid();
-    private readonly Guid _repositoryId = Guid.NewGuid();
 
     public TicketRepositoryTests()
     {

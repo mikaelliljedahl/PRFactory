@@ -50,36 +50,6 @@ public class CodeReviewAgentTests
             .Returns(_mockProvider.Object);
     }
 
-    private CodeReviewAgent CreateAgent(Guid? llmProviderId = null)
-    {
-        return new CodeReviewAgent(
-            _mockLogger.Object,
-            _mockProviderFactory.Object,
-            _mockPromptService.Object,
-            _mockReviewResultRepo.Object,
-            _mockTicketRepo.Object,
-            _mockGitPlatformService.Object,
-            llmProviderId);
-    }
-
-    private static AgentContext CreateContext(Guid ticketId, int? prNumber = 123, string? prUrl = "https://github.com/test/repo/pull/123")
-    {
-        return new AgentContext
-        {
-            TicketId = ticketId.ToString(),
-            TenantId = Guid.NewGuid().ToString(),
-            RepositoryId = Guid.NewGuid().ToString(),
-            PullRequestNumber = prNumber,
-            PullRequestUrl = prUrl,
-            ImplementationPlan = "# Implementation Plan\n\nImplement feature X.",
-            Repository = new RepositoryBuilder()
-                .WithName("test-repo")
-                .WithDefaultBranch("main")
-                .Build()
-        };
-    }
-
-
     #region DetectLanguage Tests
 
     [Fact]

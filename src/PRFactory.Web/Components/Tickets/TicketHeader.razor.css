@@ -1,0 +1,17 @@
+.description-content {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.ticket-metadata dl {
+    font-size: 0.9rem;
+}
+
+.ticket-metadata dt {
+    font-weight: 600;
+    color: #6c757d;
+}
+
+.ticket-metadata dd {
+    margin-bottom: 0.5rem;
+}

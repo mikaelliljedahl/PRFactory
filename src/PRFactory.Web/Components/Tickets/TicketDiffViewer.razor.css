@@ -1,0 +1,83 @@
+.ticket-diff-viewer {
+    padding: 1rem;
+}
+
+.diff-panel {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    height: 100%;
+}
+
+.original-panel {
+    background-color: #fff8f0;
+}
+
+.updated-panel {
+    background-color: #f0f8ff;
+}
+
+.diff-header {
+    padding: 1rem;
+    border-bottom: 2px solid #dee2e6;
+    background-color: white;
+    border-radius: 0.375rem 0.375rem 0 0;
+}
+
+.diff-header h5 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.diff-content {
+    padding: 1rem;
+}
+
+.content-box {
+    padding: 0.75rem;
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    min-height: 50px;
+}
+
+.content-box.changed {
+    border-left: 4px solid #ffc107;
+    background-color: #fffbf0;
+}
+
+.criterion-item {
+    padding: 0.5rem;
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
+}
+
+.markdown-content {
+    font-size: 0.95rem;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4 {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+    margin-bottom: 0.5rem;
+    padding-left: 1.5rem;
+}
+
+.markdown-content code {
+    background-color: #f5f5f5;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.2rem;
+}
+
+.markdown-content pre {
+    background-color: #f5f5f5;
+    padding: 0.75rem;
+    border-radius: 0.25rem;
+    overflow-x: auto;
+}

@@ -1,0 +1,141 @@
+@namespace PRFactory.Web.UI.Editors
+
+<div class="markdown-toolbar">
+    <div class="toolbar-group">
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+                @onclick="() => OnCommand.InvokeAsync(ToolbarCommand.Bold)"
+                title="Bold (Ctrl+B)">
+            <i class="bi bi-type-bold"></i>
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+                @onclick="() => OnCommand.InvokeAsync(ToolbarCommand.Italic)"
+                title="Italic (Ctrl+I)">
+            <i class="bi bi-type-italic"></i>
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+                @onclick="() => OnCommand.InvokeAsync(ToolbarCommand.Strikethrough)"
+                title="Strikethrough">
+            <i class="bi bi-type-strikethrough"></i>
+        </button>
+    </div>
+
+    <div class="toolbar-separator"></div>
+
+    <div class="toolbar-group">
+        <select class="form-select form-select-sm" style="width: 100px"
+                @onchange="HandleHeadingChange">
+            <option value="">Heading</option>
+            <option value="@ToolbarCommand.Heading1">H1</option>
+            <option value="@ToolbarCommand.Heading2">H2</option>
+            <option value="@ToolbarCommand.Heading3">H3</option>
+            <option value="@ToolbarCommand.Heading4">H4</option>
+            <option value="@ToolbarCommand.Heading5">H5</option>
+            <option value="@ToolbarCommand.Heading6">H6</option>
+        </select>
+    </div>
+
+    <div class="toolbar-separator"></div>
+
+    <div class="toolbar-group">
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+                @onclick="() => OnCommand.InvokeAsync(ToolbarCommand.UnorderedList)"
+                title="Bullet List">
+            <i class="bi bi-list-ul"></i>
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+                @onclick="() => OnCommand.InvokeAsync(ToolbarCommand.OrderedList)"
+                title="Numbered List">
+            <i class="bi bi-list-ol"></i>
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+                @onclick="() => OnCommand.InvokeAsync(ToolbarCommand.Checklist)"
+                title="Checklist">
+            <i class="bi bi-check2-square"></i>
+        </button>
+    </div>
+
+    <div class="toolbar-separator"></div>
+
+    <div class="toolbar-group">
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+                @onclick="() => OnCommand.InvokeAsync(ToolbarCommand.Link)"
+                title="Insert Link (Ctrl+K)">
+            <i class="bi bi-link-45deg"></i>
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+                @onclick="() => OnCommand.InvokeAsync(ToolbarCommand.Image)"
+                title="Insert Image">
+            <i class="bi bi-image"></i>
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+                @onclick="() => OnCommand.InvokeAsync(ToolbarCommand.CodeBlock)"
+                title="Code Block">
+            <i class="bi bi-code-square"></i>
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+                @onclick="() => OnCommand.InvokeAsync(ToolbarCommand.InlineCode)"
+                title="Inline Code">
+            <i class="bi bi-code"></i>
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+                @onclick="() => OnCommand.InvokeAsync(ToolbarCommand.Table)"
+                title="Insert Table">
+            <i class="bi bi-table"></i>
+        </button>
+    </div>
+
+    <div class="toolbar-separator"></div>
+
+    <div class="toolbar-group">
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+                @onclick="() => OnCommand.InvokeAsync(ToolbarCommand.Blockquote)"
+                title="Blockquote">
+            <i class="bi bi-quote"></i>
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+                @onclick="() => OnCommand.InvokeAsync(ToolbarCommand.HorizontalRule)"
+                title="Horizontal Rule">
+            <i class="bi bi-dash-lg"></i>
+        </button>
+    </div>
+
+    <div class="toolbar-separator"></div>
+
+    <div class="toolbar-group ms-auto">
+        <select class="form-select form-select-sm" style="width: 140px"
+                value="@CurrentViewMode"
+                @onchange="HandleViewModeChange">
+            <option value="@ViewMode.Split">Split View</option>
+            <option value="@ViewMode.EditorOnly">Editor Only</option>
+            <option value="@ViewMode.PreviewOnly">Preview Only</option>
+            <option value="@ViewMode.Fullscreen">Fullscreen</option>
+        </select>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback<ToolbarCommand> OnCommand { get; set; }
+
+    [Parameter]
+    public ViewMode CurrentViewMode { get; set; } = ViewMode.Split;
+
+    [Parameter]
+    public EventCallback<ViewMode> OnViewModeChanged { get; set; }
+
+    private void HandleHeadingChange(ChangeEventArgs e)
+    {
+        if (Enum.TryParse<ToolbarCommand>(e.Value?.ToString(), out var command))
+        {
+            OnCommand.InvokeAsync(command);
+        }
+    }
+
+    private void HandleViewModeChange(ChangeEventArgs e)
+    {
+        if (Enum.TryParse<ViewMode>(e.Value?.ToString(), out var mode))
+        {
+            OnViewModeChanged.InvokeAsync(mode);
+        }
+    }
+}

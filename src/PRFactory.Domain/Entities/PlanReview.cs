@@ -51,6 +51,7 @@ public class PlanReview
     // Navigation properties
     public Ticket Ticket { get; private set; } = null!;
     public User Reviewer { get; private set; } = null!;
+    public ReviewChecklist? Checklist { get; private set; }
 
     // EF Core constructor
     private PlanReview() { }

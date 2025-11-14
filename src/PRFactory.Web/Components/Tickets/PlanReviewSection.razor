@@ -1,6 +1,7 @@
 @namespace PRFactory.Web.Components.Tickets
 @using PRFactory.Web.Models
 @using PRFactory.Web.UI.Help
+@using PRFactory.Web.UI.Editors
 
 <div class="row">
     <div class="col-lg-8 mb-3">
@@ -91,12 +92,10 @@
                             <label for="refinementInstructions" class="form-label">
                                 <strong>Refinement Instructions</strong> <span class="text-danger">*</span>
                             </label>
-                            <textarea id="refinementInstructions"
-                                    class="form-control @(showRefineError ? "is-invalid" : "")"
-                                    rows="5"
-                                    @bind="refinementInstructions"
-                                    placeholder="Be specific about what changes you want. For example: 'Add database migration steps', 'Use dependency injection for services', 'Include integration tests'..."
-                                    disabled="@isSubmitting"></textarea>
+                            <MarkdownEditor @bind-Value="refinementInstructions"
+                                            Height="400px"
+                                            ShowToolbar="true"
+                                            ShowPreview="true" />
                             @if (showRefineError)
                             {
                                 <div class="invalid-feedback d-block">
@@ -130,12 +129,10 @@
                             <label for="rejectionReason" class="form-label">
                                 <strong>Rejection Reason</strong> <span class="text-danger">*</span>
                             </label>
-                            <textarea id="rejectionReason"
-                                    class="form-control @(showRejectError ? "is-invalid" : "")"
-                                    rows="4"
-                                    @bind="rejectionReason"
-                                    placeholder="Please explain why you're rejecting this plan and what needs to be changed..."
-                                    disabled="@isSubmitting"></textarea>
+                            <MarkdownEditor @bind-Value="rejectionReason"
+                                            Height="300px"
+                                            ShowToolbar="true"
+                                            ShowPreview="true" />
                             @if (showRejectError)
                             {
                                 <div class="invalid-feedback d-block">

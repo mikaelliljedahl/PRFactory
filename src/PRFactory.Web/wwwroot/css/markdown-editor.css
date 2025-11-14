@@ -1,0 +1,299 @@
+/* Markdown Editor Container */
+.markdown-editor {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    background: white;
+}
+
+.markdown-editor.view-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    border-radius: 0;
+    margin: 0;
+}
+
+/* Toolbar */
+.markdown-toolbar {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border-bottom: 1px solid #dee2e6;
+    background: #f8f9fa;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.toolbar-group {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+}
+
+.toolbar-separator {
+    width: 1px;
+    height: 24px;
+    background: #dee2e6;
+    margin: 0 0.5rem;
+}
+
+.toolbar-group .btn-sm {
+    padding: 0.25rem 0.5rem;
+}
+
+/* Editor Container */
+.editor-container {
+    display: grid;
+    overflow: hidden;
+}
+
+.view-split .editor-container {
+    grid-template-columns: 1fr 1fr;
+}
+
+.view-editor-only .editor-container {
+    grid-template-columns: 1fr;
+}
+
+.view-preview-only .editor-container {
+    grid-template-columns: 1fr;
+}
+
+.view-fullscreen .editor-container {
+    height: calc(100vh - 50px) !important;
+}
+
+/* Editor Pane */
+.editor-pane {
+    display: flex;
+    border-right: 1px solid #dee2e6;
+    overflow: hidden;
+    background: white;
+}
+
+.view-editor-only .editor-pane,
+.view-fullscreen .editor-pane {
+    border-right: none;
+}
+
+.line-numbers {
+    padding: 1rem 0.5rem;
+    background: #f8f9fa;
+    color: #6c757d;
+    text-align: right;
+    font-family: 'Courier New', 'Consolas', 'Monaco', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    user-select: none;
+    min-width: 3rem;
+    border-right: 1px solid #dee2e6;
+    overflow-y: hidden;
+}
+
+.editor-textarea {
+    flex: 1;
+    padding: 1rem;
+    border: none;
+    outline: none;
+    resize: none;
+    font-family: 'Courier New', 'Consolas', 'Monaco', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    overflow-y: auto;
+    background: white;
+}
+
+.editor-textarea:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+/* Preview Pane */
+.markdown-preview {
+    padding: 1rem;
+    overflow-y: auto;
+    background: white;
+}
+
+.markdown-preview h1,
+.markdown-preview h2,
+.markdown-preview h3,
+.markdown-preview h4,
+.markdown-preview h5,
+.markdown-preview h6 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+.markdown-preview h1 {
+    font-size: 2rem;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 0.5rem;
+}
+
+.markdown-preview h2 {
+    font-size: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 0.5rem;
+}
+
+.markdown-preview h3 {
+    font-size: 1.25rem;
+}
+
+.markdown-preview h4 {
+    font-size: 1rem;
+}
+
+.markdown-preview h5 {
+    font-size: 0.875rem;
+}
+
+.markdown-preview h6 {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.markdown-preview p {
+    margin-bottom: 1rem;
+}
+
+.markdown-preview ul,
+.markdown-preview ol {
+    margin-bottom: 1rem;
+    padding-left: 2rem;
+}
+
+.markdown-preview li {
+    margin-bottom: 0.25rem;
+}
+
+.markdown-preview pre {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+    border: 1px solid #dee2e6;
+}
+
+.markdown-preview code {
+    background: #f8f9fa;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-family: 'Courier New', 'Consolas', 'Monaco', monospace;
+    font-size: 0.875rem;
+    color: #e83e8c;
+}
+
+.markdown-preview pre code {
+    background: transparent;
+    padding: 0;
+    color: inherit;
+}
+
+.markdown-preview blockquote {
+    padding-left: 1rem;
+    border-left: 4px solid #dee2e6;
+    color: #6c757d;
+    margin-bottom: 1rem;
+}
+
+.markdown-preview table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+}
+
+.markdown-preview table th,
+.markdown-preview table td {
+    border: 1px solid #dee2e6;
+    padding: 0.5rem;
+}
+
+.markdown-preview table th {
+    background: #f8f9fa;
+    font-weight: 600;
+}
+
+.markdown-preview table tr:nth-child(even) {
+    background: #f8f9fa;
+}
+
+.markdown-preview hr {
+    border: none;
+    border-top: 1px solid #dee2e6;
+    margin: 1.5rem 0;
+}
+
+.markdown-preview img {
+    max-width: 100%;
+    height: auto;
+    margin: 1rem 0;
+}
+
+.markdown-preview a {
+    color: #0d6efd;
+    text-decoration: none;
+}
+
+.markdown-preview a:hover {
+    text-decoration: underline;
+}
+
+.empty-state {
+    padding: 3rem 1rem;
+}
+
+.empty-state i {
+    opacity: 0.3;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .view-split .editor-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr;
+    }
+
+    .editor-pane {
+        border-right: none;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .markdown-toolbar {
+        padding: 0.25rem;
+    }
+
+    .toolbar-separator {
+        display: none;
+    }
+}
+
+@media (max-width: 576px) {
+    .markdown-toolbar {
+        flex-wrap: wrap;
+    }
+
+    .toolbar-group {
+        flex-wrap: wrap;
+    }
+
+    .line-numbers {
+        min-width: 2rem;
+        padding: 1rem 0.25rem;
+        font-size: 0.75rem;
+    }
+
+    .editor-textarea {
+        font-size: 0.75rem;
+    }
+
+    .markdown-preview {
+        font-size: 0.875rem;
+    }
+}

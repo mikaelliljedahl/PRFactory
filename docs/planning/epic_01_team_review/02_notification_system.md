@@ -600,15 +600,14 @@ public class NotificationDto
 
 ## Blazor Components
 
-### NotificationBell Component
+### NotificationBell Component (Business Logic)
 
 **File:** `/src/PRFactory.Web/Components/Notifications/NotificationBell.razor`
 
 ```razor
 @namespace PRFactory.Web.Components.Notifications
 @using PRFactory.Web.Models
-@inject INotificationService NotificationService
-@inject ICurrentUserService CurrentUserService
+@using PRFactory.Web.UI.Notifications
 @implements IDisposable
 
 <div class="dropdown">
@@ -623,82 +622,13 @@ public class NotificationDto
             </span>
         }
     </button>
-    <ul class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationDropdown">
-        <li class="dropdown-header d-flex justify-content-between align-items-center">
-            <span>Notifications</span>
-            @if (unreadCount > 0)
-            {
-                <button class="btn btn-link btn-sm text-decoration-none" @onclick="MarkAllAsRead">
-                    Mark all read
-                </button>
-            }
-        </li>
-        <li><hr class="dropdown-divider"></li>
 
-        @if (notifications.Any())
-        {
-            @foreach (var notification in notifications)
-            {
-                <li>
-                    <a class="dropdown-item @(!notification.IsRead ? "notification-unread" : "")"
-                       href="@notification.ActionUrl" @onclick="() => MarkAsRead(notification.Id)">
-                        <div class="d-flex">
-                            <div class="flex-shrink-0 me-2">
-                                <i class="bi bi-@GetNotificationIcon(notification.Type) fs-5 text-@GetNotificationColor(notification.Type)"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <div class="fw-bold">@notification.Title</div>
-                                <div class="small text-muted">@notification.Message</div>
-                                <div class="small text-muted">@FormatRelativeTime(notification.CreatedAt)</div>
-                            </div>
-                            @if (!notification.IsRead)
-                            {
-                                <div class="flex-shrink-0">
-                                    <span class="badge bg-primary rounded-pill">New</span>
-                                </div>
-                            }
-                        </div>
-                    </a>
-                </li>
-            }
-            <li><hr class="dropdown-divider"></li>
-            <li>
-                <a class="dropdown-item text-center small" href="/notifications">
-                    View all notifications
-                </a>
-            </li>
-        }
-        else
-        {
-            <li class="dropdown-item text-center text-muted">
-                <i class="bi bi-inbox me-2"></i>
-                No notifications
-            </li>
-        }
-    </ul>
+    <NotificationDropdown Notifications="@notifications"
+                          UnreadCount="@unreadCount"
+                          OnMarkAsRead="@MarkAsRead"
+                          OnMarkAllAsRead="@MarkAllAsRead"
+                          ErrorMessage="@errorMessage" />
 </div>
-
-<style>
-    .notification-dropdown {
-        min-width: 350px;
-        max-width: 400px;
-        max-height: 500px;
-        overflow-y: auto;
-    }
-
-    .notification-unread {
-        background-color: #f0f8ff;
-    }
-
-    .dropdown-item {
-        white-space: normal;
-        padding: 0.75rem 1rem;
-    }
-
-    .dropdown-item:hover {
-        background-color: #f8f9fa;
-    }
-</style>
 ```
 
 **Code-behind:** `NotificationBell.razor.cs`
@@ -722,6 +652,7 @@ public partial class NotificationBell : IDisposable
     private List<NotificationDto> notifications = new();
     private int unreadCount = 0;
     private System.Timers.Timer? pollTimer;
+    private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -738,8 +669,17 @@ public partial class NotificationBell : IDisposable
         var currentUser = await CurrentUserService.GetCurrentUserAsync();
         if (currentUser == null) return;
 
-        notifications = await NotificationService.GetRecentNotificationsAsync(currentUser.Id, 10);
-        unreadCount = await NotificationService.GetUnreadCountAsync(currentUser.Id);
+        try
+        {
+            notifications = await NotificationService.GetRecentNotificationsAsync(currentUser.Id, 10);
+            unreadCount = await NotificationService.GetUnreadCountAsync(currentUser.Id);
+            errorMessage = null;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load notifications: {ex.Message}";
+        }
+
         StateHasChanged();
     }
 
@@ -763,6 +703,129 @@ public partial class NotificationBell : IDisposable
         await LoadNotifications();
     }
 
+    public void Dispose()
+    {
+        pollTimer?.Stop();
+        pollTimer?.Dispose();
+    }
+}
+```
+
+**Lines of Code:** ~30 lines (razor) + ~65 lines (code-behind) = ~95 lines
+
+**Note:** All UI formatting logic (icons, colors, relative time) moved to pure UI component.
+
+---
+
+### NotificationDropdown Component (Pure UI)
+
+**File:** `/src/PRFactory.Web/UI/Notifications/NotificationDropdown.razor`
+
+```razor
+@namespace PRFactory.Web.UI.Notifications
+@using PRFactory.Web.Models
+
+<ul class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationDropdown">
+    <li class="dropdown-header d-flex justify-content-between align-items-center">
+        <span>Notifications</span>
+        @if (UnreadCount > 0)
+        {
+            <button class="btn btn-link btn-sm text-decoration-none" @onclick="HandleMarkAllAsRead">
+                Mark all read
+            </button>
+        }
+    </li>
+    <li><hr class="dropdown-divider"></li>
+
+    @if (Notifications.Any())
+    {
+        @foreach (var notification in Notifications)
+        {
+            <li>
+                <a class="dropdown-item @GetReadClass(notification.IsRead)"
+                   href="@notification.ActionUrl"
+                   @onclick="() => HandleMarkAsRead(notification.Id)">
+                    <div class="d-flex">
+                        <div class="flex-shrink-0 me-2">
+                            <i class="bi bi-@GetNotificationIcon(notification.Type) fs-5 text-@GetNotificationColor(notification.Type)"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold">@notification.Title</div>
+                            <div class="small text-muted">@notification.Message</div>
+                            <div class="small text-muted">@FormatRelativeTime(notification.CreatedAt)</div>
+                        </div>
+                        @if (!notification.IsRead)
+                        {
+                            <div class="flex-shrink-0">
+                                <span class="badge bg-primary rounded-pill">New</span>
+                            </div>
+                        }
+                    </div>
+                </a>
+            </li>
+        }
+        <li><hr class="dropdown-divider"></li>
+        <li>
+            <a class="dropdown-item text-center small" href="/notifications">
+                View all notifications
+            </a>
+        </li>
+    }
+    else
+    {
+        <li class="dropdown-item text-center text-muted">
+            <i class="bi bi-inbox me-2"></i>
+            No notifications
+        </li>
+    }
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <li><hr class="dropdown-divider"></li>
+        <li class="dropdown-item text-danger small">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            @ErrorMessage
+        </li>
+    }
+</ul>
+
+@code {
+    [Parameter]
+    public List<NotificationDto> Notifications { get; set; } = new();
+
+    [Parameter]
+    public int UnreadCount { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid> OnMarkAsRead { get; set; }
+
+    [Parameter]
+    public EventCallback OnMarkAllAsRead { get; set; }
+
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+
+    private async Task HandleMarkAsRead(Guid notificationId)
+    {
+        if (OnMarkAsRead.HasDelegate)
+        {
+            await OnMarkAsRead.InvokeAsync(notificationId);
+        }
+    }
+
+    private async Task HandleMarkAllAsRead()
+    {
+        if (OnMarkAllAsRead.HasDelegate)
+        {
+            await OnMarkAllAsRead.InvokeAsync();
+        }
+    }
+
+    private string GetReadClass(bool isRead)
+    {
+        return isRead ? "" : "notification-unread";
+    }
+
     private string GetNotificationIcon(string type)
     {
         return type switch
@@ -772,6 +835,7 @@ public partial class NotificationBell : IDisposable
             "PlanApproved" => "check-circle",
             "PlanRejected" => "x-circle",
             "CommentReply" => "reply",
+            "ReviewCompleted" => "check-circle-fill",
             _ => "bell"
         };
     }
@@ -785,6 +849,7 @@ public partial class NotificationBell : IDisposable
             "PlanApproved" => "success",
             "PlanRejected" => "warning",
             "CommentReply" => "info",
+            "ReviewCompleted" => "success",
             _ => "secondary"
         };
     }
@@ -802,16 +867,40 @@ public partial class NotificationBell : IDisposable
             _ => dateTime.ToString("MMM d")
         };
     }
-
-    public void Dispose()
-    {
-        pollTimer?.Stop();
-        pollTimer?.Dispose();
-    }
 }
 ```
 
-**Lines of Code:** ~95 lines (razor) + ~100 lines (code-behind) = ~195 lines
+**Styling:** Move to `/src/PRFactory.Web/wwwroot/css/notifications.css`
+
+```css
+.notification-dropdown {
+    min-width: 350px;
+    max-width: 400px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.notification-unread {
+    background-color: #f0f8ff;
+}
+
+.notification-dropdown .dropdown-item {
+    white-space: normal;
+    padding: 0.75rem 1rem;
+}
+
+.notification-dropdown .dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+```
+
+**Lines of Code:** ~140 lines (UI component) + ~20 lines (CSS file)
+
+**Benefits:**
+- ✅ Pure UI component - no service injection
+- ✅ All formatting logic encapsulated
+- ✅ Reusable for notification page/panel
+- ✅ Follows CLAUDE.md component architecture
 
 ---
 
@@ -866,11 +955,13 @@ if (mentionedUserIds != null && mentionedUserIds.Any())
 - Service Interface: ~25 lines
 - Service Implementation: ~190 lines
 - DTO: ~40 lines
-- NotificationBell Component: ~195 lines
+- NotificationBell Component: ~95 lines (business logic)
+- NotificationDropdown Component: ~140 lines (pure UI)
+- CSS file: ~20 lines
 - Integration code: ~20 lines
 - Migration: ~30 lines
 
-**Total: ~705 lines of code**
+**Total: ~765 lines of code**
 
 **Estimated Effort:** 3-4 days
 - Day 1: Database schema, entity, repository

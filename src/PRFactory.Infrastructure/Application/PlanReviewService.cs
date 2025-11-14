@@ -13,20 +13,26 @@ public class PlanReviewService : IPlanReviewService
     private readonly ITicketRepository _ticketRepository;
     private readonly IPlanReviewRepository _planReviewRepository;
     private readonly IReviewCommentRepository _reviewCommentRepository;
+    private readonly IInlineCommentAnchorRepository _anchorRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IChecklistTemplateService _checklistTemplateService;
     private readonly ILogger<PlanReviewService> _logger;
 
     public PlanReviewService(
         ITicketRepository ticketRepository,
         IPlanReviewRepository planReviewRepository,
         IReviewCommentRepository reviewCommentRepository,
+        IInlineCommentAnchorRepository anchorRepository,
         IUserRepository userRepository,
+        IChecklistTemplateService checklistTemplateService,
         ILogger<PlanReviewService> logger)
     {
         _ticketRepository = ticketRepository ?? throw new ArgumentNullException(nameof(ticketRepository));
         _planReviewRepository = planReviewRepository ?? throw new ArgumentNullException(nameof(planReviewRepository));
         _reviewCommentRepository = reviewCommentRepository ?? throw new ArgumentNullException(nameof(reviewCommentRepository));
+        _anchorRepository = anchorRepository ?? throw new ArgumentNullException(nameof(anchorRepository));
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        _checklistTemplateService = checklistTemplateService ?? throw new ArgumentNullException(nameof(checklistTemplateService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -181,5 +187,80 @@ public class PlanReviewService : IPlanReviewService
         await _ticketRepository.UpdateAsync(ticket, cancellationToken);
 
         _logger.LogInformation("Reset all reviews for ticket {TicketId} due to new plan", ticketId);
+    }
+
+    public async Task<ReviewComment> AddCommentWithAnchorAsync(
+        Guid ticketId,
+        Guid authorId,
+        string content,
+        int startLine,
+        int endLine,
+        string textSnippet,
+        List<Guid>? mentionedUserIds = null,
+        CancellationToken cancellationToken = default)
+    {
+        var ticket = await _ticketRepository.GetByIdAsync(ticketId, cancellationToken);
+        if (ticket == null)
+        {
+            throw new InvalidOperationException($"Ticket with ID {ticketId} not found.");
+        }
+
+        var author = await _userRepository.GetByIdAsync(authorId, cancellationToken);
+        if (author == null)
+        {
+            throw new InvalidOperationException($"Author with ID {authorId} not found.");
+        }
+
+        // Create the comment first
+        var comment = new ReviewComment(ticketId, authorId, content, mentionedUserIds);
+        await _reviewCommentRepository.CreateAsync(comment, cancellationToken);
+
+        // Create the inline anchor
+        var anchor = InlineCommentAnchor.Create(
+            comment.Id,
+            startLine,
+            endLine,
+            textSnippet);
+
+        await _anchorRepository.CreateAsync(anchor, cancellationToken);
+
+        _logger.LogInformation("Added comment {CommentId} with anchor to ticket {TicketId} at lines {StartLine}-{EndLine}",
+            comment.Id, ticketId, startLine, endLine);
+
+        return comment;
+    }
+
+    public async Task<List<InlineCommentAnchor>> GetInlineCommentAnchorsAsync(Guid ticketId, CancellationToken cancellationToken = default)
+    {
+        return await _anchorRepository.GetByTicketIdAsync(ticketId, cancellationToken);
+    }
+
+    public async Task<bool> ValidateChecklistAsync(Guid planReviewId, CancellationToken cancellationToken = default)
+    {
+        var review = await _planReviewRepository.GetByIdWithChecklistAsync(planReviewId, cancellationToken);
+        if (review?.Checklist == null)
+        {
+            // No checklist = no validation required
+            return true;
+        }
+
+        return review.Checklist.AllRequiredItemsChecked();
+    }
+
+    public async Task ApproveWithChecklistValidationAsync(
+        Guid planReviewId,
+        string? decision = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Validate checklist first
+        var isValid = await ValidateChecklistAsync(planReviewId, cancellationToken);
+        if (!isValid)
+        {
+            throw new InvalidOperationException(
+                "Cannot approve: all required checklist items must be checked.");
+        }
+
+        // Proceed with normal approval
+        await ApproveReviewAsync(planReviewId, decision, cancellationToken);
     }
 }

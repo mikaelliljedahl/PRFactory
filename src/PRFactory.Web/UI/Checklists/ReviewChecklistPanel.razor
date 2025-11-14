@@ -1,0 +1,82 @@
+@namespace PRFactory.Web.UI.Checklists
+@using PRFactory.Web.Models
+@using PRFactory.Web.UI.Alerts
+
+<div class="review-checklist-panel card">
+    <div class="card-header bg-info text-white">
+        <h6 class="mb-0">
+            <i class="bi bi-check2-square me-2"></i>
+            Review Checklist
+            @if (Checklist != null)
+            {
+                <span class="badge bg-light text-dark ms-2">@Checklist.TemplateName</span>
+            }
+        </h6>
+    </div>
+    <div class="card-body">
+        @if (Checklist != null)
+        {
+            <div class="progress mb-3" style="height: 25px;">
+                <div class="progress-bar @GetProgressBarClass()"
+                     role="progressbar"
+                     style="width: @Checklist.CompletionPercentage%"
+                     aria-valuenow="@Checklist.CompletionPercentage"
+                     aria-valuemin="0"
+                     aria-valuemax="100">
+                    <strong>@Checklist.CompletionPercentage% Complete</strong>
+                </div>
+            </div>
+
+            @foreach (var category in GetCategories())
+            {
+                <div class="checklist-category mb-3">
+                    <h6 class="category-header d-flex justify-content-between align-items-center"
+                        style="cursor: pointer;"
+                        @onclick="() => ToggleCategory(category)">
+                        <span>
+                            <i class="bi bi-@(IsCategoryExpanded(category) ? "chevron-down" : "chevron-right") me-2"></i>
+                            @category
+                        </span>
+                        <span class="badge bg-secondary">
+                            @GetCategoryProgress(category)
+                        </span>
+                    </h6>
+
+                    @if (IsCategoryExpanded(category))
+                    {
+                        <div class="category-items mt-2">
+                            @foreach (var item in GetItemsByCategory(category))
+                            {
+                                <ChecklistItemRow Item="@item"
+                                                  OnCheckedChanged="HandleItemChecked" />
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (!Checklist.AllRequiredItemsChecked)
+            {
+                <AlertMessage Type="AlertType.Warning"
+                              Icon="exclamation-triangle"
+                              Title="Required Items"
+                              Message="All required items must be checked before approval." />
+            }
+            else
+            {
+                <AlertMessage Type="AlertType.Success"
+                              Icon="check-circle"
+                              Title="Ready for Approval"
+                              Message="All required checklist items are complete." />
+            }
+        }
+        else
+        {
+            <div class="text-center text-muted py-4">
+                <i class="bi bi-list-check" style="font-size: 3rem;"></i>
+                <p class="mt-2">No checklist template loaded</p>
+                <small>Checklist will appear when review is assigned</small>
+            </div>
+        }
+    </div>
+</div>

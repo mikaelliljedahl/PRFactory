@@ -59,6 +59,26 @@ public interface IPlanReviewService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Adds a comment with an inline anchor to specific lines in the plan
+    /// </summary>
+    /// <param name="ticketId">The ticket ID</param>
+    /// <param name="authorId">The user ID of the comment author</param>
+    /// <param name="content">The comment text (supports markdown)</param>
+    /// <param name="startLine">Starting line number (1-based)</param>
+    /// <param name="endLine">Ending line number (1-based)</param>
+    /// <param name="textSnippet">Text snippet from the anchored location</param>
+    /// <param name="mentionedUserIds">Optional list of user IDs mentioned in the comment</param>
+    Task<ReviewComment> AddCommentWithAnchorAsync(
+        Guid ticketId,
+        Guid authorId,
+        string content,
+        int startLine,
+        int endLine,
+        string textSnippet,
+        List<Guid>? mentionedUserIds = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets all comments for a specific ticket
     /// </summary>
     Task<List<ReviewComment>> GetCommentsByTicketIdAsync(Guid ticketId, CancellationToken cancellationToken = default);
@@ -82,4 +102,9 @@ public interface IPlanReviewService
     /// Resets all reviews for a ticket when a new plan is generated
     /// </summary>
     Task ResetReviewsForNewPlanAsync(Guid ticketId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all inline comment anchors for a specific ticket
+    /// </summary>
+    Task<List<InlineCommentAnchor>> GetInlineCommentAnchorsAsync(Guid ticketId, CancellationToken cancellationToken = default);
 }

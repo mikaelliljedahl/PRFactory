@@ -15,7 +15,199 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "8.0.10");
+            modelBuilder.HasAnnotation("ProductVersion", "9.0.0");
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex");
+
+                    b.ToTable("AspNetRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetRoleClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUser", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex");
+
+                    b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                {
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProviderKey")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProviderDisplayName")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("LoginProvider", "ProviderKey");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserLogins", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RoleId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetUserRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("UserId", "LoginProvider", "Name");
+
+                    b.ToTable("AspNetUserTokens", (string)null);
+                });
 
             modelBuilder.Entity("PRFactory.Domain.Entities.AgentPromptTemplate", b =>
                 {
@@ -77,6 +269,55 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                     b.HasIndex("Name", "TenantId");
 
                     b.ToTable("AgentPromptTemplates", (string)null);
+                });
+
+            modelBuilder.Entity("PRFactory.Domain.Entities.ChecklistItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("CheckedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsChecked")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("ReviewChecklistId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReviewChecklistId")
+                        .HasDatabaseName("IX_ChecklistItems_ReviewChecklistId");
+
+                    b.HasIndex("ReviewChecklistId", "SortOrder")
+                        .HasDatabaseName("IX_ChecklistItems_ReviewChecklistId_SortOrder");
+
+                    b.ToTable("ChecklistItems", (string)null);
                 });
 
             modelBuilder.Entity("PRFactory.Domain.Entities.Checkpoint", b =>
@@ -153,6 +394,84 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                     b.ToTable("Checkpoints", (string)null);
                 });
 
+            modelBuilder.Entity("PRFactory.Domain.Entities.CodeReviewResult", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CriticalIssues")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("CriticalIssues");
+
+                    b.Property<string>("FullReviewContent")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("LlmProviderName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ModelName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Praise")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("Praise");
+
+                    b.Property<int>("PullRequestNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PullRequestUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RetryAttempt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime>("ReviewedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Suggestions")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("Suggestions");
+
+                    b.Property<Guid>("TicketId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LlmProviderName")
+                        .HasDatabaseName("IX_CodeReviewResults_LlmProviderName");
+
+                    b.HasIndex("PullRequestNumber")
+                        .HasDatabaseName("IX_CodeReviewResults_PullRequestNumber");
+
+                    b.HasIndex("ReviewedAt")
+                        .IsDescending()
+                        .HasDatabaseName("IX_CodeReviewResults_ReviewedAt");
+
+                    b.HasIndex("TicketId")
+                        .HasDatabaseName("IX_CodeReviewResults_TicketId");
+
+                    b.HasIndex("TicketId", "RetryAttempt")
+                        .HasDatabaseName("IX_CodeReviewResults_TicketId_RetryAttempt");
+
+                    b.ToTable("CodeReviewResults", (string)null);
+                });
+
             modelBuilder.Entity("PRFactory.Domain.Entities.ErrorLog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -212,6 +531,47 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId", "IsResolved", "Severity");
 
                     b.ToTable("ErrorLogs");
+                });
+
+            modelBuilder.Entity("PRFactory.Domain.Entities.InlineCommentAnchor", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EndLine")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("ReviewCommentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ReviewCommentId1")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("StartLine")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TextSnippet")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReviewCommentId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_InlineCommentAnchors_ReviewCommentId");
+
+                    b.HasIndex("ReviewCommentId1")
+                        .IsUnique();
+
+                    b.HasIndex("StartLine", "EndLine")
+                        .HasDatabaseName("IX_InlineCommentAnchors_LineRange");
+
+                    b.ToTable("InlineCommentAnchors", (string)null);
                 });
 
             modelBuilder.Entity("PRFactory.Domain.Entities.PlanReview", b =>
@@ -322,6 +682,38 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                     b.ToTable("Repositories", (string)null);
                 });
 
+            modelBuilder.Entity("PRFactory.Domain.Entities.ReviewChecklist", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("PlanReviewId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("PlanReviewId1")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TemplateName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlanReviewId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ReviewChecklists_PlanReviewId");
+
+                    b.HasIndex("PlanReviewId1")
+                        .IsUnique();
+
+                    b.ToTable("ReviewChecklists", (string)null);
+                });
+
             modelBuilder.Entity("PRFactory.Domain.Entities.ReviewComment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -379,22 +771,39 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ExternalTenantId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("IdentityProvider")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
-
-                    b.Property<string>("JiraApiToken")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("JiraUrl")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TicketPlatform")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("Jira");
+
+                    b.Property<string>("TicketPlatformApiToken")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TicketPlatformUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -407,7 +816,101 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
+                    b.HasIndex("TicketPlatform")
+                        .HasDatabaseName("IX_Tenants_TicketPlatform");
+
+                    b.HasIndex("IdentityProvider", "ExternalTenantId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Tenants_IdentityProvider_ExternalTenantId");
+
                     b.ToTable("Tenants", (string)null);
+                });
+
+            modelBuilder.Entity("PRFactory.Domain.Entities.TenantLlmProvider", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ApiBaseUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DefaultModel")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("DisableNonEssentialTraffic")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("EncryptedApiToken")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDefault")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("ModelOverrides")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("OAuthTokenRefreshedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProviderType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("TenantId1")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TimeoutMs")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(300000);
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("UsesOAuth")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProviderType")
+                        .HasDatabaseName("IX_TenantLlmProviders_ProviderType");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_TenantLlmProviders_TenantId");
+
+                    b.HasIndex("TenantId1");
+
+                    b.HasIndex("TenantId", "IsActive")
+                        .HasDatabaseName("IX_TenantLlmProviders_TenantId_IsActive");
+
+                    b.HasIndex("TenantId", "IsDefault")
+                        .HasDatabaseName("IX_TenantLlmProviders_TenantId_IsDefault");
+
+                    b.ToTable("TenantLlmProviders", (string)null);
                 });
 
             modelBuilder.Entity("PRFactory.Domain.Entities.Ticket", b =>
@@ -439,6 +942,9 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("LastSyncedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("LlmProviderId")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("PlanApprovedAt")
@@ -502,6 +1008,8 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedAt");
+
+                    b.HasIndex("LlmProviderId");
 
                     b.HasIndex("RepositoryId");
 
@@ -617,8 +1125,33 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("IdentityProvider")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
                     b.Property<DateTime?>("LastSeenAt")
                         .HasColumnType("TEXT");
+
+                    b.Property<string>("OAuthAccessToken")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OAuthRefreshToken")
+                        .HasColumnType("TEXT");
+
+                    b.PrimitiveCollection<string>("OAuthScopes")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("OAuthTokenExpiresAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("INTEGER");
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("TEXT");
@@ -644,52 +1177,12 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("AnswerText")
-                        .IsRequired()
-                        .HasMaxLength(5000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("BranchName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<TimeSpan>("Duration")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Error")
-                        .HasMaxLength(2000)
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("EventType")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("GraphId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("PullRequestNumber")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("PullRequestUrl")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("QuestionId")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("State")
-                        .IsRequired()
-                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("TicketId")
@@ -771,6 +1264,14 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                 {
                     b.HasBaseType("PRFactory.Domain.Entities.WorkflowEvent");
 
+                    b.Property<string>("AnswerText")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("QuestionId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.HasDiscriminator().HasValue("AnswerAdded");
                 });
 
@@ -778,12 +1279,23 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                 {
                     b.HasBaseType("PRFactory.Domain.Entities.WorkflowEvent");
 
+                    b.Property<string>("BranchName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.HasDiscriminator().HasValue("PlanCreated");
                 });
 
             modelBuilder.Entity("PRFactory.Domain.Entities.PullRequestCreated", b =>
                 {
                     b.HasBaseType("PRFactory.Domain.Entities.WorkflowEvent");
+
+                    b.Property<int>("PullRequestNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PullRequestUrl")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.HasDiscriminator().HasValue("PullRequestCreated");
                 });
@@ -824,12 +1336,22 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                 {
                     b.HasBaseType("PRFactory.Domain.Entities.WorkflowEvent");
 
+                    b.Property<TimeSpan>("Duration")
+                        .HasColumnType("TEXT");
+
                     b.HasDiscriminator().HasValue("WorkflowCompleted");
                 });
 
             modelBuilder.Entity("PRFactory.Infrastructure.Events.WorkflowFailed", b =>
                 {
                     b.HasBaseType("PRFactory.Domain.Entities.WorkflowEvent");
+
+                    b.Property<string>("Error")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GraphId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.HasDiscriminator().HasValue("WorkflowFailed");
                 });
@@ -838,7 +1360,72 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                 {
                     b.HasBaseType("PRFactory.Domain.Entities.WorkflowEvent");
 
+                    b.Property<string>("GraphId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.ToTable("WorkflowEvents", t =>
+                        {
+                            t.Property("GraphId")
+                                .HasColumnName("WorkflowSuspended_GraphId");
+                        });
+
                     b.HasDiscriminator().HasValue("WorkflowSuspended");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("PRFactory.Domain.Entities.AgentPromptTemplate", b =>
@@ -849,6 +1436,17 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("PRFactory.Domain.Entities.ChecklistItem", b =>
+                {
+                    b.HasOne("PRFactory.Domain.Entities.ReviewChecklist", "ReviewChecklist")
+                        .WithMany("Items")
+                        .HasForeignKey("ReviewChecklistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ReviewChecklist");
                 });
 
             modelBuilder.Entity("PRFactory.Domain.Entities.Checkpoint", b =>
@@ -870,15 +1468,30 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                     b.Navigation("Ticket");
                 });
 
-            modelBuilder.Entity("PRFactory.Domain.Entities.ErrorLog", b =>
+            modelBuilder.Entity("PRFactory.Domain.Entities.CodeReviewResult", b =>
                 {
-                    b.HasOne("PRFactory.Domain.Entities.Tenant", "Tenant")
+                    b.HasOne("PRFactory.Domain.Entities.Ticket", "Ticket")
                         .WithMany()
-                        .HasForeignKey("TenantId")
+                        .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Tenant");
+                    b.Navigation("Ticket");
+                });
+
+            modelBuilder.Entity("PRFactory.Domain.Entities.InlineCommentAnchor", b =>
+                {
+                    b.HasOne("PRFactory.Domain.Entities.ReviewComment", "ReviewComment")
+                        .WithOne()
+                        .HasForeignKey("PRFactory.Domain.Entities.InlineCommentAnchor", "ReviewCommentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PRFactory.Domain.Entities.ReviewComment", null)
+                        .WithOne("InlineCommentAnchor")
+                        .HasForeignKey("PRFactory.Domain.Entities.InlineCommentAnchor", "ReviewCommentId1");
+
+                    b.Navigation("ReviewComment");
                 });
 
             modelBuilder.Entity("PRFactory.Domain.Entities.PlanReview", b =>
@@ -911,6 +1524,21 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                     b.Navigation("Tenant");
                 });
 
+            modelBuilder.Entity("PRFactory.Domain.Entities.ReviewChecklist", b =>
+                {
+                    b.HasOne("PRFactory.Domain.Entities.PlanReview", "PlanReview")
+                        .WithOne()
+                        .HasForeignKey("PRFactory.Domain.Entities.ReviewChecklist", "PlanReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PRFactory.Domain.Entities.PlanReview", null)
+                        .WithOne("Checklist")
+                        .HasForeignKey("PRFactory.Domain.Entities.ReviewChecklist", "PlanReviewId1");
+
+                    b.Navigation("PlanReview");
+                });
+
             modelBuilder.Entity("PRFactory.Domain.Entities.ReviewComment", b =>
                 {
                     b.HasOne("PRFactory.Domain.Entities.User", "Author")
@@ -937,11 +1565,17 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                             b1.Property<Guid>("TenantId")
                                 .HasColumnType("TEXT");
 
-                            b1.Property<string>("AllowedRepositories")
+                            b1.PrimitiveCollection<string>("AllowedRepositories")
                                 .IsRequired()
                                 .HasColumnType("TEXT");
 
+                            b1.Property<Guid?>("AnalysisLlmProviderId")
+                                .HasColumnType("TEXT");
+
                             b1.Property<int>("ApiTimeoutSeconds")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<bool>("AutoApproveIfNoIssues")
                                 .HasColumnType("INTEGER");
 
                             b1.Property<bool>("AutoImplementAfterPlanApproval")
@@ -952,16 +1586,34 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                                 .HasMaxLength(100)
                                 .HasColumnType("TEXT");
 
+                            b1.Property<Guid?>("CodeReviewLlmProviderId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<bool>("EnableAutoCodeReview")
+                                .HasColumnType("INTEGER");
+
                             b1.Property<bool>("EnableCodeReview")
                                 .HasColumnType("INTEGER");
 
                             b1.Property<bool>("EnableVerboseLogging")
                                 .HasColumnType("INTEGER");
 
+                            b1.Property<Guid?>("ImplementationLlmProviderId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int>("MaxCodeReviewIterations")
+                                .HasColumnType("INTEGER");
+
                             b1.Property<int>("MaxRetries")
                                 .HasColumnType("INTEGER");
 
                             b1.Property<int>("MaxTokensPerRequest")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<Guid?>("PlanningLlmProviderId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<bool>("RequireHumanApprovalAfterReview")
                                 .HasColumnType("INTEGER");
 
                             b1.HasKey("TenantId");
@@ -994,8 +1646,28 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("PRFactory.Domain.Entities.TenantLlmProvider", b =>
+                {
+                    b.HasOne("PRFactory.Domain.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PRFactory.Domain.Entities.Tenant", null)
+                        .WithMany("LlmProviders")
+                        .HasForeignKey("TenantId1");
+
+                    b.Navigation("Tenant");
+                });
+
             modelBuilder.Entity("PRFactory.Domain.Entities.Ticket", b =>
                 {
+                    b.HasOne("PRFactory.Domain.Entities.TenantLlmProvider", "LlmProvider")
+                        .WithMany()
+                        .HasForeignKey("LlmProviderId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("PRFactory.Domain.Entities.Repository", "Repository")
                         .WithMany("Tickets")
                         .HasForeignKey("RepositoryId")
@@ -1028,7 +1700,7 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                             b1.Property<Guid>("TicketId")
                                 .HasColumnType("TEXT");
 
-                            b1.Property<int>("Id1")
+                            b1.Property<int>("__synthesizedOrdinal")
                                 .ValueGeneratedOnAddOrUpdate()
                                 .HasColumnType("INTEGER");
 
@@ -1045,7 +1717,7 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                                 .HasMaxLength(2000)
                                 .HasColumnType("TEXT");
 
-                            b1.HasKey("TicketId", "Id1");
+                            b1.HasKey("TicketId", "__synthesizedOrdinal");
 
                             b1.ToTable("Tickets");
 
@@ -1060,8 +1732,8 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                             b1.Property<Guid>("TicketId")
                                 .HasColumnType("TEXT");
 
-                            b1.Property<int>("Id")
-                                .ValueGeneratedOnAdd()
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAddOrUpdate()
                                 .HasColumnType("INTEGER");
 
                             b1.Property<DateTime>("AnsweredAt")
@@ -1077,7 +1749,7 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                                 .HasMaxLength(5000)
                                 .HasColumnType("TEXT");
 
-                            b1.HasKey("TicketId", "Id");
+                            b1.HasKey("TicketId", "__synthesizedOrdinal");
 
                             b1.ToTable("Tickets");
 
@@ -1088,6 +1760,8 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                         });
 
                     b.Navigation("Answers");
+
+                    b.Navigation("LlmProvider");
 
                     b.Navigation("Metadata")
                         .IsRequired();
@@ -1168,13 +1842,30 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("PRFactory.Domain.Entities.PlanReview", b =>
+                {
+                    b.Navigation("Checklist");
+                });
+
             modelBuilder.Entity("PRFactory.Domain.Entities.Repository", b =>
                 {
                     b.Navigation("Tickets");
                 });
 
+            modelBuilder.Entity("PRFactory.Domain.Entities.ReviewChecklist", b =>
+                {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("PRFactory.Domain.Entities.ReviewComment", b =>
+                {
+                    b.Navigation("InlineCommentAnchor");
+                });
+
             modelBuilder.Entity("PRFactory.Domain.Entities.Tenant", b =>
                 {
+                    b.Navigation("LlmProviders");
+
                     b.Navigation("Repositories");
 
                     b.Navigation("Tickets");

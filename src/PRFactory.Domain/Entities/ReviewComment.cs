@@ -44,6 +44,7 @@ public class ReviewComment
     // Navigation properties
     public Ticket Ticket { get; private set; } = null!;
     public User Author { get; private set; } = null!;
+    public InlineCommentAnchor? InlineCommentAnchor { get; private set; }
 
     // EF Core constructor
     private ReviewComment() { }

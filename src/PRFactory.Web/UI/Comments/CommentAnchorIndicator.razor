@@ -1,0 +1,64 @@
+@namespace PRFactory.Web.UI.Comments
+
+<div class="comment-anchor-indicator"
+     title="@GetTooltipText()"
+     @onclick="OnClick">
+    <i class="bi bi-chat-dots-fill text-@GetIconColor()"></i>
+    @if (ShowLineRange)
+    {
+        <span class="ms-1 small">@Anchor.LineRangeDisplay</span>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public InlineCommentAnchorDto Anchor { get; set; } = null!;
+
+    [Parameter]
+    public bool ShowLineRange { get; set; } = true;
+
+    [Parameter]
+    public EventCallback<InlineCommentAnchorDto> OnAnchorClick { get; set; }
+
+    private string GetTooltipText()
+    {
+        if (Anchor.ReviewComment != null)
+        {
+            return $"Comment by {Anchor.ReviewComment.AuthorName} on lines {Anchor.LineRangeDisplay}";
+        }
+        return $"Comment on lines {Anchor.LineRangeDisplay}";
+    }
+
+    private string GetIconColor()
+    {
+        return "primary";
+    }
+
+    private async Task OnClick()
+    {
+        if (OnAnchorClick.HasDelegate)
+        {
+            await OnAnchorClick.InvokeAsync(Anchor);
+        }
+    }
+}
+
+<style>
+    .comment-anchor-indicator {
+        display: inline-flex;
+        align-items: center;
+        cursor: pointer;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background-color: rgba(13, 110, 253, 0.1);
+        transition: background-color 0.2s;
+    }
+
+    .comment-anchor-indicator:hover {
+        background-color: rgba(13, 110, 253, 0.2);
+    }
+
+    .comment-anchor-indicator i {
+        font-size: 14px;
+    }
+</style>

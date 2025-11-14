@@ -20,6 +20,9 @@ using PlanReviewConfig = PRFactory.Infrastructure.Persistence.Configurations.Pla
 using ReviewCommentConfig = PRFactory.Infrastructure.Persistence.Configurations.ReviewCommentConfiguration;
 using TenantLlmProviderConfig = PRFactory.Infrastructure.Persistence.Configurations.TenantLlmProviderConfiguration;
 using CodeReviewResultConfig = PRFactory.Infrastructure.Persistence.Configurations.CodeReviewResultConfiguration;
+using InlineCommentAnchorConfig = PRFactory.Infrastructure.Persistence.Configurations.InlineCommentAnchorConfiguration;
+using ReviewChecklistConfig = PRFactory.Infrastructure.Persistence.Configurations.ReviewChecklistConfiguration;
+using ChecklistItemConfig = PRFactory.Infrastructure.Persistence.Configurations.ChecklistItemConfiguration;
 
 namespace PRFactory.Infrastructure.Persistence;
 
@@ -59,6 +62,9 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
     public new DbSet<User> Users => Set<User>();
     public DbSet<PlanReview> PlanReviews => Set<PlanReview>();
     public DbSet<ReviewComment> ReviewComments => Set<ReviewComment>();
+    public DbSet<InlineCommentAnchor> InlineCommentAnchors => Set<InlineCommentAnchor>();
+    public DbSet<ReviewChecklist> ReviewChecklists => Set<ReviewChecklist>();
+    public DbSet<ChecklistItem> ChecklistItems => Set<ChecklistItem>();
 
     // LLM Provider DbSets
     public DbSet<TenantLlmProvider> TenantLlmProviders => Set<TenantLlmProvider>();
@@ -85,6 +91,9 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
         builder.ApplyConfiguration(new UserConfig());
         builder.ApplyConfiguration(new PlanReviewConfig());
         builder.ApplyConfiguration(new ReviewCommentConfig());
+        builder.ApplyConfiguration(new InlineCommentAnchorConfig());
+        builder.ApplyConfiguration(new ReviewChecklistConfig());
+        builder.ApplyConfiguration(new ChecklistItemConfig());
 
         // LLM Provider configuration
         builder.ApplyConfiguration(new TenantLlmProviderConfig(_encryptionService));

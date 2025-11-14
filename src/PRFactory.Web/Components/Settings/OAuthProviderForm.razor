@@ -1,0 +1,85 @@
+<EditForm EditContext="editContext" OnValidSubmit="HandleSubmitAsync">
+    <DataAnnotationsValidator />
+
+    @* Provider Name *@
+    <FormTextField Label="Provider Name"
+                  Value="@Model.Name"
+                  Placeholder="Production Anthropic Claude"
+                  Required="true"
+                  HelpText="A friendly name for this provider"
+                  @onchange="@((ChangeEventArgs e) => Model.Name = e.Value?.ToString() ?? string.Empty)" />
+
+    @* Default Model *@
+    <div class="mb-3">
+        <label class="form-label">Default Model *</label>
+        <select class="form-select" @bind="Model.DefaultModel">
+            <option value="claude-sonnet-4-5-20250929">Claude Sonnet 4.5 (Latest)</option>
+            <option value="claude-opus-4-5-20250929">Claude Opus 4.5 (Latest)</option>
+            <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
+        </select>
+        <small class="form-text text-muted">Select the default Claude model to use</small>
+    </div>
+
+    @* OAuth Flow Information *@
+    <div class="alert alert-info">
+        <h6 class="alert-heading">
+            <i class="bi bi-info-circle me-2"></i>OAuth Authentication Required
+        </h6>
+        <p class="mb-0">
+            After creating the provider configuration, you'll need to authorize PRFactory to access your Anthropic account.
+            This requires setting up OAuth 2.0 credentials in the Anthropic Console.
+        </p>
+    </div>
+
+    @* OAuth Configuration Instructions *@
+    <div class="card mb-3">
+        <div class="card-header">
+            <h6 class="mb-0">OAuth Setup Instructions</h6>
+        </div>
+        <div class="card-body">
+            <ol class="mb-0">
+                <li>Create an OAuth application in the <a href="https://console.anthropic.com" target="_blank">Anthropic Console</a></li>
+                <li>Set the redirect URI to: <code>https://your-domain.com/oauth/callback</code></li>
+                <li>Copy your Client ID and Client Secret</li>
+                <li>Complete the OAuth authorization flow after creating this provider</li>
+            </ol>
+        </div>
+    </div>
+
+    @* OAuth Not Implemented Notice *@
+    <div class="alert alert-warning">
+        <h6 class="alert-heading">
+            <i class="bi bi-exclamation-triangle me-2"></i>OAuth Flow Placeholder
+        </h6>
+        <p class="mb-0">
+            The full OAuth 2.0 authorization flow will be implemented in a future update.
+            For now, this creates the provider configuration that can be completed later.
+        </p>
+    </div>
+
+    @* Action Buttons *@
+    <div class="d-flex gap-2">
+        <button type="submit"
+                class="btn btn-primary"
+                disabled="@IsSaving">
+            @if (IsSaving)
+            {
+                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                <span>Creating...</span>
+            }
+            else
+            {
+                <i class="bi bi-plus-circle me-2"></i>
+                <span>Create Provider</span>
+            }
+        </button>
+
+        <button type="button" class="btn btn-secondary" @onclick="OnBack">
+            Back
+        </button>
+
+        <button type="button" class="btn btn-secondary" @onclick="OnCancel">
+            Cancel
+        </button>
+    </div>
+</EditForm>

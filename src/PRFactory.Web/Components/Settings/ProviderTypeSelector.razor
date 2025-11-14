@@ -1,0 +1,110 @@
+<div class="provider-type-grid">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="provider-card" @onclick="@(() => HandleSelectAsync("AnthropicNative"))">
+                <div class="provider-icon">
+                    <i class="bi bi-lock-fill text-primary"></i>
+                </div>
+                <h5 class="provider-name">Anthropic Native</h5>
+                <p class="provider-description">Official Anthropic API with OAuth</p>
+                <span class="badge bg-primary">OAuth</span>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="provider-card" @onclick="@(() => HandleSelectAsync("ZAi"))">
+                <div class="provider-icon">
+                    <i class="bi bi-globe text-info"></i>
+                </div>
+                <h5 class="provider-name">Z.ai Unified API</h5>
+                <p class="provider-description">Access 100+ models through one API</p>
+                <span class="badge bg-info">API Key</span>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="provider-card" @onclick="@(() => HandleSelectAsync("MinimaxM2"))">
+                <div class="provider-icon">
+                    <i class="bi bi-stars text-warning"></i>
+                </div>
+                <h5 class="provider-name">Minimax M2</h5>
+                <p class="provider-description">Chinese LLM provider</p>
+                <span class="badge bg-warning">API Key</span>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="provider-card" @onclick="@(() => HandleSelectAsync("OpenRouter"))">
+                <div class="provider-icon">
+                    <i class="bi bi-signpost-split text-success"></i>
+                </div>
+                <h5 class="provider-name">OpenRouter</h5>
+                <p class="provider-description">Route to 100+ models</p>
+                <span class="badge bg-success">API Key</span>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="provider-card" @onclick="@(() => HandleSelectAsync("TogetherAI"))">
+                <div class="provider-icon">
+                    <i class="bi bi-lightning-charge text-danger"></i>
+                </div>
+                <h5 class="provider-name">Together AI</h5>
+                <p class="provider-description">Fast open-source models</p>
+                <span class="badge bg-danger">API Key</span>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="provider-card" @onclick="@(() => HandleSelectAsync("Custom"))">
+                <div class="provider-icon">
+                    <i class="bi bi-gear-fill text-secondary"></i>
+                </div>
+                <h5 class="provider-name">Custom Provider</h5>
+                <p class="provider-description">Self-hosted or custom API</p>
+                <span class="badge bg-secondary">API Key</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4 d-flex gap-2 justify-content-end">
+    <button type="button" class="btn btn-secondary" @onclick="OnCancel">
+        Cancel
+    </button>
+</div>
+
+<style>
+    .provider-card {
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        height: 100%;
+    }
+
+    .provider-card:hover {
+        border-color: var(--bs-primary);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .provider-icon {
+        font-size: 48px;
+        margin-bottom: 15px;
+    }
+
+    .provider-name {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .provider-description {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 15px;
+    }
+</style>

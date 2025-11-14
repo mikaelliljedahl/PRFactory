@@ -1,0 +1,110 @@
+@page "/settings/general"
+@attribute [Authorize(Roles = "Owner,Admin,Member,Viewer")]
+@using PRFactory.Web.Components.Settings
+@using PRFactory.Web.UI.Display
+@using PRFactory.Web.UI.Cards
+@using PRFactory.Web.UI.Buttons
+@using Microsoft.AspNetCore.Authorization
+
+<PageTitle>Tenant Settings - PRFactory</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-6">
+                <i class="bi bi-gear"></i> Tenant Settings
+            </h1>
+            @if (!canEdit)
+            {
+                <span class="badge bg-warning">
+                    <i class="bi bi-lock me-1"></i>
+                    Read-Only
+                </span>
+            }
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <LoadingSpinner IsLoading="true" Message="Loading settings..." />
+    }
+    else if (tenant != null && configuration != null)
+    {
+        <Card>
+            @* Tab Navigation *@
+            <ul class="nav nav-tabs mb-4" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link @(activeTab == TabType.General ? "active" : "")"
+                       href="#"
+                       @onclick="@(() => OnTabChanged(TabType.General))"
+                       @onclick:preventDefault>
+                        <i class="bi bi-info-circle me-2"></i>
+                        General
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(activeTab == TabType.Workflow ? "active" : "")"
+                       href="#"
+                       @onclick="@(() => OnTabChanged(TabType.Workflow))"
+                       @onclick:preventDefault>
+                        <i class="bi bi-diagram-3 me-2"></i>
+                        Workflow
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(activeTab == TabType.CodeReview ? "active" : "")"
+                       href="#"
+                       @onclick="@(() => OnTabChanged(TabType.CodeReview))"
+                       @onclick:preventDefault>
+                        <i class="bi bi-code-slash me-2"></i>
+                        Code Review
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(activeTab == TabType.LlmProviders ? "active" : "")"
+                       href="#"
+                       @onclick="@(() => OnTabChanged(TabType.LlmProviders))"
+                       @onclick:preventDefault>
+                        <i class="bi bi-robot me-2"></i>
+                        LLM Providers
+                    </a>
+                </li>
+            </ul>
+
+            @* Tab Content *@
+            <div class="tab-content">
+                @if (activeTab == TabType.General)
+                {
+                    <TenantInfoPanel Tenant="tenant" />
+                }
+                else if (activeTab == TabType.Workflow)
+                {
+                    <WorkflowSettingsPanel Configuration="configuration" CanEdit="canEdit" />
+                }
+                else if (activeTab == TabType.CodeReview)
+                {
+                    <CodeReviewSettingsPanel Configuration="configuration" CanEdit="canEdit" />
+                }
+                else if (activeTab == TabType.LlmProviders)
+                {
+                    <LlmProviderAssignmentPanel Configuration="configuration"
+                                               Providers="llmProviders"
+                                               CanEdit="canEdit" />
+                }
+            </div>
+
+            @* Save Button (only for non-General tabs and if user can edit) *@
+            @if (activeTab != TabType.General && canEdit)
+            {
+                <hr />
+                <div class="d-flex gap-2 justify-content-end">
+                    <LoadingButton Text="Save Changes"
+                                  Icon="save"
+                                  OnClick="HandleSaveAsync"
+                                  IsLoading="isSaving"
+                                  LoadingText="Saving..." />
+                </div>
+            }
+        </Card>
+    }
+</div>

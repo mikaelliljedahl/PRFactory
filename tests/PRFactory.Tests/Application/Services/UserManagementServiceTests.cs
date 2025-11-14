@@ -91,9 +91,9 @@ public class UserManagementServiceTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(3, result.Count);
-        Assert.Contains(result, u => u.Email == "user1@example.com" && u.Role == "Owner");
-        Assert.Contains(result, u => u.Email == "user2@example.com" && u.Role == "Admin");
-        Assert.Contains(result, u => u.Email == "user3@example.com" && u.Role == "Member" && !u.IsActive);
+        Assert.Contains(result, u => u.Email == "user1@example.com" && u.Role == UserRole.Owner);
+        Assert.Contains(result, u => u.Email == "user2@example.com" && u.Role == UserRole.Admin);
+        Assert.Contains(result, u => u.Email == "user3@example.com" && u.Role == UserRole.Member && !u.IsActive);
     }
 
     [Fact]
@@ -131,7 +131,7 @@ public class UserManagementServiceTests
         Assert.Equal(userId, result.Id);
         Assert.Equal("user@example.com", result.Email);
         Assert.Equal("Test User", result.DisplayName);
-        Assert.Equal("Member", result.Role);
+        Assert.Equal(UserRole.Member, result.Role);
     }
 
     [Fact]

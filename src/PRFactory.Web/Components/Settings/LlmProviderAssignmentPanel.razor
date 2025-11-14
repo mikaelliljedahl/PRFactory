@@ -1,0 +1,105 @@
+@using PRFactory.Web.UI.Forms
+@using PRFactory.Core.Application.DTOs
+
+@if (!ActiveProviders.Any())
+{
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <strong>No LLM providers configured.</strong>
+        <a href="/settings/llm-providers/create" class="alert-link">Add a provider</a> to assign it to agents.
+    </div>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-6">
+            @* Analysis Provider *@
+            <div class="mb-3">
+                <label for="analysisProvider" class="form-label">
+                    Analysis LLM Provider
+                </label>
+                <select id="analysisProvider"
+                        class="form-select"
+                        @bind="Configuration.AnalysisLlmProviderId"
+                        disabled="@(!CanEdit)">
+                    <option value="">Use Tenant Default</option>
+                    @foreach (var provider in ActiveProviders)
+                    {
+                        <option value="@provider.Id">
+                            @provider.Name (@provider.ProviderType)@(provider.IsDefault ? " ⭐" : "")
+                        </option>
+                    }
+                </select>
+                <small class="form-text text-muted">Analyzes codebase and generates clarifying questions</small>
+            </div>
+
+            @* Planning Provider *@
+            <div class="mb-3">
+                <label for="planningProvider" class="form-label">
+                    Planning LLM Provider
+                </label>
+                <select id="planningProvider"
+                        class="form-select"
+                        @bind="Configuration.PlanningLlmProviderId"
+                        disabled="@(!CanEdit)">
+                    <option value="">Use Tenant Default</option>
+                    @foreach (var provider in ActiveProviders)
+                    {
+                        <option value="@provider.Id">
+                            @provider.Name (@provider.ProviderType)@(provider.IsDefault ? " ⭐" : "")
+                        </option>
+                    }
+                </select>
+                <small class="form-text text-muted">Creates detailed implementation plans for review</small>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            @* Implementation Provider *@
+            <div class="mb-3">
+                <label for="implementationProvider" class="form-label">
+                    Implementation LLM Provider
+                </label>
+                <select id="implementationProvider"
+                        class="form-select"
+                        @bind="Configuration.ImplementationLlmProviderId"
+                        disabled="@(!CanEdit)">
+                    <option value="">Use Tenant Default</option>
+                    @foreach (var provider in ActiveProviders)
+                    {
+                        <option value="@provider.Id">
+                            @provider.Name (@provider.ProviderType)@(provider.IsDefault ? " ⭐" : "")
+                        </option>
+                    }
+                </select>
+                <small class="form-text text-muted">Generates code based on approved plans (optional)</small>
+            </div>
+
+            @* Code Review Provider *@
+            <div class="mb-3">
+                <label for="codeReviewProvider" class="form-label">
+                    Code Review LLM Provider
+                </label>
+                <select id="codeReviewProvider"
+                        class="form-select"
+                        @bind="Configuration.CodeReviewLlmProviderId"
+                        disabled="@(!CanEdit)">
+                    <option value="">Use Tenant Default</option>
+                    @foreach (var provider in ActiveProviders)
+                    {
+                        <option value="@provider.Id">
+                            @provider.Name (@provider.ProviderType)@(provider.IsDefault ? " ⭐" : "")
+                        </option>
+                    }
+                </select>
+                <small class="form-text text-muted">Reviews generated code for issues and improvements</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-info mt-3">
+        <i class="bi bi-info-circle me-2"></i>
+        <strong>Tip:</strong> Assign different providers to different roles for optimal results.
+        For example, use a fast model for analysis and a powerful model for implementation.
+    </div>
+}

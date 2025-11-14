@@ -1,0 +1,58 @@
+@using PRFactory.Web.UI.Display
+@using PRFactory.Web.Models
+
+<div class="row">
+    <div class="col-md-6">
+        <dl>
+            <dt>Tenant Name</dt>
+            <dd>@Tenant.Name</dd>
+
+            <dt>Ticket Platform</dt>
+            <dd>
+                @if (!string.IsNullOrEmpty(Tenant.TicketPlatform))
+                {
+                    <span>@Tenant.TicketPlatform</span>
+                    @if (!string.IsNullOrEmpty(Tenant.TicketPlatformUrl))
+                    {
+                        <br />
+                        <small class="text-muted">@Tenant.TicketPlatformUrl</small>
+                    }
+                }
+                else
+                {
+                    <span class="text-muted">Not configured</span>
+                }
+            </dd>
+        </dl>
+    </div>
+
+    <div class="col-md-6">
+        <dl>
+            <dt>Created</dt>
+            <dd><RelativeTime Timestamp="Tenant.CreatedAt" /></dd>
+
+            <dt>Status</dt>
+            <dd>
+                @if (Tenant.IsActive)
+                {
+                    <span class="badge bg-success">Active</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Inactive</span>
+                }
+            </dd>
+
+            <dt>Repositories</dt>
+            <dd>@Tenant.RepositoryCount</dd>
+
+            <dt>Tickets</dt>
+            <dd>@Tenant.TicketCount</dd>
+        </dl>
+    </div>
+</div>
+
+<div class="alert alert-info">
+    <i class="bi bi-info-circle me-2"></i>
+    <strong>Note:</strong> Tenant information is managed by your identity provider and cannot be changed here.
+</div>

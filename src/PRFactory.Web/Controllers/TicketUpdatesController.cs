@@ -1,11 +1,12 @@
+using RouteAttribute = Microsoft.AspNetCore.Mvc.RouteAttribute;
 using Microsoft.AspNetCore.Mvc;
-using PRFactory.Api.Models;
+using PRFactory.Web.Models;
 using PRFactory.Core.Application.Services;
 using PRFactory.Domain.Interfaces;
 using PRFactory.Domain.ValueObjects;
 using System.Diagnostics;
 
-namespace PRFactory.Api.Controllers;
+namespace PRFactory.Web.Controllers;
 
 /// <summary>
 /// Manages ticket update operations including approval, rejection, and retrieval.
@@ -312,7 +313,7 @@ public class TicketUpdatesController : ControllerBase
             PostedAt = ticketUpdate.PostedAt,
             SuccessCriteria = ticketUpdate.SuccessCriteria.Select(sc => new SuccessCriterionDto
             {
-                Category = sc.Category.ToString(),
+                Category = sc.Category,
                 Description = sc.Description,
                 Priority = sc.Priority,
                 IsTestable = sc.IsTestable

@@ -1,8 +1,9 @@
+using RouteAttribute = Microsoft.AspNetCore.Mvc.RouteAttribute;
 using Microsoft.AspNetCore.Mvc;
-using PRFactory.Api.Models;
+using PRFactory.Web.Models;
 using System.Diagnostics;
 
-namespace PRFactory.Api.Controllers;
+namespace PRFactory.Web.Controllers;
 
 /// <summary>
 /// Handles incoming Jira webhooks

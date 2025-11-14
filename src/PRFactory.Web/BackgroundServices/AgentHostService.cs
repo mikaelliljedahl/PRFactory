@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 using PRFactory.Infrastructure.Agents;
 using PRFactory.Infrastructure.Agents.Messages;
 
-namespace PRFactory.Worker;
+namespace PRFactory.Web.BackgroundServices;
 
 /// <summary>
 /// Background service that hosts agent graph execution.

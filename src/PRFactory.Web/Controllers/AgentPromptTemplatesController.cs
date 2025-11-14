@@ -1,9 +1,10 @@
+using RouteAttribute = Microsoft.AspNetCore.Mvc.RouteAttribute;
 using Microsoft.AspNetCore.Mvc;
 using PRFactory.Domain.Entities;
 using PRFactory.Domain.Interfaces;
 using PRFactory.Infrastructure.Agents.Services;
 
-namespace PRFactory.Api.Controllers;
+namespace PRFactory.Web.Controllers;
 
 /// <summary>
 /// Manages AI agent prompt templates for customizable workflow stages

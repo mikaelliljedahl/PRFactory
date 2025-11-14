@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace PRFactory.Api.Middleware;
+namespace PRFactory.Web.Middleware;
 
 /// <summary>
 /// Middleware for validating Jira webhook HMAC signatures

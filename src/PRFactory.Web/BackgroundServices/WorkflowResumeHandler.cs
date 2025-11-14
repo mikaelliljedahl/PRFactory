@@ -7,7 +7,7 @@ using PRFactory.Infrastructure.Agents.Base;
 using PRFactory.Infrastructure.Agents.Messages;
 using AgentCheckpointStore = PRFactory.Infrastructure.Agents.ICheckpointStore;
 
-namespace PRFactory.Worker;
+namespace PRFactory.Web.BackgroundServices;
 
 /// <summary>
 /// Handles resumption of suspended workflows when webhook events arrive.

@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace PRFactory.Api.Models;
+namespace PRFactory.Web.Models;
 
 /// <summary>
 /// Request to approve a ticket update
@@ -158,36 +158,6 @@ public class TicketUpdateResponse
     /// </summary>
     [JsonPropertyName("successCriteria")]
     public List<SuccessCriterionDto> SuccessCriteria { get; set; } = new();
-}
-
-/// <summary>
-/// DTO for success criterion
-/// </summary>
-public class SuccessCriterionDto
-{
-    /// <summary>
-    /// Category of the criterion
-    /// </summary>
-    [JsonPropertyName("category")]
-    public string Category { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Description of the criterion
-    /// </summary>
-    [JsonPropertyName("description")]
-    public string Description { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Priority (0=must-have, 1=should-have, 2=nice-to-have)
-    /// </summary>
-    [JsonPropertyName("priority")]
-    public int Priority { get; set; }
-
-    /// <summary>
-    /// Whether this criterion is testable
-    /// </summary>
-    [JsonPropertyName("isTestable")]
-    public bool IsTestable { get; set; }
 }
 
 /// <summary>

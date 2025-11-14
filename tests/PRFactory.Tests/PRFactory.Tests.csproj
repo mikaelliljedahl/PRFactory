@@ -52,8 +52,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\PRFactory.Domain\PRFactory.Domain.csproj" />
     <ProjectReference Include="..\..\src\PRFactory.Infrastructure\PRFactory.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\src\PRFactory.Api\PRFactory.Api.csproj" />
-    <ProjectReference Include="..\..\src\PRFactory.Worker\PRFactory.Worker.csproj" />
     <ProjectReference Include="..\..\src\PRFactory.Web\PRFactory.Web.csproj" />
   </ItemGroup>
 

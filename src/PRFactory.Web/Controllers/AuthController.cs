@@ -1,10 +1,11 @@
+using RouteAttribute = Microsoft.AspNetCore.Mvc.RouteAttribute;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using PRFactory.Core.Application.Services;
 using System.Security.Claims;
 
-namespace PRFactory.Api.Controllers;
+namespace PRFactory.Web.Controllers;
 
 /// <summary>
 /// Handles OAuth authentication callbacks and user session management

@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace PRFactory.Api.Models;
+namespace PRFactory.Web.Models;
 
 /// <summary>
 /// Request to approve an implementation plan

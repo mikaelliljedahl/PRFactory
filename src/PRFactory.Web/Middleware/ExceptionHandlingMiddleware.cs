@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text.Json;
 
-namespace PRFactory.Api.Middleware;
+namespace PRFactory.Web.Middleware;
 
 /// <summary>
 /// Middleware for global exception handling

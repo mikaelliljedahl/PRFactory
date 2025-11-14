@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace PRFactory.Api.Models;
+namespace PRFactory.Web.Models;
 
 /// <summary>
 /// Represents a Jira webhook event payload

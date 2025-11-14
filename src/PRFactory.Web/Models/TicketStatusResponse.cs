@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace PRFactory.Api.Models;
+namespace PRFactory.Web.Models;
 
 /// <summary>
 /// Response for ticket status queries
@@ -90,40 +90,4 @@ public class TicketStatusResponse
     /// </summary>
     [JsonPropertyName("awaitingHumanInput")]
     public bool AwaitingHumanInput { get; set; }
-}
-
-/// <summary>
-/// Represents a workflow event in the DTO
-/// </summary>
-public class WorkflowEventDto
-{
-    /// <summary>
-    /// Event type
-    /// </summary>
-    [JsonPropertyName("eventType")]
-    public string EventType { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Event state
-    /// </summary>
-    [JsonPropertyName("state")]
-    public string State { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Event data (JSON)
-    /// </summary>
-    [JsonPropertyName("data")]
-    public string? Data { get; set; }
-
-    /// <summary>
-    /// Timestamp
-    /// </summary>
-    [JsonPropertyName("timestamp")]
-    public DateTime Timestamp { get; set; }
-
-    /// <summary>
-    /// Error message (if any)
-    /// </summary>
-    [JsonPropertyName("errorMessage")]
-    public string? ErrorMessage { get; set; }
 }

@@ -1,0 +1,22 @@
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.page-header-title {
+    display: flex;
+    align-items: center;
+}
+
+.page-header-title h1 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+}
+
+.page-header-subtitle {
+    margin-top: 0.5rem;
+    margin-bottom: 1.5rem;
+}

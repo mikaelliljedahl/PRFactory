@@ -1,0 +1,24 @@
+<div class="section @(Collapsible ? "section-collapsible" : "")">
+    @if (!string.IsNullOrEmpty(Title))
+    {
+        <div class="section-header" @onclick="ToggleCollapse">
+            <h3 class="section-title">
+                @if (!string.IsNullOrEmpty(Icon))
+                {
+                    <i class="bi bi-@Icon me-2"></i>
+                }
+                @Title
+            </h3>
+            @if (Collapsible)
+            {
+                <i class="bi bi-chevron-@(isCollapsed ? "down" : "up")"></i>
+            }
+        </div>
+    }
+    @if (!isCollapsed)
+    {
+        <div class="section-content">
+            @ChildContent
+        </div>
+    }
+</div>

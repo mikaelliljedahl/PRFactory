@@ -1,0 +1,15 @@
+<div class="alert alert-info">
+    @if (!string.IsNullOrEmpty(Title))
+    {
+        <h6 class="alert-heading">
+            @if (!string.IsNullOrEmpty(Icon))
+            {
+                <i class="bi bi-@Icon me-2"></i>
+            }
+            @Title
+        </h6>
+    }
+    <div class="info-box-content">
+        @ChildContent
+    </div>
+</div>

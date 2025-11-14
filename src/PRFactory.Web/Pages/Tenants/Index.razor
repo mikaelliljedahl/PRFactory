@@ -3,6 +3,7 @@
 @using PRFactory.Web.UI.Display
 @using PRFactory.Web.UI.Alerts
 @using PRFactory.Web.UI.Buttons
+@using PRFactory.Web.UI.Layout
 @using Radzen
 @using Radzen.Blazor
 @using ButtonSize = PRFactory.Web.UI.Buttons.ButtonSize
@@ -10,25 +11,19 @@
 <PageTitle>Tenants - PRFactory</PageTitle>
 
 <div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col">
-            <h1 class="display-6">
-                <i class="bi bi-building"></i> Tenants
-            </h1>
-            <p class="text-muted">Manage tenant organizations and their configurations</p>
-        </div>
-        <div class="col-auto align-self-center">
+    <PageHeader Title="Tenants" Icon="building" Subtitle="Manage tenant organizations and their configurations">
+        <Actions>
             <a href="/tenants/create" class="btn btn-primary">
                 <i class="bi bi-plus-circle"></i> Create New Tenant
             </a>
-        </div>
-    </div>
+        </Actions>
+    </PageHeader>
 
     <!-- Statistics -->
     @if (stats != null)
     {
-        <div class="row mb-4">
-            <div class="col-md-6">
+        <GridLayout AdditionalClass="mb-4">
+            <GridColumn Width="6">
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title text-success">
@@ -37,8 +32,8 @@
                         <h2 class="mb-0">@stats.Value.Active</h2>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-6">
+            </GridColumn>
+            <GridColumn Width="6">
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title text-secondary">
@@ -47,8 +42,8 @@
                         <h2 class="mb-0">@stats.Value.Inactive</h2>
                     </div>
                 </div>
-            </div>
-        </div>
+            </GridColumn>
+        </GridLayout>
     }
 
     <!-- Filters -->
@@ -105,10 +100,10 @@
     else
     {
         <!-- Tenants Grid -->
-        <div class="row">
+        <GridLayout>
             @foreach (var tenant in filteredTenants)
             {
-                <div class="col-12 mb-3">
+                <GridColumn Width="12" AdditionalClass="mb-3">
                     <TenantListItem
                         Tenant="@tenant"
                         OnView="@HandleViewAsync"
@@ -116,9 +111,9 @@
                         OnActivate="@HandleActivateAsync"
                         OnDeactivate="@HandleDeactivateAsync"
                         OnDelete="@HandleDeleteAsync" />
-                </div>
+                </GridColumn>
             }
-        </div>
+        </GridLayout>
     }
 
     <!-- Success Message -->

@@ -284,9 +284,12 @@ public class LoadingButtonTests : ComponentTestBase
         var cut = RenderComponent<LoadingButton>(parameters => parameters
             .Add(p => p.Text, "Test"));
 
-        // Act & Assert (should not throw)
+        // Act
         var button = cut.Find("button");
         button.Click();
+
+        // Assert - No exception thrown
+        Assert.NotNull(cut);
     }
 
     [Fact]

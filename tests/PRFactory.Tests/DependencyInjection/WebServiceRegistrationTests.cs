@@ -13,7 +13,7 @@ public class WebServiceRegistrationTests : DIValidationTestBase
     /// <summary>
     /// Creates a service collection with Web layer services registered
     /// </summary>
-    private IServiceCollection CreateWebServiceCollection()
+    private static IServiceCollection CreateWebServiceCollection()
     {
         var services = CreateServiceCollection();
         var config = TestConfigurationBuilder.CreateTestConfiguration();

@@ -89,7 +89,7 @@ public class EventTimelineTests : ComponentTestBase
     public void Render_DisplaysEventTime()
     {
         // Arrange
-        var occurredAt = new DateTime(2024, 1, 15, 14, 30, 0);
+        var occurredAt = new DateTime(2024, 1, 15, 14, 30, 0, DateTimeKind.Utc);
         var events = new List<WorkflowEventDto>
         {
             new WorkflowEventDto

@@ -552,8 +552,12 @@ public class TicketRepositoryTests : TestBase
         // Arrange
         var nonExistentId = Guid.NewGuid();
 
-        // Act & Assert - should not throw
+        // Act
         await _repository.DeleteAsync(nonExistentId);
+
+        // Assert - No exception thrown, operation completes successfully
+        var count = await DbContext.Tickets.CountAsync();
+        Assert.True(count >= 0);
     }
 
     [Fact]

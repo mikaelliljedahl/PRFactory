@@ -13,5 +13,7 @@ public class PromptPreviewTests : ComponentTestBase
     [Fact(Skip = "Component requires IAgentPromptService with specific mock setup - needs test refactoring")]
     public void Render_WithTemplateAndSampleData_DisplaysPreviewAndSubstitutesVariables()
     {
+        // Test implementation pending refactoring of IAgentPromptService mock setup
+        throw new NotSupportedException("Test requires refactoring - see Skip attribute for details");
     }
 }

@@ -40,7 +40,7 @@ public class EventsTests : PageTestBase
         SetupMockServices();
 
         // Act
-        var cut = RenderComponent<Events>();
+        _ = RenderComponent<Events>();
         await Task.Delay(100);
 
         // Assert

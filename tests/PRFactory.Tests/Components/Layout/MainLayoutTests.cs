@@ -19,5 +19,7 @@ public class MainLayoutTests : ComponentTestBase
     [Fact(Skip = "MainLayout requires IConfiguration dependency and ChildContent parameter handling - needs test environment redesign")]
     public void Render_DisplaysLayoutStructureWithNavMenuAndContentArea()
     {
+        // Test implementation pending test environment redesign
+        throw new NotSupportedException("Test requires environment redesign - see Skip attribute for details");
     }
 }

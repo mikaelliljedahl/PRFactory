@@ -198,8 +198,8 @@ public class SuccessCriteriaEditorTests : ComponentTestBase
             new SuccessCriterionDto
             {
                 Category = SuccessCriterionCategory.Functional,
-                Description = "Test",
-                Priority = 0,
+                Description = "Test with priority",
+                Priority = 1,
                 IsTestable = true
             }
         };
@@ -210,6 +210,7 @@ public class SuccessCriteriaEditorTests : ComponentTestBase
 
         // Assert - Should render priority selection
         Assert.NotNull(cut.Markup);
+        Assert.Contains("Test with priority", cut.Markup);
     }
 
     [Fact]

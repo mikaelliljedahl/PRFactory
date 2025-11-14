@@ -23,22 +23,12 @@ namespace PRFactory.Tests.Infrastructure.Agents.Specialized;
 /// </summary>
 public class CodeReviewAgentTests
 {
-    private readonly Mock<ILogger<CodeReviewAgent>> _mockLogger;
     private readonly Mock<ILlmProviderFactory> _mockProviderFactory;
-    private readonly Mock<IPromptLoaderService> _mockPromptService;
-    private readonly Mock<ICodeReviewResultRepository> _mockReviewResultRepo;
-    private readonly Mock<ITicketRepository> _mockTicketRepo;
-    private readonly Mock<IGitPlatformService> _mockGitPlatformService;
     private readonly Mock<ILlmProvider> _mockProvider;
 
     public CodeReviewAgentTests()
     {
-        _mockLogger = new Mock<ILogger<CodeReviewAgent>>();
         _mockProviderFactory = new Mock<ILlmProviderFactory>();
-        _mockPromptService = new Mock<IPromptLoaderService>();
-        _mockReviewResultRepo = new Mock<ICodeReviewResultRepository>();
-        _mockTicketRepo = new Mock<ITicketRepository>();
-        _mockGitPlatformService = new Mock<IGitPlatformService>();
         _mockProvider = new Mock<ILlmProvider>();
 
         // Default provider setup

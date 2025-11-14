@@ -338,7 +338,7 @@ public class RefinementGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(ticketId, "RefinementGraph"))
-            .ReturnsAsync((Checkpoint?)checkpoint);
+            .ReturnsAsync(checkpoint!);
 
         var answersMessage = new AnswersReceivedMessage(ticketId, new Dictionary<string, string>());
 
@@ -471,7 +471,7 @@ public class RefinementGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(ticketId, "RefinementGraph"))
-            .ReturnsAsync((Checkpoint?)checkpoint);
+            .ReturnsAsync(checkpoint!);
 
         var rejectionMessage = new TicketUpdateRejectedMessage(
             ticketId,
@@ -514,7 +514,7 @@ public class RefinementGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(ticketId, "RefinementGraph"))
-            .ReturnsAsync((Checkpoint?)checkpoint);
+            .ReturnsAsync(checkpoint!);
 
         var rejectionMessage = new TicketUpdateRejectedMessage(
             ticketId,
@@ -601,8 +601,8 @@ public class RefinementGraphTests
 
         // Assert
         Assert.NotNull(capturedState);
-        Assert.Equal(true, capturedState["is_completed"]);
-        Assert.Equal(false, capturedState["is_suspended"]);
+        Assert.True((bool)capturedState["is_completed"]);
+        Assert.False((bool)capturedState["is_suspended"]);
     }
 
     #endregion
@@ -649,7 +649,7 @@ public class RefinementGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(ticketId, "RefinementGraph"))
-            .ReturnsAsync((Checkpoint?)null);
+            .ReturnsAsync((Checkpoint)null!);
 
         var answersMessage = new AnswersReceivedMessage(ticketId, new Dictionary<string, string>());
 
@@ -819,7 +819,7 @@ public class RefinementGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(ticketId, "RefinementGraph"))
-            .ReturnsAsync((Checkpoint?)checkpoint);
+            .ReturnsAsync(checkpoint!);
     }
 
     private void SetupCheckpointForAwaitingTicketUpdateApproval(Guid ticketId)
@@ -843,7 +843,7 @@ public class RefinementGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(ticketId, "RefinementGraph"))
-            .ReturnsAsync((Checkpoint?)checkpoint);
+            .ReturnsAsync(checkpoint!);
     }
 
     private void VerifyAgentExecuted<TAgent>()

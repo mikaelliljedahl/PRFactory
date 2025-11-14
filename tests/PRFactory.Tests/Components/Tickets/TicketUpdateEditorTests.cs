@@ -83,6 +83,12 @@ public class TicketUpdateEditorTests : ComponentTestBase
 
             // Assert - Should show validation error
             cut.WaitForState(() => cut.Markup.Contains("description"), timeout: TimeSpan.FromSeconds(2));
+            Assert.Contains("description", cut.Markup.ToLower());
+        }
+        else
+        {
+            // Assert - Save button not found
+            Assert.Fail("Save button not found");
         }
     }
 
@@ -155,6 +161,12 @@ public class TicketUpdateEditorTests : ComponentTestBase
 
             // Assert - Should show success message
             cut.WaitForState(() => cut.Markup.Contains("success"), timeout: TimeSpan.FromSeconds(2));
+            Assert.Contains("success", cut.Markup.ToLower());
+        }
+        else
+        {
+            // Assert - Save button not found
+            Assert.Fail("Save button not found");
         }
     }
 

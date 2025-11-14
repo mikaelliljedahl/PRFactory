@@ -563,7 +563,7 @@ public class ProvisioningServiceTests
         var service = CreateService(context);
 
         // Act
-        var (tenant, user, isNewTenant) = await service.ProvisionUserAsync(
+        var (tenant, _, isNewTenant) = await service.ProvisionUserAsync(
             externalUserId: "user-123",
             identityProvider: "AzureAD",
             externalTenantId: "tenant-id",

@@ -222,10 +222,15 @@ Key patterns:
             }
 
             // Prioritize domain entities, services, and components
+            // Normalize paths to use forward slashes for cross-platform compatibility
             relevantFiles = relevantFiles
-                .OrderBy(f => f.Contains("Domain\\Entities") ? 0 :
-                             f.Contains("Application") ? 1 :
-                             f.Contains("Components") ? 2 : 3)
+                .OrderBy(f =>
+                {
+                    var normalizedPath = f.Replace("\\", "/");
+                    return normalizedPath.Contains("Domain/Entities") || normalizedPath.Contains("/Domain/") ? 0 :
+                           normalizedPath.Contains("Application") ? 1 :
+                           normalizedPath.Contains("Components") ? 2 : 3;
+                })
                 .ToList();
         }
         catch (Exception ex)

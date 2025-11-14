@@ -10,6 +10,7 @@ public class ArchitectureContextServiceTests : IDisposable
     private readonly Mock<ILogger<ArchitectureContextService>> _mockLogger;
     private readonly ArchitectureContextService _service;
     private readonly string _testRepositoryPath;
+    private bool _disposed;
 
     public ArchitectureContextServiceTests()
     {
@@ -21,13 +22,24 @@ public class ArchitectureContextServiceTests : IDisposable
         Directory.CreateDirectory(_testRepositoryPath);
     }
 
-    public void Dispose()
+    protected virtual void Dispose(bool disposing)
     {
-        // Clean up test directory
-        if (Directory.Exists(_testRepositoryPath))
+        if (_disposed)
+            return;
+
+        if (disposing && Directory.Exists(_testRepositoryPath))
         {
+            // Clean up test directory
             Directory.Delete(_testRepositoryPath, recursive: true);
         }
+
+        _disposed = true;
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 
     #region Constructor Tests

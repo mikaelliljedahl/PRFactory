@@ -195,7 +195,12 @@ public class LocalGitService : ILocalGitService
 
     private string ExtractRepoName(string repoUrl)
     {
-        var uri = new Uri(repoUrl.Replace(".git", ""));
+        // Validate that the URL is absolute and well-formed
+        if (!Uri.TryCreate(repoUrl.Replace(".git", ""), UriKind.Absolute, out var uri))
+        {
+            throw new UriFormatException($"The repository URL '{repoUrl}' is not a valid absolute URI.");
+        }
+
         return uri.Segments.Last();
     }
 }

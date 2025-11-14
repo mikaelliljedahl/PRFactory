@@ -28,7 +28,24 @@ public class TicketServiceTests
             .Setup(x => x.GetTicketByIdAsync(ticketId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(ticket);
 
-        var service = CreateTicketService(mockTicketAppService.Object);
+        // Create a mock mapper that returns a properly mapped DTO
+        var mockMapper = new Mock<MapsterMapper.IMapper>();
+        mockMapper
+            .Setup(x => x.Map<PRFactory.Web.Models.TicketDto>(It.IsAny<Ticket>()))
+            .Returns((Ticket t) => new PRFactory.Web.Models.TicketDto
+            {
+                Id = t.Id,
+                TicketKey = t.TicketKey,
+                Title = t.Title,
+                Description = t.Description,
+                State = t.State,
+                Source = t.Source,
+                RepositoryId = t.RepositoryId,
+                CreatedAt = t.CreatedAt,
+                UpdatedAt = t.UpdatedAt
+            });
+
+        var service = CreateTicketService(mockTicketAppService.Object, mockMapper.Object);
 
         // Act
         var result = await service.GetTicketDtoByIdAsync(ticketId);
@@ -62,7 +79,9 @@ public class TicketServiceTests
         Assert.Null(result);
     }
 
-    private static TicketService CreateTicketService(ITicketApplicationService? ticketAppService = null)
+    private static TicketService CreateTicketService(
+        ITicketApplicationService? ticketAppService = null,
+        MapsterMapper.IMapper? mapper = null)
     {
         var mockLogger = new Mock<ILogger<TicketService>>();
         var mockTicketUpdateService = new Mock<ITicketUpdateService>();
@@ -74,7 +93,7 @@ public class TicketServiceTests
         var mockPlanReviewService = new Mock<IPlanReviewService>();
         var mockCurrentUserService = new Mock<ICurrentUserService>();
 
-        var mockMapper = new Mock<MapsterMapper.IMapper>();
+        var mockMapper = mapper ?? new Mock<MapsterMapper.IMapper>().Object;
 
         return new TicketService(
             mockLogger.Object,
@@ -87,6 +106,6 @@ public class TicketServiceTests
             mockTicketRepo.Object,
             mockPlanReviewService.Object,
             mockCurrentUserService.Object,
-            mockMapper.Object);
+            mockMapper);
     }
 }

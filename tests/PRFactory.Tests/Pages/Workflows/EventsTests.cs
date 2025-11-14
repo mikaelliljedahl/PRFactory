@@ -2,6 +2,7 @@ using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
+using PRFactory.Domain.DTOs;
 using PRFactory.Tests.Blazor;
 using PRFactory.Tests.Blazor.TestDataBuilders;
 using PRFactory.Web.Models;

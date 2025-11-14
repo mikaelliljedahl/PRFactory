@@ -1,4 +1,5 @@
 using PRFactory.Core.Application.Services;
+using PRFactory.Domain.DTOs;
 using PRFactory.Domain.Entities;
 using PRFactory.Domain.Interfaces;
 using PRFactory.Domain.ValueObjects;
@@ -103,6 +104,52 @@ public class TicketService(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error fetching tickets for repository {RepositoryId}", repositoryId);
+            throw;
+        }
+    }
+
+    public async Task<PagedResult<TicketDto>> GetTicketsPagedAsync(
+        PaginationParams paginationParams,
+        WorkflowState? stateFilter = null,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            // Use application service to get paged tickets
+            var pagedResult = await ticketApplicationService.GetTicketsPagedAsync(paginationParams, stateFilter, ct);
+
+            // Map entities to DTOs
+            var ticketDtos = pagedResult.Items.Select(ticket => new TicketDto
+            {
+                Id = ticket.Id,
+                TicketKey = ticket.TicketKey,
+                Title = ticket.Title,
+                Description = ticket.Description,
+                State = ticket.State,
+                Source = ticket.Source,
+                RepositoryId = ticket.RepositoryId,
+                RepositoryName = ticket.Repository?.Name,
+                CreatedAt = ticket.CreatedAt,
+                UpdatedAt = ticket.UpdatedAt,
+                CompletedAt = ticket.CompletedAt,
+                PullRequestUrl = ticket.PullRequestUrl,
+                PullRequestNumber = ticket.PullRequestNumber,
+                PlanBranchName = ticket.PlanBranchName,
+                PlanMarkdownPath = ticket.PlanMarkdownPath,
+                LastError = ticket.LastError
+            }).ToList();
+
+            return new PagedResult<TicketDto>
+            {
+                Items = ticketDtos,
+                TotalCount = pagedResult.TotalCount,
+                Page = pagedResult.Page,
+                PageSize = pagedResult.PageSize
+            };
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error fetching paged tickets");
             throw;
         }
     }

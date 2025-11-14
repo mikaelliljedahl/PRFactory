@@ -1,4 +1,6 @@
+using PRFactory.Domain.DTOs;
 using PRFactory.Domain.Entities;
+using PRFactory.Domain.ValueObjects;
 
 namespace PRFactory.Core.Application.Services;
 
@@ -30,6 +32,18 @@ public interface ITicketApplicationService
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>List of tickets for the repository</returns>
     Task<List<Ticket>> GetTicketsByRepositoryAsync(Guid repositoryId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets tickets with pagination, filtering, and sorting support
+    /// </summary>
+    /// <param name="paginationParams">Pagination and filtering parameters</param>
+    /// <param name="stateFilter">Optional state filter</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Paged result of tickets</returns>
+    Task<PagedResult<Ticket>> GetTicketsPagedAsync(
+        PaginationParams paginationParams,
+        WorkflowState? stateFilter = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Triggers the workflow for a ticket

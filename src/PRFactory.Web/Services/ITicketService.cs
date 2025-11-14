@@ -1,4 +1,6 @@
+using PRFactory.Domain.DTOs;
 using PRFactory.Domain.Entities;
+using PRFactory.Domain.ValueObjects;
 using PRFactory.Web.Models;
 
 namespace PRFactory.Web.Services;
@@ -27,6 +29,14 @@ public interface ITicketService
     /// Get tickets by repository
     /// </summary>
     Task<List<Ticket>> GetTicketsByRepositoryAsync(Guid repositoryId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Get paginated tickets with filtering and sorting
+    /// </summary>
+    Task<PagedResult<TicketDto>> GetTicketsPagedAsync(
+        PaginationParams paginationParams,
+        WorkflowState? stateFilter = null,
+        CancellationToken ct = default);
 
     /// <summary>
     /// Trigger workflow for a ticket

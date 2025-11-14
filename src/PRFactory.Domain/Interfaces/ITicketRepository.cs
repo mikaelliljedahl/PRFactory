@@ -1,3 +1,4 @@
+using PRFactory.Domain.DTOs;
 using PRFactory.Domain.Entities;
 using PRFactory.Domain.ValueObjects;
 
@@ -87,4 +88,12 @@ public interface ITicketRepository
     /// Checks if a ticket with the given key already exists
     /// </summary>
     Task<bool> ExistsAsync(string ticketKey, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets tickets with pagination, filtering, and sorting support
+    /// </summary>
+    Task<PagedResult<Ticket>> GetTicketsPagedAsync(
+        PaginationParams paginationParams,
+        WorkflowState? stateFilter = null,
+        CancellationToken cancellationToken = default);
 }

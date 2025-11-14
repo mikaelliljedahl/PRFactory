@@ -1041,13 +1041,6 @@ Assert.Equal("Expected message", ex.Message);
 Assert.InRange(actual, low, high);
 ```
 
-**Why xUnit Assert Only:**
-- **Consistency**: Single assertion style across the entire codebase
-- **Simplicity**: Fewer dependencies, less complexity
-- **Standard**: xUnit Assert is the industry standard for .NET testing
-- **Maintenance**: Reduces dependency management overhead
-- **CI/CD**: Simpler build pipelines without extra assertion libraries
-
 **DO:**
 - Use xUnit's `Assert` class for all test assertions
 - Write clear, descriptive test names (e.g., `CreateTicket_WithValidData_ReturnsTicket`)
@@ -1119,14 +1112,6 @@ Before committing and pushing any code changes, you **MUST** verify:
 - **Documentation that's out of sync with implementation**
 - **Temporary or work-in-progress documents** without cleaning them up
 - **Features that deviate from their documentation** without updating docs first
-
-**Why This Matters:**
-- **CI/CD Pipeline**: Broken builds, failing tests, or formatting issues block the entire team
-- **Quality Assurance**: Failing tests indicate bugs or regressions
-- **Code Consistency**: Format checks ensure consistent code style across the team
-- **Developer Productivity**: Other developers pulling broken code lose time debugging
-- **Professional Standards**: Non-compiling or incorrectly formatted code should never reach version control
-- **Automated Workflows**: PRFactory's agents depend on a working codebase
 
 **If Tests Fail After Your Changes:**
 1. **Fix the tests or the code** - Don't commit broken code

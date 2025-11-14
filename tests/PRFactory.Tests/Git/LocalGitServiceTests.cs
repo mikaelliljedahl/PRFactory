@@ -120,8 +120,8 @@ public class LocalGitServiceTests : IDisposable
         var service = CreateService();
         var invalidUrl = "/nonexistent/path/to/repo";
 
-        // Act & Assert
-        await Assert.ThrowsAsync<LibGit2SharpException>(
+        // Act & Assert - Invalid URL format throws UriFormatException before reaching LibGit2Sharp
+        await Assert.ThrowsAsync<UriFormatException>(
             () => service.CloneAsync(invalidUrl, "token", CancellationToken.None));
     }
 
@@ -691,13 +691,23 @@ public class LocalGitServiceTests : IDisposable
         Repository.Init(repoPath);
 
         // Create initial commit (required for branch operations)
-        using var repo = new Repository(repoPath);
-        var readmePath = Path.Combine(repoPath, "README.md");
-        File.WriteAllTextAsync(readmePath, $"# {name}").GetAwaiter().GetResult();
-        Commands.Stage(repo, "README.md");
+        using (var repo = new Repository(repoPath))
+        {
+            var readmePath = Path.Combine(repoPath, "README.md");
+            File.WriteAllTextAsync(readmePath, $"# {name}").GetAwaiter().GetResult();
+            Commands.Stage(repo, "README.md");
 
-        var signature = new Signature("Test Init", "test@test.com", DateTimeOffset.Now);
-        repo.Commit("Initial commit", signature, signature);
+            var signature = new Signature("Test Init", "test@test.com", DateTimeOffset.Now);
+            repo.Commit("Initial commit", signature, signature);
+
+            // Rename the default branch from "main" to "master" for test consistency
+            var currentBranch = repo.Head;
+            if (currentBranch.FriendlyName == "main")
+            {
+                var masterBranch = repo.Branches.Rename(currentBranch, "master");
+                Commands.Checkout(repo, masterBranch);
+            }
+        }
 
         return repoPath;
     }

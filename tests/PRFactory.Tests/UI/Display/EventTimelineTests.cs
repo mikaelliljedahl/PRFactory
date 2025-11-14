@@ -107,8 +107,8 @@ public class EventTimelineTests : ComponentTestBase
             .Add(p => p.Events, events));
 
         // Assert
-        Assert.Contains("Jan 15, 2024", cut.Markup);
-        Assert.Contains("14:30:00", cut.Markup);
+        // Component formats as "MMM dd, yyyy HH:mm:ss"
+        Assert.Contains("Jan 15, 2024 14:30:00", cut.Markup);
     }
 
     [Fact]

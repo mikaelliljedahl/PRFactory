@@ -1,0 +1,98 @@
+name: "Web UI Implementation Review"
+domain: "web_ui"
+version: "1.0"
+categories:
+  - name: "Completeness"
+    items:
+      - title: "All UI components identified"
+        description: "Plan lists all Blazor components to create/modify with file paths"
+        severity: "required"
+        sort_order: 1
+
+      - title: "Page routing defined"
+        description: "All @page directives and navigation paths specified"
+        severity: "required"
+        sort_order: 2
+
+      - title: "State management specified"
+        description: "Component state, cascading parameters, and service injection documented"
+        severity: "required"
+        sort_order: 3
+
+      - title: "UI component reuse"
+        description: "Plan uses existing components from /UI/ directory where applicable"
+        severity: "recommended"
+        sort_order: 4
+
+      - title: "Code-behind pattern"
+        description: "All Pages and business Components use code-behind (.razor.cs) separation"
+        severity: "required"
+        sort_order: 5
+
+  - name: "Security"
+    items:
+      - title: "Authorization checks present"
+        description: "Protected pages have [Authorize] attribute or authorization logic"
+        severity: "required"
+        sort_order: 1
+
+      - title: "Input validation"
+        description: "Form validation with DataAnnotations or FluentValidation specified"
+        severity: "required"
+        sort_order: 2
+
+      - title: "XSS protection"
+        description: "User input sanitized or escaped before rendering"
+        severity: "required"
+        sort_order: 3
+
+  - name: "Architecture"
+    items:
+      - title: "Service injection used"
+        description: "Components inject services directly (NO HTTP calls within Blazor Server process)"
+        severity: "required"
+        sort_order: 1
+
+      - title: "Clean Architecture layers"
+        description: "Changes follow Domain -> Application -> Infrastructure -> Web pattern"
+        severity: "required"
+        sort_order: 2
+
+      - title: "No custom JavaScript"
+        description: "Pure Blazor Server patterns used (NO custom .js files unless approved)"
+        severity: "required"
+        sort_order: 3
+
+  - name: "Testing"
+    items:
+      - title: "Unit tests specified"
+        description: "Plan includes unit tests for component logic and services"
+        severity: "required"
+        sort_order: 1
+
+      - title: "80% coverage target"
+        description: "Tests cover critical paths and edge cases (80% minimum)"
+        severity: "required"
+        sort_order: 2
+
+      - title: "Integration tests"
+        description: "Component rendering and interaction tests specified"
+        severity: "recommended"
+        sort_order: 3
+
+  - name: "Code Quality"
+    items:
+      - title: "UTF-8 without BOM"
+        description: "Files will be saved as UTF-8 without BOM (dotnet format check)"
+        severity: "required"
+        sort_order: 1
+
+      - title: "File-scoped namespaces"
+        description: "Uses file-scoped namespace syntax (namespace Foo.Bar;)"
+        severity: "recommended"
+        sort_order: 2
+
+      - title: "Error handling"
+        description: "Try-catch blocks and user-friendly error messages specified"
+        severity: "required"
+        sort_order: 3

@@ -28,6 +28,15 @@ public class PlanReviewRepository : IPlanReviewRepository
             .FirstOrDefaultAsync(r => r.Id == reviewId, cancellationToken);
     }
 
+    public async Task<PlanReview?> GetByIdWithChecklistAsync(Guid reviewId, CancellationToken cancellationToken = default)
+    {
+        return await _context.PlanReviews
+            .Include(r => r.Reviewer)
+            .Include(r => r.Checklist!)
+                .ThenInclude(c => c.Items)
+            .FirstOrDefaultAsync(r => r.Id == reviewId, cancellationToken);
+    }
+
     public async Task<List<PlanReview>> GetByTicketIdAsync(Guid ticketId, CancellationToken cancellationToken = default)
     {
         return await _context.PlanReviews

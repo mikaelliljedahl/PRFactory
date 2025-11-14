@@ -70,7 +70,9 @@ public class EventStatisticsTests : ComponentTestBase
 
         // Assert
         Assert.Contains("Success Rate", cut.Markup);
-        Assert.Contains("95.0%", cut.Markup);
+        // Success rate formatted with F1 may use culture-specific decimal separator
+        var markup = cut.Markup;
+        Assert.True(markup.Contains("95.0%") || markup.Contains("95,0%"), "Should contain success rate 95.0% (with either . or , decimal separator)");
         Assert.Contains("bi-check-circle", cut.Markup);
     }
 
@@ -164,8 +166,10 @@ public class EventStatisticsTests : ComponentTestBase
 
         // Assert
         // 60/100 = 60.0%, 40/100 = 40.0%
-        Assert.Contains("60.0%", cut.Markup);
-        Assert.Contains("40.0%", cut.Markup);
+        // Percentages formatted with F1 may use culture-specific decimal separator
+        var markup = cut.Markup;
+        Assert.True(markup.Contains("60.0%") || markup.Contains("60,0%"), "Should contain 60.0% (with either . or , decimal separator)");
+        Assert.True(markup.Contains("40.0%") || markup.Contains("40,0%"), "Should contain 40.0% (with either . or , decimal separator)");
     }
 
     [Fact]
@@ -275,6 +279,8 @@ public class EventStatisticsTests : ComponentTestBase
         // Assert
         // Should not throw division by zero error
         Assert.NotNull(cut.Markup);
-        Assert.Contains("0.0%", cut.Markup);
+        // Percentage formatted with F1 may use culture-specific decimal separator
+        var markup = cut.Markup;
+        Assert.True(markup.Contains("0.0%") || markup.Contains("0,0%"), "Should contain 0.0% (with either . or , decimal separator)");
     }
 }

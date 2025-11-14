@@ -74,7 +74,8 @@ public class RelativeTimeTests : ComponentTestBase
             .Add(p => p.Timestamp, timestamp));
 
         // Assert
-        Assert.Contains("Jan 15, 2024", cut.Markup);
+        // Component formats as "MMM dd, yyyy 'at' h:mm tt"
+        Assert.Contains("Jan 15, 2024 at", cut.Markup);
     }
 
     [Fact]

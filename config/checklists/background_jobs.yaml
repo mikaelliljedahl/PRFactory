@@ -1,0 +1,98 @@
+name: "Background Jobs Implementation Review"
+domain: "background_jobs"
+version: "1.0"
+categories:
+  - name: "Completeness"
+    items:
+      - title: "Job class defined"
+        description: "Background job class specified with Execute method"
+        severity: "required"
+        sort_order: 1
+
+      - title: "Job scheduling specified"
+        description: "Cron schedule or trigger mechanism documented"
+        severity: "required"
+        sort_order: 2
+
+      - title: "Dependencies injected"
+        description: "Services and repositories injected via constructor"
+        severity: "required"
+        sort_order: 3
+
+      - title: "Job registration"
+        description: "Job registered in DI container and scheduler configuration"
+        severity: "required"
+        sort_order: 4
+
+  - name: "Reliability"
+    items:
+      - title: "Idempotency guaranteed"
+        description: "Job can safely run multiple times without side effects"
+        severity: "required"
+        sort_order: 1
+
+      - title: "Retry logic specified"
+        description: "Plan includes retry policy for transient failures"
+        severity: "required"
+        sort_order: 2
+
+      - title: "Error handling"
+        description: "Try-catch blocks with logging for job failures"
+        severity: "required"
+        sort_order: 3
+
+      - title: "Timeout configured"
+        description: "Job has maximum execution time to prevent hanging"
+        severity: "recommended"
+        sort_order: 4
+
+  - name: "Observability"
+    items:
+      - title: "Logging implemented"
+        description: "Job logs start, progress, completion, and errors"
+        severity: "required"
+        sort_order: 1
+
+      - title: "Metrics tracked"
+        description: "Plan includes tracking job execution count and duration"
+        severity: "recommended"
+        sort_order: 2
+
+      - title: "Status visibility"
+        description: "Job status queryable for monitoring"
+        severity: "recommended"
+        sort_order: 3
+
+  - name: "Performance"
+    items:
+      - title: "Batch processing"
+        description: "Large datasets processed in batches to avoid memory issues"
+        severity: "required"
+        sort_order: 1
+
+      - title: "Database efficiency"
+        description: "Queries optimized with proper indexes and projections"
+        severity: "required"
+        sort_order: 2
+
+      - title: "Concurrency control"
+        description: "Handles concurrent execution or uses locks if needed"
+        severity: "required"
+        sort_order: 3
+
+  - name: "Testing"
+    items:
+      - title: "Unit tests specified"
+        description: "Tests for job logic with mocked dependencies"
+        severity: "required"
+        sort_order: 1
+
+      - title: "Integration tests"
+        description: "End-to-end tests with real dependencies"
+        severity: "recommended"
+        sort_order: 2
+
+      - title: "80% coverage target"
+        description: "Tests cover success, failures, and edge cases (80% minimum)"
+        severity: "required"
+        sort_order: 3

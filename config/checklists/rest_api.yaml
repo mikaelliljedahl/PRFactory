@@ -1,0 +1,93 @@
+name: "REST API Implementation Review"
+domain: "rest_api"
+version: "1.0"
+categories:
+  - name: "Completeness"
+    items:
+      - title: "All endpoints defined"
+        description: "Plan lists all controller actions with HTTP verbs and routes"
+        severity: "required"
+        sort_order: 1
+
+      - title: "Request/response DTOs specified"
+        description: "All DTO classes defined with property types and validation attributes"
+        severity: "required"
+        sort_order: 2
+
+      - title: "Service layer integration"
+        description: "Controllers delegate to application services (not repositories directly)"
+        severity: "required"
+        sort_order: 3
+
+      - title: "Error responses defined"
+        description: "Plan specifies error handling and appropriate HTTP status codes"
+        severity: "required"
+        sort_order: 4
+
+  - name: "Security"
+    items:
+      - title: "Authentication required"
+        description: "Protected endpoints have [Authorize] attribute"
+        severity: "required"
+        sort_order: 1
+
+      - title: "Input validation"
+        description: "DTOs use DataAnnotations or FluentValidation for request validation"
+        severity: "required"
+        sort_order: 2
+
+      - title: "SQL injection prevention"
+        description: "No raw SQL queries; uses EF Core parameterized queries"
+        severity: "required"
+        sort_order: 3
+
+      - title: "Rate limiting considered"
+        description: "Plan addresses rate limiting for public endpoints if applicable"
+        severity: "recommended"
+        sort_order: 4
+
+  - name: "Architecture"
+    items:
+      - title: "RESTful conventions"
+        description: "Routes follow RESTful conventions (GET/POST/PUT/DELETE)"
+        severity: "required"
+        sort_order: 1
+
+      - title: "API versioning"
+        description: "Plan includes version strategy if breaking changes expected"
+        severity: "recommended"
+        sort_order: 2
+
+      - title: "Clean Architecture layers"
+        description: "Controller -> Application Service -> Repository pattern followed"
+        severity: "required"
+        sort_order: 3
+
+  - name: "Testing"
+    items:
+      - title: "Unit tests specified"
+        description: "Tests for application services and business logic"
+        severity: "required"
+        sort_order: 1
+
+      - title: "Integration tests specified"
+        description: "Tests for API endpoints with WebApplicationFactory"
+        severity: "required"
+        sort_order: 2
+
+      - title: "80% coverage target"
+        description: "Tests cover success and error paths (80% minimum)"
+        severity: "required"
+        sort_order: 3
+
+  - name: "Documentation"
+    items:
+      - title: "API documentation"
+        description: "XML comments for controller actions (Swagger/OpenAPI generation)"
+        severity: "recommended"
+        sort_order: 1
+
+      - title: "Example requests"
+        description: "Plan includes example request/response payloads"
+        severity: "recommended"
+        sort_order: 2

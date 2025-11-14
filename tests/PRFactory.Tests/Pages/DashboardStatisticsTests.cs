@@ -170,9 +170,9 @@ public class DashboardStatisticsTests
     private static string FormatDuration(TimeSpan duration)
     {
         if (duration.TotalDays >= 1)
-            return $"{duration.TotalDays:F1}d";
+            return $"{duration.TotalDays.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)}d";
         if (duration.TotalHours >= 1)
-            return $"{duration.TotalHours:F1}h";
+            return $"{duration.TotalHours.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)}h";
         if (duration.TotalMinutes >= 1)
             return $"{duration.TotalMinutes:F0}m";
         return $"{duration.TotalSeconds:F0}s";

@@ -92,6 +92,7 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IPlanReviewRepository, PlanReviewRepository>();
         services.AddScoped<IReviewCommentRepository, ReviewCommentRepository>();
+        services.AddScoped<IInlineCommentAnchorRepository, InlineCommentAnchorRepository>();
 
         // Multi-LLM provider repositories
         services.AddScoped<ITenantLlmProviderRepository, TenantLlmProviderRepository>();
@@ -131,6 +132,7 @@ public static class DependencyInjection
         services.AddScoped<ICurrentUserService, Application.CurrentUserService>();
         services.AddScoped<IProvisioningService, Application.ProvisioningService>();
         services.AddScoped<IUserManagementService, Application.UserManagementService>();
+        services.AddScoped<IChecklistTemplateService, Application.ChecklistTemplateService>();
 
         // Multi-LLM provider services
         services.AddScoped<ITenantLlmProviderService, Application.TenantLlmProviderService>();
@@ -141,6 +143,9 @@ public static class DependencyInjection
         // Register agent prompt services
         services.AddScoped<Agents.Services.IAgentPromptService, Agents.Services.AgentPromptService>();
         services.AddScoped<Agents.Services.AgentPromptLoaderService>();
+
+        // Register architecture context service for enhanced planning prompts
+        services.AddScoped<IArchitectureContextService, Agents.Services.ArchitectureContextService>();
 
         // Register context builder for AI agents
         services.AddScoped<Claude.IContextBuilder, Claude.ContextBuilder>();

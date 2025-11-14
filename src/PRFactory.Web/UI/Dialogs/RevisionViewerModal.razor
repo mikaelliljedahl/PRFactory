@@ -1,0 +1,56 @@
+@namespace PRFactory.Web.UI.Dialogs
+@using PRFactory.Core.Application.DTOs
+@using PRFactory.Web.UI.Editors
+
+<Modal IsVisible="true"
+       Title="@($"Revision #{Revision.RevisionNumber} - {Revision.Reason}")"
+       Size="ModalSize.ExtraLarge"
+       OnClose="@HandleClose"
+       ShowDefaultButtons="false">
+    <BodyContent>
+        <div class="mb-3">
+            <div class="text-muted small">
+                <i class="bi bi-calendar3 me-1"></i>
+                @Revision.CreatedAt.ToString("MMM d, yyyy 'at' h:mm tt")
+                <i class="bi bi-person ms-3 me-1"></i>
+                @Revision.CreatedByName
+                <i class="bi bi-git ms-3 me-1"></i>
+                Branch: <code>@Revision.BranchName</code>
+                <i class="bi bi-hash ms-3 me-1"></i>
+                Commit: <code>@GetShortCommitHash(Revision.CommitHash)</code>
+            </div>
+        </div>
+
+        <MarkdownEditor Value="@Revision.Content"
+                        Height="600px"
+                        ShowToolbar="false"
+                        InitialViewMode="ViewMode.PreviewOnly" />
+    </BodyContent>
+    <FooterContent>
+        <button type="button" class="btn btn-secondary" @onclick="HandleClose">Close</button>
+    </FooterContent>
+</Modal>
+
+@code {
+    [Parameter, EditorRequired]
+    public PlanRevisionDto Revision { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private async Task HandleClose()
+    {
+        if (OnClose.HasDelegate)
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+
+    private string GetShortCommitHash(string commitHash)
+    {
+        if (string.IsNullOrEmpty(commitHash))
+            return "N/A";
+
+        return commitHash.Length > 8 ? commitHash.Substring(0, 8) : commitHash;
+    }
+}

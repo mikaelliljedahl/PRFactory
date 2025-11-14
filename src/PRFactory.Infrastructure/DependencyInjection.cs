@@ -93,9 +93,13 @@ public static class DependencyInjection
         services.AddScoped<IPlanReviewRepository, PlanReviewRepository>();
         services.AddScoped<IReviewCommentRepository, ReviewCommentRepository>();
         services.AddScoped<IInlineCommentAnchorRepository, InlineCommentAnchorRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
 
         // Multi-LLM provider repositories
         services.AddScoped<ITenantLlmProviderRepository, TenantLlmProviderRepository>();
+
+        // Plan Revision repository
+        services.AddScoped<IPlanRevisionRepository, PlanRevisionRepository>();
 
         // Register checkpoint store adapters
         services.AddScoped<WorkflowCheckpointStore, GraphCheckpointStoreAdapter>();
@@ -133,6 +137,8 @@ public static class DependencyInjection
         services.AddScoped<IProvisioningService, Application.ProvisioningService>();
         services.AddScoped<IUserManagementService, Application.UserManagementService>();
         services.AddScoped<IChecklistTemplateService, Application.ChecklistTemplateService>();
+        services.AddScoped<IPlanValidationService, Application.PlanValidationService>();
+        services.AddScoped<INotificationService, Application.NotificationService>();
 
         // Multi-LLM provider services
         services.AddScoped<ITenantLlmProviderService, Application.TenantLlmProviderService>();

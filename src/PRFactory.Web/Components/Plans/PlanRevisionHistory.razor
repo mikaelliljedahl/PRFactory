@@ -1,0 +1,51 @@
+@namespace PRFactory.Web.Components.Plans
+@using PRFactory.Core.Application.DTOs
+@using PRFactory.Web.UI.Display
+@using PRFactory.Web.UI.Dialogs
+@using PRFactory.Web.UI.Cards
+@using PRFactory.Web.UI.Alerts
+
+<Card Title="Plan Revision History" Icon="clock-history" Variant="CardVariant.Secondary">
+    @if (revisions.Any())
+    {
+        <RevisionTimeline Revisions="@revisions"
+                          OnViewRevision="@ViewRevision"
+                          OnSelectForComparison="@SelectForComparison"
+                          SelectedRevision1="@selectedRevision1"
+                          SelectedRevision2="@selectedRevision2" />
+
+        @if (selectedRevision1 != null && selectedRevision2 != null)
+        {
+            <div class="alert alert-info mt-3">
+                <strong>Comparing revisions selected.</strong>
+                <button class="btn btn-primary btn-sm ms-3" @onclick="CompareSelected">
+                    <i class="bi bi-arrow-left-right me-1"></i> Show Comparison
+                </button>
+                <button class="btn btn-outline-secondary btn-sm ms-2" @onclick="ClearSelection">
+                    Clear
+                </button>
+            </div>
+        }
+    }
+    else
+    {
+        <EmptyState Icon="inbox" Message="No revision history available" />
+    }
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <AlertMessage Type="AlertType.Danger" Message="@errorMessage" Icon="exclamation-triangle" />
+    }
+</Card>
+
+@if (viewingRevision != null)
+{
+    <RevisionViewerModal Revision="@viewingRevision"
+                         OnClose="@CloseViewer" />
+}
+
+@if (comparison != null)
+{
+    <RevisionComparisonModal Comparison="@comparison"
+                             OnClose="@CloseComparison" />
+}

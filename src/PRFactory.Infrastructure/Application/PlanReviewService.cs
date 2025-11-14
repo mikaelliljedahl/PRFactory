@@ -16,6 +16,7 @@ public class PlanReviewService : IPlanReviewService
     private readonly IInlineCommentAnchorRepository _anchorRepository;
     private readonly IUserRepository _userRepository;
     private readonly IChecklistTemplateService _checklistTemplateService;
+    private readonly INotificationService _notificationService;
     private readonly ILogger<PlanReviewService> _logger;
 
     public PlanReviewService(
@@ -25,6 +26,7 @@ public class PlanReviewService : IPlanReviewService
         IInlineCommentAnchorRepository anchorRepository,
         IUserRepository userRepository,
         IChecklistTemplateService checklistTemplateService,
+        INotificationService notificationService,
         ILogger<PlanReviewService> logger)
     {
         _ticketRepository = ticketRepository ?? throw new ArgumentNullException(nameof(ticketRepository));
@@ -33,6 +35,7 @@ public class PlanReviewService : IPlanReviewService
         _anchorRepository = anchorRepository ?? throw new ArgumentNullException(nameof(anchorRepository));
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _checklistTemplateService = checklistTemplateService ?? throw new ArgumentNullException(nameof(checklistTemplateService));
+        _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -62,6 +65,25 @@ public class PlanReviewService : IPlanReviewService
 
         _logger.LogInformation("Assigned {RequiredCount} required and {OptionalCount} optional reviewers to ticket {TicketId}",
             requiredReviewerIds.Count, optionalReviewerIds?.Count ?? 0, ticketId);
+
+        // Notify assigned reviewers (notification failures should not block main operation)
+        var allReviews = await _planReviewRepository.GetByTicketIdAsync(ticketId, cancellationToken);
+        foreach (var review in allReviews)
+        {
+            try
+            {
+                await _notificationService.NotifyReviewerAssignedAsync(
+                    review.ReviewerId,
+                    ticketId,
+                    review.IsRequired);
+
+                _logger.LogDebug("Notification sent to reviewer {ReviewerId} for ticket {TicketId}", review.ReviewerId, ticketId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send notification to reviewer {ReviewerId} for ticket {TicketId}", review.ReviewerId, ticketId);
+            }
+        }
     }
 
     public async Task<List<PlanReview>> GetReviewsByTicketIdAsync(Guid ticketId, CancellationToken cancellationToken = default)
@@ -92,7 +114,22 @@ public class PlanReviewService : IPlanReviewService
         if (ticket != null && ticket.HasSufficientApprovals())
         {
             _logger.LogInformation("Ticket {TicketId} now has sufficient approvals", ticket.Id);
-            // Note: The actual plan approval and workflow transition should be triggered by the UI or a background job
+
+            // Notify all reviewers that the plan has been approved
+            try
+            {
+                var reviews = await _planReviewRepository.GetByTicketIdAsync(ticket.Id, cancellationToken);
+                var reviewerIds = reviews.Select(r => r.ReviewerId).ToList();
+
+                await _notificationService.NotifyPlanApprovedAsync(ticket.Id, reviewerIds);
+
+                _logger.LogDebug("Notification sent to {Count} reviewers for plan approval on ticket {TicketId}",
+                    reviewerIds.Count, ticket.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send plan approval notifications for ticket {TicketId}", ticket.Id);
+            }
         }
     }
 
@@ -109,6 +146,22 @@ public class PlanReviewService : IPlanReviewService
 
         _logger.LogInformation("Review {ReviewId} rejected by reviewer {ReviewerId}, regenerate: {Regenerate}",
             reviewId, review.ReviewerId, regenerateCompletely);
+
+        // Notify all reviewers that the plan has been rejected
+        try
+        {
+            var reviews = await _planReviewRepository.GetByTicketIdAsync(review.TicketId, cancellationToken);
+            var reviewerIds = reviews.Select(r => r.ReviewerId).ToList();
+
+            await _notificationService.NotifyPlanRejectedAsync(review.TicketId, reviewerIds, reason);
+
+            _logger.LogDebug("Notification sent to {Count} reviewers for plan rejection on ticket {TicketId}",
+                reviewerIds.Count, review.TicketId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send plan rejection notifications for ticket {TicketId}", review.TicketId);
+        }
     }
 
     public async Task<ReviewComment> AddCommentAsync(
@@ -135,6 +188,26 @@ public class PlanReviewService : IPlanReviewService
 
         _logger.LogInformation("Added comment {CommentId} to ticket {TicketId} by author {AuthorId}",
             comment.Id, ticketId, authorId);
+
+        // Notify mentioned users (notification failures should not block main operation)
+        if (mentionedUserIds != null && mentionedUserIds.Any())
+        {
+            try
+            {
+                await _notificationService.NotifyMentionedInCommentAsync(
+                    mentionedUserIds,
+                    ticketId,
+                    comment.Id,
+                    author.DisplayName ?? "Someone");
+
+                _logger.LogDebug("Notification sent for {Count} mentioned users in comment {CommentId}",
+                    mentionedUserIds.Count, comment.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send mention notifications for comment {CommentId}", comment.Id);
+            }
+        }
 
         return comment;
     }

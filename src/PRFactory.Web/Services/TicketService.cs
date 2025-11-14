@@ -21,7 +21,8 @@ public class TicketService(
     ITenantContext tenantContext,
     ITicketRepository ticketRepository,
     IPlanReviewService planReviewService,
-    ICurrentUserService currentUserService) : ITicketService
+    ICurrentUserService currentUserService,
+    IPlanValidationService planValidationService) : ITicketService
 {
     private const string CheckCircleIcon = "check-circle";
 
@@ -630,5 +631,15 @@ public class TicketService(
             logger.LogError(ex, "Error checking approvals for ticket {TicketId}", ticketId);
             throw;
         }
+    }
+
+    public async Task<PlanValidationResult> ValidatePlanAsync(Guid ticketId, string checkType)
+    {
+        return await planValidationService.ValidatePlanAsync(ticketId, checkType);
+    }
+
+    public async Task<PlanValidationResult> ValidatePlanWithCustomPromptAsync(Guid ticketId, string customPrompt)
+    {
+        return await planValidationService.ValidatePlanWithPromptAsync(ticketId, customPrompt);
     }
 }

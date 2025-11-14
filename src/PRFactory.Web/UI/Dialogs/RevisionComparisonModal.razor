@@ -1,0 +1,72 @@
+@namespace PRFactory.Web.UI.Dialogs
+@using PRFactory.Core.Application.DTOs
+@using PRFactory.Web.UI.Display
+
+<Modal IsVisible="true"
+       Title="@($"Compare Revision #{Comparison.Revision1.RevisionNumber} vs #{Comparison.Revision2.RevisionNumber}")"
+       Size="ModalSize.ExtraLarge"
+       OnClose="@HandleClose"
+       ShowDefaultButtons="false">
+    <BodyContent>
+        <div class="mb-3">
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Revision #{Comparison.Revision1.RevisionNumber}</strong>
+                    <span class="badge bg-@GetReasonColor(Comparison.Revision1.Reason) ms-2">
+                        @Comparison.Revision1.Reason
+                    </span>
+                    <div class="text-muted small mt-1">
+                        <i class="bi bi-calendar3 me-1"></i>
+                        @Comparison.Revision1.CreatedAt.ToString("MMM d, yyyy")
+                        <i class="bi bi-person ms-2 me-1"></i>
+                        @Comparison.Revision1.CreatedByName
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <strong>Revision #{Comparison.Revision2.RevisionNumber}</strong>
+                    <span class="badge bg-@GetReasonColor(Comparison.Revision2.Reason) ms-2">
+                        @Comparison.Revision2.Reason
+                    </span>
+                    <div class="text-muted small mt-1">
+                        <i class="bi bi-calendar3 me-1"></i>
+                        @Comparison.Revision2.CreatedAt.ToString("MMM d, yyyy")
+                        <i class="bi bi-person ms-2 me-1"></i>
+                        @Comparison.Revision2.CreatedByName
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <DiffViewer DiffLines="@Comparison.DiffLines" />
+    </BodyContent>
+    <FooterContent>
+        <button type="button" class="btn btn-secondary" @onclick="HandleClose">Close</button>
+    </FooterContent>
+</Modal>
+
+@code {
+    [Parameter, EditorRequired]
+    public PlanRevisionComparisonDto Comparison { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private async Task HandleClose()
+    {
+        if (OnClose.HasDelegate)
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+
+    private string GetReasonColor(string reason)
+    {
+        return reason switch
+        {
+            "Initial" => "primary",
+            "Refined" => "info",
+            "Regenerated" => "warning",
+            _ => "secondary"
+        };
+    }
+}

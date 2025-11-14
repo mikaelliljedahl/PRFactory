@@ -1,0 +1,19 @@
+.notification-dropdown {
+    min-width: 350px;
+    max-width: 400px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.notification-unread {
+    background-color: #f0f8ff;
+}
+
+.notification-dropdown .dropdown-item {
+    white-space: normal;
+    padding: 0.75rem 1rem;
+}
+
+.notification-dropdown .dropdown-item:hover {
+    background-color: #f8f9fa;
+}

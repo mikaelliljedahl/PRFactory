@@ -1,0 +1,27 @@
+@namespace PRFactory.Web.UI.Display
+@using PRFactory.Core.Application.DTOs
+
+<div class="diff-viewer">
+    @foreach (var line in DiffLines)
+    {
+        <div class="diff-line diff-@line.Type.ToString().ToLower()">
+            <span class="line-number">@line.LineNumber</span>
+            <span class="line-content">
+                @if (line.Type == DiffLineType.Modified && !string.IsNullOrEmpty(line.OldContent))
+                {
+                    <del class="text-danger">@line.OldContent</del>
+                    <ins class="text-success">@line.Content</ins>
+                }
+                else
+                {
+                    @line.Content
+                }
+            </span>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public List<DiffLine> DiffLines { get; set; } = new();
+}

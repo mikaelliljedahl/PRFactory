@@ -1,0 +1,61 @@
+/* Diff Viewer */
+.diff-viewer {
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    overflow-x: auto;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.diff-line {
+    display: flex;
+    padding: 2px 0;
+}
+
+.line-number {
+    min-width: 50px;
+    padding-right: 10px;
+    color: #6c757d;
+    text-align: right;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.line-content {
+    flex: 1;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.diff-unchanged {
+    background-color: white;
+}
+
+.diff-added {
+    background-color: #d4edda;
+}
+
+.diff-removed {
+    background-color: #f8d7da;
+}
+
+.diff-modified {
+    background-color: #fff3cd;
+}
+
+/* Text decorations for modified lines */
+.diff-line del {
+    text-decoration: line-through;
+    background-color: #f8d7da;
+    padding: 0 2px;
+}
+
+.diff-line ins {
+    text-decoration: none;
+    background-color: #d4edda;
+    padding: 0 2px;
+}

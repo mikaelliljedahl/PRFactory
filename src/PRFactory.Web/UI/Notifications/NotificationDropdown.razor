@@ -1,0 +1,146 @@
+@namespace PRFactory.Web.UI.Notifications
+@using PRFactory.Core.Application.DTOs
+
+<ul class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationDropdown">
+    <li class="dropdown-header d-flex justify-content-between align-items-center">
+        <span>Notifications</span>
+        @if (UnreadCount > 0)
+        {
+            <button class="btn btn-link btn-sm text-decoration-none" @onclick="HandleMarkAllAsRead">
+                Mark all read
+            </button>
+        }
+    </li>
+    <li><hr class="dropdown-divider"></li>
+
+    @if (Notifications.Any())
+    {
+        @foreach (var notification in Notifications)
+        {
+            <li>
+                <a class="dropdown-item @GetReadClass(notification.IsRead)"
+                   href="@notification.ActionUrl"
+                   @onclick="() => HandleMarkAsRead(notification.Id)">
+                    <div class="d-flex">
+                        <div class="flex-shrink-0 me-2">
+                            <i class="bi bi-@GetNotificationIcon(notification.Type) fs-5 text-@GetNotificationColor(notification.Type)"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold">@notification.Title</div>
+                            <div class="small text-muted">@notification.Message</div>
+                            <div class="small text-muted">@FormatRelativeTime(notification.CreatedAt)</div>
+                        </div>
+                        @if (!notification.IsRead)
+                        {
+                            <div class="flex-shrink-0">
+                                <span class="badge bg-primary rounded-pill">New</span>
+                            </div>
+                        }
+                    </div>
+                </a>
+            </li>
+        }
+        <li><hr class="dropdown-divider"></li>
+        <li>
+            <a class="dropdown-item text-center small" href="/notifications">
+                View all notifications
+            </a>
+        </li>
+    }
+    else
+    {
+        <li class="dropdown-item text-center text-muted">
+            <i class="bi bi-inbox me-2"></i>
+            No notifications
+        </li>
+    }
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <li><hr class="dropdown-divider"></li>
+        <li class="dropdown-item text-danger small">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            @ErrorMessage
+        </li>
+    }
+</ul>
+
+@code {
+    [Parameter]
+    public List<PRFactory.Core.Application.DTOs.NotificationDto> Notifications { get; set; } = new();
+
+    [Parameter]
+    public int UnreadCount { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid> OnMarkAsRead { get; set; }
+
+    [Parameter]
+    public EventCallback OnMarkAllAsRead { get; set; }
+
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+
+    private async Task HandleMarkAsRead(Guid notificationId)
+    {
+        if (OnMarkAsRead.HasDelegate)
+        {
+            await OnMarkAsRead.InvokeAsync(notificationId);
+        }
+    }
+
+    private async Task HandleMarkAllAsRead()
+    {
+        if (OnMarkAllAsRead.HasDelegate)
+        {
+            await OnMarkAllAsRead.InvokeAsync();
+        }
+    }
+
+    private string GetReadClass(bool isRead)
+    {
+        return isRead ? "" : "notification-unread";
+    }
+
+    private string GetNotificationIcon(string type)
+    {
+        return type switch
+        {
+            "ReviewerAssigned" => "person-check",
+            "MentionedInComment" => "at",
+            "PlanApproved" => "check-circle",
+            "PlanRejected" => "x-circle",
+            "CommentReply" => "reply",
+            "ReviewCompleted" => "check-circle-fill",
+            _ => "bell"
+        };
+    }
+
+    private string GetNotificationColor(string type)
+    {
+        return type switch
+        {
+            "ReviewerAssigned" => "primary",
+            "MentionedInComment" => "info",
+            "PlanApproved" => "success",
+            "PlanRejected" => "warning",
+            "CommentReply" => "info",
+            "ReviewCompleted" => "success",
+            _ => "secondary"
+        };
+    }
+
+    private string FormatRelativeTime(DateTime dateTime)
+    {
+        var timeSpan = DateTime.UtcNow - dateTime;
+
+        return timeSpan switch
+        {
+            { TotalSeconds: < 60 } => "just now",
+            { TotalMinutes: < 60 } => $"{(int)timeSpan.TotalMinutes}m ago",
+            { TotalHours: < 24 } => $"{(int)timeSpan.TotalHours}h ago",
+            { TotalDays: < 7 } => $"{(int)timeSpan.TotalDays}d ago",
+            _ => dateTime.ToString("MMM d")
+        };
+    }
+}

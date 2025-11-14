@@ -1,3 +1,6 @@
+using PRFactory.Core.Application.DTOs;
+using PRFactory.Domain.Entities;
+
 namespace PRFactory.Core.Application.Services;
 
 /// <summary>
@@ -13,6 +16,29 @@ public interface IPlanService
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The plan content and metadata, or null if no plan exists</returns>
     Task<PlanInfo?> GetPlanAsync(Guid ticketId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get all revisions for a ticket
+    /// </summary>
+    Task<List<PlanRevisionDto>> GetPlanRevisionsAsync(Guid ticketId);
+
+    /// <summary>
+    /// Get a specific revision
+    /// </summary>
+    Task<PlanRevisionDto?> GetPlanRevisionAsync(Guid revisionId);
+
+    /// <summary>
+    /// Create a snapshot of the current plan as a revision
+    /// </summary>
+    Task<PlanRevisionDto> CreateRevisionAsync(
+        Guid ticketId,
+        PlanRevisionReason reason,
+        Guid? createdByUserId = null);
+
+    /// <summary>
+    /// Compare two revisions and return diff
+    /// </summary>
+    Task<PlanRevisionComparisonDto> CompareRevisionsAsync(Guid revision1Id, Guid revision2Id);
 }
 
 /// <summary>

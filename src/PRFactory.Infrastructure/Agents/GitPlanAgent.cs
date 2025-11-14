@@ -1,4 +1,6 @@
 using Microsoft.Extensions.Logging;
+using PRFactory.Core.Application.Services;
+using PRFactory.Domain.Entities;
 using PRFactory.Domain.Interfaces;
 using PRFactory.Domain.ValueObjects;
 using PRFactory.Infrastructure.Agents.Base;
@@ -14,6 +16,7 @@ public class GitPlanAgent : BaseAgent
 {
     private readonly ILocalGitService _localGitService;
     private readonly ITicketRepository _ticketRepository;
+    private readonly IPlanService _planService;
 
     public override string Name => "GitPlanAgent";
     public override string Description => "Commit implementation plan to feature branch and push to remote";
@@ -21,11 +24,13 @@ public class GitPlanAgent : BaseAgent
     public GitPlanAgent(
         ILogger<GitPlanAgent> logger,
         ILocalGitService localGitService,
-        ITicketRepository ticketRepository)
+        ITicketRepository ticketRepository,
+        IPlanService planService)
         : base(logger)
     {
         _localGitService = localGitService ?? throw new ArgumentNullException(nameof(localGitService));
         _ticketRepository = ticketRepository ?? throw new ArgumentNullException(nameof(ticketRepository));
+        _planService = planService ?? throw new ArgumentNullException(nameof(planService));
     }
 
     protected override async Task<AgentResult> ExecuteAsync(AgentContext context, CancellationToken cancellationToken)
@@ -125,6 +130,25 @@ public class GitPlanAgent : BaseAgent
             }
 
             await _ticketRepository.UpdateAsync(context.Ticket, cancellationToken);
+
+            // Create initial plan revision after plan committed to git
+            try
+            {
+                await _planService.CreateRevisionAsync(
+                    context.Ticket.Id,
+                    PlanRevisionReason.Initial);
+
+                Logger.LogInformation(
+                    "Created initial plan revision for ticket {TicketId}",
+                    context.Ticket.Id);
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't fail the workflow - revision creation is not critical
+                Logger.LogError(ex,
+                    "Failed to create initial plan revision for ticket {TicketId}, continuing workflow",
+                    context.Ticket.Id);
+            }
 
             Logger.LogInformation("Implementation plan committed and pushed for ticket {JiraKey}", context.Ticket.TicketKey);
 

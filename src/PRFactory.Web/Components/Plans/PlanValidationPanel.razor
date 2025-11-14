@@ -1,0 +1,91 @@
+@namespace PRFactory.Web.Components.Plans
+@using PRFactory.Core.Application.Services
+
+<div class="card mb-3">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-shield-check me-2"></i>
+            Plan Validation
+        </h5>
+    </div>
+    <div class="card-body">
+        @if (!hasValidationRun)
+        {
+            <div class="mb-3">
+                <label class="form-label"><strong>Select Validation Type</strong></label>
+                <select class="form-select" @bind="selectedCheckType">
+                    <option value="security">Security Review</option>
+                    <option value="completeness">Completeness Check</option>
+                    <option value="performance">Performance Analysis</option>
+                </select>
+            </div>
+
+            <button class="btn btn-primary" @onclick="RunValidation" disabled="@isRunning">
+                @if (isRunning)
+                {
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                <i class="bi bi-play-circle me-2"></i>
+                Run Validation
+            </button>
+        }
+        else
+        {
+            <div class="validation-results">
+                <div class="alert alert-@GetAlertClass() mb-3">
+                    <h6>
+                        <i class="bi bi-@GetIcon() me-2"></i>
+                        Validation Complete
+                    </h6>
+                    <strong>Score:</strong> @validationResult!.Score / 100
+                    @if (!string.IsNullOrEmpty(validationResult.RiskLevel))
+                    {
+                        <br />
+                        <strong>Risk Level:</strong> @validationResult.RiskLevel
+                    }
+                </div>
+
+                @if (validationResult.Findings.Any())
+                {
+                    <h6 class="mt-3">Findings (@validationResult.Findings.Count)</h6>
+                    <ul class="list-group mb-3">
+                        @foreach (var finding in validationResult.Findings)
+                        {
+                            <li class="list-group-item">
+                                <i class="bi bi-exclamation-circle text-warning me-2"></i>
+                                @finding
+                            </li>
+                        }
+                    </ul>
+                }
+
+                @if (validationResult.Recommendations.Any())
+                {
+                    <h6 class="mt-3">Recommendations (@validationResult.Recommendations.Count)</h6>
+                    <ul class="list-group mb-3">
+                        @foreach (var rec in validationResult.Recommendations)
+                        {
+                            <li class="list-group-item">
+                                <i class="bi bi-lightbulb text-success me-2"></i>
+                                @rec
+                            </li>
+                        }
+                    </ul>
+                }
+
+                <button class="btn btn-outline-secondary btn-sm" @onclick="ResetValidation">
+                    <i class="bi bi-arrow-clockwise me-2"></i>
+                    Run Another Validation
+                </button>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger mt-3">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                @errorMessage
+            </div>
+        }
+    </div>
+</div>

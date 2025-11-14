@@ -1,3 +1,4 @@
+using PRFactory.Core.Application.Services;
 using PRFactory.Domain.Entities;
 using PRFactory.Web.Models;
 
@@ -129,4 +130,14 @@ public interface ITicketService
     /// Check if a ticket has sufficient approvals to proceed
     /// </summary>
     Task<bool> HasSufficientApprovalsAsync(Guid ticketId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Validate plan using AI analysis
+    /// </summary>
+    Task<PlanValidationResult> ValidatePlanAsync(Guid ticketId, string checkType);
+
+    /// <summary>
+    /// Validate plan with custom prompt
+    /// </summary>
+    Task<PlanValidationResult> ValidatePlanWithCustomPromptAsync(Guid ticketId, string customPrompt);
 }

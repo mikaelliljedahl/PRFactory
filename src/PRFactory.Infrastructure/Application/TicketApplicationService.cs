@@ -19,7 +19,9 @@ public class TicketApplicationService(
     ITicketRepository ticketRepository,
     IRepositoryRepository repositoryRepository,
     IWorkflowOrchestrator workflowOrchestrator,
-    ITenantContext tenantContext) : ITicketApplicationService
+    ITenantContext tenantContext,
+    IPlanService planService,
+    ICurrentUserService currentUserService) : ITicketApplicationService
 {
 
     /// <inheritdoc/>
@@ -163,6 +165,30 @@ public class TicketApplicationService(
 
         await workflowOrchestrator.ResumeWorkflowAsync(ticket.Id, rejectionMessage, cancellationToken);
 
+        // Create regenerated plan revision if regenerating completely
+        if (regenerateCompletely)
+        {
+            try
+            {
+                var currentUserId = await currentUserService.GetCurrentUserIdAsync();
+                await planService.CreateRevisionAsync(
+                    ticket.Id,
+                    PlanRevisionReason.Regenerated,
+                    createdByUserId: currentUserId);
+
+                logger.LogInformation(
+                    "Created regenerated plan revision for ticket {TicketId} by user {UserId}",
+                    ticket.Id, currentUserId);
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't fail the workflow - revision creation is not critical
+                logger.LogError(ex,
+                    "Failed to create regenerated plan revision for ticket {TicketId}, continuing workflow",
+                    ticket.Id);
+            }
+        }
+
         var actionComplete = regenerateCompletely ? "rejected and will regenerate" : "rejected";
         logger.LogInformation("Plan {ActionComplete} for ticket {TicketKey}", actionComplete, ticket.TicketKey);
     }
@@ -198,6 +224,27 @@ public class TicketApplicationService(
         );
 
         await workflowOrchestrator.ResumeWorkflowAsync(ticket.Id, refinementMessage, cancellationToken);
+
+        // Create refined plan revision after plan refined
+        try
+        {
+            var currentUserId = await currentUserService.GetCurrentUserIdAsync();
+            await planService.CreateRevisionAsync(
+                ticket.Id,
+                PlanRevisionReason.Refined,
+                createdByUserId: currentUserId);
+
+            logger.LogInformation(
+                "Created refined plan revision for ticket {TicketId} by user {UserId}",
+                ticket.Id, currentUserId);
+        }
+        catch (Exception ex)
+        {
+            // Log error but don't fail the workflow - revision creation is not critical
+            logger.LogError(ex,
+                "Failed to create refined plan revision for ticket {TicketId}, continuing workflow",
+                ticket.Id);
+        }
 
         logger.LogInformation("Plan refinement requested for ticket {TicketKey}", ticket.TicketKey);
     }

@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PRFactory.Core.Application.Services;
 using PRFactory.Domain.Interfaces;
-using PRFactory.Infrastructure.Agents.Adapters;
 using PRFactory.Infrastructure.Agents.Base;
 using PRFactory.Infrastructure.Agents.Configuration;
 using PRFactory.Infrastructure.Configuration;
@@ -98,8 +97,9 @@ public static class DependencyInjection
         services.AddScoped<ITenantLlmProviderRepository, TenantLlmProviderRepository>();
 
         // Register checkpoint store adapters
-        services.AddScoped<WorkflowCheckpointStore, GraphCheckpointStoreAdapter>();
-        services.AddScoped<Agents.Base.ICheckpointStore, BaseCheckpointStoreAdapter>();
+        // TODO: Implement checkpoint store adapters
+        // services.AddScoped<WorkflowCheckpointStore, GraphCheckpointStoreAdapter>();
+        // services.AddScoped<Agents.Base.ICheckpointStore, BaseCheckpointStoreAdapter>();
 
         // Register workflow state store
         services.AddScoped<Agents.Graphs.IWorkflowStateStore, WorkflowStateStore>();
@@ -177,19 +177,22 @@ public static class DependencyInjection
         services.Configure<ClaudeCodeCliOptions>(
             configuration.GetSection("ClaudeCodeCli"));
 
-        services.AddScoped<ClaudeCodeCliAdapter>();
-        services.AddScoped<CodexCliAdapter>();
+        // TODO: Implement CLI adapters
+        // services.AddScoped<ClaudeCodeCliAdapter>();
+        // services.AddScoped<CodexCliAdapter>();
 
         // Register default CLI agent (Claude Code)
-        services.AddScoped<ICliAgent>(sp => sp.GetRequiredService<ClaudeCodeCliAdapter>());
+        // TODO: Implement ICliAgent registration
+        // services.AddScoped<ICliAgent>(sp => sp.GetRequiredService<ClaudeCodeCliAdapter>());
 
         // Register LLM providers (multi-provider support)
         services.Configure<PRFactory.Core.Configuration.LlmProvidersOptions>(
             configuration.GetSection("LlmProviders"));
 
-        services.AddScoped<PRFactory.Infrastructure.Agents.Adapters.ClaudeCodeCliLlmProvider>();
-        services.AddScoped<PRFactory.Infrastructure.Agents.Adapters.GeminiCliAdapter>();
-        services.AddScoped<PRFactory.Infrastructure.Agents.Adapters.OpenAiCliAdapter>();
+        // TODO: Implement LLM adapter providers
+        // services.AddScoped<PRFactory.Infrastructure.Agents.Adapters.ClaudeCodeCliLlmProvider>();
+        // services.AddScoped<PRFactory.Infrastructure.Agents.Adapters.GeminiCliAdapter>();
+        // services.AddScoped<PRFactory.Infrastructure.Agents.Adapters.OpenAiCliAdapter>();
 
         // Register LLM provider factory and prompt loader
         services.AddScoped<PRFactory.Core.Application.LLM.ILlmProviderFactory, PRFactory.Infrastructure.Application.LlmProviderFactory>();

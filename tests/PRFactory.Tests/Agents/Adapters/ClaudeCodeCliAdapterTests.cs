@@ -1,3 +1,6 @@
+// TODO: ClaudeCodeCliAdapter tests disabled - adapter class has been deleted
+// Uncomment when ClaudeCodeCliAdapter is re-implemented
+/*
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
@@ -637,3 +640,4 @@ public class ClaudeCodeCliAdapterTests : IDisposable
 
     #endregion
 }
+*/

@@ -108,7 +108,7 @@ public class IndexTests : PageTestBase
         var filterSelects = cut.FindAll("select");
         if (filterSelects.Any())
         {
-            await filterSelects.First().ChangeAsync(new Microsoft.AspNetCore.Components.ChangeEventArgs
+            await filterSelects[0].ChangeAsync(new Microsoft.AspNetCore.Components.ChangeEventArgs
             {
                 Value = WorkflowState.Completed.ToString()
             });

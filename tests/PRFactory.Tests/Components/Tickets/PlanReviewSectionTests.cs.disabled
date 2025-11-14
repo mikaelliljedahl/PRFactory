@@ -59,7 +59,7 @@ public class PlanReviewSectionTests : ComponentTestBase
         var approveButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Approve")).ToList();
         if (approveButtons.Any())
         {
-            await approveButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+            await approveButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
             await Task.Delay(100);
 
@@ -96,7 +96,7 @@ public class PlanReviewSectionTests : ComponentTestBase
         var approveButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Approve")).ToList();
         if (approveButtons.Any())
         {
-            await approveButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+            await approveButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
             await Task.Delay(100);
 
@@ -125,7 +125,7 @@ public class PlanReviewSectionTests : ComponentTestBase
         var refineButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Refine")).ToList();
         if (refineButtons.Any())
         {
-            await refineButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+            await refineButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
             // Assert - Refine form should be visible
             Assert.Contains("instructions", cut.Markup.ToLower());
@@ -149,13 +149,13 @@ public class PlanReviewSectionTests : ComponentTestBase
         var refineButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Refine")).ToList();
         if (refineButtons.Any())
         {
-            await refineButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+            await refineButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
             // Act - Try to confirm without instructions
             var confirmButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Confirm")).ToList();
             if (confirmButtons.Any())
             {
-                await confirmButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+                await confirmButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
                 // Assert - Should not call service
                 MockTicketService.Verify(
@@ -186,19 +186,19 @@ public class PlanReviewSectionTests : ComponentTestBase
         var refineButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Refine")).ToList();
         if (refineButtons.Any())
         {
-            await refineButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+            await refineButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
             // Enter instructions
             var textareas = cut.FindAll("textarea");
             if (textareas.Any())
             {
-                await textareas.First().InputAsync(new Microsoft.AspNetCore.Components.ChangeEventArgs { Value = "Add more details" });
+                await textareas[0].InputAsync(new Microsoft.AspNetCore.Components.ChangeEventArgs { Value = "Add more details" });
 
                 // Confirm
                 var confirmButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Confirm")).ToList();
                 if (confirmButtons.Any())
                 {
-                    await confirmButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+                    await confirmButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
                     await Task.Delay(100);
 
@@ -230,7 +230,7 @@ public class PlanReviewSectionTests : ComponentTestBase
         var rejectButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Reject") && !b.TextContent.Contains("Cancel")).ToList();
         if (rejectButtons.Any())
         {
-            await rejectButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+            await rejectButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
             // Assert - Reject form should be visible
             Assert.Contains("reason", cut.Markup.ToLower());
@@ -258,19 +258,19 @@ public class PlanReviewSectionTests : ComponentTestBase
         var rejectButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Reject") && !b.TextContent.Contains("Cancel")).ToList();
         if (rejectButtons.Any())
         {
-            await rejectButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+            await rejectButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
             // Enter reason
             var textareas = cut.FindAll("textarea");
             if (textareas.Any())
             {
-                await textareas.First().InputAsync(new Microsoft.AspNetCore.Components.ChangeEventArgs { Value = "Start over" });
+                await textareas[0].InputAsync(new Microsoft.AspNetCore.Components.ChangeEventArgs { Value = "Start over" });
 
                 // Confirm
                 var confirmButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Confirm")).ToList();
                 if (confirmButtons.Any())
                 {
-                    await confirmButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+                    await confirmButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
                     await Task.Delay(100);
 
@@ -302,7 +302,7 @@ public class PlanReviewSectionTests : ComponentTestBase
         var assignButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Add") || b.TextContent.Contains("Assign")).ToList();
         if (assignButtons.Any())
         {
-            await assignButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+            await assignButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
             // Assert - ReviewerAssignment component should be visible
             Assert.NotNull(cut.Markup);

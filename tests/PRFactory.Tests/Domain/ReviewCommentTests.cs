@@ -91,12 +91,12 @@ public class ReviewCommentTests
     #region Update Tests
 
     [Fact]
-    public void Update_WithValidContent_UpdatesContentAndTimestamp()
+    public async Task Update_WithValidContent_UpdatesContentAndTimestamp()
     {
         // Arrange
         var comment = new ReviewComment(_ticketId, _authorId, ValidContent);
         const string newContent = "Updated comment content";
-        Thread.Sleep(10); // Ensure time difference
+        await Task.Delay(10); // Ensure time difference
 
         // Act
         comment.Update(newContent);
@@ -108,14 +108,14 @@ public class ReviewCommentTests
     }
 
     [Fact]
-    public void Update_WithMentions_UpdatesMentionsAndTimestamp()
+    public async Task Update_WithMentions_UpdatesMentionsAndTimestamp()
     {
         // Arrange
         var comment = new ReviewComment(_ticketId, _authorId, ValidContent);
         var userId1 = Guid.NewGuid();
         var userId2 = Guid.NewGuid();
         var newMentions = new List<Guid> { userId1, userId2 };
-        Thread.Sleep(10); // Ensure time difference
+        await Task.Delay(10); // Ensure time difference
 
         // Act
         comment.Update("Updated content", newMentions);
@@ -193,12 +193,12 @@ public class ReviewCommentTests
     #region AddMention Tests
 
     [Fact]
-    public void AddMention_NewUser_AddsToMentionsAndUpdatesTimestamp()
+    public async Task AddMention_NewUser_AddsToMentionsAndUpdatesTimestamp()
     {
         // Arrange
         var comment = new ReviewComment(_ticketId, _authorId, ValidContent);
         var userId = Guid.NewGuid();
-        Thread.Sleep(10); // Ensure time difference
+        await Task.Delay(10); // Ensure time difference
 
         // Act
         comment.AddMention(userId);
@@ -211,16 +211,16 @@ public class ReviewCommentTests
     }
 
     [Fact]
-    public void AddMention_DuplicateUser_DoesNotAddDuplicate()
+    public async Task AddMention_DuplicateUser_DoesNotAddDuplicate()
     {
         // Arrange
         var userId = Guid.NewGuid();
         var mentions = new List<Guid> { userId };
         var comment = new ReviewComment(_ticketId, _authorId, ValidContent, mentions);
-        Thread.Sleep(10); // Ensure time difference
+        await Task.Delay(10); // Ensure time difference
         comment.Update(ValidContent, new List<Guid> { userId }); // Preserve the mention
         var previousUpdatedAt = comment.UpdatedAt;
-        Thread.Sleep(10); // Ensure time difference
+        await Task.Delay(10); // Ensure time difference
 
         // Act
         comment.AddMention(userId); // Try to add duplicate
@@ -235,13 +235,13 @@ public class ReviewCommentTests
     #region RemoveMention Tests
 
     [Fact]
-    public void RemoveMention_ExistingUser_RemovesFromMentionsAndUpdatesTimestamp()
+    public async Task RemoveMention_ExistingUser_RemovesFromMentionsAndUpdatesTimestamp()
     {
         // Arrange
         var userId = Guid.NewGuid();
         var mentions = new List<Guid> { userId };
         var comment = new ReviewComment(_ticketId, _authorId, ValidContent, mentions);
-        Thread.Sleep(10); // Ensure time difference
+        await Task.Delay(10); // Ensure time difference
 
         // Act
         comment.RemoveMention(userId);

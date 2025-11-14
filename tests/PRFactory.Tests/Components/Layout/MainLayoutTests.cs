@@ -8,37 +8,16 @@ namespace PRFactory.Tests.Components.Layout;
 
 public class MainLayoutTests : ComponentTestBase
 {
-    private TestAuthorizationContext _authContext = null!;
-
     protected override void ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection services)
     {
         base.ConfigureServices(services);
 
         // Add authorization services before any components are rendered
-        _authContext = this.AddTestAuthorization();
+        this.AddTestAuthorization();
     }
 
-    [Fact(Skip = "MainLayout requires IConfiguration dependency - needs test environment setup")]
-    public void Render_DisplaysLayoutStructure()
+    [Fact(Skip = "MainLayout requires IConfiguration dependency and ChildContent parameter handling - needs test environment redesign")]
+    public void Render_DisplaysLayoutStructureWithNavMenuAndContentArea()
     {
-        // Method intentionally left empty.
-    }
-
-    [Fact(Skip = "MainLayout doesn't have ChildContent parameter - test needs redesign")]
-    public void Render_IncludesNavMenu()
-    {
-        // Method intentionally left empty.
-    }
-
-    [Fact(Skip = "MainLayout doesn't have ChildContent parameter - test needs redesign")]
-    public void Render_IncludesMainContentArea()
-    {
-        // Method intentionally left empty.
-    }
-
-    [Fact(Skip = "MainLayout requires IConfiguration dependency - needs test environment setup")]
-    public void Render_WithUnauthenticatedUser_StillRendersLayout()
-    {
-        // Method intentionally left empty.
     }
 }

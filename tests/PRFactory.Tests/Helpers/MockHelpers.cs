@@ -201,10 +201,9 @@ public static class MockHelpers
     /// <summary>
     /// Verifies that a repository method was called to add an entity
     /// </summary>
-    public static void VerifyRepositoryAdd<TEntity>(
+    public static void VerifyRepositoryAdd(
         Mock<ITicketRepository> mockRepo,
         Times? times = null)
-        where TEntity : class
     {
         mockRepo.Verify(
             x => x.AddAsync(It.IsAny<Ticket>(), It.IsAny<CancellationToken>()),
@@ -214,10 +213,9 @@ public static class MockHelpers
     /// <summary>
     /// Verifies that a repository method was called to update an entity
     /// </summary>
-    public static void VerifyRepositoryUpdate<TEntity>(
+    public static void VerifyRepositoryUpdate(
         Mock<ITicketRepository> mockRepo,
         Times? times = null)
-        where TEntity : class
     {
         mockRepo.Verify(
             x => x.UpdateAsync(It.IsAny<Ticket>(), It.IsAny<CancellationToken>()),

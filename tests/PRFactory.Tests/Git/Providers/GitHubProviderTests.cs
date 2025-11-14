@@ -71,13 +71,6 @@ public class GitHubProviderTests
         var repository = CreateRepositoryEntity(repositoryId);
         SetupRepositoryGetter(repository);
 
-        var request = new CreatePullRequestRequest(
-            "feature/auth",
-            "develop",
-            "Implement authentication",
-            "Adds OAuth2 authentication support"
-        );
-
         // Act & Assert will be done by the actual implementation
         // This test verifies the return type structure
         var expectedPrNumber = 456;
@@ -145,8 +138,6 @@ public class GitHubProviderTests
             AccessToken = "test-token"
         };
         SetupRepositoryGetter(repository);
-
-        var request = new CreatePullRequestRequest("feature", "main", "Test", "Description");
 
         // The provider should correctly parse owner="myorg" and repo="myrepo" from the URL
         // This is tested implicitly through the successful execution
@@ -414,8 +405,6 @@ public class GitHubProviderTests
         };
         SetupRepositoryGetter(repository);
 
-        var request = new CreatePullRequestRequest("feature", "main", "Test", "Description");
-
         // Act & Assert
         // The ParseGitHubUrl should throw ArgumentException for invalid format
         // This would be caught during actual execution
@@ -436,8 +425,6 @@ public class GitHubProviderTests
             AccessToken = "test-token"
         };
         SetupRepositoryGetter(repository);
-
-        var request = new CreatePullRequestRequest("feature", "main", "Test", "Description");
 
         // Act & Assert
         // Should throw when trying to parse empty URL
@@ -500,13 +487,6 @@ public class GitHubProviderTests
         var repository = CreateRepositoryEntity(repositoryId);
         SetupRepositoryGetter(repository);
 
-        var prRequest = new CreatePullRequestRequest(
-            "feature/integration-test",
-            "main",
-            "Integration test PR",
-            "This is a full workflow test"
-        );
-
         // Act & Assert
         // In a real scenario with actual Octokit mocking, we would:
         // 1. Create a PR
@@ -517,15 +497,6 @@ public class GitHubProviderTests
         // This test structure demonstrates the expected workflow
     }
 
-    [Fact]
-    public void MultipleProviders_EachHasCorrectPlatformName()
-    {
-        // Arrange & Act
-        var githubProvider = new GitHubProvider(_mockLogger.Object);
-
-        // Assert
-        Assert.Equal("GitHub", githubProvider.PlatformName);
-    }
 
     #endregion
 

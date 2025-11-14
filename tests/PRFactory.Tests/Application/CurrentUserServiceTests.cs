@@ -43,7 +43,8 @@ public class CurrentUserServiceTests
         return context;
     }
 
-    private Mock<IHttpContextAccessor> CreateHttpContextAccessor(
+
+    private static Mock<IHttpContextAccessor> CreateHttpContextAccessor(
         string? prfactoryUserId = null,
         string? prfactoryTenantId = null,
         string? externalAuthId = null,
@@ -71,7 +72,7 @@ public class CurrentUserServiceTests
         return mockAccessor;
     }
 
-    private CurrentUserService CreateService(
+    private static CurrentUserService CreateService(
         ApplicationDbContext context,
         Mock<IHttpContextAccessor> mockHttpContextAccessor)
     {

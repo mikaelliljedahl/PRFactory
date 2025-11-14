@@ -17,7 +17,7 @@ public abstract class DIValidationTestBase
     /// <summary>
     /// Creates a service collection with logging configured
     /// </summary>
-    protected IServiceCollection CreateServiceCollection()
+    protected static IServiceCollection CreateServiceCollection()
     {
         var services = new ServiceCollection();
 
@@ -41,7 +41,7 @@ public abstract class DIValidationTestBase
     /// <summary>
     /// Creates a service collection with infrastructure services registered
     /// </summary>
-    protected IServiceCollection CreateInfrastructureServiceCollection(IConfiguration? configuration = null)
+    protected static IServiceCollection CreateInfrastructureServiceCollection(IConfiguration? configuration = null)
     {
         var services = CreateServiceCollection();
         var config = configuration ?? TestConfigurationBuilder.CreateTestConfiguration();
@@ -52,7 +52,7 @@ public abstract class DIValidationTestBase
     /// <summary>
     /// Creates a service provider from a service collection
     /// </summary>
-    protected ServiceProvider BuildServiceProvider(IServiceCollection services)
+    protected static ServiceProvider BuildServiceProvider(IServiceCollection services)
     {
         return services.BuildServiceProvider();
     }
@@ -60,7 +60,7 @@ public abstract class DIValidationTestBase
     /// <summary>
     /// Creates a service provider with infrastructure services
     /// </summary>
-    protected ServiceProvider CreateInfrastructureServiceProvider(IConfiguration? configuration = null)
+    protected static ServiceProvider CreateInfrastructureServiceProvider(IConfiguration? configuration = null)
     {
         var services = CreateInfrastructureServiceCollection(configuration);
         return BuildServiceProvider(services);
@@ -69,7 +69,7 @@ public abstract class DIValidationTestBase
     /// <summary>
     /// Asserts that a service is registered
     /// </summary>
-    protected void AssertServiceRegistered<TInterface>(IServiceCollection services)
+    protected static void AssertServiceRegistered<TInterface>(IServiceCollection services)
     {
         DIAssertions.AssertServiceRegistered<TInterface>(services);
     }
@@ -77,7 +77,7 @@ public abstract class DIValidationTestBase
     /// <summary>
     /// Asserts that a service can be resolved
     /// </summary>
-    protected void AssertServiceResolvable<TInterface>(ServiceProvider provider)
+    protected static void AssertServiceResolvable<TInterface>(ServiceProvider provider)
     {
         DIAssertions.AssertServiceResolvable<TInterface>(provider);
     }
@@ -85,7 +85,7 @@ public abstract class DIValidationTestBase
     /// <summary>
     /// Asserts service lifetime
     /// </summary>
-    protected void AssertServiceLifetime<TInterface>(
+    protected static void AssertServiceLifetime<TInterface>(
         IServiceCollection services,
         ServiceLifetime expectedLifetime)
     {

@@ -43,58 +43,21 @@ public class QuestionAnswerFormTests : ComponentTestBase
     }
 
     [Fact(Skip = "ValidationMessage with dictionary indexer not supported in bUnit - Blazor limitation")]
-    public void Renders_QuestionsWithAnswerInputs()
+    public void QuestionAnswerForm_AllInteractivityAndValidation_BlockedByBUnitLimitation()
     {
         // Component uses <ValidationMessage For="@(() => Answers[question.Id])" />
         // which throws: "Unable to evaluate index expressions of type 'PropertyExpression'"
-        // This is a known limitation of Blazor's ValidationMessage with dictionary indexers
-    }
-
-    [Fact(Skip = "ValidationMessage with dictionary indexer not supported in bUnit - Blazor limitation")]
-    public async Task SubmitButton_WithoutAnswers_ShowsValidationError()
-    {
-        // Method intentionally left empty.
-    }
-
-    [Fact(Skip = "ValidationMessage with dictionary indexer not supported in bUnit - Blazor limitation")]
-    public async Task SubmitButton_WithAllAnswers_CallsServiceAndInvokesCallback()
-    {
-        // Method intentionally left empty.
-    }
-
-    [Fact(Skip = "ValidationMessage with dictionary indexer not supported in bUnit - Blazor limitation")]
-    public async Task SubmitButton_HandlesServiceError()
-    {
-        // Method intentionally left empty.
-    }
-
-    [Fact(Skip = "ValidationMessage with dictionary indexer not supported in bUnit - Blazor limitation")]
-    public void InitializesAnswerDictionary_OnParametersSet()
-    {
-        // Method intentionally left empty.
-    }
-
-    [Fact(Skip = "ValidationMessage with dictionary indexer not supported in bUnit - Blazor limitation")]
-    public async Task AppliesValidationClass_ToUnansweredQuestions()
-    {
-        // Method intentionally left empty.
-    }
-
-    [Fact(Skip = "ValidationMessage with dictionary indexer not supported in bUnit - Blazor limitation")]
-    public void DisablesSubmitButton_WhileSubmitting()
-    {
-        // Method intentionally left empty.
-    }
-
-    [Fact(Skip = "ValidationMessage with dictionary indexer not supported in bUnit - Blazor limitation")]
-    public void Renders_QuestionNumbers()
-    {
-        // Method intentionally left empty.
-    }
-
-    [Fact(Skip = "ValidationMessage with dictionary indexer not supported in bUnit - Blazor limitation")]
-    public void Renders_QuestionCategories_AsBadges()
-    {
-        // Method intentionally left empty.
+        // This is a known limitation of Blazor's ValidationMessage with dictionary indexers.
+        //
+        // Tests that cannot run due to this limitation:
+        // - Renders_QuestionsWithAnswerInputs
+        // - SubmitButton_WithoutAnswers_ShowsValidationError
+        // - SubmitButton_WithAllAnswers_CallsServiceAndInvokesCallback
+        // - SubmitButton_HandlesServiceError
+        // - InitializesAnswerDictionary_OnParametersSet
+        // - AppliesValidationClass_ToUnansweredQuestions
+        // - DisablesSubmitButton_WhileSubmitting
+        // - Renders_QuestionNumbers
+        // - Renders_QuestionCategories_AsBadges
     }
 }

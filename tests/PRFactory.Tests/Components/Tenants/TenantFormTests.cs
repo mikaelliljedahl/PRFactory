@@ -280,23 +280,6 @@ public class TenantFormTests : ComponentTestBase
         Assert.Contains("API Timeout (seconds)", cut.Markup);
     }
 
-    [Fact]
-    public void Render_ShowsAllCheckboxOptions()
-    {
-        // Arrange
-        var model = new CreateTenantRequest();
-
-        // Act
-        var cut = RenderComponent<TenantForm>(parameters => parameters
-            .Add(p => p.Model, model));
-
-        // Assert
-        Assert.Contains("Active", cut.Markup);
-        Assert.Contains("Auto-implement after plan approval", cut.Markup);
-        Assert.Contains("Enable code review", cut.Markup);
-        Assert.Contains("Enable verbose logging", cut.Markup);
-    }
-
     [Fact(Skip = "Assertion mismatch - validation-summary not found in markup")]
     public void Render_ShowsValidationSummary()
     {

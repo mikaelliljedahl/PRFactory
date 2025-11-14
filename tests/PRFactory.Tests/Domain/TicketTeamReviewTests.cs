@@ -158,7 +158,7 @@ public class TicketTeamReviewTests
         ticket.AssignReviewers(initialReviewers);
 
         // Approve one review to verify it gets cleared
-        ticket.PlanReviews.First().Approve("Looks good");
+        ticket.PlanReviews[0].Approve("Looks good");
 
         // Act - Reassign with new reviewers
         var newReviewers = new List<Guid> { Guid.NewGuid() };
@@ -196,7 +196,7 @@ public class TicketTeamReviewTests
         ticket.AssignReviewers(new List<Guid> { reviewer });
 
         // Approve the review
-        ticket.PlanReviews.First().Approve("LGTM");
+        ticket.PlanReviews[0].Approve("LGTM");
 
         // Act
         var result = ticket.HasSufficientApprovals();
@@ -340,7 +340,7 @@ public class TicketTeamReviewTests
         ticket.AssignReviewers(new List<Guid> { reviewer });
 
         // Reject for refinement
-        ticket.PlanReviews.First().Reject("Needs minor changes", regenerateCompletely: false);
+        ticket.PlanReviews[0].Reject("Needs minor changes", regenerateCompletely: false);
 
         // Act
         var result = ticket.HasRejections();
@@ -358,7 +358,7 @@ public class TicketTeamReviewTests
         ticket.AssignReviewers(new List<Guid> { reviewer });
 
         // Reject for regeneration
-        ticket.PlanReviews.First().Reject("Completely wrong approach", regenerateCompletely: true);
+        ticket.PlanReviews[0].Reject("Completely wrong approach", regenerateCompletely: true);
 
         // Act
         var result = ticket.HasRejections();
@@ -395,7 +395,7 @@ public class TicketTeamReviewTests
         ticket.AssignReviewers(new List<Guid> { reviewer });
 
         const string reason = "Please add error handling";
-        ticket.PlanReviews.First().Reject(reason, regenerateCompletely: false);
+        ticket.PlanReviews[0].Reject(reason, regenerateCompletely: false);
 
         // Act
         var result = ticket.GetRejectionDetails();
@@ -415,7 +415,7 @@ public class TicketTeamReviewTests
         ticket.AssignReviewers(new List<Guid> { reviewer });
 
         const string reason = "Wrong architecture entirely";
-        ticket.PlanReviews.First().Reject(reason, regenerateCompletely: true);
+        ticket.PlanReviews[0].Reject(reason, regenerateCompletely: true);
 
         // Act
         var result = ticket.GetRejectionDetails();
@@ -487,7 +487,7 @@ public class TicketTeamReviewTests
         var ticket = CreateTicketInPlanPostedState();
         var reviewer = Guid.NewGuid();
         ticket.AssignReviewers(new List<Guid> { reviewer });
-        ticket.PlanReviews.First().Approve("Approved");
+        ticket.PlanReviews[0].Approve("Approved");
         ticket.ApprovePlan(); // Sets PlanApprovedAt
 
         // Sanity check: plan was approved

@@ -17,11 +17,9 @@ public class LocalGitServiceTests : IDisposable
     private readonly Mock<ILogger<LocalGitService>> _mockLogger;
     private readonly string _testWorkspacePath;
     private readonly List<string> _pathsToCleanup;
-    private readonly ITestOutputHelper _testOutputHelper;
 
     public LocalGitServiceTests(ITestOutputHelper testOutputHelper)
     {
-        _testOutputHelper = testOutputHelper;
         _mockConfiguration = new Mock<IConfiguration>();
         _mockLogger = new Mock<ILogger<LocalGitService>>();
         _testWorkspacePath = Path.Combine(Path.GetTempPath(), "prfactory-tests", Guid.NewGuid().ToString());

@@ -100,8 +100,8 @@ public class ImplementationGraphTests
         Assert.True(result.IsSuccess);
         Assert.Equal("skipped", result.State);
         Assert.NotNull(savedState);
-        Assert.Equal(true, savedState["is_completed"]);
-        Assert.Equal(true, savedState["skipped"]);
+        Assert.True((bool)savedState["is_completed"]);
+        Assert.True((bool)savedState["skipped"]);
         Assert.Equal("auto_implementation_disabled", savedState["skip_reason"]);
 
         // Should NOT execute any agents
@@ -414,7 +414,7 @@ public class ImplementationGraphTests
         Assert.NotNull(savedState);
         Assert.Equal(456, savedState["pr_number"]);
         Assert.Equal("https://github.com/repo/pull/456", savedState["pr_url"]);
-        Assert.Equal(true, savedState["jira_posted"]);
+        Assert.True((bool)savedState["jira_posted"]);
     }
 
     #endregion
@@ -485,7 +485,7 @@ public class ImplementationGraphTests
         Assert.True(result.IsSuccess);
         Assert.Equal("completed", result.State);
         Assert.NotNull(completedState);
-        Assert.Equal(true, completedState["is_completed"]);
+        Assert.True((bool)completedState["is_completed"]);
     }
 
     [Fact]
@@ -685,7 +685,7 @@ public class ImplementationGraphTests
 
         // Assert
         Assert.NotNull(failedState);
-        Assert.Equal(true, failedState["is_failed"]);
+        Assert.True((bool)failedState["is_failed"]);
         Assert.Equal("Implementation error", failedState["error"]);
     }
 

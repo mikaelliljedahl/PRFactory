@@ -329,9 +329,6 @@ public class ServiceLifetimeValidationTests : DIValidationTestBase
         Assert.True(singletonCount > 0, $"Should have singleton services (found {singletonCount})");
         Assert.True(scopedCount > 0, $"Should have scoped services (found {scopedCount})");
         Assert.True(transientCount > 0, $"Should have transient services (found {transientCount})");
-
-        // Log for visibility (optional, can be removed)
-        // Console.WriteLine($"Singleton: {singletonCount}, Scoped: {scopedCount}, Transient: {transientCount}");
     }
 
     #endregion

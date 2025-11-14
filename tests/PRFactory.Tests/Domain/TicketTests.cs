@@ -55,14 +55,14 @@ public class TicketTests
     }
 
     [Fact]
-    public void TransitionTo_ValidTransition_UpdatesState()
+    public async Task TransitionTo_ValidTransition_UpdatesState()
     {
         // Arrange
         var ticket = Ticket.Create(ValidTicketKey, _tenantId, _repositoryId);
         ticket.TransitionTo(WorkflowState.Analyzing);
         Assert.NotNull(ticket.UpdatedAt);
         var originalUpdatedAt = ticket.UpdatedAt.Value;
-        Thread.Sleep(10); // Ensure time difference
+        await Task.Delay(10); // Ensure time difference
 
         // Act
         var result = ticket.TransitionTo(WorkflowState.TicketUpdateGenerated);

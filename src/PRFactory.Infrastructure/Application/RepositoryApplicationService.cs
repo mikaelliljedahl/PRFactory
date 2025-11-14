@@ -19,7 +19,6 @@ public class RepositoryApplicationService(
     ILogger<RepositoryApplicationService> logger,
     IRepositoryRepository repositoryRepository,
     ITicketRepository ticketRepository,
-    ITenantRepository tenantRepository,
     ILocalGitService localGitService,
     IEncryptionService encryptionService) : IRepositoryApplicationService
 {

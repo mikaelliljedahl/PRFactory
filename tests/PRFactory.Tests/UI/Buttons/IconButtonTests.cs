@@ -199,9 +199,12 @@ public class IconButtonTests : ComponentTestBase
         var cut = RenderComponent<IconButton>(parameters => parameters
             .Add(p => p.Icon, "gear"));
 
-        // Act & Assert (should not throw)
+        // Act
         var button = cut.Find("button");
         button.Click();
+
+        // Assert - No exception thrown
+        Assert.NotNull(cut);
     }
 
     [Fact]

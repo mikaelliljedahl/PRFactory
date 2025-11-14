@@ -14,7 +14,7 @@ public class GitPlatformServiceRegistrationTests : DIValidationTestBase
     /// <summary>
     /// Creates a service collection with Git platform services registered
     /// </summary>
-    private IServiceCollection CreateGitPlatformServiceCollection()
+    private static IServiceCollection CreateGitPlatformServiceCollection()
     {
         var services = CreateServiceCollection();
 

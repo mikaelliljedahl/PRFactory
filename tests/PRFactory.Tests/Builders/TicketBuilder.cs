@@ -26,7 +26,6 @@ public class TicketBuilder
     private string? _pullRequestUrl;
     private int? _pullRequestNumber;
     private string? _externalTicketId;
-    private int _requiredApprovalCount = 1;
 
     public TicketBuilder()
     {
@@ -137,12 +136,6 @@ public class TicketBuilder
         return this;
     }
 
-    public TicketBuilder WithRequiredApprovalCount(int count)
-    {
-        _requiredApprovalCount = count;
-        return this;
-    }
-
     public Ticket Build()
     {
         var ticket = Ticket.Create(_ticketKey, _tenantId, _repositoryId, _ticketSystem, _source);
@@ -198,7 +191,7 @@ public class TicketBuilder
         return ticket;
     }
 
-    private void TransitionToState(Ticket ticket, WorkflowState targetState)
+    private static void TransitionToState(Ticket ticket, WorkflowState targetState)
     {
         var statePath = GetStatePath(targetState);
         foreach (var state in statePath)
@@ -214,7 +207,7 @@ public class TicketBuilder
         }
     }
 
-    private List<WorkflowState> GetStatePath(WorkflowState to)
+    private static List<WorkflowState> GetStatePath(WorkflowState to)
     {
         // Simple path mapping for common test scenarios
         var paths = new Dictionary<WorkflowState, List<WorkflowState>>

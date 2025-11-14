@@ -93,7 +93,7 @@ public class ReviewerAssignmentTests : ComponentTestBase
         var assignButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Assign")).ToList();
         if (assignButtons.Any())
         {
-            await assignButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+            await assignButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
             await Task.Delay(100);
 
@@ -135,13 +135,13 @@ public class ReviewerAssignmentTests : ComponentTestBase
         var requiredCheckboxes = cut.FindAll("input[type='checkbox']");
         if (requiredCheckboxes.Any())
         {
-            await requiredCheckboxes.First().ChangeAsync(new Microsoft.AspNetCore.Components.ChangeEventArgs { Value = true });
+            await requiredCheckboxes[0].ChangeAsync(new Microsoft.AspNetCore.Components.ChangeEventArgs { Value = true });
 
             // Submit
             var assignButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Assign")).ToList();
             if (assignButtons.Any())
             {
-                await assignButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+                await assignButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
                 await Task.Delay(100);
 
@@ -190,12 +190,12 @@ public class ReviewerAssignmentTests : ComponentTestBase
         var checkboxes = cut.FindAll("input[type='checkbox']");
         if (checkboxes.Any())
         {
-            await checkboxes.First().ChangeAsync(new Microsoft.AspNetCore.Components.ChangeEventArgs { Value = true });
+            await checkboxes[0].ChangeAsync(new Microsoft.AspNetCore.Components.ChangeEventArgs { Value = true });
 
             var assignButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Assign")).ToList();
             if (assignButtons.Any())
             {
-                await assignButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+                await assignButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
                 await Task.Delay(100);
 
@@ -230,7 +230,7 @@ public class ReviewerAssignmentTests : ComponentTestBase
         var cancelButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Cancel")).ToList();
         if (cancelButtons.Any())
         {
-            await cancelButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+            await cancelButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
             // Assert
             Assert.True(callbackInvoked);

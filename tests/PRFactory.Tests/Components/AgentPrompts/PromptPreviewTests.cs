@@ -11,18 +11,9 @@ namespace PRFactory.Tests.Components.AgentPrompts;
 public class PromptPreviewTests : ComponentTestBase
 {
     [Fact(Skip = "Component requires IAgentPromptService with specific mock setup - needs test refactoring")]
-    public void Render_WithTemplate_DisplaysPreview()
+    public void Render_WithTemplateAndSampleData_DisplaysPreviewAndSubstitutesVariables()
     {
-        // TODO: Refactor to use ConfigureServices pattern
-        // The issue is that each test needs different mock setups, which is incompatible
-        // with the ConfigureServices approach. Consider redesigning the test or component.
-    }
-
-    [Fact(Skip = "Component requires IAgentPromptService with specific mock setup - needs test refactoring")]
-    public void Render_WithSampleData_SubstitutesVariables()
-    {
-        // TODO: Refactor to use ConfigureServices pattern
-        // The issue is that each test needs different mock setups, which is incompatible
-        // with the ConfigureServices approach. Consider redesigning the test or component.
+        // Test implementation pending refactoring of IAgentPromptService mock setup
+        throw new NotSupportedException("Test requires refactoring - see Skip attribute for details");
     }
 }

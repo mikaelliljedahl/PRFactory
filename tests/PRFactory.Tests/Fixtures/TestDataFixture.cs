@@ -67,7 +67,7 @@ public class TestDataFixture
     /// <summary>
     /// Creates a new tenant with customizable properties
     /// </summary>
-    public Tenant CreateTenant(string name = "Test Tenant", string platform = "Jira")
+    public static Tenant CreateTenant(string name = "Test Tenant", string platform = "Jira")
     {
         return new TenantBuilder()
             .WithName(name)
@@ -78,7 +78,7 @@ public class TestDataFixture
     /// <summary>
     /// Creates a new repository for a specific tenant
     /// </summary>
-    public Repository CreateRepository(Guid tenantId, string name = "test-repo", string platform = "GitHub")
+    public static Repository CreateRepository(Guid tenantId, string name = "test-repo", string platform = "GitHub")
     {
         var builder = new RepositoryBuilder()
             .ForTenant(tenantId)
@@ -96,7 +96,7 @@ public class TestDataFixture
     /// <summary>
     /// Creates a new user for a specific tenant
     /// </summary>
-    public User CreateUser(Guid tenantId, string email = "test.user@example.com", string displayName = "Test User")
+    public static User CreateUser(Guid tenantId, string email = "test.user@example.com", string displayName = "Test User")
     {
         return new UserBuilder()
             .ForTenant(tenantId)
@@ -200,7 +200,7 @@ public class TestDataFixture
     /// <summary>
     /// Creates success criteria for testing
     /// </summary>
-    public List<SuccessCriterion> CreateSuccessCriteria()
+    public static List<SuccessCriterion> CreateSuccessCriteria()
     {
         return new List<SuccessCriterion>
         {

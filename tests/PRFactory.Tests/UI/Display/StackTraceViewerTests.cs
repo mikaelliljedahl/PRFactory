@@ -247,42 +247,12 @@ at lambda_method(Closure , Object , Object[] )";
         Assert.Contains("UserController.Get", cut.Markup);
     }
 
-    [Fact]
-    public void Render_IdentifiesSystemFramesAsInternal()
+    [Theory]
+    [InlineData("at System.Threading.Tasks.Task.ExecuteAsync()")]
+    [InlineData("at Microsoft.AspNetCore.Hosting.WebHost.Start()")]
+    [InlineData("at lambda_method(Closure , Object , Object[] )")]
+    public void Render_IdentifiesInternalFramesAsMuted(string stackTrace)
     {
-        // Arrange
-        var stackTrace = "at System.Threading.Tasks.Task.ExecuteAsync()";
-
-        // Act
-        var cut = RenderComponent<StackTraceViewer>(parameters => parameters
-            .Add(p => p.StackTrace, stackTrace)
-            .Add(p => p.ShowInternalFrames, true));
-
-        // Assert - Internal frames should be marked with text-muted
-        Assert.Contains("text-muted", cut.Markup);
-    }
-
-    [Fact]
-    public void Render_IdentifiesMicrosoftFramesAsInternal()
-    {
-        // Arrange
-        var stackTrace = "at Microsoft.AspNetCore.Hosting.WebHost.Start()";
-
-        // Act
-        var cut = RenderComponent<StackTraceViewer>(parameters => parameters
-            .Add(p => p.StackTrace, stackTrace)
-            .Add(p => p.ShowInternalFrames, true));
-
-        // Assert - Internal frames should be marked with text-muted
-        Assert.Contains("text-muted", cut.Markup);
-    }
-
-    [Fact]
-    public void Render_IdentifiesLambdaMethodAsInternal()
-    {
-        // Arrange
-        var stackTrace = "at lambda_method(Closure , Object , Object[] )";
-
         // Act
         var cut = RenderComponent<StackTraceViewer>(parameters => parameters
             .Add(p => p.StackTrace, stackTrace)

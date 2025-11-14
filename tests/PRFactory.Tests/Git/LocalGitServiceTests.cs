@@ -17,11 +17,10 @@ public class LocalGitServiceTests : IDisposable
     private readonly Mock<ILogger<LocalGitService>> _mockLogger;
     private readonly string _testWorkspacePath;
     private readonly List<string> _pathsToCleanup;
-    private readonly ITestOutputHelper _testOutputHelper;
+    private bool _disposed;
 
     public LocalGitServiceTests(ITestOutputHelper testOutputHelper)
     {
-        _testOutputHelper = testOutputHelper;
         _mockConfiguration = new Mock<IConfiguration>();
         _mockLogger = new Mock<ILogger<LocalGitService>>();
         _testWorkspacePath = Path.Combine(Path.GetTempPath(), "prfactory-tests", Guid.NewGuid().ToString());
@@ -37,26 +36,39 @@ public class LocalGitServiceTests : IDisposable
 
     public void Dispose()
     {
-        // Cleanup test directories
-        foreach (var path in _pathsToCleanup)
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed) return;
+
+        if (disposing)
         {
-            if (Directory.Exists(path))
+            // Cleanup test directories
+            foreach (var path in _pathsToCleanup)
             {
-                try
+                if (Directory.Exists(path))
                 {
-                    // Remove read-only attributes that git might set
-                    foreach (var file in Directory.GetFiles(path, "*", SearchOption.AllDirectories))
+                    try
                     {
-                        File.SetAttributes(file, FileAttributes.Normal);
+                        // Remove read-only attributes that git might set
+                        foreach (var file in Directory.GetFiles(path, "*", SearchOption.AllDirectories))
+                        {
+                            File.SetAttributes(file, FileAttributes.Normal);
+                        }
+                        Directory.Delete(path, true);
                     }
-                    Directory.Delete(path, true);
-                }
-                catch
-                {
-                    // Ignore cleanup errors
+                    catch
+                    {
+                        // Ignore cleanup errors
+                    }
                 }
             }
         }
+
+        _disposed = true;
     }
 
     #region CloneAsync Tests
@@ -168,7 +180,7 @@ public class LocalGitServiceTests : IDisposable
             Commands.Checkout(repo, testBranch);
 
             var filePath = Path.Combine(repoPath, "test.txt");
-            File.WriteAllText(filePath, "test content");
+            await File.WriteAllTextAsync(filePath, "test content");
             Commands.Stage(repo, "test.txt");
 
             var signature = new Signature("Test", "test@test.com", DateTimeOffset.Now);
@@ -253,7 +265,7 @@ public class LocalGitServiceTests : IDisposable
 
         var filePath = Path.Combine(repoPath, "test.txt");
         Assert.True(File.Exists(filePath));
-        Assert.Equal("Hello, World!", File.ReadAllText(filePath));
+        Assert.Equal("Hello, World!", await File.ReadAllTextAsync(filePath));
     }
 
     [Fact]
@@ -304,7 +316,7 @@ public class LocalGitServiceTests : IDisposable
         // Assert
         var filePath = Path.Combine(repoPath, "deeply/nested/folder/file.txt");
         Assert.True(File.Exists(filePath));
-        Assert.Equal("Nested content", File.ReadAllText(filePath));
+        Assert.Equal("Nested content", await File.ReadAllTextAsync(filePath));
 
         using var repo = new Repository(repoPath);
         var status = repo.RetrieveStatus();
@@ -370,7 +382,7 @@ public class LocalGitServiceTests : IDisposable
         Assert.Equal(3, repo.Commits.Count()); // Initial + 2 commits
         Assert.Equal("Second commit", repo.Head.Tip.Message.TrimEnd('\n'));
 
-        var fileContent = File.ReadAllText(Path.Combine(repoPath, "file.txt"));
+        var fileContent = await File.ReadAllTextAsync(Path.Combine(repoPath, "file.txt"));
         Assert.Equal("Updated content", fileContent);
     }
 
@@ -681,7 +693,7 @@ public class LocalGitServiceTests : IDisposable
         // Create initial commit (required for branch operations)
         using var repo = new Repository(repoPath);
         var readmePath = Path.Combine(repoPath, "README.md");
-        File.WriteAllText(readmePath, $"# {name}");
+        File.WriteAllTextAsync(readmePath, $"# {name}").GetAwaiter().GetResult();
         Commands.Stage(repo, "README.md");
 
         var signature = new Signature("Test Init", "test@test.com", DateTimeOffset.Now);

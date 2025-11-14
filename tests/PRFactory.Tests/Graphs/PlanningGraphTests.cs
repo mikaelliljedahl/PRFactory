@@ -256,7 +256,7 @@ public class PlanningGraphTests
         // Assert
         Assert.NotNull(savedState);
         Assert.Equal("abc123def", savedState["git_commit_sha"]);
-        Assert.Equal(true, savedState["jira_posted"]);
+        Assert.True((bool)savedState["jira_posted"]);
     }
 
     #endregion
@@ -310,7 +310,7 @@ public class PlanningGraphTests
         Assert.True(result.IsSuccess);
         Assert.Equal("awaiting_approval", result.State);
         Assert.NotNull(suspendedState);
-        Assert.Equal(true, suspendedState["is_suspended"]);
+        Assert.True((bool)suspendedState["is_suspended"]);
         Assert.Equal("plan_approval", suspendedState["waiting_for"]);
     }
 
@@ -386,7 +386,7 @@ public class PlanningGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(_testTicketId, "PlanningGraph"))
-            .ReturnsAsync(checkpoint);
+            .ReturnsAsync(checkpoint!);
 
         _mockCheckpointStore
             .Setup(x => x.SaveCheckpointAsync(
@@ -427,7 +427,7 @@ public class PlanningGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(_testTicketId, "PlanningGraph"))
-            .ReturnsAsync(checkpoint);
+            .ReturnsAsync(checkpoint!);
 
         _mockCheckpointStore
             .Setup(x => x.SaveCheckpointAsync(
@@ -443,8 +443,8 @@ public class PlanningGraphTests
 
         // Assert
         Assert.NotNull(savedState);
-        Assert.Equal(true, savedState["is_completed"]);
-        Assert.Equal(false, savedState["is_suspended"]);
+        Assert.True((bool)savedState["is_completed"]);
+        Assert.False((bool)savedState["is_suspended"]);
         Assert.Equal("approver@test.com", savedState["approved_by"]);
         Assert.NotNull(savedState["approved_at"]);
     }
@@ -483,7 +483,7 @@ public class PlanningGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(_testTicketId, "PlanningGraph"))
-            .ReturnsAsync(checkpoint);
+            .ReturnsAsync(checkpoint!);
 
         _mockCheckpointStore
             .Setup(x => x.SaveCheckpointAsync(
@@ -547,7 +547,7 @@ public class PlanningGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(_testTicketId, "PlanningGraph"))
-            .ReturnsAsync(checkpoint);
+            .ReturnsAsync(checkpoint!);
 
         _mockCheckpointStore
             .Setup(x => x.SaveCheckpointAsync(
@@ -619,7 +619,7 @@ public class PlanningGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(_testTicketId, "PlanningGraph"))
-            .ReturnsAsync(checkpoint);
+            .ReturnsAsync(checkpoint!);
 
         _mockCheckpointStore
             .Setup(x => x.SaveCheckpointAsync(
@@ -656,7 +656,7 @@ public class PlanningGraphTests
         // Assert
         Assert.NotNull(savedState);
         Assert.Equal("Add more unit tests coverage", savedState["refinement_instructions"]);
-        Assert.Equal(false, savedState["regenerate_completely"]);
+        Assert.False((bool)savedState["regenerate_completely"]);
     }
 
     [Fact]
@@ -691,7 +691,7 @@ public class PlanningGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(_testTicketId, "PlanningGraph"))
-            .ReturnsAsync(checkpoint);
+            .ReturnsAsync(checkpoint!);
 
         _mockCheckpointStore
             .Setup(x => x.SaveCheckpointAsync(
@@ -727,7 +727,7 @@ public class PlanningGraphTests
 
         // Assert
         Assert.NotNull(savedState);
-        Assert.Equal(true, savedState["regenerate_completely"]);
+        Assert.True((bool)savedState["regenerate_completely"]);
     }
 
     #endregion
@@ -754,7 +754,7 @@ public class PlanningGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(_testTicketId, "PlanningGraph"))
-            .ReturnsAsync(checkpoint);
+            .ReturnsAsync(checkpoint!);
 
         _mockCheckpointStore
             .Setup(x => x.SaveCheckpointAsync(
@@ -806,7 +806,7 @@ public class PlanningGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(_testTicketId, "PlanningGraph"))
-            .ReturnsAsync(checkpoint);
+            .ReturnsAsync(checkpoint!);
 
         _mockCheckpointStore
             .Setup(x => x.SaveCheckpointAsync(
@@ -887,7 +887,7 @@ public class PlanningGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(_testTicketId, "PlanningGraph"))
-            .ReturnsAsync((Checkpoint?)null);
+            .ReturnsAsync((Checkpoint)null!);
 
         // Act
         var result = await _planningGraph.ResumeAsync(_testTicketId, approvedMessage);
@@ -915,7 +915,7 @@ public class PlanningGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(_testTicketId, "PlanningGraph"))
-            .ReturnsAsync(checkpoint);
+            .ReturnsAsync(checkpoint!);
 
         _mockCheckpointStore
             .Setup(x => x.SaveCheckpointAsync(
@@ -951,7 +951,7 @@ public class PlanningGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(_testTicketId, "PlanningGraph"))
-            .ReturnsAsync(checkpoint);
+            .ReturnsAsync(checkpoint!);
 
         _mockCheckpointStore
             .Setup(x => x.SaveCheckpointAsync(

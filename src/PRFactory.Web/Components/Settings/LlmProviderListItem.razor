@@ -1,0 +1,76 @@
+<tr>
+    <td>
+        <strong>@Provider.Name</strong>
+        @if (Provider.IsDefault)
+        {
+            <span class="badge bg-warning ms-2">
+                <i class="bi bi-star-fill"></i> Default
+            </span>
+        }
+    </td>
+    <td>
+        <span class="badge bg-info">@Provider.ProviderType</span>
+    </td>
+    <td>
+        @if (Provider.UsesOAuth)
+        {
+            <span class="badge bg-primary">
+                <i class="bi bi-lock-fill"></i> OAuth
+            </span>
+        }
+        else
+        {
+            <span class="badge bg-secondary">
+                <i class="bi bi-key-fill"></i> API Key
+            </span>
+        }
+    </td>
+    <td>
+        <code class="small">@Provider.DefaultModel</code>
+    </td>
+    <td>
+        @if (Provider.IsDefault)
+        {
+            <i class="bi bi-star-fill text-warning"></i>
+        }
+    </td>
+    <td>
+        @if (Provider.IsActive)
+        {
+            <span class="badge bg-success">Active</span>
+        }
+        else
+        {
+            <span class="badge bg-secondary">Inactive</span>
+        }
+    </td>
+    <td>
+        <div class="btn-group btn-group-sm" role="group">
+            <button class="btn btn-outline-secondary" @onclick="OnViewDetails" title="View Details">
+                <i class="bi bi-eye"></i>
+            </button>
+
+            @if (CanEdit)
+            {
+                <button class="btn btn-outline-primary" @onclick="OnEdit" title="Edit">
+                    <i class="bi bi-pencil"></i>
+                </button>
+
+                @if (!Provider.IsDefault)
+                {
+                    <button class="btn btn-outline-warning" @onclick="OnSetDefault" title="Set as Default">
+                        <i class="bi bi-star"></i>
+                    </button>
+                }
+
+                <button class="btn btn-outline-info" @onclick="OnTestConnection" title="Test Connection">
+                    <i class="bi bi-plug"></i>
+                </button>
+
+                <button class="btn btn-outline-danger" @onclick="OnDelete" title="Deactivate">
+                    <i class="bi bi-trash"></i>
+                </button>
+            }
+        </div>
+    </td>
+</tr>

@@ -1,0 +1,116 @@
+@page "/settings/llm-providers"
+@attribute [Authorize(Roles = "Owner,Admin,Member")]
+
+<PageTitle>LLM Providers - PRFactory</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-6">
+                <i class="bi bi-robot"></i> LLM Providers
+            </h1>
+            @if (canAddProvider)
+            {
+                <button class="btn btn-primary mt-2" @onclick="NavigateToCreate">
+                    <i class="bi bi-plus-circle me-2"></i>Add Provider
+                </button>
+            }
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <LoadingSpinner Message="Loading LLM providers..." />
+    }
+    else if (!filteredProviders.Any())
+    {
+        @if (providers.Any())
+        {
+            <AlertMessage Type="AlertType.Info"
+                         Message="No providers match your filters." />
+        }
+        else
+        {
+            <EmptyState Icon="bi-robot"
+                       Title="No LLM providers configured"
+                       Message="Add your first LLM provider to start using AI agents.">
+                @if (canAddProvider)
+                {
+                    <button class="btn btn-primary" @onclick="NavigateToCreate">
+                        <i class="bi bi-plus-circle me-2"></i>Add Provider
+                    </button>
+                }
+            </EmptyState>
+        }
+    }
+    else
+    {
+        <Card>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <FormTextField Label="Search"
+                                  Value="@searchTerm"
+                                  Placeholder="Search by name..."
+                                  ValueChanged="@(value => OnSearchChanged(value ?? string.Empty))" />
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Provider Type</label>
+                        <select class="form-select" @onchange="OnTypeFilterChanged">
+                            <option value="">All Types</option>
+                            <option value="AnthropicNative">Anthropic Native</option>
+                            <option value="ZAi">Z.ai</option>
+                            <option value="MinimaxM2">Minimax M2</option>
+                            <option value="OpenRouter">OpenRouter</option>
+                            <option value="TogetherAI">Together AI</option>
+                            <option value="Custom">Custom</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-check mt-4">
+                        <input class="form-check-input" type="checkbox"
+                               id="showActiveOnly"
+                               checked="@showActiveOnly"
+                               @onchange="@((ChangeEventArgs e) => OnShowActiveOnlyChanged((bool)(e.Value ?? false)))" />
+                        <label class="form-check-label" for="showActiveOnly">
+                            Active only
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Provider Type</th>
+                            <th>Auth Method</th>
+                            <th>Default Model</th>
+                            <th>Default</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var provider in filteredProviders)
+                        {
+                            <LlmProviderListItem Provider="@provider"
+                                               CanEdit="@canEditProvider"
+                                               OnEdit="@(() => NavigateToEdit(provider.Id))"
+                                               OnDelete="@(() => HandleDeleteAsync(provider.Id))"
+                                               OnSetDefault="@(() => HandleSetDefaultAsync(provider.Id))"
+                                               OnTestConnection="@(() => HandleTestConnectionAsync(provider.Id))"
+                                               OnViewDetails="@(() => NavigateToDetail(provider.Id))" />
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-3 text-muted">
+                Showing @filteredProviders.Count of @providers.Count providers
+            </div>
+        </Card>
+    }
+</div>

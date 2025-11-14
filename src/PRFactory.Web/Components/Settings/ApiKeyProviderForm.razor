@@ -1,0 +1,139 @@
+<EditForm EditContext="editContext" OnValidSubmit="HandleSubmitAsync">
+    <DataAnnotationsValidator />
+
+    @* Provider Name *@
+    <FormTextField Label="Provider Name"
+                  Value="@Model.Name"
+                  Placeholder="Production Z.ai"
+                  Required="true"
+                  HelpText="A friendly name for this provider"
+                  @onchange="@((ChangeEventArgs e) => Model.Name = e.Value?.ToString() ?? string.Empty)" />
+
+    @* API Key *@
+    <FormPasswordField Label="API Key"
+                      Value="@Model.ApiKey"
+                      Placeholder="sk-xxxxxxxxxxxxxxxxxxxx"
+                      Required="true"
+                      HelpText="Your API key from the provider"
+                      @onchange="@((ChangeEventArgs e) => Model.ApiKey = e.Value?.ToString() ?? string.Empty)" />
+
+    @* API Base URL *@
+    @if (Model.ProviderType == "Custom")
+    {
+        <FormTextField Label="API Base URL"
+                      Value="@Model.ApiBaseUrl"
+                      Placeholder="https://api.example.com/v1"
+                      Required="true"
+                      HelpText="Base URL for the API endpoint"
+                      @onchange="@((ChangeEventArgs e) => Model.ApiBaseUrl = e.Value?.ToString() ?? string.Empty)" />
+    }
+    else
+    {
+        <div class="mb-3">
+            <label class="form-label">API Base URL</label>
+            <input type="text" class="form-control" value="@Model.ApiBaseUrl" readonly disabled />
+            <small class="form-text text-muted">Default URL for @Model.ProviderType</small>
+        </div>
+    }
+
+    @* Default Model *@
+    <FormTextField Label="Default Model"
+                  Value="@Model.DefaultModel"
+                  Placeholder="gpt-4o"
+                  Required="true"
+                  HelpText="Default model to use for requests"
+                  @onchange="@((ChangeEventArgs e) => Model.DefaultModel = e.Value?.ToString() ?? string.Empty)" />
+
+    @* Timeout *@
+    <div class="mb-3">
+        <label class="form-label">Timeout (milliseconds) *</label>
+        <input type="number"
+               class="form-control"
+               @bind="Model.TimeoutMs"
+               placeholder="300000"
+               min="1000"
+               max="600000" />
+        <small class="form-text text-muted">Request timeout in milliseconds (default: 300000 = 5 minutes)</small>
+    </div>
+
+    @* Model Overrides *@
+    <ModelOverridesEditor @bind-Value="Model.ModelOverrides"
+                         HelpText="Map generic model names to provider-specific names (optional)" />
+
+    @* Disable Non-Essential Traffic *@
+    <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="disableNonEssentialTraffic"
+               @bind="Model.DisableNonEssentialTraffic" />
+        <label class="form-check-label" for="disableNonEssentialTraffic">
+            Disable Non-Essential Traffic
+        </label>
+        <small class="form-text text-muted d-block">
+            Skip non-essential API calls to reduce costs
+        </small>
+    </div>
+
+    @* Test Result Display *@
+    @if (testResult != null)
+    {
+        <div class="alert @(testResult.Success ? "alert-success" : "alert-danger")">
+            <i class="bi @(testResult.Success ? "bi-check-circle" : "bi-x-circle") me-2"></i>
+            @testResult.Message
+
+            @if (testResult.Success)
+            {
+                <small class="d-block mt-2">Response time: @testResult.ResponseTimeMs ms</small>
+            }
+
+            @if (!string.IsNullOrEmpty(testResult.ErrorDetails))
+            {
+                <hr />
+                <small>@testResult.ErrorDetails</small>
+            }
+        </div>
+    }
+
+    @* Action Buttons *@
+    <div class="d-flex gap-2">
+        <button type="button"
+                class="btn btn-secondary"
+                @onclick="HandleTestConnectionAsync"
+                disabled="@isTesting">
+            @if (isTesting)
+            {
+                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                <span>Testing...</span>
+            }
+            else
+            {
+                <i class="bi bi-plug me-2"></i>
+                <span>Test Connection</span>
+            }
+        </button>
+
+        <button type="submit"
+                class="btn btn-primary"
+                disabled="@IsSaving">
+            @if (IsSaving)
+            {
+                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                <span>@(IsEditMode ? "Updating..." : "Creating...")</span>
+            }
+            else
+            {
+                <i class="bi bi-plus-circle me-2"></i>
+                <span>@(IsEditMode ? "Update Provider" : "Create Provider")</span>
+            }
+        </button>
+
+        @if (!IsEditMode)
+        {
+            <button type="button" class="btn btn-secondary" @onclick="OnBack">
+                Back
+            </button>
+        }
+
+        <button type="button" class="btn btn-secondary" @onclick="OnCancel">
+            Cancel
+        </button>
+    </div>
+</EditForm>

@@ -1,0 +1,65 @@
+@using PRFactory.Web.UI.Forms
+@using PRFactory.Web.UI.Help
+@using PRFactory.Core.Application.DTOs
+
+<div class="row">
+    <div class="col-md-6">
+        @* Auto-Implementation *@
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="autoImplement"
+                   @bind="Configuration.AutoImplementAfterPlanApproval"
+                   disabled="@(!CanEdit)" />
+            <label class="form-check-label" for="autoImplement">
+                Auto-Implementation After Plan Approval
+            </label>
+            <ContextualHelp HelpText="Automatically start code implementation after plan is approved (requires Implementation LLM provider)" />
+        </div>
+
+        @* Max Retries *@
+        <div class="mb-3">
+            <label for="maxRetries" class="form-label">
+                Max Retries for Failed Operations
+            </label>
+            <input type="number"
+                   id="maxRetries"
+                   class="form-control"
+                   @bind="Configuration.MaxRetries"
+                   min="1"
+                   max="10"
+                   disabled="@(!CanEdit)" />
+            <small class="form-text text-muted">Maximum number of retry attempts (1-10)</small>
+        </div>
+
+        @* API Timeout *@
+        <div class="mb-3">
+            <label for="apiTimeout" class="form-label">
+                API Timeout (seconds)
+            </label>
+            <input type="number"
+                   id="apiTimeout"
+                   class="form-control"
+                   @bind="Configuration.ApiTimeoutSeconds"
+                   min="30"
+                   max="600"
+                   disabled="@(!CanEdit)" />
+            <small class="form-text text-muted">Timeout for API calls in seconds (30-600)</small>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        @* Verbose Logging *@
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="verboseLogging"
+                   @bind="Configuration.EnableVerboseLogging"
+                   disabled="@(!CanEdit)" />
+            <label class="form-check-label" for="verboseLogging">
+                Enable Verbose Logging
+            </label>
+            <ContextualHelp HelpText="Enable detailed logging for troubleshooting (may impact performance)" />
+        </div>
+
+        @* Allowed Repositories *@
+        <AllowedRepositoriesEditor @bind-Value="Configuration.AllowedRepositories"
+                                   Disabled="@(!CanEdit)" />
+    </div>
+</div>

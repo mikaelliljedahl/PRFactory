@@ -1,0 +1,84 @@
+@using PRFactory.Web.UI.Display
+
+<tr>
+    <td>
+        <div class="d-flex align-items-center">
+            @if (!string.IsNullOrEmpty(User.AvatarUrl))
+            {
+                <img src="@User.AvatarUrl" alt="@User.DisplayName"
+                     class="rounded-circle me-2" width="32" height="32" />
+            }
+            else
+            {
+                <div class="avatar-placeholder rounded-circle me-2"
+                     style="width: 32px; height: 32px; background: #e0e0e0; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-person" style="font-size: 16px; color: #666;"></i>
+                </div>
+            }
+            <a href="#" @onclick="OnViewDetails" @onclick:preventDefault>
+                @User.DisplayName
+            </a>
+        </div>
+    </td>
+    <td>
+        <code class="text-muted">@User.Email</code>
+    </td>
+    <td>
+        <span class="badge bg-@GetRoleBadgeColor()">
+            @User.Role
+        </span>
+    </td>
+    <td>
+        @User.IdentityProvider
+    </td>
+    <td>
+        @if (User.LastSeenAt.HasValue)
+        {
+            <RelativeTime Timestamp="User.LastSeenAt.Value" />
+        }
+        else
+        {
+            <span class="text-muted">Never</span>
+        }
+    </td>
+    <td>
+        <span class="badge @(User.IsActive ? "bg-success" : "bg-secondary")">
+            @(User.IsActive ? "Active" : "Inactive")
+        </span>
+    </td>
+    <td>
+        <div class="btn-group btn-group-sm">
+            <button type="button" class="btn btn-outline-primary"
+                    title="View Details"
+                    @onclick="OnViewDetails">
+                <i class="bi bi-eye"></i>
+            </button>
+
+            @if (CanEdit)
+            {
+                <button type="button" class="btn btn-outline-secondary"
+                        title="Edit"
+                        @onclick="OnEdit">
+                    <i class="bi bi-pencil"></i>
+                </button>
+
+                @if (User.IsActive)
+                {
+                    <button type="button" class="btn btn-outline-warning"
+                            title="Deactivate"
+                            @onclick="OnDeactivate">
+                        <i class="bi bi-x-circle"></i>
+                    </button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-outline-success"
+                            title="Activate"
+                            @onclick="OnActivate">
+                        <i class="bi bi-check-circle"></i>
+                    </button>
+                }
+            }
+        </div>
+    </td>
+</tr>

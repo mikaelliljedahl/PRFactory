@@ -1,0 +1,37 @@
+<div class="row g-3">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="text-muted">Total Requests</h6>
+                <h3 class="mb-0">@TotalRequests.ToString("N0")</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="text-muted">Successful</h6>
+                <h3 class="mb-0 text-success">@SuccessfulRequests.ToString("N0")</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="text-muted">Failed</h6>
+                <h3 class="mb-0 text-danger">@FailedRequests.ToString("N0")</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="text-muted">Avg Response Time</h6>
+                <h3 class="mb-0">@AverageResponseTimeMs.ToString("N0") ms</h3>
+            </div>
+        </div>
+    </div>
+</div>

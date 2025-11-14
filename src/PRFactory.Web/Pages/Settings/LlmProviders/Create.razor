@@ -1,0 +1,109 @@
+@page "/settings/llm-providers/create"
+@attribute [Authorize(Roles = "Owner,Admin")]
+
+<PageTitle>Add LLM Provider - PRFactory</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/settings/llm-providers">LLM Providers</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Add</li>
+                </ol>
+            </nav>
+            <h1 class="display-6">
+                <i class="bi bi-plus-circle"></i> Add LLM Provider
+            </h1>
+        </div>
+    </div>
+
+    <Card Title="@GetWizardTitle()" Icon="bi-robot">
+        <div class="wizard-steps mb-4">
+            <div class="d-flex align-items-center justify-content-center gap-3">
+                <div class="@(currentStep == WizardStep.SelectType ? "wizard-step active" : "wizard-step")">
+                    <span class="step-number">1</span>
+                    <span class="step-title">Select Type</span>
+                </div>
+                <div class="step-divider">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+                <div class="@(currentStep == WizardStep.Configure ? "wizard-step active" : "wizard-step")">
+                    <span class="step-number">2</span>
+                    <span class="step-title">Configure</span>
+                </div>
+            </div>
+        </div>
+
+        @if (currentStep == WizardStep.SelectType)
+        {
+            <ProviderTypeSelector OnProviderTypeSelected="OnProviderTypeSelected"
+                                 OnCancel="HandleCancel" />
+        }
+        else if (currentStep == WizardStep.Configure)
+        {
+            @if (selectedType == "AnthropicNative" && oauthModel != null)
+            {
+                <OAuthProviderForm Model="oauthModel"
+                                  IsSaving="isSaving"
+                                  OnValidSubmit="HandleOAuthSubmitAsync"
+                                  OnBack="OnBack"
+                                  OnCancel="HandleCancel" />
+            }
+            else if (apiKeyModel != null)
+            {
+                <ApiKeyProviderForm Model="apiKeyModel"
+                                   IsSaving="isSaving"
+                                   OnValidSubmit="HandleApiKeySubmitAsync"
+                                   OnBack="OnBack"
+                                   OnCancel="HandleCancel" />
+            }
+        }
+    </Card>
+</div>
+
+<style>
+    .wizard-steps {
+        padding: 20px 0;
+    }
+
+    .wizard-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        opacity: 0.5;
+    }
+
+    .wizard-step.active {
+        opacity: 1;
+    }
+
+    .step-number {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #e0e0e0;
+        color: #666;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-bottom: 8px;
+    }
+
+    .wizard-step.active .step-number {
+        background-color: var(--bs-primary);
+        color: white;
+    }
+
+    .step-title {
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .step-divider {
+        color: #ccc;
+        font-size: 20px;
+        margin-top: -20px;
+    }
+</style>

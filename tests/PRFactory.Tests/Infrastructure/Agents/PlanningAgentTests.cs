@@ -26,6 +26,7 @@ public class PlanningAgentTests : IDisposable
     private readonly Mock<IArchitectureContextService> _mockArchitectureContext;
     private readonly PlanningAgent _agent;
     private readonly string _testRepositoryPath;
+    private bool _disposed;
 
     public PlanningAgentTests()
     {
@@ -70,13 +71,24 @@ public class PlanningAgentTests : IDisposable
             .Returns("TestCliAgent");
     }
 
-    public void Dispose()
+    protected virtual void Dispose(bool disposing)
     {
-        // Clean up test directory
-        if (Directory.Exists(_testRepositoryPath))
+        if (_disposed)
+            return;
+
+        if (disposing && Directory.Exists(_testRepositoryPath))
         {
+            // Clean up test directory
             Directory.Delete(_testRepositoryPath, recursive: true);
         }
+
+        _disposed = true;
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 
     #region Constructor Tests
@@ -253,7 +265,7 @@ public class PlanningAgentTests : IDisposable
             });
 
         // Act
-        var result = await _agent.ExecuteWithMiddlewareAsync(context);
+        await _agent.ExecuteWithMiddlewareAsync(context);
 
         // Assert
         _mockCliAgent.Verify(
@@ -684,7 +696,7 @@ public class PlanningAgentTests : IDisposable
 
     #region Helper Methods
 
-    private Ticket CreateTestTicket()
+    private static Ticket CreateTestTicket()
     {
         var ticket = Ticket.Create(
             "TEST-123",

@@ -120,8 +120,8 @@ public class LocalGitServiceTests : IDisposable
         var service = CreateService();
         var invalidUrl = "/nonexistent/path/to/repo";
 
-        // Act & Assert - Invalid URL format throws UriFormatException before reaching LibGit2Sharp
-        await Assert.ThrowsAsync<UriFormatException>(
+        // Act & Assert - LibGit2Sharp throws exception for invalid/unsupported URLs
+        await Assert.ThrowsAsync<LibGit2SharpException>(
             () => service.CloneAsync(invalidUrl, "token", CancellationToken.None));
     }
 

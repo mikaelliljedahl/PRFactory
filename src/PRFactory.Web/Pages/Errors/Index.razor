@@ -2,68 +2,55 @@
 @using PRFactory.Web.Models
 @using PRFactory.Web.Components.Errors
 @using PRFactory.Web.UI.Display
+@using PRFactory.Web.UI.Layout
+@using PRFactory.Web.UI.Cards
 @using PRFactory.Domain.ValueObjects
 
 <PageTitle>Error Logs - PRFactory</PageTitle>
 
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="mb-0">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            Error Logs
-        </h1>
-        <div class="d-flex gap-2">
-            <button class="btn btn-outline-primary" @onclick="RefreshErrors">
-                <i class="bi bi-arrow-clockwise me-1"></i>
-                Refresh
+<PageHeader Title="Error Logs"
+            Icon="exclamation-triangle"
+            Subtitle="View and manage system errors and exceptions">
+    <Actions>
+        <button class="btn btn-outline-primary" @onclick="RefreshErrors">
+            <i class="bi bi-arrow-clockwise me-1"></i>
+            Refresh
+        </button>
+        @if (SelectedErrorIds.Any())
+        {
+            <button class="btn btn-success" @onclick="BulkResolveErrors">
+                <i class="bi bi-check-circle me-1"></i>
+                Resolve Selected (@SelectedErrorIds.Count)
             </button>
-            @if (SelectedErrorIds.Any())
-            {
-                <button class="btn btn-success" @onclick="BulkResolveErrors">
-                    <i class="bi bi-check-circle me-1"></i>
-                    Resolve Selected (@SelectedErrorIds.Count)
-                </button>
-            }
-        </div>
-    </div>
+        }
+    </Actions>
+</PageHeader>
 
-    @if (Statistics != null)
-    {
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card bg-@Statistics.HealthStatusClass text-white">
-                    <div class="card-body">
-                        <h6 class="card-title">System Health</h6>
-                        <h3 class="mb-0">@Statistics.HealthStatus</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-danger text-white">
-                    <div class="card-body">
-                        <h6 class="card-title">Unresolved Errors</h6>
-                        <h3 class="mb-0">@Statistics.UnresolvedErrors</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-warning text-white">
-                    <div class="card-body">
-                        <h6 class="card-title">Critical Errors</h6>
-                        <h3 class="mb-0">@Statistics.CriticalErrors</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-success text-white">
-                    <div class="card-body">
-                        <h6 class="card-title">Resolution Rate</h6>
-                        <h3 class="mb-0">@Statistics.ResolutionRate%</h3>
-                    </div>
-                </div>
-            </div>
-        </div>
-    }
+@if (Statistics != null)
+{
+    <GridLayout Columns="3,3,3,3" Class="mb-4">
+        <GridColumn>
+            <Card Title="System Health" Variant="@GetHealthCardVariant()">
+                <h3 class="mb-0 text-white">@Statistics.HealthStatus</h3>
+            </Card>
+        </GridColumn>
+        <GridColumn>
+            <Card Title="Unresolved Errors" Variant="CardVariant.Danger">
+                <h3 class="mb-0 text-white">@Statistics.UnresolvedErrors</h3>
+            </Card>
+        </GridColumn>
+        <GridColumn>
+            <Card Title="Critical Errors" Variant="CardVariant.Warning">
+                <h3 class="mb-0 text-white">@Statistics.CriticalErrors</h3>
+            </Card>
+        </GridColumn>
+        <GridColumn>
+            <Card Title="Resolution Rate" Variant="CardVariant.Success">
+                <h3 class="mb-0 text-white">@Statistics.ResolutionRate%</h3>
+            </Card>
+        </GridColumn>
+    </GridLayout>
+}
 
     <ErrorListFilter OnFiltersChanged="HandleFiltersChanged" />
 
@@ -76,9 +63,8 @@
     }
     else if (Errors.Any())
     {
-        <div class="card">
-            <div class="card-body">
-                <Radzen.Blazor.RadzenDataGrid Data="@Errors"
+        <Card>
+            <Radzen.Blazor.RadzenDataGrid Data="@Errors"
                                               TItem="ErrorDto"
                                               AllowGrouping="true"
                                               AllowSorting="true"
@@ -164,8 +150,7 @@
                         </Radzen.Blazor.RadzenDataGridColumn>
                     </Columns>
                 </Radzen.Blazor.RadzenDataGrid>
-            </div>
-        </div>
+        </Card>
     }
     else
     {
@@ -177,4 +162,3 @@
             ActionText="View Tickets"
             ActionIcon="ticket-detailed" />
     }
-</div>

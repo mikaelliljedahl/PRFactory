@@ -229,7 +229,27 @@ public enum WorkflowState
 
 ## Component Architecture
 
-### 1. API Layer (`PRFactory.Api`)
+**Project Structure** (as of Epic 08 - November 2025):
+
+```
+PRFactory Solution
+├── PRFactory.Domain          # Domain entities, interfaces
+├── PRFactory.Infrastructure  # Services, repositories, agents
+├── PRFactory.Core            # Application services, DTOs
+└── PRFactory.Web             # ✨ Consolidated application
+    ├── Controllers/          # API endpoints (from former PRFactory.Api)
+    ├── BackgroundServices/   # Agent execution (from former PRFactory.Worker)
+    ├── Pages/                # Blazor pages
+    ├── Components/           # Business components
+    ├── UI/                   # Pure UI library (38 components)
+    ├── Middleware/           # Request pipeline
+    ├── Hubs/                 # SignalR
+    └── Services/             # Web facades
+```
+
+**Note**: Prior to Epic 08, PRFactory had 3 separate projects (Api, Worker, Web). These have been consolidated into a single `PRFactory.Web` project for simplified deployment.
+
+### 1. API Layer (Controllers in `PRFactory.Web`)
 
 **Responsibilities:**
 - Expose REST endpoints for external webhook integrations ONLY
@@ -237,7 +257,9 @@ public enum WorkflowState
 - Handle HTTP concerns (CORS, authentication)
 - Serialize/deserialize external system requests
 
-**Important**: API Controllers are used ONLY for external webhooks (Jira, Azure DevOps). The Blazor Server Web UI (`PRFactory.Web`) injects services directly and does NOT make HTTP calls to these controllers.
+**Location**: `/src/PRFactory.Web/Controllers/`
+
+**Important**: API Controllers are used ONLY for external webhooks (Jira, Azure DevOps). The Blazor Server Web UI injects services directly and does NOT make HTTP calls to these controllers.
 
 **Key Components:**
 - `TicketUpdatesController` - Webhook endpoints for Jira/Azure DevOps ticket updates
@@ -298,7 +320,7 @@ public enum WorkflowState
 - `Migrations/` - Database migrations
 - `Encryption/` - Credential encryption service
 
-### 4. Worker Service (`PRFactory.Worker`)
+### 4. Background Services (in `PRFactory.Web`)
 
 **Responsibilities:**
 - Background job processing
@@ -306,13 +328,17 @@ public enum WorkflowState
 - Execute agent workflows
 - Checkpoint-based resumption (fault tolerance)
 
+**Location**: `/src/PRFactory.Web/BackgroundServices/`
+
+**Note**: Prior to Epic 08, this was a separate `PRFactory.Worker` project. Now consolidated into `PRFactory.Web` as hosted services.
+
 **Key Components:**
 - `WorkflowOrchestrator` - Coordinates agent execution
 - `AgentFactory` - Creates appropriate agent instances
 - `CheckpointService` - Save/restore workflow state
 - `14 Agent Implementations` - One per workflow step
 
-### 5. Web Layer (`PRFactory.Web`)
+### 5. Web UI Layer (`PRFactory.Web`)
 
 **Responsibilities:**
 - Blazor Server UI for ticket management and workflow monitoring
@@ -652,40 +678,56 @@ Agent (continues execution)
 
 ## Deployment Architecture
 
+**Note**: As of Epic 08 (November 2025), PRFactory has been consolidated from 3 separate projects (Api, Worker, Web) into a single `PRFactory.Web` application. This simplifies deployment significantly.
+
+### Development (Local)
+
+**Single command starts everything:**
+```bash
+cd src/PRFactory.Web
+dotnet run
+```
+
+The application runs on:
+- Blazor UI: `http://localhost:5003`
+- API endpoints: `http://localhost:5000/swagger`
+- Background services: Hosted services within the same process
+
 ### Option 1: Docker Compose (Development / PoC)
 
+**Single container deployment:**
 ```yaml
 services:
-  api:
-    image: prfactory-api:latest
+  web:
+    image: prfactory:latest
     ports:
-      - "5000:8080"
+      - "5003:8080"  # Blazor UI + API + Background Services (all-in-one)
     environment:
       - ConnectionStrings__DefaultConnection=Data Source=/data/prfactory.db
+      - ASPNETCORE_ENVIRONMENT=Development
     volumes:
       - ./data:/data
-
-  worker:
-    image: prfactory-worker:latest
-    environment:
-      - ConnectionStrings__DefaultConnection=Data Source=/data/prfactory.db
-    volumes:
-      - ./data:/data
+      - ./workspace:/workspace
 ```
+
+**Benefits of consolidation:**
+- 66% fewer containers (3 → 1)
+- Simpler networking (no inter-container communication)
+- Single deployment unit
+- Shared memory/process (no serialization overhead)
 
 ### Option 2: Azure App Service
 
+**Single App Service deployment:**
 ```
-Azure App Service (API)
+Azure App Service (PRFactory.Web)
     │
     ├─ App Service Plan (Linux, B1 or higher)
     ├─ Application Insights (monitoring)
+    ├─ Blazor UI (port 8080)
+    ├─ API Controllers (same process)
+    ├─ Background Services (hosted services)
     └─ Azure Key Vault (secrets)
-
-Azure Container Instances (Worker)
-    │
-    ├─ Container running worker service
-    └─ Scheduled scaling
 
 Azure Files or Blob Storage (workspace)
     │
@@ -696,20 +738,49 @@ Azure SQL Database (production)
     └─ Replaces SQLite
 ```
 
-### Option 3: On-Premises (Windows Server)
+**Benefits:**
+- Single App Service deployment
+- No coordination between separate services
+- Simplified scaling (scale entire app together)
 
+### Option 3: Azure Container Instances (ACI)
+
+**Single container:**
 ```
-IIS (hosts API)
+Azure Container Instance
     │
-    └─ ASP.NET Core Module
+    ├─ prfactory:latest image
+    ├─ CPU: 2 cores, Memory: 4GB
+    └─ All services in one container
+```
 
-Windows Service (hosts Worker)
+### Option 4: On-Premises (Windows Server or Linux)
+
+**Windows Server (IIS):**
+```
+IIS (hosts PRFactory.Web)
     │
-    └─ Background job processor
+    ├─ ASP.NET Core Module
+    ├─ Blazor UI
+    ├─ API Controllers
+    └─ Background Services (hosted services)
 
 SQL Server (database)
 
 Network share (workspace for git repos)
+```
+
+**Linux Server (systemd):**
+```
+systemd service (prfactory.service)
+    │
+    ├─ Runs dotnet PRFactory.Web.dll
+    ├─ Listens on port 5003
+    └─ All services in one process
+
+PostgreSQL or SQL Server (database)
+
+Local directory (workspace for git repos)
 ```
 
 ## Performance Considerations

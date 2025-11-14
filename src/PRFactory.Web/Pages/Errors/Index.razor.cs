@@ -3,6 +3,7 @@ using PRFactory.Domain.ValueObjects;
 using PRFactory.Web.Components.Errors;
 using PRFactory.Web.Models;
 using PRFactory.Web.Services;
+using PRFactory.Web.UI.Cards;
 using Radzen;
 
 namespace PRFactory.Web.Pages.Errors;
@@ -182,5 +183,19 @@ public partial class Index
         {
             SelectedErrorIds.Clear();
         }
+    }
+
+    private CardVariant GetHealthCardVariant()
+    {
+        if (Statistics == null)
+            return CardVariant.Primary;
+
+        return Statistics.HealthStatusClass switch
+        {
+            "success" => CardVariant.Success,
+            "warning" => CardVariant.Warning,
+            "danger" => CardVariant.Danger,
+            _ => CardVariant.Primary
+        };
     }
 }

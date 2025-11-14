@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using PRFactory.Web.Models;
 using PRFactory.Web.Services;
 using PRFactory.Web.UI.Navigation;
+using PRFactory.Web.UI.Alerts;
 
 namespace PRFactory.Web.Pages.Tickets;
 
@@ -229,6 +230,18 @@ public partial class Detail : IAsyncDisposable
             HubConnectionState.Reconnecting => "alert-warning",
             HubConnectionState.Disconnected => "alert-danger",
             _ => "alert-secondary"
+        };
+    }
+
+    private AlertType GetConnectionAlertType()
+    {
+        return connectionState switch
+        {
+            HubConnectionState.Connected => AlertType.Success,
+            HubConnectionState.Connecting => AlertType.Info,
+            HubConnectionState.Reconnecting => AlertType.Warning,
+            HubConnectionState.Disconnected => AlertType.Danger,
+            _ => AlertType.Info
         };
     }
 

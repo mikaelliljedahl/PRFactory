@@ -176,29 +176,32 @@ flowchart TB
 
    See [docs/SETUP.md](docs/SETUP.md) for detailed configuration instructions.
 
-3. **Run with Docker Compose** (recommended)
+3. **Run locally** (single command)
+   ```bash
+   # Navigate to the project
+   cd src/PRFactory.Web
+
+   # Apply database migrations
+   dotnet ef database update
+
+   # Start the application (all-in-one: UI + API + Background Services)
+   dotnet run
+   ```
+
+   The application will be available at:
+   - Blazor UI: http://localhost:5003
+   - API (Swagger): http://localhost:5000/swagger
+   - Background services: Running within the same process
+
+4. **Or run with Docker Compose** (recommended for production)
    ```bash
    docker-compose up --build
    ```
 
-   Services will be available at:
-   - Web UI: http://localhost:5000
-   - API: http://localhost:5000/api
-   - Swagger UI: http://localhost:5000/swagger
-   - Worker: Background job processing
-
-4. **Or run locally**
-   ```bash
-   # Apply database migrations
-   cd src/PRFactory.Api
-   dotnet ef database update
-
-   # Start the API
-   dotnet run --project src/PRFactory.Api
-
-   # In another terminal, start the Worker
-   dotnet run --project src/PRFactory.Worker
-   ```
+   The containerized application will be available at:
+   - Blazor UI: http://localhost:5003
+   - API: http://localhost:5003/api
+   - All services run in a single container
 
 For detailed setup instructions, see [docs/SETUP.md](docs/SETUP.md).
 

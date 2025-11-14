@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using PRFactory.Web.Components.Errors;
 using PRFactory.Web.Models;
 using PRFactory.Web.Services;
+using PRFactory.Web.UI.Navigation;
 
 namespace PRFactory.Web.Pages.Errors;
 
@@ -25,11 +26,23 @@ public partial class Detail
     private bool ShowResolution { get; set; } = false;
     private string? SuccessMessage { get; set; }
     private string? ErrorMessage { get; set; }
+    private List<BreadcrumbItem> breadcrumbItems = new();
 
     protected override async Task OnInitializedAsync()
     {
+        BuildBreadcrumbs();
         await LoadError();
         await LoadRelatedErrors();
+    }
+
+    private void BuildBreadcrumbs()
+    {
+        breadcrumbItems = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem { Text = "Dashboard", Href = "/", Icon = "house" },
+            new BreadcrumbItem { Text = "Errors", Href = "/errors", Icon = "exclamation-triangle" },
+            new BreadcrumbItem { Text = "Error Details", Icon = "file-text" }
+        };
     }
 
     private async Task LoadError()

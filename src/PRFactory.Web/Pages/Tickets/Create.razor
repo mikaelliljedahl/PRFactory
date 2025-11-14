@@ -3,16 +3,23 @@
 @using PRFactory.Web.UI.Forms
 @using PRFactory.Web.UI.Alerts
 @using PRFactory.Web.UI.Help
+@using PRFactory.Web.UI.Layout
 
-<h1>Create New Ticket</h1>
+<PageHeader Title="Create New Ticket"
+            Icon="ticket"
+            Subtitle="Create a new ticket to track work and start automated workflows">
+    <Actions>
+        <a href="/tickets" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Cancel
+        </a>
+    </Actions>
+</PageHeader>
 
-@if (!string.IsNullOrEmpty(errorMessage))
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
-        <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
-    </div>
-}
+<AlertMessage Type="AlertType.Danger"
+              Message="@errorMessage"
+              Icon="exclamation-triangle-fill"
+              Dismissible="true"
+              OnDismiss="@(() => errorMessage = null)" />
 
 <EditForm Model="@model" OnValidSubmit="@HandleSubmit">
     <DataAnnotationsValidator />
@@ -76,6 +83,5 @@
             }
             Create Ticket
         </button>
-        <a href="/tickets" class="btn btn-secondary ms-2">Cancel</a>
     </div>
 </EditForm>

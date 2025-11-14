@@ -1,3 +1,5 @@
+using Mapster;
+using MapsterMapper;
 using PRFactory.Core.Application.Services;
 using PRFactory.Domain.Entities;
 using PRFactory.Domain.ValueObjects;
@@ -14,13 +16,16 @@ public class ErrorService : IErrorService
 {
     private readonly ILogger<ErrorService> _logger;
     private readonly IErrorApplicationService _errorApplicationService;
+    private readonly IMapper _mapper;
 
     public ErrorService(
         ILogger<ErrorService> logger,
-        IErrorApplicationService errorApplicationService)
+        IErrorApplicationService errorApplicationService,
+        IMapper mapper)
     {
         _logger = logger;
         _errorApplicationService = errorApplicationService;
+        _mapper = mapper;
     }
 
     public async Task<(List<ErrorDto> Items, int TotalCount)> GetErrorsAsync(
@@ -51,7 +56,7 @@ public class ErrorService : IErrorService
             var (items, totalCount) = await _errorApplicationService.GetErrorsAsync(
                 queryParams, ct);
 
-            var dtos = items.Select(MapToDto).ToList();
+            var dtos = _mapper.Map<List<ErrorDto>>(items);
             return (dtos, totalCount);
         }
         catch (Exception ex)
@@ -66,7 +71,7 @@ public class ErrorService : IErrorService
         try
         {
             var error = await _errorApplicationService.GetErrorByIdAsync(errorId, ct);
-            return error != null ? MapToDto(error) : null;
+            return error != null ? _mapper.Map<ErrorDto>(error) : null;
         }
         catch (Exception ex)
         {
@@ -83,7 +88,7 @@ public class ErrorService : IErrorService
         try
         {
             var errors = await _errorApplicationService.GetErrorsByEntityAsync(entityType, entityId, ct);
-            return errors.Select(MapToDto).ToList();
+            return _mapper.Map<List<ErrorDto>>(errors);
         }
         catch (Exception ex)
         {
@@ -181,23 +186,4 @@ public class ErrorService : IErrorService
         }
     }
 
-    private static ErrorDto MapToDto(Domain.Entities.ErrorLog error)
-    {
-        return new ErrorDto
-        {
-            Id = error.Id,
-            TenantId = error.TenantId,
-            Severity = error.Severity,
-            Message = error.Message,
-            StackTrace = error.StackTrace,
-            EntityType = error.EntityType,
-            EntityId = error.EntityId,
-            ContextData = error.ContextData,
-            IsResolved = error.IsResolved,
-            ResolvedAt = error.ResolvedAt,
-            ResolvedBy = error.ResolvedBy,
-            ResolutionNotes = error.ResolutionNotes,
-            CreatedAt = error.CreatedAt
-        };
-    }
 }

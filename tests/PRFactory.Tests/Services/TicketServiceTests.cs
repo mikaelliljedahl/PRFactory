@@ -74,6 +74,8 @@ public class TicketServiceTests
         var mockPlanReviewService = new Mock<IPlanReviewService>();
         var mockCurrentUserService = new Mock<ICurrentUserService>();
 
+        var mockMapper = new Mock<MapsterMapper.IMapper>();
+
         return new TicketService(
             mockLogger.Object,
             ticketAppService ?? new Mock<ITicketApplicationService>().Object,
@@ -84,6 +86,7 @@ public class TicketServiceTests
             mockTenantContext.Object,
             mockTicketRepo.Object,
             mockPlanReviewService.Object,
-            mockCurrentUserService.Object);
+            mockCurrentUserService.Object,
+            mockMapper.Object);
     }
 }

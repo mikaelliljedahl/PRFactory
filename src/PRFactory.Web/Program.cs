@@ -187,6 +187,13 @@ builder.Services.AddCors(options =>
 });
 
 // ============================================================
+// MAPSTER (DTO Mapping - Phase 5)
+// ============================================================
+PRFactory.Web.Mapping.MappingConfiguration.Configure();
+builder.Services.AddSingleton(Mapster.TypeAdapterConfig.GlobalSettings);
+builder.Services.AddScoped<MapsterMapper.IMapper, MapsterMapper.Mapper>();
+
+// ============================================================
 // WEB SERVICES (Facades for Blazor components)
 // ============================================================
 builder.Services.AddScoped<ITicketService, TicketService>();

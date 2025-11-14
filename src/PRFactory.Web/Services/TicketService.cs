@@ -1,3 +1,5 @@
+using Mapster;
+using MapsterMapper;
 using PRFactory.Core.Application.Services;
 using PRFactory.Domain.DTOs;
 using PRFactory.Domain.Entities;
@@ -22,7 +24,8 @@ public class TicketService(
     ITenantContext tenantContext,
     ITicketRepository ticketRepository,
     IPlanReviewService planReviewService,
-    ICurrentUserService currentUserService) : ITicketService
+    ICurrentUserService currentUserService,
+    IMapper mapper) : ITicketService
 {
     private const string CheckCircleIcon = "check-circle";
 
@@ -66,26 +69,8 @@ public class TicketService(
                 return null;
             }
 
-            // Map to DTO
-            return new TicketDto
-            {
-                Id = ticket.Id,
-                TicketKey = ticket.TicketKey,
-                Title = ticket.Title,
-                Description = ticket.Description,
-                State = ticket.State,
-                Source = ticket.Source,
-                RepositoryId = ticket.RepositoryId,
-                RepositoryName = ticket.Repository?.Name,
-                CreatedAt = ticket.CreatedAt,
-                UpdatedAt = ticket.UpdatedAt,
-                CompletedAt = ticket.CompletedAt,
-                PullRequestUrl = ticket.PullRequestUrl,
-                PullRequestNumber = ticket.PullRequestNumber,
-                PlanBranchName = ticket.PlanBranchName,
-                PlanMarkdownPath = ticket.PlanMarkdownPath,
-                LastError = ticket.LastError
-            };
+            // Map to DTO using Mapster
+            return mapper.Map<TicketDto>(ticket);
         }
         catch (Exception ex)
         {
@@ -118,26 +103,8 @@ public class TicketService(
             // Use application service to get paged tickets
             var pagedResult = await ticketApplicationService.GetTicketsPagedAsync(paginationParams, stateFilter, ct);
 
-            // Map entities to DTOs
-            var ticketDtos = pagedResult.Items.Select(ticket => new TicketDto
-            {
-                Id = ticket.Id,
-                TicketKey = ticket.TicketKey,
-                Title = ticket.Title,
-                Description = ticket.Description,
-                State = ticket.State,
-                Source = ticket.Source,
-                RepositoryId = ticket.RepositoryId,
-                RepositoryName = ticket.Repository?.Name,
-                CreatedAt = ticket.CreatedAt,
-                UpdatedAt = ticket.UpdatedAt,
-                CompletedAt = ticket.CompletedAt,
-                PullRequestUrl = ticket.PullRequestUrl,
-                PullRequestNumber = ticket.PullRequestNumber,
-                PlanBranchName = ticket.PlanBranchName,
-                PlanMarkdownPath = ticket.PlanMarkdownPath,
-                LastError = ticket.LastError
-            }).ToList();
+            // Map entities to DTOs using Mapster
+            var ticketDtos = mapper.Map<List<TicketDto>>(pagedResult.Items);
 
             return new PagedResult<TicketDto>
             {
@@ -242,8 +209,8 @@ public class TicketService(
                 return null;
             }
 
-            // Map entity to DTO
-            return MapToDto(ticketUpdate);
+            // Map entity to DTO using Mapster
+            return mapper.Map<TicketUpdateDto>(ticketUpdate);
         }
         catch (Exception ex)
         {
@@ -316,7 +283,7 @@ public class TicketService(
             // Use application service directly (Blazor Server architecture)
             var questionsWithAnswers = await questionApplicationService.GetQuestionsWithAnswersAsync(ticketId, ct);
 
-            // Map to DTOs
+            // Map to DTOs - manual mapping needed for complex QuestionWithAnswer type
             return questionsWithAnswers.Select(qa => new QuestionDto
             {
                 Id = qa.Question.Id,
@@ -342,7 +309,7 @@ public class TicketService(
             // Use application service directly (Blazor Server architecture)
             var events = await workflowEventApplicationService.GetEventsAsync(ticketId, ct);
 
-            // Map to DTOs
+            // Map to DTOs using Mapster (with custom logic for event types)
             return events.Select(MapEventToDto).ToList();
         }
         catch (Exception ex)
@@ -415,36 +382,9 @@ public class TicketService(
     }
 
     /// <summary>
-    /// Maps a TicketUpdate entity to a TicketUpdateDto
-    /// </summary>
-    private TicketUpdateDto MapToDto(TicketUpdate ticketUpdate)
-    {
-        return new TicketUpdateDto
-        {
-            Id = ticketUpdate.Id,
-            TicketId = ticketUpdate.TicketId,
-            UpdatedTitle = ticketUpdate.UpdatedTitle,
-            UpdatedDescription = ticketUpdate.UpdatedDescription,
-            AcceptanceCriteria = ticketUpdate.AcceptanceCriteria,
-            Version = ticketUpdate.Version,
-            IsDraft = ticketUpdate.IsDraft,
-            IsApproved = ticketUpdate.IsApproved,
-            RejectionReason = ticketUpdate.RejectionReason,
-            GeneratedAt = ticketUpdate.GeneratedAt,
-            ApprovedAt = ticketUpdate.ApprovedAt,
-            PostedAt = ticketUpdate.PostedAt,
-            SuccessCriteria = ticketUpdate.SuccessCriteria.Select(sc => new SuccessCriterionDto
-            {
-                Category = sc.Category,
-                Description = sc.Description,
-                Priority = sc.Priority,
-                IsTestable = sc.IsTestable
-            }).ToList()
-        };
-    }
-
-    /// <summary>
     /// Maps a WorkflowEvent entity to a WorkflowEventDto
+    /// Note: This method contains custom business logic for event-specific properties (icons, descriptions, severity)
+    /// and cannot be replaced with Mapster's automatic mapping.
     /// </summary>
     private WorkflowEventDto MapEventToDto(WorkflowEvent evt)
     {
@@ -561,7 +501,7 @@ public class TicketService(
         try
         {
             var reviews = await planReviewService.GetReviewsByTicketIdAsync(ticketId, ct);
-            return reviews.Select(ReviewerDto.FromEntity).ToList();
+            return mapper.Map<List<ReviewerDto>>(reviews);
         }
         catch (Exception ex)
         {
@@ -635,7 +575,7 @@ public class TicketService(
         try
         {
             var comments = await planReviewService.GetCommentsByTicketIdAsync(ticketId, ct);
-            return comments.Select(ReviewCommentDto.FromEntity).ToList();
+            return mapper.Map<List<ReviewCommentDto>>(comments);
         }
         catch (Exception ex)
         {
@@ -657,7 +597,7 @@ public class TicketService(
             var comment = await planReviewService.AddCommentAsync(ticketId, currentUserId.Value, content, mentionedUserIds, ct);
             logger.LogInformation("Added comment to ticket {TicketId} by user {UserId}", ticketId, currentUserId.Value);
 
-            return ReviewCommentDto.FromEntity(comment);
+            return mapper.Map<ReviewCommentDto>(comment);
         }
         catch (Exception ex)
         {

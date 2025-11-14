@@ -42,6 +42,15 @@ public class CheckpointConfiguration : IEntityTypeConfiguration<Checkpoint>
             .IsRequired()
             .HasColumnType("TEXT"); // SQLite uses TEXT for large strings
 
+        builder.Property(c => c.AgentThreadId)
+            .HasMaxLength(200);
+
+        builder.Property(c => c.ConversationHistory)
+            .HasColumnType("TEXT"); // JSON or compressed conversation history
+
+        builder.Property(c => c.AgentState)
+            .HasColumnType("TEXT"); // JSON serialized agent state
+
         builder.Property(c => c.Status)
             .IsRequired()
             .HasMaxLength(50)

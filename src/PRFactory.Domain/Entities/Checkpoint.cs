@@ -50,6 +50,21 @@ public class Checkpoint
     public string StateJson { get; private set; } = "{}";
 
     /// <summary>
+    /// Agent thread ID for checkpoint resumption
+    /// </summary>
+    public string? AgentThreadId { get; private set; }
+
+    /// <summary>
+    /// Serialized conversation history (JSON or compressed)
+    /// </summary>
+    public string? ConversationHistory { get; private set; }
+
+    /// <summary>
+    /// Serialized agent state (JSON)
+    /// </summary>
+    public string? AgentState { get; private set; }
+
+    /// <summary>
     /// Current status of this checkpoint
     /// </summary>
     public CheckpointStatus Status { get; private set; }
@@ -169,6 +184,26 @@ public class Checkpoint
 
         if (nextAgentType != null)
             NextAgentType = nextAgentType;
+
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Updates the agent-specific checkpoint state
+    /// </summary>
+    public void UpdateAgentState(
+        string? agentThreadId = null,
+        string? conversationHistory = null,
+        string? agentState = null)
+    {
+        if (agentThreadId != null)
+            AgentThreadId = agentThreadId;
+
+        if (conversationHistory != null)
+            ConversationHistory = conversationHistory;
+
+        if (agentState != null)
+            AgentState = agentState;
 
         UpdatedAt = DateTime.UtcNow;
     }

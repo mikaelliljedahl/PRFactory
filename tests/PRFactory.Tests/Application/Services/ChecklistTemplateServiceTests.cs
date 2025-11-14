@@ -16,6 +16,7 @@ public class ChecklistTemplateServiceTests : IDisposable
     private readonly string _testTemplatesPath;
     private readonly Mock<ILogger<ChecklistTemplateService>> _mockLogger;
     private readonly Mock<IConfiguration> _mockConfiguration;
+    private bool _disposed;
 
     public ChecklistTemplateServiceTests()
     {
@@ -29,13 +30,24 @@ public class ChecklistTemplateServiceTests : IDisposable
         _mockConfiguration.Setup(c => c["ChecklistTemplatesPath"]).Returns(_testTemplatesPath);
     }
 
-    public void Dispose()
+    protected virtual void Dispose(bool disposing)
     {
-        // Cleanup test directory
-        if (Directory.Exists(_testTemplatesPath))
+        if (_disposed)
+            return;
+
+        if (disposing && Directory.Exists(_testTemplatesPath))
         {
+            // Cleanup test directory
             Directory.Delete(_testTemplatesPath, true);
         }
+
+        _disposed = true;
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 
     #region LoadTemplateAsync Tests

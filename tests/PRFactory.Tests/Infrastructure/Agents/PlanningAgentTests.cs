@@ -26,6 +26,8 @@ public class PlanningAgentTests : IDisposable
     private readonly Mock<IArchitectureContextService> _mockArchitectureContext;
     private readonly PlanningAgent _agent;
     private readonly string _testRepositoryPath;
+    private readonly List<string> _createdTemplateFiles = new();
+    private bool _disposed;
 
     public PlanningAgentTests()
     {
@@ -70,13 +72,36 @@ public class PlanningAgentTests : IDisposable
             .Returns("TestCliAgent");
     }
 
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+            return;
+
+        if (disposing)
+        {
+            // Clean up test directory
+            if (Directory.Exists(_testRepositoryPath))
+            {
+                Directory.Delete(_testRepositoryPath, recursive: true);
+            }
+
+            // Clean up test-created template files
+            foreach (var templateFile in _createdTemplateFiles)
+            {
+                if (File.Exists(templateFile))
+                {
+                    File.Delete(templateFile);
+                }
+            }
+        }
+
+        _disposed = true;
+    }
+
     public void Dispose()
     {
-        // Clean up test directory
-        if (Directory.Exists(_testRepositoryPath))
-        {
-            Directory.Delete(_testRepositoryPath, recursive: true);
-        }
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 
     #region Constructor Tests
@@ -253,7 +278,7 @@ public class PlanningAgentTests : IDisposable
             });
 
         // Act
-        var result = await _agent.ExecuteWithMiddlewareAsync(context);
+        await _agent.ExecuteWithMiddlewareAsync(context);
 
         // Assert
         _mockCliAgent.Verify(
@@ -684,7 +709,7 @@ public class PlanningAgentTests : IDisposable
 
     #region Helper Methods
 
-    private Ticket CreateTestTicket()
+    private static Ticket CreateTestTicket()
     {
         var ticket = Ticket.Create(
             "TEST-123",
@@ -709,10 +734,24 @@ public class PlanningAgentTests : IDisposable
 
     private async Task CreateDomainTemplate(string templateName)
     {
-        var promptsPath = Path.Combine(_testRepositoryPath, "..", "..", "..", "..", "..", "prompts", "plan", "anthropic", "domains");
-        Directory.CreateDirectory(promptsPath);
+        // Create prompts directory at the project root (same location PlanningAgent looks for them)
+        // AppDomain.CurrentDomain.BaseDirectory is typically: .../tests/PRFactory.Tests/bin/Debug|Release/net10.0/
+        // Going up 5 levels gets to project root
+        var projectRoot = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "..");
+        var promptsPath = Path.Combine(projectRoot, "prompts", "plan", "anthropic", "domains");
+        var fullPromptsPath = Path.GetFullPath(promptsPath);
 
-        var templatePath = Path.Combine(promptsPath, templateName);
+        Directory.CreateDirectory(fullPromptsPath);
+
+        var templatePath = Path.Combine(fullPromptsPath, templateName);
+
+        // Skip if file already exists (use actual templates instead of overwriting with test content)
+        if (File.Exists(templatePath))
+        {
+            return;
+        }
+
+        // Create test template only if it doesn't exist (e.g., in CI environment)
         var content = templateName switch
         {
             "web_ui.txt" => "You are an expert Blazor Server developer",
@@ -722,6 +761,9 @@ public class PlanningAgentTests : IDisposable
         };
 
         await File.WriteAllTextAsync(templatePath, content);
+
+        // Track created file for cleanup
+        _createdTemplateFiles.Add(templatePath);
     }
 
     #endregion

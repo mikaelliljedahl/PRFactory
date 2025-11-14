@@ -1,463 +1,679 @@
 # Epic 5: Microsoft Agent Framework Integration
 
-**Status:** 🔴 Not Started (Research Phase Required)
-**Priority:** Future (After P1 & P2)
-**Effort:** 2-3 weeks (after PoC decision)
+**Status:** 🟡 Refined & Ready for Implementation
+**Priority:** High (Post-P1, foundational for future AI capabilities)
+**Effort:** 10-12 weeks (phased implementation)
 **Dependencies:** Epic 2 (Multi-LLM), Epic 1 (Team Review for safety gates)
 
 ---
 
-## Strategic Goal
+## Executive Summary
 
-Enable autonomous agentic workflows with tool use (file operations, git commands, Jira API calls). Move beyond simple CLI execution to true multi-turn agent conversations with memory and context.
+Enable **autonomous agentic workflows** with specialized tool use (file operations, git commands, Jira API calls, code analysis) while maintaining human oversight gates. Move from graph-based orchestration to **agent-driven orchestration within graphs**, combining PRFactory's proven workflow architecture with Microsoft Agent Framework's powerful agent capabilities.
 
-**Current Approach:** CLI-based (simple, works today)
+**Key Innovation:** Agents as specialized **graph node executors** rather than replacements for graphs. Graphs provide workflow orchestration, agents provide intelligent task execution.
 
-**Proposed Approach:** Microsoft Agent Framework (formerly Semantic Kernel) with direct API calls and tool plugins
+---
 
-**Decision Point:** After 1-week PoC, decide if framework adds sufficient value vs current CLI architecture.
+## Strategic Goals
+
+### 1. **Intelligent Task Execution**
+Current agents are prompt-based wrappers. New Agent Framework agents have:
+- **Tool use** - Direct API calls to file system, git, Jira, codebase analysis
+- **Multi-turn reasoning** - Agents can plan, execute, validate, retry autonomously
+- **Conversation memory** - Context retention across workflow stages
+- **Structured outputs** - Type-safe responses instead of parsing markdown
+
+### 2. **Specialized Agent Roles**
+Align agents with PRFactory's proven workflows:
+- **AnalyzerAgent** - Codebase analysis, impact assessment (RefinementGraph)
+- **PlannerAgent** - Implementation planning, task decomposition (PlanningGraph)
+- **CodeExecutorAgent** - Code generation, testing, validation (ImplementationGraph)
+- **ReviewerAgent** - Code quality review, security analysis (CodeReviewGraph)
+
+### 3. **Interactive User Experience**
+Via AG-UI integration:
+- Real-time agent reasoning visibility (streaming responses)
+- Follow-up question flows ("Did you mean this file?")
+- Human approval gates before destructive operations
+- Conversation history and context management
+
+### 4. **Database-Driven Configuration**
+All agent configuration stored in database (multi-tenant isolated):
+- Agent instructions and personas per tenant
+- Tool permissions and safety policies
+- Token budgets and cost controls
+- Feature flags for gradual rollout
+
+---
+
+## Architecture Vision
+
+### High-Level Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     PRFactory Workflow Graphs                    │
+│  (RefinementGraph, PlanningGraph, ImplementationGraph, etc.)    │
+└────────────────────────┬────────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│              Agent Adapters (BaseAgent Wrappers)                │
+│     AnalysisAgentAdapter, PlannerAgentAdapter, etc.             │
+│  (Preserve checkpoint resumption, multi-tenancy, messages)      │
+└────────────────────────┬────────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│           Microsoft Agent Framework (AF.Agents)                 │
+│                                                                  │
+│  ┌────────────────┐  ┌────────────────┐  ┌──────────────────┐ │
+│  │ AnalyzerAgent  │  │ PlannerAgent   │  │ CodeExecutorAgent│ │
+│  │ - Code search  │  │ - Task decomp  │  │ - Code gen       │ │
+│  │ - Impact       │  │ - Risk assess  │  │ - Testing        │ │
+│  │ - Dependencies │  │ - Estimation   │  │ - Validation     │ │
+│  └────────┬───────┘  └────────┬───────┘  └────────┬─────────┘ │
+│           │                    │                    │           │
+│           └────────────────────┼────────────────────┘           │
+│                                ▼                                │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │              Agent Tool Registry (DI)                     │  │
+│  │         PRFactory.AgentTools Class Library                │  │
+│  └──────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   PRFactory.AgentTools                          │
+│                  (Separate Class Library)                        │
+│                                                                  │
+│  ┌─────────────────┐  ┌──────────────────┐  ┌────────────────┐│
+│  │ File Tools      │  │ Git Tools        │  │ Jira Tools     ││
+│  │ - ReadFile      │  │ - Commit         │  │ - GetTicket    ││
+│  │ - WriteFile     │  │ - CreateBranch   │  │ - AddComment   ││
+│  │ - Grep          │  │ - CreatePR       │  │ - Transition   ││
+│  │ - Glob          │  │ - GetDiff        │  │                ││
+│  └─────────────────┘  └──────────────────┘  └────────────────┘│
+│                                                                  │
+│  ┌─────────────────┐  ┌──────────────────┐  ┌────────────────┐│
+│  │ Analysis Tools  │  │ Command Tools    │  │ Web Tools      ││
+│  │ - CodeSearch    │  │ - ExecuteShell   │  │ - WebFetch     ││
+│  │ - ParseAST      │  │ - RunTests       │  │ - ApiCall      ││
+│  │ - DependencyMap │  │ - BuildProject   │  │                ││
+│  └─────────────────┘  └──────────────────┘  └────────────────┘│
+└─────────────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Infrastructure Services                       │
+│  LocalGitService, JiraService, FileSystem, HttpClient, etc.     │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Key Architectural Decisions
+
+**✅ PRESERVE: Graph-based orchestration**
+Graphs remain the workflow backbone. Agent Framework enhances individual graph nodes, not replaces graphs.
+
+**✅ PRESERVE: Checkpoint-based resumption**
+Agent state serialized into existing Checkpoint entity. Full pause/resume capability maintained.
+
+**✅ PRESERVE: Multi-tenancy**
+Agent configuration, tool permissions, and execution all tenant-isolated via ITenantContext.
+
+**✅ NEW: Agent-driven task execution**
+Replace simple prompt wrappers with intelligent agents that can reason, plan, and use tools.
+
+**✅ NEW: Separate tools library**
+`PRFactory.AgentTools` class library - reusable, testable, tenant-aware tools.
+
+**✅ NEW: Database-driven configuration**
+New `AgentConfiguration` entity stores all agent settings (instructions, tools, limits, policies).
+
+**✅ NEW: AG-UI integration**
+Real-time streaming UI for agent interactions, follow-up questions, and approval gates.
 
 ---
 
 ## Why Microsoft Agent Framework?
 
-**✅ Benefits:**
-- **Multi-step Orchestration:** Agents can plan and execute complex workflows autonomously
-- **Function Calling / Tool Use:** Agents can invoke tools (file I/O, git, Jira) directly
-- **Memory & Context:** Multi-turn conversations with conversation history
-- **Built-in LLM Abstraction:** Works with Anthropic, OpenAI, Google out-of-the-box
-- **Prompt Templates & Chaining:** Reusable, composable prompt patterns
-- **Production-Ready:** Microsoft-supported, used in Copilot products
+### Research Summary
 
-**❌ Tradeoffs:**
-- **Complexity:** Adds abstraction layer vs simple CLI subprocess calls
-- **Token Costs:** Agentic workflows may use more tokens (multi-turn, tool calls)
-- **Latency:** Multiple API roundtrips for tool execution
-- **Reliability:** Autonomous agents may make unexpected decisions
+**Three comprehensive research documents created:**
+1. **AGENT_FRAMEWORK_RESEARCH.md** - Deep technical dive (1,960 lines, 14 topics)
+2. **AGENT_FRAMEWORK_RECOMMENDATIONS.md** - Decision rationale and roadmap (503 lines)
+3. **AGENT_FRAMEWORK_INTEGRATION_MAP.md** - PRFactory integration points (1,732 lines)
 
----
+### Perfect Alignment with PRFactory
 
-## Architecture Comparison
+| PRFactory Requirement | Agent Framework Capability | Fit |
+|----------------------|----------------------------|-----|
+| Graph-based workflows | Graph-based workflow support | ✅ Perfect |
+| Checkpoint resumption | Native checkpointing & AgentThread | ✅ Perfect |
+| Multi-tenant isolation | Middleware + DI support | ✅ Perfect |
+| Tool/function calling | AIFunctionFactory | ✅ Perfect |
+| OpenTelemetry | Built-in observability | ✅ Perfect |
+| Multi-LLM support | IChatClient abstraction | ✅ Perfect |
+| Real-time UI | AG-UI protocol (SSE) | ✅ Perfect |
 
-### Current: CLI-Based
+### Benefits Over Current Approach
 
-```
-Workflow Graphs
-  ↓
-Agents (Analysis/Planning/Implementation)
-  ↓
-ILlmProvider (ClaudeCodeCliAdapter, etc.)
-  ↓
-ProcessExecutor
-  ↓
-claude --headless "prompt"
-```
+**Current:** Simple prompt wrappers calling LLM CLI/API
+**Agent Framework:** Intelligent agents with reasoning, planning, tool use, memory
 
-**Pros:** Simple, works today, authentication handled by CLI
-**Cons:** Limited to single-turn prompts, no tool use, no memory
+| Capability | Current | Agent Framework |
+|-----------|---------|-----------------|
+| **Autonomy** | Single prompt/response | Multi-turn reasoning with tool use |
+| **Tools** | None (all manual) | 20+ tools (file, git, Jira, analysis) |
+| **Memory** | Stateless per graph node | Conversation history + context |
+| **Planning** | Fixed graph logic | Dynamic agent planning |
+| **Validation** | Manual or none | Agents validate their own work |
+| **Error Recovery** | Fixed retry logic | Intelligent retry with context |
+| **Observability** | Custom logging | Built-in OpenTelemetry |
+| **UI Interaction** | Approval gates only | Streaming, follow-ups, reasoning |
 
----
+### Cost & Performance Considerations
 
-### Proposed: Agent Framework + Direct API
+**Token Usage:**
+- ✅ **Mitigation**: Token budgets per tenant in `AgentConfiguration`
+- ✅ **Mitigation**: Smaller models for simple tasks (Haiku vs Sonnet)
+- ✅ **Mitigation**: Tool results cached where possible
+- ⚠️ **Expected increase**: 1.5-2x tokens vs current (multi-turn conversations)
 
-```
-Workflow Graphs
-  ↓
-Microsoft Agent Framework (Kernel)
-  ↓
-┌────────────────────────────────────────────┐
-│  Agent Orchestration                        │
-│  - Planning                                 │
-│  - Tool Selection                           │
-│  - Multi-turn Conversations                │
-└────────────────────────────────────────────┘
-  ↓
-┌────────────────────────────────────────────┐
-│  Tool Plugins                               │
-│  - FileOperations (Read, Edit, Write)      │
-│  - GitOperations (Commit, Branch, PR)      │
-│  - JiraOperations (Comment, Transition)    │
-│  - AnalysisTools (CodeSearch, AST)         │
-└────────────────────────────────────────────┘
-  ↓
-AnthropicApiClient (Direct Messages API)
-  ↓
-https://api.anthropic.com/v1/messages
-```
+**Latency:**
+- ✅ **Mitigation**: Streaming responses via AG-UI (perceived performance)
+- ✅ **Mitigation**: Parallel tool execution where possible
+- ⚠️ **Expected increase**: +2-5s per workflow stage (tool roundtrips)
 
-**Pros:** True agentic workflows, tool use, multi-turn, memory
-**Cons:** More complex, higher token costs, requires API key management
+**Value Proposition:**
+Higher costs justified by significantly better outcomes (better analysis, planning, code generation, review).
 
 ---
 
-## PoC Phase (Week 1 - Research & Decision)
+## Saturn Fork Learnings
 
-### Objectives
+### What Saturn Got Right (Adopt)
 
-**Must Answer:**
-1. Does Agent Framework provide enough value over CLI approach?
-2. What is the token cost increase for agentic workflows vs CLI?
-3. How reliable are autonomous tool calls?
-4. Does framework support all required LLM providers (Anthropic, OpenAI, Google)?
+**Comprehensive research document created:**
+**SATURN_TOOLS_ANALYSIS.md** - 1,848 lines, complete tool architecture analysis
 
-### Tasks
+**Key Patterns to Port:**
+1. **ITool Interface** - Simple, elegant tool contract
+2. **ToolRegistry with Auto-Discovery** - Reflection-based tool registration
+3. **Template Method Pattern** - Consistent tool execution flow
+4. **Production-Hardened Security** - Path validation, size limits, SSRF protection, timeouts
+5. **Atomic File Operations** - Temp file + rename pattern for corruption prevention
+6. **Streaming Support** - Real-time output for long operations
+7. **Message Persistence** - Full audit trail
 
-1. **Install Microsoft Agent Framework**
-   ```bash
-   dotnet add package Microsoft.SemanticKernel
-   dotnet add package Microsoft.SemanticKernel.Plugins.Core
-   ```
+**16 Production-Ready Tools Identified:**
+- File System: Read, Write, Delete, List, Patch
+- Search: Grep, Glob, SearchReplace
+- Command: ExecuteShell with timeout
+- Web: WebFetch with SSRF protection
+- Multi-Agent: Create, Handoff, Wait, GetResult, Status, Terminate
 
-2. **Create Simple PoC Agent**
-   ```csharp
-   var kernel = Kernel.CreateBuilder()
-       .AddAnthropicChatCompletion(model: "claude-sonnet-4-5", apiKey: apiKey)
-       .Build();
+### What Saturn Got Wrong (Avoid)
 
-   // Add file tool plugin
-   kernel.ImportPluginFromType<FileToolPlugin>();
+1. ❌ **Global Singleton State** - Use DI instead
+2. ❌ **Polling-Based Coordination** - Use event-driven patterns
+3. ❌ **No Security Boundaries** - Tools must be per-agent/per-tenant controlled
+4. ❌ **Direct LLM Provider Coupling** - Use Agent Framework's abstraction
+5. ❌ **Per-Command Approval** - Use policy-based approval at workflow level
+6. ❌ **Complex Review Phase Loops** - Keep approval gates simple
 
-   var result = await kernel.InvokePromptAsync(@"
-       Analyze the file UserService.cs and suggest improvements.
-       Use the ReadFile tool to access the file content.
-   ");
-   ```
+### Saturn Integration Strategy
 
-3. **Test Tool Use**
-   - Create simple plugins: `FileToolPlugin`, `GitToolPlugin`
-   - Verify agent can invoke tools autonomously
-   - Measure token usage vs CLI approach
-
-4. **Performance Comparison**
-   - CLI: Single prompt, single response
-   - Agent Framework: Prompt → tool call → tool result → final response
-   - Measure latency and token costs
-
-5. **Decision Matrix**
-
-   | Criteria | CLI Approach | Agent Framework |
-   |----------|--------------|-----------------|
-   | Simplicity | ✅ Very simple | ❌ More complex |
-   | Token Costs | ✅ Lower | ❌ Higher (multi-turn) |
-   | Autonomy | ❌ Limited | ✅ High (tool use) |
-   | Latency | ✅ Lower | ❌ Higher (roundtrips) |
-   | Flexibility | ❌ Single-turn only | ✅ Multi-turn, memory |
-   | Maintainability | ✅ Simple code | ❌ More abstraction |
-
-### Deliverables
-
-- [ ] PoC code demonstrating agent + tool use
-- [ ] Performance benchmark (latency, token usage)
-- [ ] Decision document: Proceed or defer?
+**Phase 1:** Port ITool + ToolBase + ToolRegistry patterns
+**Phase 2:** Implement 10 core tools (file, git, Jira)
+**Phase 3:** Add advanced tools (analysis, AST parsing)
+**Phase 4:** Multi-agent coordination (future)
 
 ---
 
-## Implementation Plan (If PoC Decision is "Proceed")
+## Implementation Plan Overview
 
-### Phase 1: AnthropicApiClient (Direct Messages API)
+**Detailed implementation plans in:** `/docs/planning/epic_05_agent_framework/`
 
-**Create:** `/PRFactory.Infrastructure/LLM/AnthropicApiClient.cs`
+### Phase 1: Foundation (Weeks 1-3)
+- Create `PRFactory.AgentTools` class library
+- Port Saturn's ITool pattern and core tools
+- Create `AgentConfiguration` entity and database schema
+- Set up Agent Framework SDK integration
+- Implement observability (OpenTelemetry)
 
+### Phase 2: Agent Roles (Weeks 4-6)
+- Implement AnalyzerAgent + adapter for RefinementGraph
+- Implement PlannerAgent + adapter for PlanningGraph
+- Create AgentConfigurationService for database-driven config
+- Add middleware for multi-tenant isolation
+- Unit and integration testing
+
+### Phase 3: Tool Ecosystem (Weeks 7-8)
+- Complete file system tools (Read, Write, Grep, Glob)
+- Complete git tools (Commit, Branch, PR, Diff)
+- Complete Jira tools (GetTicket, AddComment, Transition)
+- Add analysis tools (CodeSearch, DependencyMap)
+- Security hardening and validation
+
+### Phase 4: UI Integration (Weeks 9-10)
+- AG-UI protocol implementation
+- Blazor components for agent interaction
+- Real-time streaming response UI
+- Follow-up question flows
+- Approval gate UI improvements
+
+### Phase 5: Production Readiness (Weeks 11-12)
+- CodeExecutorAgent + ReviewerAgent implementation
+- End-to-end workflow testing
+- Performance optimization
+- Documentation and training
+- Gradual rollout with feature flags
+
+---
+
+## Database Schema Changes
+
+### New Entities
+
+**AgentConfiguration** (Multi-tenant isolated)
 ```csharp
-public interface IAnthropicApiClient
+public class AgentConfiguration
 {
-    Task<CompletionResponse> SendMessageAsync(
-        Guid userId,
-        string prompt,
-        string? systemPrompt = null,
-        CancellationToken ct = default);
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public string AgentName { get; set; }  // "AnalyzerAgent", "PlannerAgent", etc.
+    public string Instructions { get; set; }  // System prompt / persona
+    public string[] EnabledTools { get; set; }  // Tool whitelist
+    public int MaxTokens { get; set; }  // Token budget
+    public float Temperature { get; set; }  // LLM temperature
+    public bool StreamingEnabled { get; set; }
+    public bool RequiresApproval { get; set; }  // Approval gate config
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 
-    Task<StreamingCompletionResponse> SendMessageStreamAsync(
-        Guid userId,
-        string prompt,
-        string? systemPrompt = null,
-        CancellationToken ct = default);
-}
-
-public class AnthropicApiClient : IAnthropicApiClient
-{
-    private readonly HttpClient _httpClient;
-    private readonly IOAuthTokenStore _tokenStore;
-
-    public async Task<CompletionResponse> SendMessageAsync(
-        Guid userId,
-        string prompt,
-        string? systemPrompt = null,
-        CancellationToken ct = default)
-    {
-        // Load user's OAuth tokens
-        var tokens = await _tokenStore.LoadTokensAsync(userId);
-
-        // POST https://api.anthropic.com/v1/messages
-        var request = new
-        {
-            model = "claude-sonnet-4-5-20250929",
-            max_tokens = 8000,
-            system = systemPrompt,
-            messages = new[]
-            {
-                new { role = "user", content = prompt }
-            }
-        };
-
-        _httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
-
-        var response = await _httpClient.PostAsJsonAsync(
-            "https://api.anthropic.com/v1/messages",
-            request,
-            ct);
-
-        response.EnsureSuccessStatusCode();
-
-        var result = await response.Content.ReadFromJsonAsync<AnthropicResponse>(ct);
-
-        return new CompletionResponse
-        {
-            Content = result.Content[0].Text,
-            Usage = new UsageMetrics
-            {
-                InputTokens = result.Usage.InputTokens,
-                OutputTokens = result.Usage.OutputTokens
-            }
-        };
-    }
+    // Navigation
+    public Tenant Tenant { get; set; }
 }
 ```
 
-**Configuration:**
+**AgentExecutionLog** (Audit trail)
+```csharp
+public class AgentExecutionLog
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public Guid TicketId { get; set; }
+    public Guid CheckpointId { get; set; }
+    public string AgentName { get; set; }
+    public string ToolName { get; set; }  // Null if no tool used
+    public string Input { get; set; }
+    public string Output { get; set; }
+    public int InputTokens { get; set; }
+    public int OutputTokens { get; set; }
+    public TimeSpan Duration { get; set; }
+    public bool Success { get; set; }
+    public string? ErrorMessage { get; set; }
+    public DateTime ExecutedAt { get; set; }
+}
+```
 
+### Checkpoint Schema Extension
+
+**Add AgentThread state to Checkpoint:**
+```csharp
+public class Checkpoint
+{
+    // ... existing fields ...
+
+    // New fields for Agent Framework integration
+    public string? AgentThreadId { get; set; }  // AF AgentThread ID
+    public string? ConversationHistory { get; set; }  // Serialized messages (JSON)
+    public string? AgentState { get; set; }  // Serialized agent-specific state
+}
+```
+
+---
+
+## Configuration Example (Database, NOT appsettings)
+
+### UI for Agent Configuration
+
+**Admin UI: `/admin/agent-configuration`**
+
+Tenant admins can configure agents:
+- Agent name and role
+- Custom instructions/persona
+- Tool permissions (checkboxes for each tool)
+- Token budget and temperature
+- Streaming and approval settings
+
+**Example stored in database:**
 ```json
 {
-  "LlmProviders": {
-    "AnthropicApi": {
-      "BaseUrl": "https://api.anthropic.com/v1",
-      "Model": "claude-sonnet-4-5-20250929",
-      "MaxTokens": 8000
-    }
-  }
+  "tenantId": "abc123",
+  "agentName": "AnalyzerAgent",
+  "instructions": "You are a senior software architect. Analyze codebases for impact, dependencies, and risks. Be thorough but concise.",
+  "enabledTools": [
+    "ReadFile",
+    "Grep",
+    "Glob",
+    "CodeSearch",
+    "GetJiraTicket"
+  ],
+  "maxTokens": 8000,
+  "temperature": 0.3,
+  "streamingEnabled": true,
+  "requiresApproval": false
 }
 ```
 
----
-
-### Phase 2: Tool Plugins
-
-**Create:** `/PRFactory.Infrastructure/Agents/Plugins/FileToolPlugin.cs`
+### Runtime Agent Creation (from Database)
 
 ```csharp
-public class FileToolPlugin
+public class AgentFactory : IAgentFactory
 {
-    [KernelFunction("ReadFile")]
-    [Description("Read the contents of a file")]
-    public async Task<string> ReadFileAsync(
-        [Description("File path to read")] string filePath)
+    private readonly IAgentConfigurationService _configService;
+    private readonly IToolRegistry _toolRegistry;
+    private readonly IChatClient _chatClient;
+
+    public async Task<AIAgent> CreateAgentAsync(
+        Guid tenantId,
+        string agentName,
+        CancellationToken ct = default)
     {
-        if (!File.Exists(filePath))
-            return $"Error: File not found: {filePath}";
+        // Load from database
+        var config = await _configService.GetConfigurationAsync(
+            tenantId, agentName, ct);
 
-        return await File.ReadAllTextAsync(filePath);
-    }
+        // Get enabled tools (filtered by tenant permissions)
+        var tools = _toolRegistry.GetTools(
+            tenantId, config.EnabledTools);
 
-    [KernelFunction("WriteFile")]
-    [Description("Write content to a file")]
-    public async Task<string> WriteFileAsync(
-        [Description("File path to write")] string filePath,
-        [Description("Content to write")] string content)
-    {
-        await File.WriteAllTextAsync(filePath, content);
-        return $"Successfully wrote to {filePath}";
-    }
+        // Create agent with config
+        var agent = _chatClient.CreateAIAgent(
+            instructions: config.Instructions,
+            tools: tools,
+            maxTokens: config.MaxTokens,
+            temperature: config.Temperature);
 
-    [KernelFunction("SearchFiles")]
-    [Description("Search for files matching a pattern")]
-    public string[] SearchFilesAsync(
-        [Description("Directory to search")] string directory,
-        [Description("Search pattern (e.g., *.cs)")] string pattern)
-    {
-        return Directory.GetFiles(directory, pattern, SearchOption.AllDirectories);
-    }
-}
-```
-
-**Create:** `/PRFactory.Infrastructure/Agents/Plugins/GitToolPlugin.cs`
-
-```csharp
-public class GitToolPlugin
-{
-    private readonly ILocalGitService _gitService;
-
-    [KernelFunction("GitCommit")]
-    [Description("Commit changes to git repository")]
-    public async Task<string> CommitAsync(
-        [Description("Repository path")] string repositoryPath,
-        [Description("Commit message")] string message)
-    {
-        await _gitService.CommitAsync(repositoryPath, message);
-        return $"Committed: {message}";
-    }
-
-    [KernelFunction("GitCreateBranch")]
-    [Description("Create a new git branch")]
-    public async Task<string> CreateBranchAsync(
-        [Description("Repository path")] string repositoryPath,
-        [Description("Branch name")] string branchName)
-    {
-        await _gitService.CreateBranchAsync(repositoryPath, branchName);
-        return $"Created branch: {branchName}";
-    }
-}
-```
-
-**Create:** `/PRFactory.Infrastructure/Agents/Plugins/JiraToolPlugin.cs`
-
-```csharp
-public class JiraToolPlugin
-{
-    private readonly IJiraService _jiraService;
-
-    [KernelFunction("GetJiraTicket")]
-    [Description("Get details of a Jira ticket")]
-    public async Task<string> GetTicketAsync(
-        [Description("Ticket key (e.g., PROJ-123)")] string ticketKey)
-    {
-        var ticket = await _jiraService.GetTicketAsync(ticketKey);
-        return JsonSerializer.Serialize(ticket);
-    }
-
-    [KernelFunction("AddJiraComment")]
-    [Description("Add a comment to a Jira ticket")]
-    public async Task<string> AddCommentAsync(
-        [Description("Ticket key")] string ticketKey,
-        [Description("Comment text")] string comment)
-    {
-        await _jiraService.AddCommentAsync(ticketKey, comment);
-        return $"Comment added to {ticketKey}";
+        // Apply middleware
+        return agent
+            .WithMiddleware(LoggingMiddleware)
+            .WithMiddleware(TenantIsolationMiddleware)
+            .WithMiddleware(TokenBudgetMiddleware);
     }
 }
 ```
 
 ---
 
-### Phase 3: Agent Orchestration
+## AG-UI Integration
 
-**Create:** `/PRFactory.Infrastructure/Agents/AnalysisAgent.cs`
+### Real-Time Streaming Protocol
 
-```csharp
-public class AnalysisAgent
-{
-    private readonly IKernel _kernel;
+**AG-UI uses HTTP + Server-Sent Events (SSE):**
 
-    public async Task<AnalysisResult> AnalyzeTicketAsync(Guid userId, Guid ticketId)
+```
+Client (Blazor)
+    ↓ POST /api/agent/chat
+Server (AG-UI endpoint)
+    ↓ SSE stream
+Client receives:
+  - Agent reasoning steps
+  - Tool invocations
+  - Partial responses
+  - Final result
+```
+
+### Blazor Component Example
+
+```razor
+<!-- /PRFactory.Web/Components/Agents/AgentChat.razor -->
+<div class="agent-chat">
+    <div class="messages">
+        @foreach (var msg in messages)
+        {
+            <AgentMessage Message="@msg" />
+        }
+
+        @if (isStreaming)
+        {
+            <div class="streaming-indicator">
+                <LoadingSpinner />
+                <span>@currentAgentAction</span>
+            </div>
+        }
+    </div>
+
+    @if (requiresUserInput)
     {
-        // Load OAuth tokens for user
-        var tokens = await _tokenStore.LoadTokensAsync(userId);
+        <AgentFollowUpQuestion
+            Question="@currentQuestion"
+            OnAnswer="HandleUserAnswer" />
+    }
 
-        // Create kernel with Anthropic
-        var kernel = Kernel.CreateBuilder()
-            .AddAnthropicChatCompletion(
-                model: "claude-sonnet-4-5-20250929",
-                apiKey: tokens.AccessToken)
-            .Build();
+    @if (requiresApproval)
+    {
+        <AgentApprovalGate
+            ProposedAction="@proposedAction"
+            OnApprove="HandleApproval"
+            OnReject="HandleRejection" />
+    }
+</div>
 
-        // Import tool plugins
-        kernel.ImportPluginFromType<FileToolPlugin>();
-        kernel.ImportPluginFromType<JiraToolPlugin>();
+@code {
+    [Parameter] public Guid TicketId { get; set; }
+    [Inject] private IAgentChatService AgentChatService { get; set; }
 
-        // Execute agent with autonomy
-        var systemPrompt = @"
-You are a software analyst. Your task is to analyze a Jira ticket and the related codebase.
+    private async Task SendMessageAsync(string userMessage)
+    {
+        isStreaming = true;
 
-You have access to these tools:
-- ReadFile: Read file contents
-- SearchFiles: Find files matching a pattern
-- GetJiraTicket: Get ticket details
+        await foreach (var chunk in AgentChatService.StreamResponseAsync(
+            TicketId, userMessage))
+        {
+            if (chunk.Type == "reasoning")
+                currentAgentAction = chunk.Content;
+            else if (chunk.Type == "tool_use")
+                messages.Add(new ToolUseMessage(chunk));
+            else if (chunk.Type == "response")
+                messages.Add(new AssistantMessage(chunk));
 
-Use these tools to gather context and generate a comprehensive analysis.
-";
+            StateHasChanged();
+        }
 
-        var result = await kernel.InvokePromptAsync($@"
-{systemPrompt}
-
-Analyze ticket ID: {ticketId}
-
-Steps:
-1. Use GetJiraTicket to fetch ticket details
-2. Use SearchFiles to find related code files
-3. Use ReadFile to read relevant files
-4. Generate analysis report
-");
-
-        return ParseAnalysisResult(result.GetValue<string>());
+        isStreaming = false;
     }
 }
 ```
 
+### Follow-Up Question Flow
+
+**Agent can ask clarifying questions mid-workflow:**
+
+1. Agent analyzes ticket: "Fix authentication bug"
+2. Agent searches codebase, finds 3 auth-related files
+3. **Agent asks:** "I found 3 authentication modules. Which one is affected?"
+   - `src/Auth/JwtAuth.cs`
+   - `src/Auth/OAuth2Auth.cs`
+   - `src/Auth/ApiKeyAuth.cs`
+4. User clicks: `JwtAuth.cs`
+5. Agent continues with correct context
+
+This is **only possible with AG-UI + Agent Framework**, not current approach.
+
 ---
 
-## Acceptance Criteria (If Implemented)
+## Security & Safety
 
-### PoC Phase
-- [ ] PoC code demonstrates agent + tool use
-- [ ] Token usage measured and acceptable (< 2x CLI approach)
-- [ ] Latency measured and acceptable (< 5s total for tool workflow)
-- [ ] Decision made: Proceed or defer
+### Tool Permission Model
 
-### Implementation (If "Proceed")
-- [ ] `AnthropicApiClient` implements direct Messages API calls
-- [ ] OAuth tokens loaded from User entity
-- [ ] `FileToolPlugin`, `GitToolPlugin`, `JiraToolPlugin` created
-- [ ] Agent can autonomously invoke tools
-- [ ] Multi-turn conversations with memory
-- [ ] Workflow graphs updated to use Agent Framework
+**Database-driven tool whitelisting:**
+- Each AgentConfiguration specifies `EnabledTools`
+- ToolRegistry filters tools by tenant permissions
+- Agents cannot access tools not in their whitelist
 
-### Safety & Reliability
-- [ ] Human approval gates for critical operations (git push, Jira transitions)
-- [ ] Tool execution limits (max file reads, max tool calls per conversation)
-- [ ] Audit logging for all tool invocations
-- [ ] Error handling and retry logic
+**Example:**
+```csharp
+// AnalyzerAgent config (read-only)
+EnabledTools = ["ReadFile", "Grep", "Glob", "CodeSearch"]
+
+// CodeExecutorAgent config (read-write)
+EnabledTools = ["ReadFile", "WriteFile", "Grep", "Glob", "ExecuteShell", "RunTests"]
+
+// ReviewerAgent config (read-only)
+EnabledTools = ["ReadFile", "Grep", "GetGitDiff"]
+```
+
+### Approval Gates
+
+**Workflow-level approval (not per-command):**
+- RefinementGraph → Human approves refined requirements
+- PlanningGraph → Human approves implementation plan
+- ImplementationGraph → Human approves code changes
+- CodeReviewGraph → Human approves review feedback
+
+**No per-tool approval** (too granular, slows down agents).
+
+### Resource Limits
+
+**Enforced via middleware:**
+- Token budgets per agent per ticket
+- File size limits (10MB max read, 1MB max write)
+- Execution timeouts (30s per tool, 5min per agent)
+- Rate limiting (100 tool calls per workflow)
+
+### Audit Trail
+
+**All agent actions logged in `AgentExecutionLog`:**
+- Which agent executed
+- Which tool was invoked
+- Input and output
+- Token usage and duration
+- Success or failure
+
+Enables full forensic analysis of agent behavior.
+
+---
+
+## Migration Strategy
+
+### Hybrid Approach (Gradual Rollout)
+
+**Not a "big bang" rewrite - gradual enhancement:**
+
+**Week 1-3:** AnalyzerAgent (RefinementGraph only)
+- Feature flag: `EnableAgentFrameworkAnalyzer`
+- Fallback to current AnalysisAgent if flag disabled
+
+**Week 4-6:** PlannerAgent (PlanningGraph only)
+- Feature flag: `EnableAgentFrameworkPlanner`
+- Fallback to current PlanningAgent if flag disabled
+
+**Week 7-10:** Full integration (all graphs)
+- Feature flag: `EnableAgentFrameworkFull`
+- Remove old agents once validated
+
+### Rollback Plan
+
+**If Agent Framework underperforms:**
+1. Disable feature flags per tenant
+2. Fallback to current graph agents
+3. Continue using existing workflow graphs (unchanged)
+4. Re-evaluate and iterate
+
+**No risk to core workflows** - graphs and checkpoints preserved.
+
+---
+
+## Success Criteria
+
+### Phase 1 (Foundation - Week 3)
+- [ ] `PRFactory.AgentTools` class library created
+- [ ] ITool interface and 5 core tools implemented
+- [ ] `AgentConfiguration` entity in database
+- [ ] Agent Framework SDK integrated
+- [ ] Unit tests for all tools (80%+ coverage)
+
+### Phase 2 (Agent Roles - Week 6)
+- [ ] AnalyzerAgent produces better codebase analysis than current
+- [ ] PlannerAgent generates structured plans with risk assessment
+- [ ] Multi-tenant isolation verified (no cross-tenant data leaks)
+- [ ] Token usage < 2x current approach
+- [ ] Latency < 5s added per workflow stage
+
+### Phase 3 (Tool Ecosystem - Week 8)
+- [ ] 15+ tools implemented and tested
+- [ ] Security validation passes (no directory traversal, SSRF, etc.)
+- [ ] Tool execution audit logs working
+- [ ] Performance benchmarks acceptable
+
+### Phase 4 (UI Integration - Week 10)
+- [ ] AG-UI streaming works in Blazor
+- [ ] Follow-up questions functional
+- [ ] Approval gates integrated
+- [ ] User feedback positive
+
+### Phase 5 (Production - Week 12)
+- [ ] CodeExecutorAgent and ReviewerAgent implemented
+- [ ] End-to-end workflow tested (Jira → Code → PR)
+- [ ] Feature flags enabled for pilot tenants
+- [ ] Documentation complete
+- [ ] Training materials created
 
 ---
 
 ## Risks & Mitigations
 
-**Risk:** Token costs significantly higher
-**Mitigation:** Set token budgets, monitor usage, use smaller models for simple tasks
-
-**Risk:** Agents make unexpected tool calls
-**Mitigation:** Extensive testing, human approval gates, audit logs
-
-**Risk:** Added complexity for minimal gain
-**Mitigation:** PoC phase validates value before full implementation
-
----
-
-## Decision Criteria
-
-**Proceed if:**
-- Token cost increase < 2x CLI approach
-- Latency acceptable for user workflows
-- Tool use reliability > 95%
-- Framework provides clear value (autonomous multi-step workflows)
-
-**Defer if:**
-- Token costs prohibitive
-- Latency too high (> 10s for typical workflow)
-- Tool use unreliable
-- CLI approach sufficient for current needs
+| Risk | Impact | Probability | Mitigation |
+|------|--------|-------------|------------|
+| Token costs too high | High | Medium | Token budgets, smaller models, caching |
+| Latency degrades UX | Medium | Low | Streaming UI, parallel execution |
+| Agents make mistakes | High | Medium | Approval gates, audit logs, fallback to human |
+| Framework not mature | Medium | Low | Public preview (Oct 2025) is production-ready |
+| Complex integration | Medium | Medium | Phased rollout, hybrid approach, feature flags |
+| Security vulnerabilities | High | Low | Tool whitelisting, resource limits, audit trail |
 
 ---
 
-## Related Epics
+## Related Documentation
 
-- **Epic 2 (Multi-LLM):** Agent Framework should work with all LLM providers
-- **Epic 1 (Team Review):** Human approval gates critical for agentic workflows
+### Research Documents
+- **AGENT_FRAMEWORK_RESEARCH.md** - Technical deep-dive (58 KB, 1,960 lines)
+- **AGENT_FRAMEWORK_RECOMMENDATIONS.md** - Decision rationale (17 KB, 503 lines)
+- **AGENT_FRAMEWORK_INTEGRATION_MAP.md** - PRFactory integration (71 KB, 1,732 lines)
+- **SATURN_TOOLS_ANALYSIS.md** - Saturn fork analysis (61 KB, 1,848 lines)
+- **SATURN_QUICK_REFERENCE.md** - Saturn patterns (16 KB, 470 lines)
+
+### Implementation Plans
+- **01_ARCHITECTURE.md** - Detailed architecture and design decisions
+- **02_TOOLS_LIBRARY.md** - PRFactory.AgentTools class library spec
+- **03_AGENT_ROLES.md** - Specialized agent role definitions
+- **04_UI_INTEGRATION.md** - AG-UI and Blazor integration
+- **05_CONFIGURATION.md** - Database-driven configuration spec
+- **06_IMPLEMENTATION_ROADMAP.md** - Week-by-week implementation plan
+
+### Related Epics
+- **Epic 1 (Team Review)** - Approval gates for agent actions
+- **Epic 2 (Multi-LLM)** - Agent Framework supports all LLM providers
+- **Epic 3 (OAuth)** - Secure credential management for agents
 
 ---
 
-**Next Steps:**
-1. Allocate 1 week for PoC phase
-2. Build simple agent with tool use
-3. Measure performance and costs
-4. Make decision: Proceed or defer
-5. If defer: Revisit in 6 months after P1/P2 epics complete
+## Next Steps
+
+1. **Review this refined EPIC** with engineering and product leadership
+2. **Review detailed implementation plans** in `/docs/planning/epic_05_agent_framework/`
+3. **Approve/adjust scope** and timeline
+4. **Allocate engineering resources** (2 senior engineers, 10-12 weeks)
+5. **Begin Phase 1: Foundation** (create tools library, database schema, SDK integration)
+6. **Weekly progress reviews** with stakeholders
+7. **Gradual rollout** with feature flags and pilot tenants
+
+---
+
+**Status:** ✅ **Refined and ready for stakeholder review**
+**Next Review Date:** [To be scheduled]
+**Owner:** [To be assigned]

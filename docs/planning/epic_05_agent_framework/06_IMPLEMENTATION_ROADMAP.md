@@ -1,0 +1,513 @@
+# 06: Implementation Roadmap
+
+**Document Purpose:** Week-by-week implementation timeline with milestones, deliverables, and approval gates.
+
+**Total Duration:** 14 weeks (12 weeks implementation + 2 weeks buffer)
+**Team Size:** 2 senior engineers
+**Last Updated:** 2025-11-13
+
+---
+
+## Timeline Overview
+
+```
+Week 1-3: Foundation
+Week 4-6: Agent Roles
+Week 7-8: Tool Ecosystem
+Week 9-11: UI Integration (extended for AG-UI complexity)
+Week 12-13: Production Readiness
+Week 14: Contingency Buffer
+```
+
+**Note:** Week 14 is contingency buffer. If ahead of schedule, use for additional testing, performance optimization, or early production deployment.
+
+---
+
+## Phase 1: Foundation (Weeks 1-3)
+
+### Objectives
+- Create infrastructure for Agent Framework integration
+- Establish database schema and configuration system
+- Implement core tool interfaces
+- Set up observability
+
+### Week 1: Project Setup & Core Interfaces
+
+**Tasks:**
+- [ ] Create `PRFactory.AgentTools` class library project
+- [ ] Implement `ITool` interface (from Saturn)
+- [ ] Implement `ToolBase` abstract class
+- [ ] Implement `ToolExecutionContext` and `ToolExecutionResult`
+- [ ] Create security utilities (`PathValidator`, `SsrfProtection`)
+- [ ] Set up xUnit test project for tools
+
+**Deliverables:**
+- PRFactory.AgentTools.csproj
+- Core interfaces with XML documentation
+- Security utilities with unit tests
+
+**Approval Gate:** Architecture review
+
+---
+
+### Week 2: Database Schema & Agent Framework SDK
+
+**Tasks:**
+- [ ] Create `AgentConfiguration` entity and DbSet
+- [ ] Create `AgentExecutionLog` entity and DbSet
+- [ ] Add migration for new tables
+- [ ] Extend `Checkpoint` entity with AgentThread fields
+- [ ] Add NuGet package: `Microsoft.SemanticKernel`
+- [ ] Implement `AgentFactory` interface and class
+- [ ] Implement `AgentConfigurationService`
+
+**Deliverables:**
+- Database migration scripts
+- AgentConfiguration CRUD operations
+- AgentFactory with DI registration
+
+**Approval Gate:** Schema review, DBA approval
+
+---
+
+### Week 3: Tool Registry & First Tools
+
+**Tasks:**
+- [ ] Implement `ToolRegistry` with auto-discovery
+- [ ] Implement `ReadFileTool` with security validations
+- [ ] Implement `WriteFileTool` with atomic operations
+- [ ] Implement `GrepTool` with regex support
+- [ ] Implement `GlobTool` with pattern matching
+- [ ] Set up OpenTelemetry integration
+- [ ] Write comprehensive unit tests (80%+ coverage)
+
+**Deliverables:**
+- ToolRegistry with auto-discovery
+- 4 file system tools (tested)
+- OpenTelemetry integration
+
+**Approval Gate:** Tool security review, penetration testing
+
+---
+
+## Phase 2: Agent Roles (Weeks 4-6)
+
+### Objectives
+- Implement first agent adapters for RefinementGraph and PlanningGraph
+- Validate end-to-end workflow with Agent Framework agents
+- Establish middleware patterns for multi-tenancy
+
+### Week 4: AnalyzerAgent Implementation
+
+**Tasks:**
+- [ ] Implement `AnalysisAgentAdapter` (wraps AF AnalyzerAgent)
+- [ ] Configure default `AnalyzerAgent` in database (seed data)
+- [ ] Implement checkpoint save/restore for agent state
+- [ ] Implement `GetJiraTicketTool` for Jira integration
+- [ ] Implement `CodeSearchTool` for semantic search
+- [ ] Write integration tests for AnalyzerAgent
+
+**Deliverables:**
+- AnalysisAgentAdapter integrated into RefinementGraph
+- End-to-end test: Jira webhook → Analysis → Result
+
+**Approval Gate:** Demo AnalyzerAgent vs current AnalysisAgent
+
+---
+
+### Week 5: PlannerAgent Implementation
+
+**Tasks:**
+- [ ] Implement `PlannerAgentAdapter` (wraps AF PlannerAgent)
+- [ ] Configure default `PlannerAgent` in database (seed data)
+- [ ] Implement structured output parsing (JSON plan format)
+- [ ] Implement multi-turn conversation support (questions/answers)
+- [ ] Add middleware: `TenantIsolationMiddleware`
+- [ ] Add middleware: `TokenBudgetMiddleware`
+- [ ] Write integration tests for PlannerAgent
+
+**Deliverables:**
+- PlannerAgentAdapter integrated into PlanningGraph
+- Middleware chain for security and resource limits
+- End-to-end test: Refinement → Planning → Structured plan
+
+**Approval Gate:** Demo PlannerAgent output quality
+
+---
+
+### Week 6: Testing & Refinement
+
+**Tasks:**
+- [ ] Comprehensive E2E testing (Jira → Refinement → Planning)
+- [ ] Performance benchmarking (latency, token usage)
+- [ ] Security testing (cross-tenant isolation, path traversal)
+- [ ] Fix bugs and edge cases
+- [ ] Update documentation
+- [ ] Train team on new architecture
+
+**Deliverables:**
+- Test report (E2E, performance, security)
+- Bug fixes
+- Team training materials
+
+**Approval Gate:** Engineering leadership sign-off for Phase 3
+
+---
+
+## Phase 3: Tool Ecosystem (Weeks 7-8)
+
+### Objectives
+- Complete tool implementations across all categories
+- Security hardening and validation
+- Tool execution audit logging
+
+### Week 7: Complete Tool Implementations
+
+**Tasks:**
+- [ ] Implement Git tools: `CommitTool`, `CreateBranchTool`, `GetDiffTool`
+- [ ] Implement Jira tools: `AddCommentTool`, `TransitionTicketTool`
+- [ ] Implement command tools: `ExecuteShellTool`, `RunTestsTool`
+- [ ] Implement web tools: `WebFetchTool` (with SSRF protection)
+- [ ] Implement `DependencyMapTool` for code analysis
+- [ ] Write unit tests for all tools (80%+ coverage)
+
+**Deliverables:**
+- 15+ tools implemented and tested
+- Comprehensive tool test suite
+
+**Approval Gate:** Tool inventory review
+
+---
+
+### Week 8: Security Hardening & Audit Logging
+
+**Tasks:**
+- [ ] Implement `AuditLoggingMiddleware`
+- [ ] Add tool execution logging to `AgentExecutionLog` table
+- [ ] Security review: All tools validated for path traversal, SSRF, injection
+- [ ] Add resource limits: File size, timeout, rate limiting
+- [ ] Performance optimization: Tool execution caching
+- [ ] Admin UI: Tool execution logs viewer
+
+**Deliverables:**
+- Complete audit trail for all tool executions
+- Security validation report
+- Admin UI for log viewing
+
+**Approval Gate:** Security team sign-off
+
+---
+
+## Phase 4: UI Integration (Weeks 9-11)
+
+### Objectives
+- AG-UI protocol implementation
+- Blazor components for agent interaction
+- Real-time streaming and follow-up questions
+
+**Note:** Extended to 3 weeks based on AG-UI complexity and streaming implementation effort.
+
+### Week 9: AG-UI Protocol & Streaming
+
+**Tasks:**
+- [ ] Implement AG-UI HTTP endpoint (`/api/agent/chat`)
+- [ ] Implement Server-Sent Events (SSE) streaming
+- [ ] Create `AgentChatService` for message handling
+- [ ] Create Blazor component: `AgentChat.razor`
+- [ ] Create Blazor component: `AgentMessage.razor`
+- [ ] Implement real-time streaming UI (partial responses)
+
+**Deliverables:**
+- AG-UI endpoint with SSE streaming
+- Blazor components for agent chat
+
+**Approval Gate:** Demo streaming UI
+
+---
+
+### Week 10: Blazor Components & Integration
+
+**Tasks:**
+- [ ] Implement follow-up question flow (agent asks, user answers)
+- [ ] Create Blazor component: `AgentFollowUpQuestion.razor`
+- [ ] Create Blazor component: `AgentApprovalGate.razor`
+- [ ] Update workflow orchestrator for user interaction pauses
+- [ ] Implement approval gate UI (approve/reject proposed actions)
+- [ ] UX polish and refinement
+
+**Deliverables:**
+- Interactive agent UI with follow-up questions
+- Approval gate UI for human-in-the-loop
+- User acceptance testing results
+
+**Deliverables:**
+- Blazor components with code-behind
+- Basic streaming UI working
+
+**Approval Gate:** Demo streaming in development environment
+
+---
+
+### Week 11: Follow-Up Questions & Approval Gates
+
+**Tasks:**
+- [ ] Implement follow-up question flow (agent asks, user answers)
+- [ ] Create Blazor component: `AgentFollowUpQuestion.razor`
+- [ ] Create Blazor component: `AgentApprovalGate.razor`
+- [ ] Update workflow orchestrator for user interaction pauses
+- [ ] Implement approval gate UI (approve/reject proposed actions)
+- [ ] UX polish and refinement
+- [ ] User acceptance testing
+
+**Deliverables:**
+- Interactive agent UI with follow-up questions
+- Approval gate UI for human-in-the-loop
+- User acceptance testing results
+
+**Approval Gate:** UX team sign-off
+
+---
+
+## Phase 5: Production Readiness (Weeks 12-13)
+
+### Objectives
+- Complete remaining agent roles
+- End-to-end testing
+- Production deployment
+
+### Week 12: CodeExecutorAgent & ReviewerAgent
+
+**Tasks:**
+- [ ] Implement `CodeExecutorAgentAdapter` for ImplementationGraph
+- [ ] Implement `ReviewerAgentAdapter` for CodeReviewGraph
+- [ ] Configure default agents in database (seed data)
+- [ ] End-to-end testing: Jira → Refinement → Planning → Implementation → Review → PR
+- [ ] Performance optimization (parallel tool execution, caching)
+- [ ] Documentation: Architecture, API, admin guide
+
+**Deliverables:**
+- All 4 agent roles implemented
+- Complete E2E workflow tested
+- Documentation complete
+
+**Approval Gate:** E2E demo to stakeholders
+
+---
+
+### Week 13: Production Deployment
+
+**Tasks:**
+- [ ] Create feature flags: `EnableAgentFrameworkAnalyzer`, `EnableAgentFrameworkPlanner`, etc.
+- [ ] Deploy to staging environment
+- [ ] Staging validation with real Jira tickets
+- [ ] Create deployment runbook
+- [ ] Train customer success team
+- [ ] Deploy to production (pilot tenant only)
+- [ ] Monitor production metrics (latency, token usage, errors)
+
+**Deliverables:**
+- Production deployment
+- Feature flags for gradual rollout
+- Monitoring dashboards
+- Training materials
+
+**Approval Gate:** Production readiness review, go-live decision
+
+---
+
+### Week 14: Contingency Buffer
+
+**Purpose:** Time buffer for unforeseen delays or additional work.
+
+**Potential Uses:**
+- Address feedback from Week 13 production deployment
+- Additional performance optimization
+- Extra testing or security hardening
+- Early production rollout to additional tenants
+- Documentation improvements
+- Team retrospective and knowledge sharing
+
+**If Ahead of Schedule:**
+- Begin early production deployment
+- Implement nice-to-have features from backlog
+- Create additional training materials
+- Conduct performance tuning
+
+---
+
+## Milestones
+
+| Milestone | Week | Description |
+|-----------|------|-------------|
+| M1: Foundation Complete | 3 | Tools library + DB schema + AF SDK integrated |
+| M2: First Agent Live | 4 | AnalyzerAgent working in RefinementGraph |
+| M3: Planning Agents Live | 6 | Both AnalyzerAgent and PlannerAgent production-ready |
+| M4: Complete Tool Ecosystem | 8 | 15+ tools implemented, security validated |
+| M5: UI Streaming Complete | 9 | AG-UI streaming working in Blazor |
+| M6: UI Interactive Features | 11 | Follow-up questions and approval gates functional |
+| M7: All Agents Complete | 12 | All 4 agent roles implemented and tested |
+| M8: Production Deployment | 13 | Deployed to production with feature flags |
+| M9: Contingency Complete | 14 | Buffer used or early completion |
+
+---
+
+## Success Criteria
+
+### Phase 1 (Week 3)
+- [x] PRFactory.AgentTools project created with core interfaces
+- [x] 5+ tools implemented and tested (80%+ coverage)
+- [x] Database schema deployed
+- [x] OpenTelemetry integration working
+
+### Phase 2 (Week 6)
+- [x] AnalyzerAgent produces better analysis than current
+- [x] PlannerAgent generates structured plans
+- [x] Token usage < 2x current approach
+- [x] Latency < 5s added per workflow stage
+- [x] Multi-tenant isolation verified
+
+### Phase 3 (Week 8)
+- [x] 15+ tools implemented
+- [x] Security validation passes (no vulnerabilities)
+- [x] Tool audit logs working
+- [x] Performance benchmarks acceptable
+
+### Phase 4 (Week 10)
+- [x] AG-UI streaming works in Blazor
+- [x] Follow-up questions functional
+- [x] User feedback positive (user acceptance testing)
+
+### Phase 5 (Week 12)
+- [x] All 4 agent roles deployed
+- [x] E2E workflow tested (Jira → PR)
+- [x] Feature flags enabled for pilot tenant
+- [x] Production monitoring active
+
+---
+
+## Risk Mitigation
+
+| Risk | Week | Mitigation |
+|------|------|------------|
+| Agent Framework SDK breaking changes | 1-3 | Pin to stable version, subscribe to release notes |
+| Token costs exceed budget | 4-6 | Implement TokenBudgetMiddleware, use smaller models for simple tasks |
+| Agent output quality issues | 4-6 | Extensive prompt engineering, few-shot examples, constrained outputs |
+| Security vulnerabilities in tools | 7-8 | Security review, penetration testing, multiple validation layers |
+| UX issues with streaming | 9-10 | User testing, iterative refinement, fallback to non-streaming |
+| Production incidents | 12 | Feature flags for quick rollback, comprehensive monitoring, runbooks |
+
+---
+
+## Timeline Risk Acceptance
+
+**14-Week Timeline with 1-Week Buffer:**
+
+The 14-week timeline includes:
+- **12 weeks** of active implementation
+- **1 week** buffer for UI complexity (Week 11, added to Phase 4)
+- **1 week** contingency buffer (Week 14)
+
+**Total Buffer:** 2 weeks out of 14 (14.3% contingency)
+
+**Risk Assessment:**
+- ✅ **Acceptable:** 14.3% buffer is reasonable for well-defined work with experienced engineers
+- ✅ **Mitigated by:** Weekly checkpoint meetings (see below) to detect slippage early
+- ✅ **Fallback:** Week 14 can absorb 1-week delay without impacting delivery date
+- ⚠️ **Risk:** If both UI (Week 11) and Contingency (Week 14) are consumed, no remaining buffer
+
+**Alternative Consideration:**
+- **15-week timeline** would provide 21.4% buffer (3 weeks / 14 weeks)
+- Trade-off: More safety vs. faster time-to-market
+- **Decision:** Accept 14-week timeline with explicit risk acknowledgment
+
+**Early Warning System:**
+- Weekly checkpoint meetings (see Team Allocation below)
+- If >3 days behind by Week 6, trigger timeline review
+- Feature flag approach allows partial deployment if needed
+
+---
+
+## Dependencies & Blockers
+
+### External Dependencies
+- Microsoft Agent Framework SDK availability
+- Azure OpenAI / Anthropic API access
+- Jira sandbox environment for testing
+
+### Internal Dependencies
+- Database migration approval (Week 2)
+- Security team review (Week 8)
+- UX team sign-off (Week 10)
+- Production deployment window (Week 12)
+
+---
+
+## Team Allocation
+
+### Engineers (2 Full-Time)
+- **Engineer 1 (Backend Focus):** Tools library, agent adapters, middleware
+- **Engineer 2 (Full-Stack):** Database schema, UI integration, E2E testing
+
+### Part-Time Support
+- **Architect (10%):** Design reviews, technical guidance
+- **Security Engineer (10%):** Security reviews, penetration testing
+- **UX Designer (10%):** AG-UI design, user testing
+- **DevOps (10%):** Deployment, monitoring, infrastructure
+
+### Weekly Checkpoint Meetings
+
+**Purpose:** Early detection of timeline slippage, blocker resolution, and risk mitigation.
+
+**Schedule:**
+- **Day:** Every Friday, 2:00 PM
+- **Duration:** 30 minutes
+- **Attendees:**
+  - 2 engineers (required)
+  - Architect (required)
+  - Product owner (optional)
+  - Part-time support (as needed)
+
+**Agenda:**
+1. **Progress Review (10 min):**
+   - Completed tasks vs. planned tasks for the week
+   - Milestones achieved
+   - Test coverage and code quality metrics
+
+2. **Blocker Identification (10 min):**
+   - Technical blockers (API issues, integration problems)
+   - Resource blockers (waiting on approvals, external dependencies)
+   - Escalation needed?
+
+3. **Timeline Status (5 min):**
+   - On track / 1-2 days behind / 3+ days behind
+   - If 3+ days behind, trigger risk assessment
+   - Adjust next week's scope if needed
+
+4. **Next Week Planning (5 min):**
+   - Confirm tasks for upcoming week
+   - Identify potential risks
+   - Resource needs
+
+**Critical Checkpoints (Approval Gates):**
+- **Week 3:** Architecture review, schema approval
+- **Week 6:** Engineering leadership sign-off for Phase 3
+- **Week 8:** Security team sign-off
+- **Week 11:** UX team sign-off
+- **Week 13:** Production readiness review, go/no-go decision
+
+**Escalation Triggers:**
+- 3+ days behind schedule by Week 6 → Timeline review with stakeholders
+- Critical blocker unresolved for >3 days → Architect escalation
+- Security issues found in Week 8 → Immediate remediation, delay Phase 5 if needed
+
+---
+
+## Next Steps
+
+1. ✅ **Detailed plans created** - All implementation documents ready
+2. ⏳ **Stakeholder review** - Present roadmap to engineering leadership
+3. ⏳ **Resource allocation** - Assign 2 engineers for 10-12 weeks
+4. ⏳ **Kick off Week 1** - Create PRFactory.AgentTools project
+5. ⏳ **Weekly status updates** - Progress tracking and blocker resolution
+
+**Status:** ✅ **Ready for kickoff**

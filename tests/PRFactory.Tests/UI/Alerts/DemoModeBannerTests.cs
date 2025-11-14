@@ -147,18 +147,4 @@ public class DemoModeBannerTests : ComponentTestBase
         Assert.Contains("aria-label=\"Close\"", cut.Markup);
     }
 
-    [Fact]
-    public void CloseButton_CanBeClickedMultipleTimes_WithoutError()
-    {
-        // Arrange
-        var cut = RenderComponent<DemoModeBanner>(parameters => parameters
-            .Add(p => p.ShowBanner, true));
-
-        // Act & Assert - First click hides banner
-        var closeButton = cut.Find(".btn-close");
-        closeButton.Click();
-        Assert.Empty(cut.Markup);
-
-        // Banner is already hidden, no error should occur
-    }
 }

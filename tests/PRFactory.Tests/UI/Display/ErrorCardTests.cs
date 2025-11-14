@@ -17,7 +17,7 @@ public class ErrorCardTests : ComponentTestBase
             Id = Guid.NewGuid(),
             Severity = severity,
             Message = "Test error message",
-            CreatedAt = new DateTime(2024, 1, 15, 10, 30, 0),
+            CreatedAt = new DateTime(2024, 1, 15, 10, 30, 0, DateTimeKind.Utc),
             IsResolved = isResolved,
             EntityType = "TestEntity"
         };
@@ -166,7 +166,7 @@ public class ErrorCardTests : ComponentTestBase
         // Arrange
         var error = CreateTestError(isResolved: true);
         error.ResolvedBy = "admin@example.com";
-        error.ResolvedAt = new DateTime(2024, 1, 16, 14, 30, 0);
+        error.ResolvedAt = new DateTime(2024, 1, 16, 14, 30, 0, DateTimeKind.Utc);
 
         // Act
         var cut = RenderComponent<ErrorCard>(parameters => parameters

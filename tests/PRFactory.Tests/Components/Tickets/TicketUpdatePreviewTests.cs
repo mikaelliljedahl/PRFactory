@@ -39,12 +39,6 @@ public class TicketUpdatePreviewTests : ComponentTestBase
         MockTicketService.Verify(x => x.GetLatestTicketUpdateAsync(ticketId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    [Fact(Skip = "WaitForState timeout - component doesn't render error message as expected")]
-    public async Task OnInitialized_HandlesServiceError()
-    {
-        // Method intentionally left empty.
-    }
-
     [Fact]
     public async Task ApproveButton_Click_CallsServiceAndInvokesCallback()
     {
@@ -73,7 +67,7 @@ public class TicketUpdatePreviewTests : ComponentTestBase
         // Act
         var approveButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Approve")).ToList();
         Assert.NotEmpty(approveButtons);
-        await approveButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+        await approveButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
         // Wait for the callback
         await Task.Delay(100);
@@ -109,7 +103,7 @@ public class TicketUpdatePreviewTests : ComponentTestBase
 
         // Act
         var approveButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Approve")).ToList();
-        await approveButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+        await approveButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
         // Wait for error
         await Task.Delay(100);
@@ -141,7 +135,7 @@ public class TicketUpdatePreviewTests : ComponentTestBase
         var rejectButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Reject")).ToList();
         if (rejectButtons.Any())
         {
-            await rejectButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+            await rejectButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
             // Assert - Reject form should be visible
             Assert.Contains("reason", cut.Markup.ToLower());
@@ -171,13 +165,13 @@ public class TicketUpdatePreviewTests : ComponentTestBase
         var rejectButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Reject")).ToList();
         if (rejectButtons.Any())
         {
-            await rejectButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+            await rejectButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
             // Act - Try to confirm without entering a reason
             var confirmButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Confirm")).ToList();
             if (confirmButtons.Any())
             {
-                await confirmButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+                await confirmButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
                 // Assert - Should show validation error
                 // The component should not call the service without a reason
@@ -186,12 +180,6 @@ public class TicketUpdatePreviewTests : ComponentTestBase
                     Times.Never);
             }
         }
-    }
-
-    [Fact(Skip = "InputAsync expects oninput event but textarea uses onchange - test needs fix")]
-    public async Task ConfirmReject_WithReason_CallsServiceAndInvokesCallback()
-    {
-        // Method intentionally left empty.
     }
 
     [Fact]
@@ -217,13 +205,13 @@ public class TicketUpdatePreviewTests : ComponentTestBase
         var rejectButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Reject")).ToList();
         if (rejectButtons.Any())
         {
-            await rejectButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+            await rejectButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
             // Act - Cancel rejection
             var cancelButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Cancel")).ToList();
             if (cancelButtons.Any())
             {
-                await cancelButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+                await cancelButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
                 // Assert - Reject form should be hidden
                 // The form fields should no longer be visible

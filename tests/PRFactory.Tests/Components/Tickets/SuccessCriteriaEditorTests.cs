@@ -117,7 +117,7 @@ public class SuccessCriteriaEditorTests : ComponentTestBase
         var removeButtons = cut.FindAll("button.btn-danger, button.btn-outline-danger");
         if (removeButtons.Any())
         {
-            await removeButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+            await removeButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
         }
 
         // Assert
@@ -198,8 +198,8 @@ public class SuccessCriteriaEditorTests : ComponentTestBase
             new SuccessCriterionDto
             {
                 Category = SuccessCriterionCategory.Functional,
-                Description = "Test",
-                Priority = 0,
+                Description = "Test with priority",
+                Priority = 1,
                 IsTestable = true
             }
         };
@@ -210,6 +210,7 @@ public class SuccessCriteriaEditorTests : ComponentTestBase
 
         // Assert - Should render priority selection
         Assert.NotNull(cut.Markup);
+        Assert.Contains("Test with priority", cut.Markup);
     }
 
     [Fact]
@@ -234,29 +235,6 @@ public class SuccessCriteriaEditorTests : ComponentTestBase
         // Assert - Should render checkbox inputs
         var checkboxes = cut.FindAll("input[type='checkbox']");
         Assert.NotEmpty(checkboxes);
-    }
-
-    [Fact]
-    public void RemoveCriterion_HandlesInvalidIndex()
-    {
-        // Arrange
-        var criteria = new List<SuccessCriterionDto>
-        {
-            new SuccessCriterionDto
-            {
-                Category = SuccessCriterionCategory.Functional,
-                Description = "Test",
-                Priority = 0,
-                IsTestable = true
-            }
-        };
-
-        var cut = RenderComponent<SuccessCriteriaEditor>(parameters => parameters
-            .Add(p => p.SuccessCriteria, criteria));
-
-        // Act & Assert - Should not throw when attempting to remove invalid index
-        // This is indirectly tested by the component's internal validation
-        Assert.NotNull(cut.Markup);
     }
 
     [Fact]

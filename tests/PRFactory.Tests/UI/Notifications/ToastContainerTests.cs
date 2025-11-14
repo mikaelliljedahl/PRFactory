@@ -12,6 +12,7 @@ public class ToastContainerTests : IDisposable
 {
     private readonly Bunit.TestContext _testContext;
     private readonly Mock<IToastService> _mockToastService;
+    private bool _disposed;
 
     public ToastContainerTests()
     {
@@ -39,6 +40,19 @@ public class ToastContainerTests : IDisposable
 
     public void Dispose()
     {
-        _testContext?.Dispose();
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)
+            {
+                _testContext?.Dispose();
+            }
+            _disposed = true;
+        }
     }
 }

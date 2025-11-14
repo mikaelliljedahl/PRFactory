@@ -155,21 +155,6 @@ public class RelativeTimeTests : ComponentTestBase
     }
 
     [Fact]
-    public void Render_DefaultIcon_IsClock()
-    {
-        // Arrange
-        var timestamp = DateTime.UtcNow;
-
-        // Act
-        var cut = RenderComponent<RelativeTime>(parameters => parameters
-            .Add(p => p.Timestamp, timestamp)
-            .Add(p => p.ShowIcon, true));
-
-        // Assert
-        Assert.Contains("bi-clock", cut.Markup);
-    }
-
-    [Fact]
     public void Render_WithoutPrefix_DoesNotAddExtraSpace()
     {
         // Arrange

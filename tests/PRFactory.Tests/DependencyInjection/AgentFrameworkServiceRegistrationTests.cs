@@ -16,7 +16,7 @@ public class AgentFrameworkServiceRegistrationTests : DIValidationTestBase
     /// <summary>
     /// Creates a service collection with Agent Framework services registered
     /// </summary>
-    private IServiceCollection CreateAgentFrameworkServiceCollection(
+    private static IServiceCollection CreateAgentFrameworkServiceCollection(
         bool enableLogging = true,
         bool enableErrorHandling = true,
         bool enableRetry = true)

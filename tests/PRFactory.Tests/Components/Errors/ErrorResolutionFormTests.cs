@@ -70,12 +70,11 @@ public class ErrorResolutionFormTests : ComponentTestBase
     {
         // Arrange
         var errorId = Guid.NewGuid();
-        var submitCalled = false;
 
         // Act
         var cut = RenderComponent<ErrorResolutionForm>(parameters => parameters
             .Add(p => p.ErrorId, errorId)
-            .Add(p => p.OnSubmit, EventCallback.Factory.Create<ErrorResolutionForm.ResolutionFormModel>(this, (model) => { submitCalled = true; return Task.CompletedTask; })));
+            .Add(p => p.OnSubmit, EventCallback.Factory.Create<ErrorResolutionForm.ResolutionFormModel>(this, (model) => Task.CompletedTask)));
 
         var submitButton = cut.Find("button[type='submit']");
         submitButton.Click();

@@ -19,7 +19,6 @@ public class TicketUpdateBuilder
     private int _version = 1;
     private bool _isApproved = false;
     private string? _rejectionReason;
-    private DateTime? _approvedAt;
     private DateTime? _postedAt;
 
     public TicketUpdateBuilder()
@@ -83,7 +82,6 @@ public class TicketUpdateBuilder
     public TicketUpdateBuilder AsDraft()
     {
         _isApproved = false;
-        _approvedAt = null;
         _postedAt = null;
         return this;
     }
@@ -91,14 +89,12 @@ public class TicketUpdateBuilder
     public TicketUpdateBuilder AsApproved()
     {
         _isApproved = true;
-        _approvedAt = DateTime.UtcNow;
         return this;
     }
 
     public TicketUpdateBuilder AsPosted()
     {
         _isApproved = true;
-        _approvedAt = DateTime.UtcNow.AddMinutes(-5);
         _postedAt = DateTime.UtcNow;
         return this;
     }

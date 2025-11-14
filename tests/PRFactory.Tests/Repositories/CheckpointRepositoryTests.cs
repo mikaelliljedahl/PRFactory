@@ -585,7 +585,7 @@ public class CheckpointRepositoryTests : TestBase
     }
 
     // Helper methods
-    private Tenant CreateTestTenant(string name = "Test Tenant")
+    private static Tenant CreateTestTenant(string name = "Test Tenant")
     {
         return Tenant.Create(
             name: name,

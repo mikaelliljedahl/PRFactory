@@ -166,9 +166,12 @@ public class AlertMessageTests : ComponentTestBase
             .Add(p => p.Message, "Test message")
             .Add(p => p.Dismissible, true));
 
-        // Act & Assert (should not throw)
+        // Act
         var closeButton = cut.Find(".btn-close");
         closeButton.Click();
+
+        // Assert - No exception thrown
+        Assert.NotNull(cut);
     }
 
     [Fact]

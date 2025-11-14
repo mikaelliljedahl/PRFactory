@@ -86,7 +86,7 @@ public class ReviewCommentThreadTests : ComponentTestBase
         var submitButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Post") || b.TextContent.Contains("Submit")).ToList();
         if (submitButtons.Any())
         {
-            await submitButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+            await submitButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
             await Task.Delay(100);
 
@@ -114,7 +114,7 @@ public class ReviewCommentThreadTests : ComponentTestBase
         var submitButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Post") || b.TextContent.Contains("Submit")).ToList();
         if (submitButtons.Any())
         {
-            await submitButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+            await submitButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
             await Task.Delay(100);
 
@@ -144,7 +144,7 @@ public class ReviewCommentThreadTests : ComponentTestBase
         var submitButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Post") || b.TextContent.Contains("Submit")).ToList();
         if (submitButtons.Any())
         {
-            await submitButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+            await submitButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
             await Task.Delay(100);
 
@@ -171,7 +171,7 @@ public class ReviewCommentThreadTests : ComponentTestBase
         var clearButtons = cut.FindAll("button").Where(b => b.TextContent.Contains("Clear") || b.TextContent.Contains("Cancel")).ToList();
         if (clearButtons.Any())
         {
-            await clearButtons.First().ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+            await clearButtons[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
             // Assert - Textarea should be cleared
             Assert.NotNull(cut.Markup);

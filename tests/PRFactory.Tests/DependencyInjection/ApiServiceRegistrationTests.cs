@@ -29,7 +29,7 @@ public class ApiServiceRegistrationTests : DIValidationTestBase
 
     #region Future Infrastructure Service Tests (Currently Skipped)
 
-    [Fact]
+    [Fact(Skip = "Infrastructure services registration not yet implemented in API")]
     public void ApiProgram_RegistersInfrastructureServices_WhenEnabled()
     {
         // When infrastructure services are enabled in API:
@@ -39,9 +39,10 @@ public class ApiServiceRegistrationTests : DIValidationTestBase
         // - Should register Git platform services
 
         // This test will be enabled once API infrastructure registration is complete
+        throw new NotImplementedException("Test not yet implemented");
     }
 
-    [Fact]
+    [Fact(Skip = "Repository registration not yet implemented in API")]
     public void ApiProgram_RegistersRepositories_WhenEnabled()
     {
         // When enabled, should register:
@@ -50,9 +51,10 @@ public class ApiServiceRegistrationTests : DIValidationTestBase
         // - ITicketRepository
         // - ITicketUpdateRepository
         // - etc.
+        throw new NotImplementedException("Test not yet implemented");
     }
 
-    [Fact]
+    [Fact(Skip = "Application services registration not yet implemented in API")]
     public void ApiProgram_RegistersApplicationServices_WhenEnabled()
     {
         // When enabled, should register:
@@ -60,13 +62,14 @@ public class ApiServiceRegistrationTests : DIValidationTestBase
         // - ITicketApplicationService
         // - IRepositoryApplicationService
         // - etc.
+        throw new NotImplementedException("Test not yet implemented");
     }
 
     #endregion
 
     #region Documentation Tests
 
-    [Fact]
+    [Fact(Skip = "Documentation test: Infrastructure services are not yet registered in API")]
     public void ApiProgram_InfrastructureServicesAreCommentedOut()
     {
         // This test documents that infrastructure services are currently
@@ -77,7 +80,7 @@ public class ApiServiceRegistrationTests : DIValidationTestBase
         // 2. Remove Skip attributes from tests above
         // 3. Update this test to verify services are registered
 
-        Assert.True(true, "Infrastructure services are not yet registered in API - this is expected");
+        throw new NotImplementedException("Test not yet implemented");
     }
 
     #endregion

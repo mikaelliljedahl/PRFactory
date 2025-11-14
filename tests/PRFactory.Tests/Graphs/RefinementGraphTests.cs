@@ -166,7 +166,7 @@ public class RefinementGraphTests
 
         // Assert
         Assert.NotNull(capturedState);
-        Assert.Equal(true, capturedState["is_suspended"]);
+        Assert.True((bool)capturedState["is_suspended"]);
         Assert.Equal("human_answers", capturedState["waiting_for"]);
     }
 
@@ -338,7 +338,7 @@ public class RefinementGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(ticketId, "RefinementGraph"))
-            .ReturnsAsync(checkpoint);
+            .ReturnsAsync((Checkpoint?)checkpoint);
 
         var answersMessage = new AnswersReceivedMessage(ticketId, new Dictionary<string, string>());
 
@@ -471,7 +471,7 @@ public class RefinementGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(ticketId, "RefinementGraph"))
-            .ReturnsAsync(checkpoint);
+            .ReturnsAsync((Checkpoint?)checkpoint);
 
         var rejectionMessage = new TicketUpdateRejectedMessage(
             ticketId,
@@ -514,7 +514,7 @@ public class RefinementGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(ticketId, "RefinementGraph"))
-            .ReturnsAsync(checkpoint);
+            .ReturnsAsync((Checkpoint?)checkpoint);
 
         var rejectionMessage = new TicketUpdateRejectedMessage(
             ticketId,
@@ -819,7 +819,7 @@ public class RefinementGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(ticketId, "RefinementGraph"))
-            .ReturnsAsync(checkpoint);
+            .ReturnsAsync((Checkpoint?)checkpoint);
     }
 
     private void SetupCheckpointForAwaitingTicketUpdateApproval(Guid ticketId)
@@ -843,7 +843,7 @@ public class RefinementGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(ticketId, "RefinementGraph"))
-            .ReturnsAsync(checkpoint);
+            .ReturnsAsync((Checkpoint?)checkpoint);
     }
 
     private void VerifyAgentExecuted<TAgent>()

@@ -39,12 +39,6 @@ public class TicketUpdatePreviewTests : ComponentTestBase
         MockTicketService.Verify(x => x.GetLatestTicketUpdateAsync(ticketId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    [Fact(Skip = "WaitForState timeout - component doesn't render error message as expected")]
-    public async Task OnInitialized_HandlesServiceError()
-    {
-        // Method intentionally left empty.
-    }
-
     [Fact]
     public async Task ApproveButton_Click_CallsServiceAndInvokesCallback()
     {
@@ -186,12 +180,6 @@ public class TicketUpdatePreviewTests : ComponentTestBase
                     Times.Never);
             }
         }
-    }
-
-    [Fact(Skip = "InputAsync expects oninput event but textarea uses onchange - test needs fix")]
-    public async Task ConfirmReject_WithReason_CallsServiceAndInvokesCallback()
-    {
-        // Method intentionally left empty.
     }
 
     [Fact]

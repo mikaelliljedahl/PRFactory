@@ -41,7 +41,8 @@ public class ProvisioningServiceTests
         return context;
     }
 
-    private ProvisioningService CreateService(ApplicationDbContext context)
+
+    private static ProvisioningService CreateService(ApplicationDbContext context)
     {
         var tenantRepo = new TenantRepository(context, new Mock<ILogger<TenantRepository>>().Object);
         var userRepo = new UserRepository(context, new Mock<ILogger<UserRepository>>().Object);
@@ -133,7 +134,7 @@ public class ProvisioningServiceTests
         var service = CreateService(context);
 
         // Create first user (Owner)
-        var (tenant, firstUser, _) = await service.ProvisionUserAsync(
+        var (tenant, _, _) = await service.ProvisionUserAsync(
             externalUserId: "azure-ad-user-123",
             identityProvider: "AzureAD",
             externalTenantId: "contoso-tenant-id",
@@ -215,7 +216,7 @@ public class ProvisioningServiceTests
         var service = CreateService(context);
 
         // Create user first time
-        var (tenant, user, _) = await service.ProvisionUserAsync(
+        var (_, user, _) = await service.ProvisionUserAsync(
             externalUserId: "azure-ad-user-123",
             identityProvider: "AzureAD",
             externalTenantId: "contoso-tenant-id",
@@ -224,7 +225,7 @@ public class ProvisioningServiceTests
             avatarUrl: "https://avatar.com/old.jpg");
 
         // Act - Provision same user again with updated profile
-        var (tenant2, user2, _) = await service.ProvisionUserAsync(
+        var (_, user2, _) = await service.ProvisionUserAsync(
             externalUserId: "azure-ad-user-123",
             identityProvider: "AzureAD",
             externalTenantId: "contoso-tenant-id",
@@ -267,7 +268,7 @@ public class ProvisioningServiceTests
         Assert.Null(existingUser.ExternalAuthId); // No external auth initially
 
         // Act - Provision with external auth
-        var (tenant2, user2, _) = await service.ProvisionUserAsync(
+        var (_, user2, _) = await service.ProvisionUserAsync(
             externalUserId: "azure-ad-user-123",
             identityProvider: "AzureAD",
             externalTenantId: "contoso-tenant-id",
@@ -467,7 +468,7 @@ public class ProvisioningServiceTests
         var service = CreateService(context);
 
         // Act
-        var (tenant, user, _) = await service.ProvisionUserAsync(
+        var (_, user, _) = await service.ProvisionUserAsync(
             externalUserId: "user-123",
             identityProvider: "AzureAD",
             externalTenantId: "tenant-id",
@@ -488,7 +489,7 @@ public class ProvisioningServiceTests
         var service = CreateService(context);
 
         // Act
-        var (tenant, user, _) = await service.ProvisionUserAsync(
+        var (_, user, _) = await service.ProvisionUserAsync(
             externalUserId: "user-123",
             identityProvider: "AzureAD",
             externalTenantId: "tenant-id",
@@ -512,7 +513,7 @@ public class ProvisioningServiceTests
         var service = CreateService(context);
 
         // Act
-        var (tenant, user, _) = await service.ProvisionUserAsync(
+        var (_, user, _) = await service.ProvisionUserAsync(
             externalUserId: "user-123",
             identityProvider: "AzureAD",
             externalTenantId: "tenant-id",
@@ -531,7 +532,7 @@ public class ProvisioningServiceTests
         var service = CreateService(context);
 
         // Create user with lowercase email
-        var (tenant, user1, _) = await service.ProvisionUserAsync(
+        var (_, user1, _) = await service.ProvisionUserAsync(
             externalUserId: "user-123",
             identityProvider: "AzureAD",
             externalTenantId: "tenant-id",
@@ -539,7 +540,7 @@ public class ProvisioningServiceTests
             displayName: "User");
 
         // Act - Try to create user with uppercase email
-        var (tenant2, user2, _) = await service.ProvisionUserAsync(
+        var (_, user2, _) = await service.ProvisionUserAsync(
             externalUserId: "user-123",
             identityProvider: "AzureAD",
             externalTenantId: "tenant-id",
@@ -582,7 +583,7 @@ public class ProvisioningServiceTests
         var service = CreateService(context);
 
         // Act
-        var (tenant, user, _) = await service.ProvisionUserAsync(
+        var (tenant, _, _) = await service.ProvisionUserAsync(
             externalUserId: "user-123",
             identityProvider: "AzureAD",
             externalTenantId: "tenant-id",

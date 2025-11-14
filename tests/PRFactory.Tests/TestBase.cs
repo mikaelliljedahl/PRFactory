@@ -84,17 +84,17 @@ public abstract class TestBase : IDisposable
 
     protected virtual void Dispose(bool disposing)
     {
-        if (_disposed) return;
-
-        if (disposing)
+        if (!_disposed)
         {
-            DbContext?.Dispose();
-            if (ServiceProvider is IDisposable disposable)
+            if (disposing)
             {
-                disposable.Dispose();
+                DbContext?.Dispose();
+                if (ServiceProvider is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
             }
+            _disposed = true;
         }
-
-        _disposed = true;
     }
 }

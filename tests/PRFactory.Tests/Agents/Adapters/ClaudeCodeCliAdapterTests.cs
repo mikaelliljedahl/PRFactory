@@ -102,14 +102,14 @@ public class ClaudeCodeCliAdapterTests : IDisposable
 
     protected virtual void Dispose(bool disposing)
     {
-        if (_disposed) return;
-
-        if (disposing)
+        if (!_disposed)
         {
-            _dbContext?.Dispose();
+            if (disposing)
+            {
+                _dbContext?.Dispose();
+            }
+            _disposed = true;
         }
-
-        _disposed = true;
     }
 
     private ClaudeCodeCliAdapter CreateAdapter()

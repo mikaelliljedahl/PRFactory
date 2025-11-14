@@ -21,7 +21,7 @@ public abstract class ComponentTestBase : TestContextBase
     /// <summary>
     /// Finds an element by its ID
     /// </summary>
-    protected AngleSharp.Dom.IElement FindElementById(IRenderedFragment fragment, string id)
+    protected static AngleSharp.Dom.IElement FindElementById(IRenderedFragment fragment, string id)
     {
         return fragment.Find($"#{id}");
     }
@@ -29,7 +29,7 @@ public abstract class ComponentTestBase : TestContextBase
     /// <summary>
     /// Finds all elements matching the CSS selector
     /// </summary>
-    protected System.Collections.Generic.IEnumerable<AngleSharp.Dom.IElement> FindElements(
+    protected static System.Collections.Generic.IEnumerable<AngleSharp.Dom.IElement> FindElements(
         IRenderedFragment fragment,
         string cssSelector)
     {
@@ -39,7 +39,7 @@ public abstract class ComponentTestBase : TestContextBase
     /// <summary>
     /// Verifies that an element exists with the given CSS selector
     /// </summary>
-    protected void AssertElementExists(IRenderedFragment fragment, string cssSelector)
+    protected static void AssertElementExists(IRenderedFragment fragment, string cssSelector)
     {
         var element = fragment.Find(cssSelector);
         Assert.NotNull(element);
@@ -48,7 +48,7 @@ public abstract class ComponentTestBase : TestContextBase
     /// <summary>
     /// Verifies that an element does not exist with the given CSS selector
     /// </summary>
-    protected void AssertElementDoesNotExist(IRenderedFragment fragment, string cssSelector)
+    protected static void AssertElementDoesNotExist(IRenderedFragment fragment, string cssSelector)
     {
         var elements = fragment.FindAll(cssSelector);
         Assert.Empty(elements);
@@ -57,7 +57,7 @@ public abstract class ComponentTestBase : TestContextBase
     /// <summary>
     /// Verifies that an element contains the expected text
     /// </summary>
-    protected void AssertElementContainsText(IRenderedFragment fragment, string cssSelector, string expectedText)
+    protected static void AssertElementContainsText(IRenderedFragment fragment, string cssSelector, string expectedText)
     {
         var element = fragment.Find(cssSelector);
         Assert.NotNull(element);

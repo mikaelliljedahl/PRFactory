@@ -1,0 +1,11 @@
+<div class="code-block">
+    <pre class="language-@Language"><code>@Content</code></pre>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Content { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Language { get; set; } = "text";
+}

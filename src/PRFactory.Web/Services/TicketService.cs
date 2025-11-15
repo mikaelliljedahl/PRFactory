@@ -23,6 +23,7 @@ public class TicketService(
     IPlanService planService,
     ITenantContext tenantContext,
     ITicketRepository ticketRepository,
+    IPlanRepository planRepository,
     IPlanReviewService planReviewService,
     ICurrentUserService currentUserService,
     IMapper mapper) : ITicketService
@@ -73,7 +74,16 @@ public class TicketService(
             }
 
             // Map to DTO using Mapster
-            return mapper.Map<TicketDto>(ticket);
+            var dto = mapper.Map<TicketDto>(ticket);
+
+            // Load plan with versions
+            var plan = await planRepository.GetByTicketIdAsync(ticketId, ct);
+            if (plan != null)
+            {
+                dto.Plan = MapPlanToDto(plan);
+            }
+
+            return dto;
         }
         catch (Exception ex)
         {
@@ -669,5 +679,43 @@ public class TicketService(
             logger.LogError(ex, "Error creating pull request for ticket {TicketId}", ticketId);
             throw;
         }
+    }
+
+    /// <summary>
+    /// Maps Plan entity to PlanDto (Core.Application.DTOs)
+    /// </summary>
+    private Core.Application.DTOs.PlanDto MapPlanToDto(Domain.Entities.Plan plan)
+    {
+        return new Core.Application.DTOs.PlanDto
+        {
+            Id = plan.Id,
+            TicketId = plan.TicketId,
+            Content = plan.Content,
+            UserStories = plan.UserStories,
+            ApiDesign = plan.ApiDesign,
+            DatabaseSchema = plan.DatabaseSchema,
+            TestCases = plan.TestCases,
+            ImplementationSteps = plan.ImplementationSteps,
+            Version = plan.Version,
+            CreatedAt = plan.CreatedAt,
+            UpdatedAt = plan.UpdatedAt,
+            Versions = plan.Versions?
+                .OrderByDescending(v => v.Version)
+                .Select(v => new Core.Application.DTOs.PlanVersionDto
+                {
+                    Id = v.Id,
+                    PlanId = v.PlanId,
+                    Version = v.Version,
+                    UserStories = v.UserStories,
+                    ApiDesign = v.ApiDesign,
+                    DatabaseSchema = v.DatabaseSchema,
+                    TestCases = v.TestCases,
+                    ImplementationSteps = v.ImplementationSteps,
+                    CreatedAt = v.CreatedAt,
+                    CreatedBy = v.CreatedBy,
+                    RevisionReason = v.RevisionReason
+                })
+                .ToList()
+        };
     }
 }

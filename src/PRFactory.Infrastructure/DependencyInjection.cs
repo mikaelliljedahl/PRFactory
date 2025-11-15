@@ -87,6 +87,7 @@ public static class DependencyInjection
         services.AddScoped<IAgentPromptTemplateRepository, AgentPromptTemplateRepository>();
         services.AddScoped<IErrorRepository, ErrorRepository>();
         services.AddScoped<ICodeReviewResultRepository, CodeReviewResultRepository>();
+        services.AddScoped<IPlanRepository, PlanRepository>();
         services.AddScoped<IAgentConfigurationRepository, AgentConfigurationRepository>();
 
         // Team Review repositories
@@ -183,6 +184,16 @@ public static class DependencyInjection
         services.AddTransient<Agents.CompletionAgent>();
         services.AddTransient<Agents.ApprovalCheckAgent>();
         services.AddTransient<Agents.ErrorHandlingAgent>();
+
+        // Register planning agents (Epic 03 - Deep Planning)
+        services.AddTransient<Agents.Planning.PmUserStoriesAgent>();
+        services.AddTransient<Agents.Planning.ArchitectApiDesignAgent>();
+        services.AddTransient<Agents.Planning.ArchitectDbSchemaAgent>();
+        services.AddTransient<Agents.Planning.QaTestCasesAgent>();
+        services.AddTransient<Agents.Planning.TechLeadImplementationAgent>();
+        services.AddTransient<Agents.Planning.PlanArtifactStorageAgent>();
+        services.AddTransient<Agents.Planning.FeedbackAnalysisAgent>();
+        services.AddTransient<Agents.Planning.PlanRevisionAgent>();
 
         // Register AF-based agents (Epic 05)
         services.AddTransient<Agents.AI.AFAnalyzerAgent>();

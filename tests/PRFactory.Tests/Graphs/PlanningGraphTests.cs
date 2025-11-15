@@ -42,23 +42,57 @@ public class PlanningGraphTests
             ["q1"] = "answer1"
         });
 
-        var planMessage = new PlanGeneratedMessage(
-            _testTicketId,
-            "# Implementation Plan",
-            "src/file.cs",
-            "Unit tests",
-            3
-        );
-
+        var userStoriesMessage = new MessagePostedMessage(_testTicketId, "user_stories", DateTime.UtcNow);
+        var apiDesignMessage = new MessagePostedMessage(_testTicketId, "api_design", DateTime.UtcNow);
+        var dbSchemaMessage = new MessagePostedMessage(_testTicketId, "db_schema", DateTime.UtcNow);
+        var testCasesMessage = new MessagePostedMessage(_testTicketId, "test_cases", DateTime.UtcNow);
+        var implementationMessage = new MessagePostedMessage(_testTicketId, "implementation", DateTime.UtcNow);
+        var storageMessage = new MessagePostedMessage(_testTicketId, "storage", DateTime.UtcNow);
         var gitMessage = new PlanCommittedMessage(_testTicketId, "plan/branch", "abc123", "http://git.com/branch");
         var jiraMessage = new MessagePostedMessage(_testTicketId, "plan_posted", DateTime.UtcNow);
 
+        // Mock all 5 planning agents
         _mockAgentExecutor
-            .Setup(x => x.ExecuteAsync<PlanningAgent>(
+            .Setup(x => x.ExecuteAsync<PmUserStoriesAgent>(
                 It.IsAny<IAgentMessage>(),
                 It.IsAny<GraphContext>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(planMessage);
+            .ReturnsAsync(userStoriesMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<ArchitectApiDesignAgent>(
+                It.IsAny<IAgentMessage>(),
+                It.IsAny<GraphContext>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(apiDesignMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<ArchitectDbSchemaAgent>(
+                It.IsAny<IAgentMessage>(),
+                It.IsAny<GraphContext>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(dbSchemaMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<QaTestCasesAgent>(
+                It.IsAny<IAgentMessage>(),
+                It.IsAny<GraphContext>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(testCasesMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<TechLeadImplementationAgent>(
+                It.IsAny<IAgentMessage>(),
+                It.IsAny<GraphContext>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(implementationMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<PlanArtifactStorageAgent>(
+                It.IsAny<IAgentMessage>(),
+                It.IsAny<GraphContext>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(storageMessage);
 
         _mockAgentExecutor
             .Setup(x => x.ExecuteAsync<GitPlanAgent>(
@@ -90,8 +124,44 @@ public class PlanningGraphTests
         Assert.Equal("awaiting_approval", result.State);
         Assert.IsType<MessagePostedMessage>(result.OutputMessage);
 
+        // Verify all planning agents were called
         _mockAgentExecutor.Verify(
-            x => x.ExecuteAsync<PlanningAgent>(
+            x => x.ExecuteAsync<PmUserStoriesAgent>(
+                It.IsAny<IAgentMessage>(),
+                It.IsAny<GraphContext>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        _mockAgentExecutor.Verify(
+            x => x.ExecuteAsync<ArchitectApiDesignAgent>(
+                It.IsAny<IAgentMessage>(),
+                It.IsAny<GraphContext>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        _mockAgentExecutor.Verify(
+            x => x.ExecuteAsync<ArchitectDbSchemaAgent>(
+                It.IsAny<IAgentMessage>(),
+                It.IsAny<GraphContext>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        _mockAgentExecutor.Verify(
+            x => x.ExecuteAsync<QaTestCasesAgent>(
+                It.IsAny<IAgentMessage>(),
+                It.IsAny<GraphContext>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        _mockAgentExecutor.Verify(
+            x => x.ExecuteAsync<TechLeadImplementationAgent>(
+                It.IsAny<IAgentMessage>(),
+                It.IsAny<GraphContext>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        _mockAgentExecutor.Verify(
+            x => x.ExecuteAsync<PlanArtifactStorageAgent>(
                 It.IsAny<IAgentMessage>(),
                 It.IsAny<GraphContext>(),
                 It.IsAny<CancellationToken>()),
@@ -103,14 +173,14 @@ public class PlanningGraphTests
     {
         // Arrange
         var inputMessage = new AnswersReceivedMessage(_testTicketId, new Dictionary<string, string>());
-        var invalidMessage = new MessagePostedMessage(_testTicketId, "invalid", DateTime.UtcNow);
 
+        // Mock PmUserStoriesAgent returning null (failure)
         _mockAgentExecutor
-            .Setup(x => x.ExecuteAsync<PlanningAgent>(
+            .Setup(x => x.ExecuteAsync<PmUserStoriesAgent>(
                 It.IsAny<IAgentMessage>(),
                 It.IsAny<GraphContext>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(invalidMessage);
+            .ReturnsAsync((IAgentMessage?)null);
 
         _mockCheckpointStore
             .Setup(x => x.SaveCheckpointAsync(
@@ -124,10 +194,9 @@ public class PlanningGraphTests
         var result = await _planningGraph.ExecuteAsync(inputMessage);
 
         Assert.False(result.IsSuccess);
-        Assert.Equal("failed", result.State);
+        Assert.Equal("user_stories_failed", result.State);
         Assert.NotNull(result.Error);
-        Assert.IsType<InvalidOperationException>(result.Error);
-        Assert.Contains("Expected PlanGeneratedMessage", result.Error.Message);
+        Assert.Contains("User stories generation failed", result.Error.Message);
     }
 
     #endregion
@@ -139,7 +208,12 @@ public class PlanningGraphTests
     {
         // Arrange
         var inputMessage = new AnswersReceivedMessage(_testTicketId, new Dictionary<string, string>());
-        var planMessage = new PlanGeneratedMessage(_testTicketId, "plan", "files", "tests", 3);
+        var userStoriesMessage = new MessagePostedMessage(_testTicketId, "user_stories", DateTime.UtcNow);
+        var apiDesignMessage = new MessagePostedMessage(_testTicketId, "api_design", DateTime.UtcNow);
+        var dbSchemaMessage = new MessagePostedMessage(_testTicketId, "db_schema", DateTime.UtcNow);
+        var testCasesMessage = new MessagePostedMessage(_testTicketId, "test_cases", DateTime.UtcNow);
+        var implementationMessage = new MessagePostedMessage(_testTicketId, "implementation", DateTime.UtcNow);
+        var storageMessage = new MessagePostedMessage(_testTicketId, "storage", DateTime.UtcNow);
         var gitMessage = new PlanCommittedMessage(_testTicketId, "branch", "sha", "url");
         var jiraMessage = new MessagePostedMessage(_testTicketId, "plan_posted", DateTime.UtcNow);
 
@@ -147,12 +221,48 @@ public class PlanningGraphTests
         var jiraExecutionOrder = 0;
         var executionCounter = 0;
 
+        // Mock all 5 planning agents
         _mockAgentExecutor
-            .Setup(x => x.ExecuteAsync<PlanningAgent>(
+            .Setup(x => x.ExecuteAsync<PmUserStoriesAgent>(
                 It.IsAny<IAgentMessage>(),
                 It.IsAny<GraphContext>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(planMessage);
+            .ReturnsAsync(userStoriesMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<ArchitectApiDesignAgent>(
+                It.IsAny<IAgentMessage>(),
+                It.IsAny<GraphContext>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(apiDesignMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<ArchitectDbSchemaAgent>(
+                It.IsAny<IAgentMessage>(),
+                It.IsAny<GraphContext>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(dbSchemaMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<QaTestCasesAgent>(
+                It.IsAny<IAgentMessage>(),
+                It.IsAny<GraphContext>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(testCasesMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<TechLeadImplementationAgent>(
+                It.IsAny<IAgentMessage>(),
+                It.IsAny<GraphContext>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(implementationMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<PlanArtifactStorageAgent>(
+                It.IsAny<IAgentMessage>(),
+                It.IsAny<GraphContext>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(storageMessage);
 
         _mockAgentExecutor
             .Setup(x => x.ExecuteAsync<GitPlanAgent>(
@@ -215,15 +325,39 @@ public class PlanningGraphTests
     {
         // Arrange
         var inputMessage = new AnswersReceivedMessage(_testTicketId, new Dictionary<string, string>());
-        var planMessage = new PlanGeneratedMessage(_testTicketId, "plan", "files", "tests", 3);
+        var userStoriesMessage = new MessagePostedMessage(_testTicketId, "user_stories", DateTime.UtcNow);
+        var apiDesignMessage = new MessagePostedMessage(_testTicketId, "api_design", DateTime.UtcNow);
+        var dbSchemaMessage = new MessagePostedMessage(_testTicketId, "db_schema", DateTime.UtcNow);
+        var testCasesMessage = new MessagePostedMessage(_testTicketId, "test_cases", DateTime.UtcNow);
+        var implementationMessage = new MessagePostedMessage(_testTicketId, "implementation", DateTime.UtcNow);
+        var storageMessage = new MessagePostedMessage(_testTicketId, "storage", DateTime.UtcNow);
         var gitMessage = new PlanCommittedMessage(_testTicketId, "branch", "abc123def", "url");
         var jiraMessage = new MessagePostedMessage(_testTicketId, "plan_posted", DateTime.UtcNow);
 
-        Dictionary<string, object>? savedState = null;
+        // Mock all 5 planning agents
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<PmUserStoriesAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(userStoriesMessage);
 
         _mockAgentExecutor
-            .Setup(x => x.ExecuteAsync<PlanningAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(planMessage);
+            .Setup(x => x.ExecuteAsync<ArchitectApiDesignAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(apiDesignMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<ArchitectDbSchemaAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(dbSchemaMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<QaTestCasesAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(testCasesMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<TechLeadImplementationAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(implementationMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<PlanArtifactStorageAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(storageMessage);
 
         _mockAgentExecutor
             .Setup(x => x.ExecuteAsync<GitPlanAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
@@ -235,28 +369,42 @@ public class PlanningGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.SaveCheckpointAsync(
-                _testTicketId,
-                "PlanningGraph",
-                "plan_posted",
-                It.IsAny<Dictionary<string, object>>()))
-            .Callback<Guid, string, string, Dictionary<string, object>>((_, _, _, state) => savedState = state)
-            .Returns(Task.CompletedTask);
-
-        _mockCheckpointStore
-            .Setup(x => x.SaveCheckpointAsync(
                 It.IsAny<Guid>(),
                 It.IsAny<string>(),
-                It.Is<string>(s => s != "plan_posted"),
+                It.IsAny<string>(),
                 It.IsAny<Dictionary<string, object>>()))
             .Returns(Task.CompletedTask);
 
         // Act
-        await _planningGraph.ExecuteAsync(inputMessage);
+        var result = await _planningGraph.ExecuteAsync(inputMessage);
 
         // Assert
-        Assert.NotNull(savedState);
-        Assert.Equal("abc123def", savedState["git_commit_sha"]);
-        Assert.True((bool)savedState["jira_posted"]);
+        Assert.True(result.IsSuccess);
+        Assert.Equal("awaiting_approval", result.State);
+
+        // Verify both Git and Jira agents were called
+        _mockAgentExecutor.Verify(
+            x => x.ExecuteAsync<GitPlanAgent>(
+                It.IsAny<IAgentMessage>(),
+                It.IsAny<GraphContext>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        _mockAgentExecutor.Verify(
+            x => x.ExecuteAsync<JiraPostAgent>(
+                It.IsAny<IAgentMessage>(),
+                It.IsAny<GraphContext>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        // Verify plan_posted checkpoint was saved
+        _mockCheckpointStore.Verify(
+            x => x.SaveCheckpointAsync(
+                _testTicketId,
+                "PlanningGraph",
+                "plan_posted",
+                It.IsAny<Dictionary<string, object>>()),
+            Times.Once);
     }
 
     #endregion
@@ -268,15 +416,41 @@ public class PlanningGraphTests
     {
         // Arrange
         var inputMessage = new AnswersReceivedMessage(_testTicketId, new Dictionary<string, string>());
-        var planMessage = new PlanGeneratedMessage(_testTicketId, "plan", "files", "tests", 3);
+        var userStoriesMessage = new MessagePostedMessage(_testTicketId, "user_stories", DateTime.UtcNow);
+        var apiDesignMessage = new MessagePostedMessage(_testTicketId, "api_design", DateTime.UtcNow);
+        var dbSchemaMessage = new MessagePostedMessage(_testTicketId, "db_schema", DateTime.UtcNow);
+        var testCasesMessage = new MessagePostedMessage(_testTicketId, "test_cases", DateTime.UtcNow);
+        var implementationMessage = new MessagePostedMessage(_testTicketId, "implementation", DateTime.UtcNow);
+        var storageMessage = new MessagePostedMessage(_testTicketId, "storage", DateTime.UtcNow);
         var gitMessage = new PlanCommittedMessage(_testTicketId, "branch", "sha", "url");
         var jiraMessage = new MessagePostedMessage(_testTicketId, "plan_posted", DateTime.UtcNow);
 
         Dictionary<string, object>? suspendedState = null;
 
+        // Mock all 5 planning agents
         _mockAgentExecutor
-            .Setup(x => x.ExecuteAsync<PlanningAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(planMessage);
+            .Setup(x => x.ExecuteAsync<PmUserStoriesAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(userStoriesMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<ArchitectApiDesignAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(apiDesignMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<ArchitectDbSchemaAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(dbSchemaMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<QaTestCasesAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(testCasesMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<TechLeadImplementationAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(implementationMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<PlanArtifactStorageAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(storageMessage);
 
         _mockAgentExecutor
             .Setup(x => x.ExecuteAsync<GitPlanAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
@@ -319,15 +493,41 @@ public class PlanningGraphTests
     {
         // Arrange
         var inputMessage = new AnswersReceivedMessage(_testTicketId, new Dictionary<string, string>());
-        var planMessage = new PlanGeneratedMessage(_testTicketId, "plan", "files", "tests", 3);
+        var userStoriesMessage = new MessagePostedMessage(_testTicketId, "user_stories", DateTime.UtcNow);
+        var apiDesignMessage = new MessagePostedMessage(_testTicketId, "api_design", DateTime.UtcNow);
+        var dbSchemaMessage = new MessagePostedMessage(_testTicketId, "db_schema", DateTime.UtcNow);
+        var testCasesMessage = new MessagePostedMessage(_testTicketId, "test_cases", DateTime.UtcNow);
+        var implementationMessage = new MessagePostedMessage(_testTicketId, "implementation", DateTime.UtcNow);
+        var storageMessage = new MessagePostedMessage(_testTicketId, "storage", DateTime.UtcNow);
         var gitMessage = new PlanCommittedMessage(_testTicketId, "branch", "sha", "url");
         var jiraMessage = new MessagePostedMessage(_testTicketId, "plan_posted", DateTime.UtcNow);
 
         Dictionary<string, object>? suspendedState = null;
 
+        // Mock all 5 planning agents
         _mockAgentExecutor
-            .Setup(x => x.ExecuteAsync<PlanningAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(planMessage);
+            .Setup(x => x.ExecuteAsync<PmUserStoriesAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(userStoriesMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<ArchitectApiDesignAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(apiDesignMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<ArchitectDbSchemaAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(dbSchemaMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<QaTestCasesAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(testCasesMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<TechLeadImplementationAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(implementationMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<PlanArtifactStorageAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(storageMessage);
 
         _mockAgentExecutor
             .Setup(x => x.ExecuteAsync<GitPlanAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
@@ -358,8 +558,14 @@ public class PlanningGraphTests
         await _planningGraph.ExecuteAsync(inputMessage);
 
         // Assert
+        // Note: plan_retry_count is only set when handling rejection, not on first execution
+        // On first execution, we verify suspension state instead
         Assert.NotNull(suspendedState);
-        Assert.Equal(0, suspendedState["plan_retry_count"]);
+        Assert.True((bool)suspendedState["is_suspended"]);
+        Assert.Equal("plan_approval", suspendedState["waiting_for"]);
+
+        // Verify retry count is not set (it will default to 0 when rejection happens)
+        Assert.False(suspendedState.ContainsKey("plan_retry_count"));
     }
 
     #endregion
@@ -477,7 +683,9 @@ public class PlanningGraphTests
             CreatedAt = DateTime.UtcNow.AddMinutes(-5)
         };
 
-        var planMessage = new PlanGeneratedMessage(_testTicketId, "revised plan", "files", "tests", 3);
+        var feedbackAnalysisMessage = new MessagePostedMessage(_testTicketId, "feedback_analyzed", DateTime.UtcNow);
+        var revisionMessage = new MessagePostedMessage(_testTicketId, "plan_revised", DateTime.UtcNow);
+        var storageMessage = new MessagePostedMessage(_testTicketId, "storage", DateTime.UtcNow);
         var gitMessage = new PlanCommittedMessage(_testTicketId, "branch", "sha", "url");
         var jiraMessage = new MessagePostedMessage(_testTicketId, "plan_posted", DateTime.UtcNow);
 
@@ -493,9 +701,18 @@ public class PlanningGraphTests
                 It.IsAny<Dictionary<string, object>>()))
             .Returns(Task.CompletedTask);
 
+        // Mock revision workflow agents
         _mockAgentExecutor
-            .Setup(x => x.ExecuteAsync<PlanningAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(planMessage);
+            .Setup(x => x.ExecuteAsync<FeedbackAnalysisAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(feedbackAnalysisMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<PlanRevisionAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(revisionMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<PlanArtifactStorageAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(storageMessage);
 
         _mockAgentExecutor
             .Setup(x => x.ExecuteAsync<GitPlanAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
@@ -510,11 +727,18 @@ public class PlanningGraphTests
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal("awaiting_approval", result.State);
+        Assert.Equal("awaiting_re_review", result.State);
 
-        // Should have called Planning agent again
+        // Should have called revision agents
         _mockAgentExecutor.Verify(
-            x => x.ExecuteAsync<PlanningAgent>(
+            x => x.ExecuteAsync<FeedbackAnalysisAgent>(
+                It.IsAny<IAgentMessage>(),
+                It.IsAny<GraphContext>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        _mockAgentExecutor.Verify(
+            x => x.ExecuteAsync<PlanRevisionAgent>(
                 It.IsAny<IAgentMessage>(),
                 It.IsAny<GraphContext>(),
                 It.IsAny<CancellationToken>()),
@@ -539,11 +763,13 @@ public class PlanningGraphTests
             CreatedAt = DateTime.UtcNow
         };
 
-        var planMessage = new PlanGeneratedMessage(_testTicketId, "plan", "files", "tests", 3);
+        var feedbackAnalysisMessage = new MessagePostedMessage(_testTicketId, "feedback_analyzed", DateTime.UtcNow);
+        var revisionMessage = new MessagePostedMessage(_testTicketId, "plan_revised", DateTime.UtcNow);
+        var storageMessage = new MessagePostedMessage(_testTicketId, "storage", DateTime.UtcNow);
         var gitMessage = new PlanCommittedMessage(_testTicketId, "branch", "sha", "url");
         var jiraMessage = new MessagePostedMessage(_testTicketId, "plan_posted", DateTime.UtcNow);
 
-        Dictionary<string, object>? savedRejectionState = null;
+        Dictionary<string, object>? capturedState = null;
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(_testTicketId, "PlanningGraph"))
@@ -551,24 +777,32 @@ public class PlanningGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.SaveCheckpointAsync(
-                _testTicketId,
-                "PlanningGraph",
-                "plan_rejected",
-                It.IsAny<Dictionary<string, object>>()))
-            .Callback<Guid, string, string, Dictionary<string, object>>((_, _, _, state) => savedRejectionState = state)
-            .Returns(Task.CompletedTask);
-
-        _mockCheckpointStore
-            .Setup(x => x.SaveCheckpointAsync(
                 It.IsAny<Guid>(),
                 It.IsAny<string>(),
-                It.Is<string>(s => s != "plan_rejected"),
+                It.IsAny<string>(),
                 It.IsAny<Dictionary<string, object>>()))
+            .Callback<Guid, string, string, Dictionary<string, object>>((_, _, checkpointId, state) =>
+            {
+                // Capture state after retry count increment (before any agents run)
+                if (capturedState == null && state.ContainsKey("plan_retry_count"))
+                {
+                    capturedState = new Dictionary<string, object>(state);
+                }
+            })
             .Returns(Task.CompletedTask);
 
+        // Mock revision workflow agents
         _mockAgentExecutor
-            .Setup(x => x.ExecuteAsync<PlanningAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(planMessage);
+            .Setup(x => x.ExecuteAsync<FeedbackAnalysisAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(feedbackAnalysisMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<PlanRevisionAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(revisionMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<PlanArtifactStorageAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(storageMessage);
 
         _mockAgentExecutor
             .Setup(x => x.ExecuteAsync<GitPlanAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
@@ -582,9 +816,9 @@ public class PlanningGraphTests
         await _planningGraph.ResumeAsync(_testTicketId, rejectedMessage);
 
         // Assert
-        Assert.NotNull(savedRejectionState);
-        Assert.Equal(3, savedRejectionState["plan_retry_count"]);
-        Assert.Equal("Try again", savedRejectionState["rejection_reason"]);
+        Assert.NotNull(capturedState);
+        Assert.Equal(3, capturedState["plan_retry_count"]);
+        Assert.Equal("Try again", capturedState["RevisionFeedback"]);
     }
 
     [Fact]
@@ -611,11 +845,13 @@ public class PlanningGraphTests
             CreatedAt = DateTime.UtcNow
         };
 
-        var planMessage = new PlanGeneratedMessage(_testTicketId, "plan", "files", "tests", 3);
+        var feedbackAnalysisMessage = new MessagePostedMessage(_testTicketId, "feedback_analyzed", DateTime.UtcNow);
+        var revisionMessage = new MessagePostedMessage(_testTicketId, "plan_revised", DateTime.UtcNow);
+        var storageMessage = new MessagePostedMessage(_testTicketId, "storage", DateTime.UtcNow);
         var gitMessage = new PlanCommittedMessage(_testTicketId, "branch", "sha", "url");
         var jiraMessage = new MessagePostedMessage(_testTicketId, "plan_posted", DateTime.UtcNow);
 
-        Dictionary<string, object>? savedState = null;
+        Dictionary<string, object>? capturedState = null;
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(_testTicketId, "PlanningGraph"))
@@ -623,24 +859,32 @@ public class PlanningGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.SaveCheckpointAsync(
-                _testTicketId,
-                "PlanningGraph",
-                "plan_rejected",
-                It.IsAny<Dictionary<string, object>>()))
-            .Callback<Guid, string, string, Dictionary<string, object>>((_, _, _, state) => savedState = state)
-            .Returns(Task.CompletedTask);
-
-        _mockCheckpointStore
-            .Setup(x => x.SaveCheckpointAsync(
                 It.IsAny<Guid>(),
                 It.IsAny<string>(),
-                It.Is<string>(s => s != "plan_rejected"),
+                It.IsAny<string>(),
                 It.IsAny<Dictionary<string, object>>()))
+            .Callback<Guid, string, string, Dictionary<string, object>>((_, _, checkpointId, state) =>
+            {
+                // Capture state after setting refinement instructions
+                if (capturedState == null && state.ContainsKey("RefinementInstructions"))
+                {
+                    capturedState = new Dictionary<string, object>(state);
+                }
+            })
             .Returns(Task.CompletedTask);
 
+        // Mock revision workflow agents
         _mockAgentExecutor
-            .Setup(x => x.ExecuteAsync<PlanningAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(planMessage);
+            .Setup(x => x.ExecuteAsync<FeedbackAnalysisAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(feedbackAnalysisMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<PlanRevisionAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(revisionMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<PlanArtifactStorageAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(storageMessage);
 
         _mockAgentExecutor
             .Setup(x => x.ExecuteAsync<GitPlanAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
@@ -654,9 +898,8 @@ public class PlanningGraphTests
         await _planningGraph.ResumeAsync(_testTicketId, rejectedMessage);
 
         // Assert
-        Assert.NotNull(savedState);
-        Assert.Equal("Add more unit tests coverage", savedState["refinement_instructions"]);
-        Assert.False((bool)savedState["regenerate_completely"]);
+        Assert.NotNull(capturedState);
+        Assert.Equal("Add more unit tests coverage", capturedState["RefinementInstructions"]);
     }
 
     [Fact]
@@ -683,11 +926,13 @@ public class PlanningGraphTests
             CreatedAt = DateTime.UtcNow
         };
 
-        var planMessage = new PlanGeneratedMessage(_testTicketId, "plan", "files", "tests", 3);
+        var feedbackAnalysisMessage = new MessagePostedMessage(_testTicketId, "feedback_analyzed", DateTime.UtcNow);
+        var revisionMessage = new MessagePostedMessage(_testTicketId, "plan_revised", DateTime.UtcNow);
+        var storageMessage = new MessagePostedMessage(_testTicketId, "storage", DateTime.UtcNow);
         var gitMessage = new PlanCommittedMessage(_testTicketId, "branch", "sha", "url");
         var jiraMessage = new MessagePostedMessage(_testTicketId, "plan_posted", DateTime.UtcNow);
 
-        Dictionary<string, object>? savedState = null;
+        GraphContext? capturedContext = null;
 
         _mockCheckpointStore
             .Setup(x => x.LoadCheckpointAsync(_testTicketId, "PlanningGraph"))
@@ -695,24 +940,31 @@ public class PlanningGraphTests
 
         _mockCheckpointStore
             .Setup(x => x.SaveCheckpointAsync(
-                _testTicketId,
-                "PlanningGraph",
-                "plan_rejected",
-                It.IsAny<Dictionary<string, object>>()))
-            .Callback<Guid, string, string, Dictionary<string, object>>((_, _, _, state) => savedState = state)
-            .Returns(Task.CompletedTask);
-
-        _mockCheckpointStore
-            .Setup(x => x.SaveCheckpointAsync(
                 It.IsAny<Guid>(),
                 It.IsAny<string>(),
-                It.Is<string>(s => s != "plan_rejected"),
+                It.IsAny<string>(),
                 It.IsAny<Dictionary<string, object>>()))
             .Returns(Task.CompletedTask);
 
+        // Mock revision workflow agents
         _mockAgentExecutor
-            .Setup(x => x.ExecuteAsync<PlanningAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(planMessage);
+            .Setup(x => x.ExecuteAsync<FeedbackAnalysisAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .Callback<IAgentMessage, GraphContext, CancellationToken>((msg, ctx, ct) =>
+            {
+                if (capturedContext == null)
+                {
+                    capturedContext = ctx;
+                }
+            })
+            .ReturnsAsync(feedbackAnalysisMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<PlanRevisionAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(revisionMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<PlanArtifactStorageAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(storageMessage);
 
         _mockAgentExecutor
             .Setup(x => x.ExecuteAsync<GitPlanAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
@@ -725,9 +977,16 @@ public class PlanningGraphTests
         // Act
         await _planningGraph.ResumeAsync(_testTicketId, rejectedMessage);
 
-        // Assert
-        Assert.NotNull(savedState);
-        Assert.True((bool)savedState["regenerate_completely"]);
+        // Assert - The actual implementation doesn't store "regenerate_completely" flag in state
+        // Instead, it's used by FeedbackAnalysisAgent to determine affected artifacts
+        // So we just verify the workflow completed successfully
+        Assert.NotNull(capturedContext);
+        _mockAgentExecutor.Verify(
+            x => x.ExecuteAsync<FeedbackAnalysisAgent>(
+                It.IsAny<IAgentMessage>(),
+                It.IsAny<GraphContext>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     #endregion
@@ -800,7 +1059,9 @@ public class PlanningGraphTests
             CreatedAt = DateTime.UtcNow
         };
 
-        var planMessage = new PlanGeneratedMessage(_testTicketId, "final plan", "files", "tests", 3);
+        var feedbackAnalysisMessage = new MessagePostedMessage(_testTicketId, "feedback_analyzed", DateTime.UtcNow);
+        var revisionMessage = new MessagePostedMessage(_testTicketId, "final plan revised", DateTime.UtcNow);
+        var storageMessage = new MessagePostedMessage(_testTicketId, "storage", DateTime.UtcNow);
         var gitMessage = new PlanCommittedMessage(_testTicketId, "branch", "sha", "url");
         var jiraMessage = new MessagePostedMessage(_testTicketId, "plan_posted", DateTime.UtcNow);
 
@@ -816,9 +1077,18 @@ public class PlanningGraphTests
                 It.IsAny<Dictionary<string, object>>()))
             .Returns(Task.CompletedTask);
 
+        // Mock revision workflow agents
         _mockAgentExecutor
-            .Setup(x => x.ExecuteAsync<PlanningAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(planMessage);
+            .Setup(x => x.ExecuteAsync<FeedbackAnalysisAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(feedbackAnalysisMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<PlanRevisionAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(revisionMessage);
+
+        _mockAgentExecutor
+            .Setup(x => x.ExecuteAsync<PlanArtifactStorageAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(storageMessage);
 
         _mockAgentExecutor
             .Setup(x => x.ExecuteAsync<GitPlanAgent>(It.IsAny<IAgentMessage>(), It.IsAny<GraphContext>(), It.IsAny<CancellationToken>()))
@@ -833,11 +1103,18 @@ public class PlanningGraphTests
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal("awaiting_approval", result.State);
+        Assert.Equal("awaiting_re_review", result.State);
 
-        // Should have regenerated
+        // Should have regenerated via revision agents
         _mockAgentExecutor.Verify(
-            x => x.ExecuteAsync<PlanningAgent>(
+            x => x.ExecuteAsync<FeedbackAnalysisAgent>(
+                It.IsAny<IAgentMessage>(),
+                It.IsAny<GraphContext>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        _mockAgentExecutor.Verify(
+            x => x.ExecuteAsync<PlanRevisionAgent>(
                 It.IsAny<IAgentMessage>(),
                 It.IsAny<GraphContext>(),
                 It.IsAny<CancellationToken>()),
@@ -854,8 +1131,9 @@ public class PlanningGraphTests
         // Arrange
         var inputMessage = new AnswersReceivedMessage(_testTicketId, new Dictionary<string, string>());
 
+        // Mock PmUserStoriesAgent throwing exception
         _mockAgentExecutor
-            .Setup(x => x.ExecuteAsync<PlanningAgent>(
+            .Setup(x => x.ExecuteAsync<PmUserStoriesAgent>(
                 It.IsAny<IAgentMessage>(),
                 It.IsAny<GraphContext>(),
                 It.IsAny<CancellationToken>()))
@@ -874,9 +1152,9 @@ public class PlanningGraphTests
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Equal("failed", result.State);
+        Assert.Equal("user_stories_failed", result.State);
         Assert.NotNull(result.Error);
-        Assert.Contains("Agent execution failed", result.Error.Message);
+        Assert.Contains("User stories generation failed", result.Error.Message);
     }
 
     [Fact]

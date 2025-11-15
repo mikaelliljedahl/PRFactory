@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PRFactory.Infrastructure.Persistence;
 
@@ -10,9 +11,11 @@ using PRFactory.Infrastructure.Persistence;
 namespace PRFactory.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251115101903_AddPlanArtifactsAndVersioning")]
+    partial class AddPlanArtifactsAndVersioning
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.0");
@@ -209,130 +212,6 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("PRFactory.Domain.Entities.AgentConfiguration", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("AgentName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("EnabledTools")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Instructions")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("MaxTokens")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(8000);
-
-                    b.Property<bool>("RequiresApproval")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(false);
-
-                    b.Property<bool>("StreamingEnabled")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(true);
-
-                    b.Property<float>("Temperature")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("REAL")
-                        .HasDefaultValue(0.3f);
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TenantId")
-                        .HasDatabaseName("IX_AgentConfigurations_TenantId");
-
-                    b.HasIndex("TenantId", "AgentName")
-                        .IsUnique()
-                        .HasDatabaseName("IX_AgentConfigurations_TenantId_AgentName");
-
-                    b.ToTable("AgentConfigurations", (string)null);
-                });
-
-            modelBuilder.Entity("PRFactory.Domain.Entities.AgentExecutionLog", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("AgentName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<TimeSpan>("Duration")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ErrorMessage")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("ExecutedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Input")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Output")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("Success")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("TicketId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("TokensUsed")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ToolName")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ExecutedAt")
-                        .HasDatabaseName("IX_AgentExecutionLogs_ExecutedAt");
-
-                    b.HasIndex("TenantId")
-                        .HasDatabaseName("IX_AgentExecutionLogs_TenantId");
-
-                    b.HasIndex("TicketId")
-                        .HasDatabaseName("IX_AgentExecutionLogs_TicketId");
-
-                    b.HasIndex("TenantId", "AgentName")
-                        .HasDatabaseName("IX_AgentExecutionLogs_TenantId_AgentName");
-
-                    b.HasIndex("TicketId", "ExecutedAt")
-                        .HasDatabaseName("IX_AgentExecutionLogs_TicketId_ExecutedAt");
-
-                    b.ToTable("AgentExecutionLogs", (string)null);
-                });
-
             modelBuilder.Entity("PRFactory.Domain.Entities.AgentPromptTemplate", b =>
                 {
                     b.Property<Guid>("Id")
@@ -395,6 +274,55 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                     b.ToTable("AgentPromptTemplates", (string)null);
                 });
 
+            modelBuilder.Entity("PRFactory.Domain.Entities.ChecklistItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("CheckedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsChecked")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("ReviewChecklistId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReviewChecklistId")
+                        .HasDatabaseName("IX_ChecklistItems_ReviewChecklistId");
+
+                    b.HasIndex("ReviewChecklistId", "SortOrder")
+                        .HasDatabaseName("IX_ChecklistItems_ReviewChecklistId_SortOrder");
+
+                    b.ToTable("ChecklistItems", (string)null);
+                });
+
             modelBuilder.Entity("PRFactory.Domain.Entities.Checkpoint", b =>
                 {
                     b.Property<Guid>("Id")
@@ -405,19 +333,9 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("AgentState")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("AgentThreadId")
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("CheckpointId")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ConversationHistory")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
@@ -862,6 +780,38 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId");
 
                     b.ToTable("Repositories", (string)null);
+                });
+
+            modelBuilder.Entity("PRFactory.Domain.Entities.ReviewChecklist", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("PlanReviewId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("PlanReviewId1")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TemplateName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlanReviewId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ReviewChecklists_PlanReviewId");
+
+                    b.HasIndex("PlanReviewId1")
+                        .IsUnique();
+
+                    b.ToTable("ReviewChecklists", (string)null);
                 });
 
             modelBuilder.Entity("PRFactory.Domain.Entities.ReviewComment", b =>
@@ -1578,36 +1528,6 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("PRFactory.Domain.Entities.AgentConfiguration", b =>
-                {
-                    b.HasOne("PRFactory.Domain.Entities.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tenant");
-                });
-
-            modelBuilder.Entity("PRFactory.Domain.Entities.AgentExecutionLog", b =>
-                {
-                    b.HasOne("PRFactory.Domain.Entities.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PRFactory.Domain.Entities.Ticket", "Ticket")
-                        .WithMany()
-                        .HasForeignKey("TicketId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tenant");
-
-                    b.Navigation("Ticket");
-                });
-
             modelBuilder.Entity("PRFactory.Domain.Entities.AgentPromptTemplate", b =>
                 {
                     b.HasOne("PRFactory.Domain.Entities.Tenant", "Tenant")
@@ -1616,6 +1536,17 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("PRFactory.Domain.Entities.ChecklistItem", b =>
+                {
+                    b.HasOne("PRFactory.Domain.Entities.ReviewChecklist", "ReviewChecklist")
+                        .WithMany("Items")
+                        .HasForeignKey("ReviewChecklistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ReviewChecklist");
                 });
 
             modelBuilder.Entity("PRFactory.Domain.Entities.Checkpoint", b =>
@@ -1713,6 +1644,21 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("PRFactory.Domain.Entities.ReviewChecklist", b =>
+                {
+                    b.HasOne("PRFactory.Domain.Entities.PlanReview", "PlanReview")
+                        .WithOne()
+                        .HasForeignKey("PRFactory.Domain.Entities.ReviewChecklist", "PlanReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PRFactory.Domain.Entities.PlanReview", null)
+                        .WithOne("Checklist")
+                        .HasForeignKey("PRFactory.Domain.Entities.ReviewChecklist", "PlanReviewId1");
+
+                    b.Navigation("PlanReview");
                 });
 
             modelBuilder.Entity("PRFactory.Domain.Entities.ReviewComment", b =>
@@ -2031,6 +1977,16 @@ namespace PRFactory.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("PRFactory.Domain.Entities.Repository", b =>
                 {
                     b.Navigation("Tickets");
+                });
+
+            modelBuilder.Entity("PRFactory.Domain.Entities.ReviewChecklist", b =>
+                {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("PRFactory.Domain.Entities.ReviewComment", b =>
+                {
+                    b.Navigation("InlineCommentAnchor");
                 });
 
             modelBuilder.Entity("PRFactory.Domain.Entities.Tenant", b =>

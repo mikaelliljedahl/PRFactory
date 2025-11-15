@@ -53,9 +53,19 @@ namespace PRFactory.Infrastructure.Agents.Graphs
                 ["HumanWaitAgent"] = typeof(HumanWaitAgent),
                 ["AnswerProcessingAgent"] = typeof(AnswerProcessingAgent),
 
-                // PlanningGraph agents
+                // PlanningGraph agents (legacy)
                 ["PlanningAgent"] = typeof(PlanningAgent),
                 ["GitPlanAgent"] = typeof(GitPlanAgent),
+
+                // PlanningGraph agents (multi-artifact)
+                ["PmUserStoriesAgent"] = typeof(Planning.PmUserStoriesAgent),
+                ["ArchitectApiDesignAgent"] = typeof(Planning.ArchitectApiDesignAgent),
+                ["ArchitectDbSchemaAgent"] = typeof(Planning.ArchitectDbSchemaAgent),
+                ["QaTestCasesAgent"] = typeof(Planning.QaTestCasesAgent),
+                ["TechLeadImplementationAgent"] = typeof(Planning.TechLeadImplementationAgent),
+                ["PlanArtifactStorageAgent"] = typeof(Planning.PlanArtifactStorageAgent),
+                ["FeedbackAnalysisAgent"] = typeof(Planning.FeedbackAnalysisAgent),
+                ["PlanRevisionAgent"] = typeof(Planning.PlanRevisionAgent),
 
                 // ImplementationGraph agents
                 ["ImplementationAgent"] = typeof(ImplementationAgent),

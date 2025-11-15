@@ -23,6 +23,7 @@ public class TicketServiceTests
     private readonly Mock<IPlanService> _planServiceMock;
     private readonly Mock<ITenantContext> _tenantContextMock;
     private readonly Mock<ITicketRepository> _ticketRepositoryMock;
+    private readonly Mock<IPlanRepository> _planRepositoryMock;
     private readonly Mock<IPlanReviewService> _planReviewServiceMock;
     private readonly Mock<ICurrentUserService> _currentUserServiceMock;
     private readonly Mock<IMapper> _mapperMock;
@@ -38,6 +39,7 @@ public class TicketServiceTests
         _planServiceMock = new Mock<IPlanService>();
         _tenantContextMock = new Mock<ITenantContext>();
         _ticketRepositoryMock = new Mock<ITicketRepository>();
+        _planRepositoryMock = new Mock<IPlanRepository>();
         _planReviewServiceMock = new Mock<IPlanReviewService>();
         _currentUserServiceMock = new Mock<ICurrentUserService>();
         _mapperMock = new Mock<IMapper>();
@@ -51,6 +53,7 @@ public class TicketServiceTests
             _planServiceMock.Object,
             _tenantContextMock.Object,
             _ticketRepositoryMock.Object,
+            _planRepositoryMock.Object,
             _planReviewServiceMock.Object,
             _currentUserServiceMock.Object,
             _mapperMock.Object

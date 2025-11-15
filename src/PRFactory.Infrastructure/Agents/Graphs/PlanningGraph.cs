@@ -1,6 +1,7 @@
 namespace PRFactory.Infrastructure.Agents.Graphs;
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,13 +10,20 @@ using PRFactory.Infrastructure.Agents.Base;
 using PRFactory.Infrastructure.Agents.Messages;
 
 /// <summary>
-/// PlanningGraph - Plan generation workflow
-/// Flow: Planning → GitPlan + JiraPost (parallel) → HumanWait (approval)
+/// Enhanced PlanningGraph - Multi-agent orchestration for comprehensive planning
 ///
-/// Features:
-/// - Conditional: If approved → emit "plan_approved", else → back to Planning
-/// - Parallel: GitPlan + JiraPost can run concurrently
-/// - Checkpoint after plan generation
+/// Flow:
+/// 1. PmUserStoriesAgent → generates user stories
+/// 2. ArchitectApiDesignAgent + ArchitectDbSchemaAgent (parallel) → API + DB design
+/// 3. QaTestCasesAgent → test cases based on API/DB/stories
+/// 4. TechLeadImplementationAgent → implementation steps
+/// 5. PlanArtifactStorageAgent → save all artifacts to database
+/// 6. GitPlanAgent + JiraPostAgent (parallel) → commit + post
+/// 7. Suspend for human approval
+///
+/// Revision workflow:
+/// - On rejection: FeedbackAnalysisAgent → PlanRevisionAgent → re-storage → re-commit → re-review
+/// - On approval: Complete and transition to implementation
 /// </summary>
 public class PlanningGraph(
     ILogger<PlanningGraph> logger,
@@ -33,12 +41,133 @@ public class PlanningGraph(
 
         try
         {
-            // Input should be AnswersReceivedMessage or PlanRejectedMessage (for retry)
-            return await GenerateAndPostPlanAsync(inputMessage, context, cancellationToken);
+            Logger.LogInformation(
+                "Starting enhanced planning workflow for ticket {TicketId}",
+                context.TicketId);
+
+            // STEP 1: PM User Stories (Foundation - Sequential)
+            Logger.LogInformation("Step 1: Generating user stories for ticket {TicketId}", context.TicketId);
+
+            var userStoriesMessage = await ExecuteAgentAsync<PmUserStoriesAgent>(
+                inputMessage, context, "user_stories", cancellationToken);
+
+            if (userStoriesMessage == null)
+            {
+                return GraphExecutionResult.Failure(
+                    "user_stories_failed",
+                    new InvalidOperationException("User stories generation failed"));
+            }
+
+            await SaveCheckpointAsync(context, "user_stories_generated", "PmUserStoriesAgent");
+
+            // STEP 2: Parallel Execution (API Design + DB Schema)
+            Logger.LogInformation(
+                "Step 2: Generating API design and database schema (parallel) for ticket {TicketId}",
+                context.TicketId);
+
+            var apiDesignTask = ExecuteAgentAsync<ArchitectApiDesignAgent>(
+                userStoriesMessage, context, "api_design", cancellationToken);
+            var dbSchemaTask = ExecuteAgentAsync<ArchitectDbSchemaAgent>(
+                userStoriesMessage, context, "db_schema", cancellationToken);
+
+            var parallelResults = await Task.WhenAll(apiDesignTask, dbSchemaTask);
+            var apiDesignMessage = parallelResults[0];
+            var dbSchemaMessage = parallelResults[1];
+
+            if (apiDesignMessage == null)
+            {
+                Logger.LogWarning("API design generation failed for ticket {TicketId}", context.TicketId);
+            }
+
+            if (dbSchemaMessage == null)
+            {
+                Logger.LogWarning("Database schema generation failed for ticket {TicketId}", context.TicketId);
+            }
+
+            await SaveCheckpointAsync(context, "architecture_designed", "ArchitectApiDesignAgent,ArchitectDbSchemaAgent");
+
+            // STEP 3: QA Test Cases (Sequential - depends on API + Schema)
+            Logger.LogInformation("Step 3: Generating test cases for ticket {TicketId}", context.TicketId);
+
+            var testCasesMessage = await ExecuteAgentAsync<QaTestCasesAgent>(
+                userStoriesMessage, context, "test_cases", cancellationToken);
+
+            if (testCasesMessage == null)
+            {
+                Logger.LogWarning("Test cases generation failed for ticket {TicketId}", context.TicketId);
+            }
+
+            await SaveCheckpointAsync(context, "test_cases_defined", "QaTestCasesAgent");
+
+            // STEP 4: Tech Lead Implementation Steps (Sequential)
+            Logger.LogInformation("Step 4: Generating implementation steps for ticket {TicketId}", context.TicketId);
+
+            var implementationMessage = await ExecuteAgentAsync<TechLeadImplementationAgent>(
+                userStoriesMessage, context, "implementation", cancellationToken);
+
+            if (implementationMessage == null)
+            {
+                Logger.LogWarning("Implementation steps generation failed for ticket {TicketId}", context.TicketId);
+            }
+
+            await SaveCheckpointAsync(context, "implementation_planned", "TechLeadImplementationAgent");
+
+            // STEP 5: Store all artifacts in database
+            Logger.LogInformation("Step 5: Storing artifacts in database for ticket {TicketId}", context.TicketId);
+
+            var storageMessage = await ExecuteAgentAsync<PlanArtifactStorageAgent>(
+                implementationMessage ?? userStoriesMessage, context, "storage", cancellationToken);
+
+            if (storageMessage == null)
+            {
+                return GraphExecutionResult.Failure(
+                    "artifact_storage_failed",
+                    new InvalidOperationException("Artifact storage failed"));
+            }
+
+            await SaveCheckpointAsync(context, "plan_stored", "PlanArtifactStorageAgent");
+
+            // STEP 6: Commit to Git and Post to Jira (Parallel)
+            Logger.LogInformation(
+                "Step 6: Committing artifacts and posting to Jira (parallel) for ticket {TicketId}",
+                context.TicketId);
+
+            var gitTask = ExecuteAgentAsync<GitPlanAgent>(
+                storageMessage, context, "git_plan", cancellationToken);
+            var jiraTask = ExecuteAgentAsync<JiraPostAgent>(
+                storageMessage, context, "jira_post", cancellationToken);
+
+            var finalResults = await Task.WhenAll(gitTask, jiraTask);
+            var gitMessage = finalResults[0];
+            var jiraMessage = finalResults[1];
+
+            if (gitMessage == null)
+            {
+                Logger.LogWarning("Git commit failed for ticket {TicketId}", context.TicketId);
+            }
+
+            if (jiraMessage == null)
+            {
+                Logger.LogWarning("Jira post failed for ticket {TicketId}", context.TicketId);
+            }
+
+            await SaveCheckpointAsync(context, "plan_posted", "GitPlanAgent,JiraPostAgent");
+
+            // STEP 7: Suspend for human review
+            Logger.LogInformation("Step 7: Suspending for human review for ticket {TicketId}", context.TicketId);
+
+            context.State["is_suspended"] = true;
+            context.State["waiting_for"] = "plan_approval";
+            await SaveCheckpointAsync(context, "awaiting_approval", "HumanWaitAgent");
+
+            // Return with appropriate output message (storageMessage guaranteed non-null at this point)
+            var outputMessage = jiraMessage ?? storageMessage;
+
+            return GraphExecutionResult.Suspended("awaiting_approval", outputMessage);
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "PlanningGraph failed for ticket {TicketId}", context.TicketId);
+            Logger.LogError(ex, "Enhanced planning workflow failed for ticket {TicketId}", context.TicketId);
             context.State["is_failed"] = true;
             context.State["error"] = ex.Message;
             await SaveCheckpointAsync(context, "failed", "unknown");
@@ -61,7 +190,7 @@ public class PlanningGraph(
                 "Resuming PlanningGraph for ticket {TicketId} from state {State}",
                 context.TicketId, currentState);
 
-            if (currentState == "awaiting_approval")
+            if (currentState == "awaiting_approval" || currentState == "awaiting_re_review")
             {
                 // Check if approved or rejected
                 if (resumeMessage is PlanApprovedMessage approvedMessage)
@@ -93,69 +222,6 @@ public class PlanningGraph(
             await SaveCheckpointAsync(context, "resume_failed", "unknown");
             return GraphExecutionResult.Failure("resume_failed", ex);
         }
-    }
-
-    /// <summary>
-    /// Generate plan and post to Jira (with parallel execution)
-    /// </summary>
-    private async Task<GraphExecutionResult> GenerateAndPostPlanAsync(
-        IAgentMessage inputMessage,
-        GraphContext context,
-        CancellationToken cancellationToken)
-    {
-        // Track if this is a retry
-        var retryCount = context.State.TryGetValue("plan_retry_count", out var count)
-            ? Convert.ToInt32(count)
-            : 0;
-
-        if (retryCount > 0)
-        {
-            Logger.LogInformation(
-                "Regenerating plan for ticket {TicketId}, attempt {Attempt}",
-                context.TicketId, retryCount + 1);
-        }
-
-        // Stage 1: Planning Agent
-        Logger.LogInformation("Stage 1: Planning Agent for ticket {TicketId}", context.TicketId);
-        var planMessage = await ExecuteAgentAsync<PlanningAgent>(
-            inputMessage, context, "planning", cancellationToken);
-        await SaveCheckpointAsync(context, "plan_generated", "PlanningAgent");
-
-        if (planMessage is not PlanGeneratedMessage plan)
-        {
-            throw new InvalidOperationException(
-                $"Expected PlanGeneratedMessage from PlanningAgent, got {planMessage?.GetType().Name}");
-        }
-
-        // Stage 2 & 3: Parallel execution of GitPlan and JiraPost
-        Logger.LogInformation(
-            "Stage 2/3: Executing GitPlan and JiraPost in parallel for ticket {TicketId}",
-            context.TicketId);
-
-        var gitTask = ExecuteAgentAsync<GitPlanAgent>(plan, context, "git_plan", cancellationToken);
-        var jiraTask = ExecuteAgentAsync<JiraPostAgent>(plan, context, "jira_post", cancellationToken);
-
-        // Wait for both to complete
-        var results = await Task.WhenAll(gitTask, jiraTask);
-        var gitResult = results[0];
-        var jiraResult = results[1];
-
-        // Save checkpoint after parallel execution
-        context.State["git_commit_sha"] = gitResult is PlanCommittedMessage committed ? committed.CommitSha ?? string.Empty : string.Empty;
-        context.State["jira_posted"] = jiraResult is MessagePostedMessage;
-        await SaveCheckpointAsync(context, "plan_posted", "GitPlanAgent,JiraPostAgent");
-
-        // Stage 4: Enter suspended state awaiting human approval
-        Logger.LogInformation(
-            "Stage 4: Awaiting plan approval for ticket {TicketId}",
-            context.TicketId);
-
-        context.State["is_suspended"] = true;
-        context.State["waiting_for"] = "plan_approval";
-        context.State["plan_retry_count"] = retryCount;
-        await SaveCheckpointAsync(context, "awaiting_approval", "HumanWaitAgent");
-
-        return GraphExecutionResult.Suspended("awaiting_approval", jiraResult);
     }
 
     /// <summary>
@@ -194,17 +260,19 @@ public class PlanningGraph(
     }
 
     /// <summary>
-    /// Handle plan rejection - either refine with instructions or regenerate completely
+    /// Handle plan rejection with feedback analysis and targeted regeneration
     /// </summary>
     private async Task<GraphExecutionResult> HandlePlanRejectionAsync(
         PlanRejectedMessage rejectedMessage,
         GraphContext context,
         CancellationToken cancellationToken)
     {
-        var actionType = rejectedMessage.RegenerateCompletely ? "regenerated" : "refined";
+        var ticketId = context.TicketId;
+
         Logger.LogInformation(
-            "Plan {ActionType} for ticket {TicketId}, reason: {Reason}",
-            actionType, context.TicketId, rejectedMessage.Reason);
+            "Plan rejected for ticket {TicketId}. Feedback: {Feedback}",
+            ticketId,
+            rejectedMessage.Reason.Length > 100 ? rejectedMessage.Reason.Substring(0, 100) + "..." : rejectedMessage.Reason);
 
         // Increment retry count
         var retryCount = context.State.TryGetValue("plan_retry_count", out var count)
@@ -213,19 +281,14 @@ public class PlanningGraph(
         retryCount++;
 
         context.State["plan_retry_count"] = retryCount;
-        context.State["rejection_reason"] = rejectedMessage.Reason;
-        context.State["refinement_instructions"] = rejectedMessage.RefinementInstructions ?? string.Empty;
-        context.State["regenerate_completely"] = rejectedMessage.RegenerateCompletely;
-        context.State["is_suspended"] = false;
-        await SaveCheckpointAsync(context, "plan_rejected", "PlanningAgent");
 
-        // Check if we should limit retries
+        // Check retry limit
         const int maxRetries = 5;
         if (retryCount > maxRetries)
         {
             Logger.LogError(
                 "Plan rejected too many times ({RetryCount}) for ticket {TicketId}, failing workflow",
-                retryCount, context.TicketId);
+                retryCount, ticketId);
 
             context.State["is_failed"] = true;
             await SaveCheckpointAsync(context, "too_many_rejections", "FailedAgent");
@@ -234,48 +297,150 @@ public class PlanningGraph(
                 new InvalidOperationException($"Plan rejected {retryCount} times, exceeding maximum retries"));
         }
 
-        // Loop back to planning - execute the full cycle again
-        var mode = rejectedMessage.RegenerateCompletely ? "regenerating" : "refining";
-        Logger.LogInformation(
-            "Looping back to Planning Agent for ticket {TicketId} ({Mode}), attempt {Attempt}",
-            context.TicketId, mode, retryCount + 1);
+        // STEP 1: Analyze feedback to determine affected artifacts
+        Logger.LogInformation("Analyzing feedback to determine affected artifacts for ticket {TicketId}", ticketId);
 
-        // Create a new input message with the rejection context and refinement instructions
-        var contextData = new Dictionary<string, string>
-        {
-            ["rejection_reason"] = rejectedMessage.Reason,
-            ["retry_attempt"] = retryCount.ToString(),
-            ["regenerate_completely"] = rejectedMessage.RegenerateCompletely.ToString()
-        };
+        context.State["RevisionFeedback"] = rejectedMessage.Reason;
+        context.State["RefinementInstructions"] = rejectedMessage.RefinementInstructions ?? string.Empty;
 
-        if (!string.IsNullOrEmpty(rejectedMessage.RefinementInstructions))
+        var analysisMessage = await ExecuteAgentAsync<FeedbackAnalysisAgent>(
+            rejectedMessage, context, "feedback_analysis", cancellationToken);
+
+        // Get affected artifacts (fallback to all if analysis fails)
+        List<string> affectedArtifacts;
+        if (analysisMessage == null)
         {
-            contextData["refinement_instructions"] = rejectedMessage.RefinementInstructions;
+            Logger.LogWarning("Feedback analysis failed, regenerating all artifacts for ticket {TicketId}", ticketId);
+            affectedArtifacts = GetAllArtifactTypes();
+        }
+        else
+        {
+            affectedArtifacts = context.State.TryGetValue("AffectedArtifacts", out var artifacts)
+                && artifacts is List<string> list
+                ? list
+                : GetAllArtifactTypes();
+
+            Logger.LogInformation(
+                "Affected artifacts identified for ticket {TicketId}: {Artifacts}",
+                ticketId,
+                string.Join(", ", affectedArtifacts));
         }
 
-        var retryMessage = new AnswersReceivedMessage(
-            context.TicketId,
-            contextData
-        );
+        context.State["AffectedArtifacts"] = affectedArtifacts;
 
-        return await GenerateAndPostPlanAsync(retryMessage, context, cancellationToken);
+        // STEP 2: Regenerate only affected artifacts
+        Logger.LogInformation("Regenerating affected artifacts for ticket {TicketId}", ticketId);
+
+        var revisionMessage = await ExecuteAgentAsync<PlanRevisionAgent>(
+            rejectedMessage, context, "plan_revision", cancellationToken);
+
+        if (revisionMessage == null)
+        {
+            Logger.LogWarning("Artifact regeneration failed for ticket {TicketId}", ticketId);
+        }
+
+        // STEP 3: Store revised artifacts (creates new version)
+        Logger.LogInformation("Storing revised artifacts for ticket {TicketId}", ticketId);
+
+        context.State["IsRevision"] = true;
+        context.State["RevisionVersion"] = retryCount + 1;
+
+        var storageMessage = await ExecuteAgentAsync<PlanArtifactStorageAgent>(
+            revisionMessage ?? rejectedMessage, context, "storage", cancellationToken);
+
+        if (storageMessage == null)
+        {
+            Logger.LogWarning("Storage of revised artifacts failed for ticket {TicketId}", ticketId);
+        }
+
+        await SaveCheckpointAsync(context, "revision_stored", "PlanArtifactStorageAgent");
+
+        // STEP 4: Commit revisions and post update to Jira (Parallel)
+        Logger.LogInformation(
+            "Committing revisions and posting updates (parallel) for ticket {TicketId}",
+            ticketId);
+
+        var gitTask = ExecuteAgentAsync<GitPlanAgent>(
+            storageMessage ?? rejectedMessage, context, "git_plan", cancellationToken);
+        var jiraTask = ExecuteAgentAsync<JiraPostAgent>(
+            storageMessage ?? rejectedMessage, context, "jira_post", cancellationToken);
+
+        var finalResults = await Task.WhenAll(gitTask, jiraTask);
+        var gitMessage = finalResults[0];
+        var jiraMessage = finalResults[1];
+
+        if (gitMessage == null)
+        {
+            Logger.LogWarning("Git revision commit failed for ticket {TicketId}", ticketId);
+        }
+
+        if (jiraMessage == null)
+        {
+            Logger.LogWarning("Jira revision update failed for ticket {TicketId}", ticketId);
+        }
+
+        await SaveCheckpointAsync(context, "revision_posted", "GitPlanAgent,JiraPostAgent");
+
+        // STEP 5: Suspend for re-review
+        Logger.LogInformation("Suspending for plan re-review for ticket {TicketId}", ticketId);
+
+        context.State["is_suspended"] = true;
+        context.State["waiting_for"] = "plan_re_approval";
+        await SaveCheckpointAsync(context, "awaiting_re_review", "HumanWaitAgent");
+
+        // Return with appropriate output message (fallback chain)
+        var outputMessage = jiraMessage ?? storageMessage ?? revisionMessage ??
+            new MessagePostedMessage(ticketId, "plan_revised", DateTime.UtcNow);
+
+        return GraphExecutionResult.Suspended("awaiting_re_review", outputMessage);
     }
 
     /// <summary>
     /// Execute a specific agent and return the result message
     /// </summary>
-    private async Task<IAgentMessage> ExecuteAgentAsync<TAgent>(
+    private async Task<IAgentMessage?> ExecuteAgentAsync<TAgent>(
         IAgentMessage inputMessage,
         GraphContext context,
         string stage,
         CancellationToken cancellationToken)
     {
-        context.State["current_stage"] = stage;
-        return await agentExecutor.ExecuteAsync<TAgent>(inputMessage, context, cancellationToken);
+        try
+        {
+            context.State["current_stage"] = stage;
+            return await agentExecutor.ExecuteAsync<TAgent>(inputMessage, context, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Agent {AgentType} failed for ticket {TicketId}", typeof(TAgent).Name, context.TicketId);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Get list of all artifact types
+    /// </summary>
+    private List<string> GetAllArtifactTypes()
+    {
+        return new List<string>
+        {
+            "UserStories",
+            "ApiDesign",
+            "DatabaseSchema",
+            "TestCases",
+            "ImplementationSteps"
+        };
     }
 }
 
 // Agent type markers for ExecuteAgentAsync<TAgent> generic resolution
 public class PlanningAgent { }
 public class GitPlanAgent { }
+public class PmUserStoriesAgent { }
+public class ArchitectApiDesignAgent { }
+public class ArchitectDbSchemaAgent { }
+public class QaTestCasesAgent { }
+public class TechLeadImplementationAgent { }
+public class PlanArtifactStorageAgent { }
+public class FeedbackAnalysisAgent { }
+public class PlanRevisionAgent { }
 

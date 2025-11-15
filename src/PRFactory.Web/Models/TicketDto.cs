@@ -95,6 +95,11 @@ public class TicketDto
     public string? LastError { get; set; }
 
     /// <summary>
+    /// Implementation plan with multi-artifact support and version history
+    /// </summary>
+    public Core.Application.DTOs.PlanDto? Plan { get; set; }
+
+    /// <summary>
     /// Returns a friendly display name for the workflow state
     /// </summary>
     public string StateBadgeClass => State switch

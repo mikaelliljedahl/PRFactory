@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using PRFactory.Web.Models
 @using PRFactory.Web.Components.Tickets
+@using PRFactory.Web.Components.Plans
 @using PRFactory.Web.UI.Alerts
 @using PRFactory.Web.UI.Cards
 @using PRFactory.Web.UI.Display
@@ -72,11 +73,29 @@ else
                                       Questions="@questions"
                                       OnAnswersSubmitted="HandleAnswersSubmitted" />
                 }
-                else if (ticket.State == WorkflowState.PlanPosted || ticket.State == WorkflowState.PlanUnderReview)
+                else if (ticket.State == WorkflowState.PlanPosted ||
+                         ticket.State == WorkflowState.PlanUnderReview ||
+                         ticket.State == WorkflowState.PlanRejected)
                 {
-                    <PlanReviewSection Ticket="@ticket"
-                                     OnPlanApproved="HandlePlanApproved"
-                                     OnPlanRejected="HandlePlanRejected" />
+                    @* Show multi-artifact plan viewer if plan has multiple artifacts *@
+                    @if (ticket.Plan != null && ticket.Plan.HasMultipleArtifacts)
+                    {
+                        <PlanArtifactsCard Plan="@ticket.Plan"
+                                           OnVersionSelected="HandleVersionSelected"
+                                           AdditionalClass="mb-3" />
+
+                        <PlanRevisionCard TicketId="@ticket.Id"
+                                          OnRevisionStarted="HandleRevisionStarted"
+                                          OnApproved="HandlePlanApproved"
+                                          AdditionalClass="mb-3" />
+                    }
+                    else
+                    {
+                        @* Fallback to legacy plan review section *@
+                        <PlanReviewSection Ticket="@ticket"
+                                         OnPlanApproved="HandlePlanApproved"
+                                         OnPlanRejected="HandlePlanRejected" />
+                    }
                 }
                 else if (ticket.State == WorkflowState.PRCreated || ticket.State == WorkflowState.InReview)
                 {

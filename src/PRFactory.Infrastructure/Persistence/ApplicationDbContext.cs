@@ -17,6 +17,8 @@ using CheckpointConfig = PRFactory.Infrastructure.Persistence.Configurations.Che
 using AgentPromptTemplateConfig = PRFactory.Infrastructure.Persistence.Configurations.AgentPromptTemplateConfiguration;
 using UserConfig = PRFactory.Infrastructure.Persistence.Configurations.UserConfiguration;
 using PlanReviewConfig = PRFactory.Infrastructure.Persistence.Configurations.PlanReviewConfiguration;
+using PlanConfig = PRFactory.Infrastructure.Persistence.Configurations.PlanConfiguration;
+using PlanVersionConfig = PRFactory.Infrastructure.Persistence.Configurations.PlanVersionConfiguration;
 using ReviewCommentConfig = PRFactory.Infrastructure.Persistence.Configurations.ReviewCommentConfiguration;
 using TenantLlmProviderConfig = PRFactory.Infrastructure.Persistence.Configurations.TenantLlmProviderConfiguration;
 using CodeReviewResultConfig = PRFactory.Infrastructure.Persistence.Configurations.CodeReviewResultConfiguration;
@@ -66,6 +68,10 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
     public DbSet<ReviewChecklist> ReviewChecklists => Set<ReviewChecklist>();
     public DbSet<ChecklistItem> ChecklistItems => Set<ChecklistItem>();
 
+    // Plan DbSets
+    public DbSet<Plan> Plans => Set<Plan>();
+    public DbSet<PlanVersion> PlanVersions => Set<PlanVersion>();
+
     // LLM Provider DbSets
     public DbSet<TenantLlmProvider> TenantLlmProviders => Set<TenantLlmProvider>();
 
@@ -94,6 +100,10 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
         builder.ApplyConfiguration(new InlineCommentAnchorConfig());
         builder.ApplyConfiguration(new ReviewChecklistConfig());
         builder.ApplyConfiguration(new ChecklistItemConfig());
+
+        // Plan configurations
+        builder.ApplyConfiguration(new PlanConfig());
+        builder.ApplyConfiguration(new PlanVersionConfig());
 
         // LLM Provider configuration
         builder.ApplyConfiguration(new TenantLlmProviderConfig(_encryptionService));

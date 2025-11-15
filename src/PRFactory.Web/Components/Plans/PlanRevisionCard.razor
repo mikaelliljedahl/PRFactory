@@ -1,0 +1,39 @@
+@using PRFactory.Web.UI.Cards
+@using PRFactory.Web.UI.Forms
+@using PRFactory.Web.UI.Buttons
+@using PRFactory.Web.UI.Alerts
+
+<Card Title="Revise Plan" Icon="pencil" AdditionalClass="@AdditionalClass">
+    <FormTextAreaField Label="Revision Instructions"
+                       @bind-Value="@RevisionFeedback"
+                       Rows="4"
+                       Placeholder="e.g., Add rate limiting to the API endpoints, include caching strategy in implementation steps"
+                       Disabled="@IsProcessing" />
+
+    <div class="d-flex gap-2 mt-3">
+        <LoadingButton OnClick="HandleRevise"
+                       IsLoading="@IsRevising"
+                       Icon="arrow-repeat"
+                       Variant="ButtonVariant.Warning"
+                       Disabled="@(string.IsNullOrWhiteSpace(RevisionFeedback))">
+            Revise Plan
+        </LoadingButton>
+
+        <LoadingButton OnClick="HandleApprove"
+                       IsLoading="@IsApproving"
+                       Icon="check-circle"
+                       Variant="ButtonVariant.Success">
+            Approve Plan
+        </LoadingButton>
+    </div>
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <AlertMessage Type="AlertType.Danger" Message="@ErrorMessage" Dismissible="true" />
+    }
+
+    @if (!string.IsNullOrEmpty(SuccessMessage))
+    {
+        <AlertMessage Type="AlertType.Success" Message="@SuccessMessage" Dismissible="true" />
+    }
+</Card>

@@ -213,6 +213,21 @@ public partial class Detail : IAsyncDisposable
         await LoadEvents();
     }
 
+    private async Task HandleVersionSelected(Core.Application.DTOs.PlanVersionDto version)
+    {
+        // TODO: Implement version diff viewer in future
+        // For now, just log and show a toast
+        Logger.LogInformation("Version {Version} selected for ticket {TicketId}", version.Version, ticket?.Id);
+        ToastService.ShowInfo($"Version {version.Version} selected. Diff viewer coming soon!");
+    }
+
+    private async Task HandleRevisionStarted()
+    {
+        ToastService.ShowInfo("Plan revision started. Reloading ticket...");
+        await LoadTicket();
+        await LoadEvents();
+    }
+
     private enum HubConnectionState
     {
         Disconnected,

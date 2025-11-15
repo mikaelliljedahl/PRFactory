@@ -24,6 +24,16 @@ public interface IContextBuilder
     /// Build context for code implementation
     /// </summary>
     Task<string> BuildImplementationContextAsync(dynamic ticket, string repoPath);
+
+    /// <summary>
+    /// Build context for API design by extracting existing API patterns
+    /// </summary>
+    Task<string> BuildApiDesignContextAsync(object repository, string repositoryPath, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Build context for database schema design by extracting existing schema
+    /// </summary>
+    Task<string> BuildDatabaseSchemaContextAsync(object repository, string repositoryPath, CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -278,5 +288,199 @@ public class ContextBuilder : IContextBuilder
         {
             return null;
         }
+    }
+
+    /// <inheritdoc/>
+    public async Task<string> BuildApiDesignContextAsync(object repository, string repositoryPath, CancellationToken cancellationToken)
+    {
+        var sb = new StringBuilder();
+
+        _logger.LogInformation("Building API design context for repository at {RepositoryPath}", repositoryPath);
+
+        sb.AppendLine("## Existing API Patterns");
+        sb.AppendLine();
+
+        // Find existing controllers
+        var controllerFiles = Directory.GetFiles(
+            repositoryPath,
+            "*Controller.cs",
+            SearchOption.AllDirectories)
+            .Where(f => !f.Contains("/bin/") && !f.Contains("/obj/"))
+            .ToArray();
+
+        if (controllerFiles.Length == 0)
+        {
+            sb.AppendLine("No existing API controllers found.");
+            return sb.ToString();
+        }
+
+        sb.AppendLine($"Found {controllerFiles.Length} existing controllers:");
+        sb.AppendLine();
+
+        // Extract patterns from first 3 controllers (avoid context overload)
+        foreach (var controllerFile in controllerFiles.Take(3))
+        {
+            var fileName = Path.GetFileName(controllerFile);
+            var content = await File.ReadAllTextAsync(controllerFile, cancellationToken);
+
+            sb.AppendLine($"### {fileName}");
+            sb.AppendLine();
+
+            // Extract route patterns
+            var routePattern = @"\[Route\(""([^""]+)""\)\]";
+            var routeMatches = System.Text.RegularExpressions.Regex.Matches(content, routePattern);
+            if (routeMatches.Count > 0)
+            {
+                sb.AppendLine("Routes:");
+                foreach (System.Text.RegularExpressions.Match match in routeMatches)
+                {
+                    sb.AppendLine($"- {match.Groups[1].Value}");
+                }
+                sb.AppendLine();
+            }
+
+            // Extract HTTP method patterns
+            var httpMethodPattern = @"\[(HttpGet|HttpPost|HttpPut|HttpDelete|HttpPatch)\(""?([^""\]]*?)""?\)\]";
+            var methodMatches = System.Text.RegularExpressions.Regex.Matches(content, httpMethodPattern);
+            if (methodMatches.Count > 0)
+            {
+                sb.AppendLine("Endpoints:");
+                foreach (System.Text.RegularExpressions.Match match in methodMatches)
+                {
+                    var method = match.Groups[1].Value;
+                    var path = match.Groups[2].Value;
+                    sb.AppendLine($"- {method}: {path}");
+                }
+                sb.AppendLine();
+            }
+
+            // Extract DTOs used
+            var dtoPattern = @"Task<ActionResult<(\w+)>>";
+            var dtoMatches = System.Text.RegularExpressions.Regex.Matches(content, dtoPattern);
+            if (dtoMatches.Count > 0)
+            {
+                sb.AppendLine("Response DTOs:");
+                var dtos = dtoMatches.Cast<System.Text.RegularExpressions.Match>()
+                    .Select(m => m.Groups[1].Value)
+                    .Distinct();
+                foreach (var dto in dtos)
+                {
+                    sb.AppendLine($"- {dto}");
+                }
+                sb.AppendLine();
+            }
+        }
+
+        return sb.ToString();
+    }
+
+    /// <inheritdoc/>
+    public async Task<string> BuildDatabaseSchemaContextAsync(object repository, string repositoryPath, CancellationToken cancellationToken)
+    {
+        var sb = new StringBuilder();
+
+        _logger.LogInformation("Building database schema context for repository at {RepositoryPath}", repositoryPath);
+
+        sb.AppendLine("## Existing Database Schema");
+        sb.AppendLine();
+
+        // Find Entity files
+        var entityFiles = Directory.GetFiles(
+            repositoryPath,
+            "*.cs",
+            SearchOption.AllDirectories)
+            .Where(f => f.Contains("/Entities/") && !f.Contains("/bin/") && !f.Contains("/obj/"))
+            .ToArray();
+
+        if (entityFiles.Length > 0)
+        {
+            sb.AppendLine($"### Entity Classes ({entityFiles.Length} found)");
+            foreach (var entityFile in entityFiles.Take(10))
+            {
+                var fileName = Path.GetFileName(entityFile);
+                sb.AppendLine($"- {fileName}");
+            }
+            sb.AppendLine();
+        }
+
+        // Find DbContext file
+        var dbContextFiles = Directory.GetFiles(
+            repositoryPath,
+            "*DbContext.cs",
+            SearchOption.AllDirectories)
+            .Where(f => !f.Contains("/bin/") && !f.Contains("/obj/"))
+            .ToArray();
+
+        if (dbContextFiles.Length > 0)
+        {
+            var dbContextFile = dbContextFiles[0];
+            var fileName = Path.GetFileName(dbContextFile);
+            var content = await File.ReadAllTextAsync(dbContextFile, cancellationToken);
+
+            sb.AppendLine($"### {fileName}");
+            sb.AppendLine();
+
+            // Extract DbSet declarations
+            var dbSetPattern = @"public\s+DbSet<(\w+)>\s+(\w+)";
+            var dbSetMatches = System.Text.RegularExpressions.Regex.Matches(content, dbSetPattern);
+            if (dbSetMatches.Count > 0)
+            {
+                sb.AppendLine("Database Tables (DbSets):");
+                foreach (System.Text.RegularExpressions.Match match in dbSetMatches)
+                {
+                    var entityType = match.Groups[1].Value;
+                    var tableName = match.Groups[2].Value;
+                    sb.AppendLine($"- {tableName} (Entity: {entityType})");
+                }
+                sb.AppendLine();
+            }
+        }
+
+        // Find migration files
+        var migrationFiles = Directory.GetFiles(
+            repositoryPath,
+            "*_*.cs",
+            SearchOption.AllDirectories)
+            .Where(f => f.Contains("/Migrations/") && !f.Contains("Designer.cs") && !f.Contains("Snapshot.cs") &&
+                        !f.Contains("/bin/") && !f.Contains("/obj/"))
+            .OrderByDescending(f => f)
+            .ToArray();
+
+        if (migrationFiles.Length > 0)
+        {
+            sb.AppendLine($"### Recent Migrations ({migrationFiles.Length} total, showing last 3)");
+            foreach (var migrationFile in migrationFiles.Take(3))
+            {
+                var fileName = Path.GetFileName(migrationFile);
+                sb.AppendLine($"- {fileName}");
+            }
+            sb.AppendLine();
+        }
+
+        // Find configuration files
+        var configFiles = Directory.GetFiles(
+            repositoryPath,
+            "*Configuration.cs",
+            SearchOption.AllDirectories)
+            .Where(f => f.Contains("/Configurations/") && !f.Contains("/bin/") && !f.Contains("/obj/"))
+            .ToArray();
+
+        if (configFiles.Length > 0)
+        {
+            sb.AppendLine($"### Entity Configurations ({configFiles.Length} found)");
+            foreach (var configFile in configFiles.Take(5))
+            {
+                var fileName = Path.GetFileName(configFile);
+                sb.AppendLine($"- {fileName}");
+            }
+            sb.AppendLine();
+        }
+
+        if (entityFiles.Length == 0 && dbContextFiles.Length == 0 && migrationFiles.Length == 0)
+        {
+            sb.AppendLine("No existing database schema found.");
+        }
+
+        return sb.ToString();
     }
 }

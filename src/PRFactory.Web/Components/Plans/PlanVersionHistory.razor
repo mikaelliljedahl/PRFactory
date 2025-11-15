@@ -1,0 +1,46 @@
+@using PRFactory.Core.Application.DTOs
+@using PRFactory.Web.UI.Display
+@using Radzen.Blazor
+
+<div class="version-history">
+    @if (Versions == null || !Versions.Any())
+    {
+        <EmptyState Message="No version history available" Icon="clock-history" />
+    }
+    else
+    {
+        <RadzenDataList Data="@Versions" TItem="PlanVersionDto">
+            <Template Context="version">
+                <div class="version-item card mb-2">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">
+                                    Version @version.Version
+                                    @if (!string.IsNullOrEmpty(version.RevisionReason))
+                                    {
+                                        <span class="badge bg-secondary ms-2">@version.RevisionReason</span>
+                                    }
+                                </h6>
+                                <small class="text-muted">
+                                    <i class="bi bi-clock me-1"></i>
+                                    <RelativeTime Timestamp="@version.CreatedAt" />
+                                    @if (!string.IsNullOrEmpty(version.CreatedBy))
+                                    {
+                                        <span class="ms-2">
+                                            <i class="bi bi-person me-1"></i>@version.CreatedBy
+                                        </span>
+                                    }
+                                </small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary"
+                                    @onclick="() => SelectVersion(version)">
+                                <i class="bi bi-eye me-1"></i>View
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </Template>
+        </RadzenDataList>
+    }
+</div>

@@ -50,11 +50,23 @@ This directory contains prompt templates for all agent types and LLM providers.
 │       ├── system.txt            # 37 lines - Balanced analyst persona
 │       └── user_template.hbs     # 106 lines - Detailed analysis request
 │
+├── documentation/                 # Documentation update agents
+│   ├── anthropic/
+│   │   ├── system.txt            # 63 lines - Detailed documentation specialist
+│   │   └── user_template.hbs     # 178 lines - Comprehensive doc update request
+│   ├── openai/
+│   │   ├── system.txt            # 28 lines - Concise documentation specialist
+│   │   └── user_template.hbs     # 64 lines - Structured doc update request
+│   ├── google/
+│   │   ├── system.txt            # 47 lines - Balanced documentation specialist
+│   │   └── user_template.hbs     # 127 lines - Detailed doc update request
+│   └── README.md                  # Documentation update guide
+│
 ├── README.md                      # This file
 └── SAMPLE_RENDERED_OUTPUT.md      # Example of rendered template
 
-**Total Files:** 24 (4 agent types × 3 providers × 2 files each)
-**Total Lines:** 1,345 lines of carefully crafted prompts
+**Total Files:** 31 (5 agent types × 3 providers × 2 files each, except documentation + docs)
+**Total Lines:** 2,093+ lines of carefully crafted prompts
 ```
 
 ## Agent Types
@@ -131,6 +143,26 @@ This directory contains prompt templates for all agent types and LLM providers.
 - Strengths and weaknesses
 - Security and performance notes
 - Actionable recommendations
+
+### 5. Documentation Agents (`/documentation/`)
+**Purpose:** Update and maintain technical documentation across projects
+
+**Variables Used:**
+- `project_name`, `repository_path`, `docs_root_path`
+- `recent_epics[]`, `recent_commits[]`
+- `core_docs[]`, `technical_docs[]`, `user_docs[]`
+- `known_issues[]` (with file_path, issue_type, priority)
+- `naming_standards[]`, `focus_areas[]`
+- `additional_instructions`
+
+**Output:** Comprehensive documentation updates with:
+- Gap analysis report (critical/important/nice-to-have)
+- Updated documentation files
+- Naming convention standardization
+- Cross-reference verification
+- Summary of changes made
+
+**See:** `/prompts/documentation/README.md` for detailed usage guide
 
 ## Provider-Specific Design
 

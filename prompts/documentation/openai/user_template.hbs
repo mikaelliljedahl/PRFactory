@@ -1,0 +1,71 @@
+# Documentation Update Request
+
+## Project
+- **Name**: {{project_name}}
+- **Repository**: {{repository_path}}
+- **Docs Root**: {{docs_root_path}}
+
+## Recent Changes
+{{#if recent_epics}}
+**Completed Features:**
+{{#each recent_epics}}
+- {{this.name}} ({{this.completion_date}}): {{this.description}}
+{{/each}}
+{{/if}}
+
+## Documentation Files
+{{#if core_docs}}
+**Core Documentation:**
+{{#each core_docs}}
+- {{this.file_name}}: {{this.purpose}} (Updated: {{this.last_updated}})
+{{/each}}
+{{/if}}
+
+{{#if known_issues}}
+## Known Issues
+{{#each known_issues}}
+**{{this.priority}}**: {{this.title}}
+- File: {{this.file_path}}
+- Type: {{this.issue_type}}
+- Description: {{this.description}}
+{{/each}}
+{{/if}}
+
+## Naming Standards
+{{#if naming_standards}}
+{{#each naming_standards}}
+- **{{this.category}}**: {{this.convention}}
+{{/each}}
+{{else}}
+- Root docs: UPPERCASE.md
+- Component docs: kebab-case.md
+- Folders: lowercase-with-hyphens
+{{/if}}
+
+## Review Checklist
+- [ ] Implementation status reflects completed features
+- [ ] Architecture docs match current structure
+- [ ] Database schema includes all entities
+- [ ] Workflows are accurate
+- [ ] UI navigation is current
+- [ ] Naming conventions are consistent
+- [ ] Cross-references work
+
+## Your Tasks
+1. **Explore** codebase and documentation
+2. **Analyze** gaps by priority (Critical/Important/Nice-to-Have)
+3. **Execute** updates (critical first)
+4. **Verify** consistency and accuracy
+
+## Success Criteria
+- ✅ Critical gaps addressed
+- ✅ Docs match implementation
+- ✅ Naming 100% consistent
+- ✅ No broken links
+- ✅ Recent work documented
+
+{{#if additional_instructions}}
+**Additional Notes:** {{additional_instructions}}
+{{/if}}
+
+**Begin with exploration and gap analysis, then provide update recommendations.**

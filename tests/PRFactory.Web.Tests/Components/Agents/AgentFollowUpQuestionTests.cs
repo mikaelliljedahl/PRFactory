@@ -1,4 +1,5 @@
 using Bunit;
+using Microsoft.AspNetCore.Components;
 using Xunit;
 using PRFactory.Web.Components.Agents;
 
@@ -84,7 +85,7 @@ public class AgentFollowUpQuestionTests : TestContext
             .Add(p => p.OnAnswer, onAnswerCallback));
 
         // Act
-        var input = cut.Find("input[type='text']");
+        var input = cut.Find("input");
         input.Change("This is my answer");
 
         var submitButton = cut.Find("button");
@@ -167,7 +168,7 @@ public class AgentFollowUpQuestionTests : TestContext
             .Add(p => p.OnAnswer, onAnswerCallback));
 
         // Act
-        var input = cut.Find("input[type='text']");
+        var input = cut.Find("input");
         input.Change("My answer");
 
         var submitButton = cut.Find("button");

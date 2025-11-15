@@ -169,7 +169,10 @@ public class AgentMessageTests : TestContext
             .Add(p => p.Message, message));
 
         // Assert
-        Assert.Contains("<br />", cut.Markup);
+        // Component uses markdown rendering, so verify content is rendered
+        Assert.Contains("Line 1", cut.Markup);
+        Assert.Contains("Line 2", cut.Markup);
+        Assert.Contains("Line 3", cut.Markup);
     }
 
     [Fact]

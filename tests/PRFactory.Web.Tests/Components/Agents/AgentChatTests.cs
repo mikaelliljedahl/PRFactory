@@ -192,7 +192,7 @@ public class AgentChatTests : TestContext
         // In real scenario, this would be set during actual streaming
 
         // Assert initial state
-        var input = cut.Find("input[type='text']");
+        var input = cut.Find("input");
         Assert.NotNull(input);
     }
 

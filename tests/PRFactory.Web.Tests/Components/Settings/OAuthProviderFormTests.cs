@@ -13,6 +13,15 @@ namespace PRFactory.Web.Tests.Components.Settings;
 /// </summary>
 public class OAuthProviderFormTests : TestContext
 {
+    public OAuthProviderFormTests()
+    {
+        // Setup JSInterop for Radzen components
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        JSInterop.SetupVoid("Radzen.preventArrows", _ => true);
+        JSInterop.SetupVoid("Radzen.closeDropdown", _ => true);
+        JSInterop.SetupVoid("Radzen.openDropdown", _ => true);
+    }
+
     private CreateOAuthProviderDto CreateTestModel(string name = "Test OAuth Provider", string defaultModel = "claude-sonnet-4-5-20250929")
     {
         return new CreateOAuthProviderDto
@@ -197,10 +206,9 @@ public class OAuthProviderFormTests : TestContext
 
         var cut = RenderComponent<OAuthProviderForm>(parameters => parameters
             .Add(p => p.Model, model)
-            .Add<EventCallback>(p => p.OnBack, new EventCallback(this, async () =>
+            .Add(p => p.OnBack, EventCallback.Factory.Create(this, async () =>
             {
                 backCallbackInvoked = true;
-                await Task.CompletedTask;
             })));
 
         // Act
@@ -220,10 +228,9 @@ public class OAuthProviderFormTests : TestContext
 
         var cut = RenderComponent<OAuthProviderForm>(parameters => parameters
             .Add(p => p.Model, model)
-            .Add<EventCallback>(p => p.OnCancel, new EventCallback(this, async () =>
+            .Add(p => p.OnCancel, EventCallback.Factory.Create(this, async () =>
             {
                 cancelCallbackInvoked = true;
-                await Task.CompletedTask;
             })));
 
         // Act

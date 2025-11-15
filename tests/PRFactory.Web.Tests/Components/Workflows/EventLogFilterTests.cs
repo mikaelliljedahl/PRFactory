@@ -13,6 +13,14 @@ namespace PRFactory.Web.Tests.Components.Workflows;
 /// </summary>
 public class EventLogFilterTests : TestContext
 {
+    public EventLogFilterTests()
+    {
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        JSInterop.SetupVoid("Radzen.preventArrows", _ => true);
+        JSInterop.SetupVoid("Radzen.closeDropdown", _ => true);
+        JSInterop.SetupVoid("Radzen.openDropdown", _ => true);
+    }
+
     [Fact]
     public void Render_DisplaysEventTypeFilterDropdown()
     {

@@ -257,8 +257,8 @@ public class UserListItemTests : TestContext
             .Add(p => p.User, user));
 
         // Assert
-        var eyeButton = cut.FindAll("button").First(b => b.FindAll("i").Any(i => i.HasAttribute("class") && i.GetAttribute("class").Contains("bi-eye")));
-        Assert.NotNull(eyeButton);
+        var eyeIcons = cut.FindAll("button i.bi-eye");
+        Assert.NotEmpty(eyeIcons);
     }
 
     [Fact]
@@ -273,8 +273,8 @@ public class UserListItemTests : TestContext
             .Add(p => p.CanEdit, true));
 
         // Assert
-        var pencilButton = cut.FindAll("button").FirstOrDefault(b => b.FindAll("i").Any(i => i.HasAttribute("class") && i.GetAttribute("class").Contains("bi-pencil")));
-        Assert.NotNull(pencilButton);
+        var pencilIcons = cut.FindAll("button i.bi-pencil");
+        Assert.NotEmpty(pencilIcons);
     }
 
     [Fact]
@@ -289,8 +289,8 @@ public class UserListItemTests : TestContext
             .Add(p => p.CanEdit, false));
 
         // Assert
-        var pencilButton = cut.FindAll("button").FirstOrDefault(b => b.FindAll("i").Any(i => i.HasAttribute("class") && i.GetAttribute("class").Contains("bi-pencil")));
-        Assert.Null(pencilButton);
+        var pencilIcons = cut.FindAll("button i.bi-pencil");
+        Assert.Empty(pencilIcons);
     }
 
     [Fact]
@@ -305,8 +305,8 @@ public class UserListItemTests : TestContext
             .Add(p => p.CanEdit, true));
 
         // Assert
-        var deactivateButton = cut.FindAll("button").FirstOrDefault(b => b.FindAll("i").Any(i => i.HasAttribute("class") && i.GetAttribute("class").Contains("bi-x-circle")));
-        Assert.NotNull(deactivateButton);
+        var deactivateIcons = cut.FindAll("button i.bi-x-circle");
+        Assert.NotEmpty(deactivateIcons);
     }
 
     [Fact]
@@ -321,8 +321,8 @@ public class UserListItemTests : TestContext
             .Add(p => p.CanEdit, true));
 
         // Assert
-        var activateButton = cut.FindAll("button").FirstOrDefault(b => b.FindAll("i").Any(i => i.HasAttribute("class") && i.GetAttribute("class").Contains("bi-check-circle")));
-        Assert.NotNull(activateButton);
+        var activateIcons = cut.FindAll("button i.bi-check-circle");
+        Assert.NotEmpty(activateIcons);
     }
 
     [Fact]
@@ -363,7 +363,7 @@ public class UserListItemTests : TestContext
             })));
 
         // Act
-        var editButton = cut.FindAll("button").First(b => b.FindAll("i").Any(i => i.GetAttribute("class").Contains("bi-pencil")));
+        var editButton = cut.FindAll("button").First(b => b.OuterHtml.Contains("bi-pencil"));
         editButton.Click();
 
         // Assert
@@ -386,7 +386,7 @@ public class UserListItemTests : TestContext
             })));
 
         // Act
-        var deactivateButton = cut.FindAll("button").First(b => b.FindAll("i").Any(i => i.GetAttribute("class").Contains("bi-x-circle")));
+        var deactivateButton = cut.FindAll("button").First(b => b.OuterHtml.Contains("bi-x-circle"));
         deactivateButton.Click();
 
         // Assert
@@ -409,7 +409,7 @@ public class UserListItemTests : TestContext
             })));
 
         // Act
-        var activateButton = cut.FindAll("button").First(b => b.FindAll("i").Any(i => i.GetAttribute("class").Contains("bi-check-circle")));
+        var activateButton = cut.FindAll("button").First(b => b.OuterHtml.Contains("bi-check-circle"));
         activateButton.Click();
 
         // Assert

@@ -11,6 +11,15 @@ namespace PRFactory.Web.Tests.Components.Settings;
 /// </summary>
 public class ProviderTypeSelectorTests : TestContext
 {
+    public ProviderTypeSelectorTests()
+    {
+        // Setup JSInterop for Radzen components
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        JSInterop.SetupVoid("Radzen.preventArrows", _ => true);
+        JSInterop.SetupVoid("Radzen.closeDropdown", _ => true);
+        JSInterop.SetupVoid("Radzen.openDropdown", _ => true);
+    }
+
     [Fact]
     public void Render_DisplaysAllProviderCards()
     {
@@ -140,10 +149,9 @@ public class ProviderTypeSelectorTests : TestContext
         string? selectedType = null;
 
         var cut = RenderComponent<ProviderTypeSelector>(parameters => parameters
-            .Add<EventCallback<string>>(p => p.OnProviderTypeSelected, new EventCallback<string>(this, async type =>
+            .Add<EventCallback<string>>(p => p.OnProviderTypeSelected, EventCallback.Factory.Create<string>(this, async (type) =>
             {
                 selectedType = type;
-                await Task.CompletedTask;
             })));
 
         // Act
@@ -161,10 +169,9 @@ public class ProviderTypeSelectorTests : TestContext
         string? selectedType = null;
 
         var cut = RenderComponent<ProviderTypeSelector>(parameters => parameters
-            .Add<EventCallback<string>>(p => p.OnProviderTypeSelected, new EventCallback<string>(this, async type =>
+            .Add<EventCallback<string>>(p => p.OnProviderTypeSelected, EventCallback.Factory.Create<string>(this, async (type) =>
             {
                 selectedType = type;
-                await Task.CompletedTask;
             })));
 
         // Act
@@ -182,10 +189,9 @@ public class ProviderTypeSelectorTests : TestContext
         string? selectedType = null;
 
         var cut = RenderComponent<ProviderTypeSelector>(parameters => parameters
-            .Add<EventCallback<string>>(p => p.OnProviderTypeSelected, new EventCallback<string>(this, async type =>
+            .Add<EventCallback<string>>(p => p.OnProviderTypeSelected, EventCallback.Factory.Create<string>(this, async (type) =>
             {
                 selectedType = type;
-                await Task.CompletedTask;
             })));
 
         // Act
@@ -203,10 +209,9 @@ public class ProviderTypeSelectorTests : TestContext
         string? selectedType = null;
 
         var cut = RenderComponent<ProviderTypeSelector>(parameters => parameters
-            .Add<EventCallback<string>>(p => p.OnProviderTypeSelected, new EventCallback<string>(this, async type =>
+            .Add<EventCallback<string>>(p => p.OnProviderTypeSelected, EventCallback.Factory.Create<string>(this, async (type) =>
             {
                 selectedType = type;
-                await Task.CompletedTask;
             })));
 
         // Act
@@ -224,10 +229,9 @@ public class ProviderTypeSelectorTests : TestContext
         string? selectedType = null;
 
         var cut = RenderComponent<ProviderTypeSelector>(parameters => parameters
-            .Add<EventCallback<string>>(p => p.OnProviderTypeSelected, new EventCallback<string>(this, async type =>
+            .Add<EventCallback<string>>(p => p.OnProviderTypeSelected, EventCallback.Factory.Create<string>(this, async (type) =>
             {
                 selectedType = type;
-                await Task.CompletedTask;
             })));
 
         // Act
@@ -245,10 +249,9 @@ public class ProviderTypeSelectorTests : TestContext
         string? selectedType = null;
 
         var cut = RenderComponent<ProviderTypeSelector>(parameters => parameters
-            .Add<EventCallback<string>>(p => p.OnProviderTypeSelected, new EventCallback<string>(this, async type =>
+            .Add<EventCallback<string>>(p => p.OnProviderTypeSelected, EventCallback.Factory.Create<string>(this, async (type) =>
             {
                 selectedType = type;
-                await Task.CompletedTask;
             })));
 
         // Act
@@ -278,10 +281,9 @@ public class ProviderTypeSelectorTests : TestContext
         var cancelCallbackInvoked = false;
 
         var cut = RenderComponent<ProviderTypeSelector>(parameters => parameters
-            .Add<EventCallback>(p => p.OnCancel, new EventCallback(this, async () =>
+            .Add(p => p.OnCancel, EventCallback.Factory.Create(this, async () =>
             {
                 cancelCallbackInvoked = true;
-                await Task.CompletedTask;
             })));
 
         // Act

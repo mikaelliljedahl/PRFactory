@@ -173,8 +173,7 @@ public class LlmProviderAssignmentPanelTests : TestContext
             .Add(p => p.Providers, providers));
 
         // Assert
-        var analysisSelect = cut.Find("select[id='analysisProvider']");
-        var options = analysisSelect.FindAll("option");
+        var options = cut.FindAll("select[id='analysisProvider'] option");
 
         Assert.Contains("Use Tenant Default", options.Select(o => o.TextContent).ToList());
         Assert.Contains("OpenAI Production (OpenAI) ⭐", options.Select(o => o.TextContent).FirstOrDefault(t => t.Contains("OpenAI Production")));

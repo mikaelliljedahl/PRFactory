@@ -12,6 +12,14 @@ namespace PRFactory.Web.Tests.Components.Settings;
 /// </summary>
 public class ModelOverridesEditorTests : TestContext
 {
+    public ModelOverridesEditorTests()
+    {
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        JSInterop.SetupVoid("Radzen.preventArrows", _ => true);
+        JSInterop.SetupVoid("Radzen.closeDropdown", _ => true);
+        JSInterop.SetupVoid("Radzen.openDropdown", _ => true);
+    }
+
     [Fact]
     public void Render_DisplaysLabel()
     {
@@ -368,7 +376,8 @@ public class ModelOverridesEditorTests : TestContext
         // Assert
         var preCode = cut.Find("pre > code");
         Assert.NotNull(preCode);
-        Assert.Contains("bg-light", preCode.Parent!.GetAttribute("class"));
+        var parentElement = (IElement)preCode.Parent!;
+        Assert.Contains("bg-light", parentElement.GetAttribute("class"));
     }
 
     [Fact]

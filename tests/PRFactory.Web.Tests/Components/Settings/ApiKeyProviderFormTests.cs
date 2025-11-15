@@ -361,10 +361,9 @@ public class ApiKeyProviderFormTests : TestContext
 
         var cut = RenderComponent<ApiKeyProviderForm>(parameters => parameters
             .Add(p => p.Model, model)
-            .Add(p => p.OnValidSubmit, EventCallback.Factory.Create(this, () =>
+            .Add(p => p.OnValidSubmit, EventCallback.Factory.Create(this, async () =>
             {
                 submitCallbackInvoked = true;
-                return Task.CompletedTask;
             })));
 
         var submitButton = cut.FindAll("button").FirstOrDefault(b => b.TextContent.Contains("Create Provider"));
@@ -385,10 +384,9 @@ public class ApiKeyProviderFormTests : TestContext
 
         var cut = RenderComponent<ApiKeyProviderForm>(parameters => parameters
             .Add(p => p.Model, model)
-            .Add(p => p.OnCancel, EventCallback.Factory.Create(this, () =>
+            .Add(p => p.OnCancel, EventCallback.Factory.Create(this, async () =>
             {
                 cancelCallbackInvoked = true;
-                return Task.CompletedTask;
             })));
 
         var cancelButton = cut.FindAll("button").FirstOrDefault(b => b.TextContent.Contains("Cancel"));
@@ -410,10 +408,9 @@ public class ApiKeyProviderFormTests : TestContext
         var cut = RenderComponent<ApiKeyProviderForm>(parameters => parameters
             .Add(p => p.Model, model)
             .Add(p => p.IsEditMode, false)
-            .Add(p => p.OnBack, EventCallback.Factory.Create(this, () =>
+            .Add(p => p.OnBack, EventCallback.Factory.Create(this, async () =>
             {
                 backCallbackInvoked = true;
-                return Task.CompletedTask;
             })));
 
         var backButton = cut.FindAll("button").FirstOrDefault(b => b.TextContent.Contains("Back"));

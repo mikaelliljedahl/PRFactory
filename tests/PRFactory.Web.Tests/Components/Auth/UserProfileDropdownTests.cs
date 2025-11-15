@@ -23,6 +23,12 @@ public class UserProfileDropdownTests : TestContext
 
         // Add Authorization Services for AuthorizeView
         Services.AddAuthorizationCore();
+
+        // Setup JSInterop for Radzen components
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        JSInterop.SetupVoid("Radzen.preventArrows", _ => true);
+        JSInterop.SetupVoid("Radzen.closeDropdown", _ => true);
+        JSInterop.SetupVoid("Radzen.openDropdown", _ => true);
     }
 
     private void SetupAuthorizedUser(string userName = TestUserName)

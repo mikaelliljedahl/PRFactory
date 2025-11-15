@@ -12,6 +12,15 @@ namespace PRFactory.Web.Tests.Components.Settings;
 /// </summary>
 public class LlmProviderListItemTests : TestContext
 {
+    public LlmProviderListItemTests()
+    {
+        // Setup JSInterop for Radzen components
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        JSInterop.SetupVoid("Radzen.preventArrows", _ => true);
+        JSInterop.SetupVoid("Radzen.closeDropdown", _ => true);
+        JSInterop.SetupVoid("Radzen.openDropdown", _ => true);
+    }
+
     private TenantLlmProviderDto CreateTestProvider(
         string name = "OpenAI Production",
         string providerType = "OpenAI",

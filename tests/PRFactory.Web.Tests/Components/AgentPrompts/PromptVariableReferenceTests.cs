@@ -19,6 +19,12 @@ public class PromptVariableReferenceTests : TestContext
     {
         _mockJsRuntime = new Mock<IJSRuntime>();
         Services.AddSingleton(_mockJsRuntime.Object);
+
+        // Setup JSInterop for Radzen components
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        JSInterop.SetupVoid("Radzen.preventArrows", _ => true);
+        JSInterop.SetupVoid("Radzen.closeDropdown", _ => true);
+        JSInterop.SetupVoid("Radzen.openDropdown", _ => true);
     }
 
     [Fact]

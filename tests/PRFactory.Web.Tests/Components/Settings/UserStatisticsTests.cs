@@ -11,6 +11,14 @@ namespace PRFactory.Web.Tests.Components.Settings;
 /// </summary>
 public class UserStatisticsTests : TestContext
 {
+    public UserStatisticsTests()
+    {
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        JSInterop.SetupVoid("Radzen.preventArrows", _ => true);
+        JSInterop.SetupVoid("Radzen.closeDropdown", _ => true);
+        JSInterop.SetupVoid("Radzen.openDropdown", _ => true);
+    }
+
     private UserStatisticsDto CreateTestStatistics(
         int totalPlanReviews = 25,
         int totalComments = 42,
@@ -335,9 +343,9 @@ public class UserStatisticsTests : TestContext
         // Assert
         var dl = cut.Find("dl");
         Assert.NotNull(dl);
-        var dt = dl.Find("dt");
-        Assert.NotNull(dt);
-        Assert.Contains("Last Activity", dt.TextContent);
+        var dts = cut.FindAll("dl dt");
+        Assert.NotEmpty(dts);
+        Assert.True(dts.Any(dt => dt.TextContent.Contains("Last Activity")));
     }
 
     [Fact]

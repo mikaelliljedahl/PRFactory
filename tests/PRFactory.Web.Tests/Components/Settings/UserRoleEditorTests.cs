@@ -295,7 +295,7 @@ public class UserRoleEditorTests : TestContext
 
         // Act
         var select = cut.Find("select.form-select");
-        var options = select.FindAll("option");
+        var options = cut.FindAll("select.form-select option");
         var adminOption = options.First(o => o.GetAttribute("value") == "Admin");
         select.Change(adminOption.GetAttribute("value"));
 

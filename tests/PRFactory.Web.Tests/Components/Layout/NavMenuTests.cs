@@ -21,6 +21,11 @@ public class NavMenuTests : TestContext
 {
     public NavMenuTests()
     {
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        JSInterop.SetupVoid("Radzen.preventArrows", _ => true);
+        JSInterop.SetupVoid("Radzen.closeDropdown", _ => true);
+        JSInterop.SetupVoid("Radzen.openDropdown", _ => true);
+
         // Setup mock NavigationManager
         Services.AddSingleton<NavigationManager>(new MockNavigationManager());
     }

@@ -113,7 +113,6 @@ public class CodeReviewSettingsPanelTests : TestContext
         // Arrange
         var config = new TenantConfigurationDto
         {
-            TenantId = Guid.NewGuid(),
             EnableAutoCodeReview = true,
             MaxCodeReviewIterations = 3,
             AutoApproveIfNoIssues = false,

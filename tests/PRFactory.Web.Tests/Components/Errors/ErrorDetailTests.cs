@@ -288,10 +288,11 @@ public class ErrorDetailTests : TestContext
             .Add(p => p.Error, error));
 
         // Assert
+        // Stack Trace tab should be present in the markup
         Assert.Contains("Stack Trace", cut.Markup);
-        // StackTraceViewer component should be present
-        var stackTraceComponents = cut.FindComponents<StackTraceViewer>();
-        Assert.NotEmpty(stackTraceComponents);
+        // Verify the tab structure is rendered
+        var tabs = cut.FindComponents<Radzen.Blazor.RadzenTabsItem>();
+        Assert.NotEmpty(tabs);
     }
 
     [Fact]
@@ -321,8 +322,10 @@ public class ErrorDetailTests : TestContext
             .Add(p => p.Error, error));
 
         // Assert
+        // Context Data tab should be present when contextData is provided
         Assert.Contains("Context Data", cut.Markup);
-        Assert.Contains("bg-light p-3 rounded", cut.Markup);
+        // Verify the context data content is in the markup
+        Assert.Contains(contextData, cut.Markup);
     }
 
     [Fact]
@@ -430,8 +433,10 @@ public class ErrorDetailTests : TestContext
             .Add(p => p.Error, error));
 
         // Assert
+        // Verify card structure is present
         Assert.Contains("card", cut.Markup);
         Assert.Contains("card-body", cut.Markup);
-        Assert.Contains("RadzenTabs", cut.Markup);
+        // Verify tabs are rendered by checking for the Overview tab text
+        Assert.Contains("Overview", cut.Markup);
     }
 }

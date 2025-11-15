@@ -2,7 +2,14 @@ using Bunit;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
+using PRFactory.Domain.DTOs;
+using PRFactory.Domain.Entities;
+using PRFactory.Domain.ValueObjects;
 using PRFactory.Web.Components.Layout;
+using PRFactory.Web.Models;
+using PRFactory.Web.Services;
+using Radzen;
 using Xunit;
 
 namespace PRFactory.Web.Tests.Components.Layout;
@@ -13,6 +20,46 @@ namespace PRFactory.Web.Tests.Components.Layout;
 /// </summary>
 public class MainLayoutTests : TestContext
 {
+    public MainLayoutTests()
+    {
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        JSInterop.SetupVoid("Radzen.preventArrows", _ => true);
+        JSInterop.SetupVoid("Radzen.closeDropdown", _ => true);
+        JSInterop.SetupVoid("Radzen.openDropdown", _ => true);
+
+        // Setup mock IErrorService (required by NavMenu)
+        var mockErrorService = new Mock<IErrorService>();
+        mockErrorService.Setup(s => s.GetUnresolvedCountAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+        Services.AddSingleton(mockErrorService.Object);
+
+        // Setup mock ITicketService (required by NavMenu)
+        var mockTicketService = new Mock<ITicketService>();
+        var testTickets = new List<TicketDto>
+        {
+            new TicketDto
+            {
+                Id = Guid.NewGuid(),
+                TicketKey = "TEST-001",
+                Title = "Test Ticket",
+                State = WorkflowState.Triggered,
+                Source = TicketSource.WebUI,
+                RepositoryId = Guid.NewGuid(),
+                CreatedAt = DateTime.UtcNow
+            }
+        };
+        mockTicketService.Setup(s => s.GetAllTicketsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(testTickets);
+        Services.AddSingleton(mockTicketService.Object);
+
+        // Setup Radzen DialogService (required by MainLayout)
+        Services.AddScoped<DialogService>();
+
+        // Setup mock IToastService (required by ToastContainer)
+        var mockToastService = new Mock<IToastService>();
+        Services.AddSingleton(mockToastService.Object);
+    }
+
     private void SetupConfiguration(string environment = "Production")
     {
         var config = new ConfigurationBuilder()

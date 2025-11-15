@@ -20,6 +20,9 @@ public class ReviewerAssignmentTests : ComponentTestBase
         // Register mocks BEFORE service provider is locked
         services.AddScoped(_ => MockUserService.Object);
         services.AddScoped(_ => MockTenantContext.Object);
+
+        // Register logging infrastructure for ILogger<ReviewerAssignment>
+        services.AddLogging();
     }
 
     [Fact]

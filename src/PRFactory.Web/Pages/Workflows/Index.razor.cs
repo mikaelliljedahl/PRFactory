@@ -49,26 +49,9 @@ public partial class Index
 
             var allTickets = await TicketService.GetAllTicketsAsync();
 
-            // Map to DTOs
-            workflows = allTickets.Select(t => new TicketDto
-            {
-                Id = t.Id,
-                TicketKey = t.TicketKey,
-                Title = t.Title,
-                Description = t.Description,
-                State = t.State,
-                Source = t.Source,
-                RepositoryId = t.RepositoryId,
-                RepositoryName = t.Repository?.Name,
-                CreatedAt = t.CreatedAt,
-                UpdatedAt = t.UpdatedAt,
-                CompletedAt = t.CompletedAt,
-                PullRequestUrl = t.PullRequestUrl,
-                PullRequestNumber = t.PullRequestNumber,
-                LastError = t.LastError
-            })
-            .OrderByDescending(t => t.CreatedAt)
-            .ToList();
+            workflows = allTickets
+                .OrderByDescending(t => t.CreatedAt)
+                .ToList();
 
             // Calculate statistics
             CalculateStatistics();

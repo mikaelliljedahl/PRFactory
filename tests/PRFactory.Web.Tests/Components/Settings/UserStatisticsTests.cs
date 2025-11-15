@@ -5,144 +5,379 @@ using Xunit;
 
 namespace PRFactory.Web.Tests.Components.Settings;
 
+/// <summary>
+/// Tests for the UserStatistics component.
+/// Verifies statistics display, loading states, and relative time formatting.
+/// </summary>
 public class UserStatisticsTests : TestContext
 {
+    public UserStatisticsTests()
+    {
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        JSInterop.SetupVoid("Radzen.preventArrows", _ => true);
+        JSInterop.SetupVoid("Radzen.closeDropdown", _ => true);
+        JSInterop.SetupVoid("Radzen.openDropdown", _ => true);
+    }
+
     private UserStatisticsDto CreateTestStatistics(
-        int totalPlanReviews = 5,
-        int totalComments = 10,
-        bool hasLastSeenAt = true,
-        DateTime? lastSeenAt = null)
+        int totalPlanReviews = 25,
+        int totalComments = 42,
+        DateTime? lastSeenAt = null,
+        bool useDefaultLastSeen = true)
     {
         return new UserStatisticsDto
         {
             UserId = Guid.NewGuid(),
             TotalPlanReviews = totalPlanReviews,
             TotalComments = totalComments,
-            LastSeenAt = hasLastSeenAt ? (lastSeenAt ?? DateTime.UtcNow.AddHours(-1)) : null
+            LastSeenAt = useDefaultLastSeen ? (lastSeenAt ?? DateTime.UtcNow.AddHours(-2)) : lastSeenAt
         };
     }
 
     [Fact]
-    public void Render_WithStatistics_DisplaysPlanReviewCount()
+    public void Render_DisplaysCardTitle()
     {
         // Arrange
-        var statistics = CreateTestStatistics(totalPlanReviews: 15);
+        var stats = CreateTestStatistics();
 
         // Act
         var cut = RenderComponent<UserStatistics>(parameters => parameters
-            .Add(p => p.Statistics, statistics));
+            .Add(p => p.Statistics, stats));
 
         // Assert
-        Assert.Contains("15", cut.Markup);
-        Assert.Contains("Plan Reviews", cut.Markup);
+        var markup = cut.Markup;
+        Assert.Contains("Activity Statistics", markup);
     }
 
     [Fact]
-    public void Render_WithStatistics_DisplaysCommentsCount()
+    public void Render_DisplaysStatisticsIcon()
     {
         // Arrange
-        var statistics = CreateTestStatistics(totalComments: 25);
+        var stats = CreateTestStatistics();
 
         // Act
         var cut = RenderComponent<UserStatistics>(parameters => parameters
-            .Add(p => p.Statistics, statistics));
+            .Add(p => p.Statistics, stats));
 
         // Assert
-        Assert.Contains("25", cut.Markup);
-        Assert.Contains("Comments", cut.Markup);
+        var icon = cut.Find("i.bi-bar-chart");
+        Assert.NotNull(icon);
     }
 
     [Fact]
-    public void Render_WithZeroStatistics_DisplaysZeros()
+    public void Render_DisplaysTotalPlanReviews()
     {
         // Arrange
-        var statistics = CreateTestStatistics(
-            totalPlanReviews: 0,
-            totalComments: 0);
+        var stats = CreateTestStatistics(totalPlanReviews: 15);
 
         // Act
         var cut = RenderComponent<UserStatistics>(parameters => parameters
-            .Add(p => p.Statistics, statistics));
+            .Add(p => p.Statistics, stats));
 
         // Assert
-        Assert.Contains("0", cut.Markup);
+        var markup = cut.Markup;
+        Assert.Contains("15", markup);
+        Assert.Contains("Plan Reviews", markup);
     }
 
     [Fact]
-    public void Render_WithLastSeenAt_DisplaysLastActivity()
+    public void Render_DisplaysTotalComments()
     {
         // Arrange
-        var lastSeen = DateTime.UtcNow.AddHours(-3);
-        var statistics = CreateTestStatistics(lastSeenAt: lastSeen);
+        var stats = CreateTestStatistics(totalComments: 38);
 
         // Act
         var cut = RenderComponent<UserStatistics>(parameters => parameters
-            .Add(p => p.Statistics, statistics));
+            .Add(p => p.Statistics, stats));
 
         // Assert
-        Assert.Contains("Last Activity", cut.Markup);
+        var markup = cut.Markup;
+        Assert.Contains("38", markup);
+        Assert.Contains("Comments", markup);
     }
 
     [Fact]
-    public void Render_WithoutLastSeenAt_HidesLastActivity()
+    public void Render_WithZeroPlanReviews_DisplaysZero()
     {
         // Arrange
-        var statistics = CreateTestStatistics(hasLastSeenAt: false);
+        var stats = CreateTestStatistics(totalPlanReviews: 0);
 
         // Act
         var cut = RenderComponent<UserStatistics>(parameters => parameters
-            .Add(p => p.Statistics, statistics));
+            .Add(p => p.Statistics, stats));
 
         // Assert
-        Assert.DoesNotContain("Last Activity", cut.Markup);
+        var markup = cut.Markup;
+        Assert.Contains("0", markup);
     }
 
     [Fact]
-    public void Render_HasCorrectTitle()
+    public void Render_WithZeroComments_DisplaysZero()
     {
         // Arrange
-        var statistics = CreateTestStatistics();
+        var stats = CreateTestStatistics(totalComments: 0);
 
         // Act
         var cut = RenderComponent<UserStatistics>(parameters => parameters
-            .Add(p => p.Statistics, statistics));
+            .Add(p => p.Statistics, stats));
 
         // Assert
-        Assert.Contains("Activity Statistics", cut.Markup);
+        var markup = cut.Markup;
+        Assert.Contains("0", markup);
     }
 
     [Fact]
-    public void Render_HasCorrectIcon()
+    public void Render_DisplaysLastActivityLabel()
     {
         // Arrange
-        var statistics = CreateTestStatistics();
+        var stats = CreateTestStatistics();
 
         // Act
         var cut = RenderComponent<UserStatistics>(parameters => parameters
-            .Add(p => p.Statistics, statistics));
+            .Add(p => p.Statistics, stats));
 
         // Assert
-        Assert.Contains("bi-bar-chart", cut.Markup);
+        var dts = cut.FindAll("dt");
+        Assert.NotEmpty(dts);
+        Assert.True(dts.Any(dt => dt.TextContent.Contains("Last Activity")));
     }
 
     [Fact]
-    public void Render_AllStatistics_DisplaysAllValues()
+    public void Render_WithLastSeenAt_DisplaysRelativeTime()
     {
         // Arrange
-        var statistics = CreateTestStatistics(
-            totalPlanReviews: 42,
-            totalComments: 108,
-            lastSeenAt: DateTime.UtcNow.AddMinutes(-30));
+        var lastSeen = DateTime.UtcNow.AddDays(-3);
+        var stats = CreateTestStatistics(lastSeenAt: lastSeen);
 
         // Act
         var cut = RenderComponent<UserStatistics>(parameters => parameters
-            .Add(p => p.Statistics, statistics));
+            .Add(p => p.Statistics, stats));
 
         // Assert
-        Assert.Contains("42", cut.Markup);
-        Assert.Contains("108", cut.Markup);
-        Assert.Contains("Plan Reviews", cut.Markup);
-        Assert.Contains("Comments", cut.Markup);
-        Assert.Contains("Last Activity", cut.Markup);
+        var markup = cut.Markup;
+        Assert.DoesNotContain("Never", markup);
+    }
+
+    [Fact]
+    public void Render_WithoutLastSeenAt_DoesNotShowLastActivity()
+    {
+        // Arrange
+        var stats = CreateTestStatistics(lastSeenAt: null, useDefaultLastSeen: false);
+
+        // Act
+        var cut = RenderComponent<UserStatistics>(parameters => parameters
+            .Add(p => p.Statistics, stats));
+
+        // Assert
+        // When LastSeenAt is null, the "Last Activity" section should not be rendered
+        var markup = cut.Markup;
+        Assert.DoesNotContain("Last Activity", markup);
+    }
+
+    [Fact]
+    public void Render_DisplaysCardComponent()
+    {
+        // Arrange
+        var stats = CreateTestStatistics();
+
+        // Act
+        var cut = RenderComponent<UserStatistics>(parameters => parameters
+            .Add(p => p.Statistics, stats));
+
+        // Assert
+        var markup = cut.Markup;
+        Assert.Contains("Activity Statistics", markup);
+    }
+
+    [Fact]
+    public void Render_DisplaysRowLayout()
+    {
+        // Arrange
+        var stats = CreateTestStatistics();
+
+        // Act
+        var cut = RenderComponent<UserStatistics>(parameters => parameters
+            .Add(p => p.Statistics, stats));
+
+        // Assert
+        var row = cut.Find(".row");
+        Assert.NotNull(row);
+    }
+
+    [Fact]
+    public void Render_DisplaysTwoStatisticColumns()
+    {
+        // Arrange
+        var stats = CreateTestStatistics();
+
+        // Act
+        var cut = RenderComponent<UserStatistics>(parameters => parameters
+            .Add(p => p.Statistics, stats));
+
+        // Assert
+        var cols = cut.FindAll(".col-6");
+        Assert.Equal(2, cols.Count);
+    }
+
+    [Fact]
+    public void Render_DisplaysStatisticsAsDisplay6()
+    {
+        // Arrange
+        var stats = CreateTestStatistics();
+
+        // Act
+        var cut = RenderComponent<UserStatistics>(parameters => parameters
+            .Add(p => p.Statistics, stats));
+
+        // Assert
+        var displays = cut.FindAll(".display-6");
+        Assert.NotEmpty(displays);
+    }
+
+    [Fact]
+    public void Render_DisplaysStatisticLabelsAsMuted()
+    {
+        // Arrange
+        var stats = CreateTestStatistics();
+
+        // Act
+        var cut = RenderComponent<UserStatistics>(parameters => parameters
+            .Add(p => p.Statistics, stats));
+
+        // Assert
+        var smallMuted = cut.FindAll("small.text-muted");
+        Assert.NotEmpty(smallMuted);
+    }
+
+    [Fact]
+    public void Render_WithDifferentStatistics_DisplaysCorrectNumbers()
+    {
+        // Arrange
+        var stats1 = CreateTestStatistics(totalPlanReviews: 10, totalComments: 20);
+        var stats2 = CreateTestStatistics(totalPlanReviews: 50, totalComments: 100);
+
+        // Act
+        var cut1 = RenderComponent<UserStatistics>(parameters => parameters
+            .Add(p => p.Statistics, stats1));
+        var cut2 = RenderComponent<UserStatistics>(parameters => parameters
+            .Add(p => p.Statistics, stats2));
+
+        // Assert
+        Assert.Contains("10", cut1.Markup);
+        Assert.Contains("20", cut1.Markup);
+
+        Assert.Contains("50", cut2.Markup);
+        Assert.Contains("100", cut2.Markup);
+    }
+
+    [Fact]
+    public void Render_WithLargeNumbers_DisplaysCorrectly()
+    {
+        // Arrange
+        var stats = CreateTestStatistics(totalPlanReviews: 9999, totalComments: 5555);
+
+        // Act
+        var cut = RenderComponent<UserStatistics>(parameters => parameters
+            .Add(p => p.Statistics, stats));
+
+        // Assert
+        var markup = cut.Markup;
+        Assert.Contains("9999", markup);
+        Assert.Contains("5555", markup);
+    }
+
+    [Fact]
+    public void Render_DisplaysCenteredText()
+    {
+        // Arrange
+        var stats = CreateTestStatistics();
+
+        // Act
+        var cut = RenderComponent<UserStatistics>(parameters => parameters
+            .Add(p => p.Statistics, stats));
+
+        // Assert
+        var textCenter = cut.Find(".text-center");
+        Assert.NotNull(textCenter);
+    }
+
+    [Fact]
+    public void Render_DisplaysMarginingForMb3()
+    {
+        // Arrange
+        var stats = CreateTestStatistics();
+
+        // Act
+        var cut = RenderComponent<UserStatistics>(parameters => parameters
+            .Add(p => p.Statistics, stats));
+
+        // Assert
+        var cols = cut.FindAll(".mb-3");
+        Assert.NotEmpty(cols);
+    }
+
+    [Fact]
+    public void Render_WithRecentActivity_DisplaysRelativeTime()
+    {
+        // Arrange
+        var stats = CreateTestStatistics(lastSeenAt: DateTime.UtcNow.AddMinutes(-15));
+
+        // Act
+        var cut = RenderComponent<UserStatistics>(parameters => parameters
+            .Add(p => p.Statistics, stats));
+
+        // Assert
+        var markup = cut.Markup;
+        Assert.NotEmpty(markup);
+        Assert.Contains("Last Activity", markup);
+    }
+
+    [Fact]
+    public void Render_DisplaysDefinitionListForLastActivity()
+    {
+        // Arrange
+        var stats = CreateTestStatistics();
+
+        // Act
+        var cut = RenderComponent<UserStatistics>(parameters => parameters
+            .Add(p => p.Statistics, stats));
+
+        // Assert
+        var dl = cut.Find("dl");
+        Assert.NotNull(dl);
+        var dts = cut.FindAll("dl dt");
+        Assert.NotEmpty(dts);
+        Assert.True(dts.Any(dt => dt.TextContent.Contains("Last Activity")));
+    }
+
+    [Fact]
+    public void Render_WithMb0OnDefinitionList()
+    {
+        // Arrange
+        var stats = CreateTestStatistics();
+
+        // Act
+        var cut = RenderComponent<UserStatistics>(parameters => parameters
+            .Add(p => p.Statistics, stats));
+
+        // Assert
+        var dl = cut.Find("dl.mb-0");
+        Assert.NotNull(dl);
+    }
+
+    [Fact]
+    public void Render_PreservesCardWithoutChildContent()
+    {
+        // Arrange
+        var stats = CreateTestStatistics();
+
+        // Act
+        var cut = RenderComponent<UserStatistics>(parameters => parameters
+            .Add(p => p.Statistics, stats));
+
+        // Assert
+        var markup = cut.Markup;
+        Assert.NotEmpty(markup);
+        Assert.Contains("Activity Statistics", markup);
     }
 }

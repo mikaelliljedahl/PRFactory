@@ -30,12 +30,15 @@ public class TicketService(
 {
     private const string CheckCircleIcon = "check-circle";
 
-    public async Task<List<Ticket>> GetAllTicketsAsync(CancellationToken ct = default)
+    public async Task<List<TicketDto>> GetAllTicketsAsync(CancellationToken ct = default)
     {
         try
         {
             // Use application service directly (Blazor Server architecture)
-            return await ticketApplicationService.GetAllTicketsAsync(ct);
+            var tickets = await ticketApplicationService.GetAllTicketsAsync(ct);
+
+            // Map entities to DTOs using Mapster
+            return mapper.Map<List<TicketDto>>(tickets);
         }
         catch (Exception ex)
         {

@@ -49,7 +49,7 @@ PRFactory/
 │   │   ├── git-integration.md         # Git integration details
 │   │   ├── cli-agent-integration.md   # LLM-agnostic CLI agent architecture ✨
 │   │   ├── cli-oauth-integration-analysis.md # CLI/OAuth integration analysis
-│   │   ├── WORKFLOW_EXECUTION_ARCHITECTURE.md # Workflow execution deep-dive
+│   │   ├── workflow-execution-architecture.md # Workflow execution deep-dive
 │   │   ├── WORKFLOW_EXECUTION_CRITICAL_GAPS.md # Blocking implementation gaps
 │   │   ├── WORKFLOW_EXECUTION_SUMMARY.md # Workflow execution summary
 │   │   └── OAUTH_INTEGRATION_SOLUTION.md # OAuth integration solution (OrchestratorChat port)
@@ -120,7 +120,7 @@ PRFactory/
 |----------|--------|-------------|
 | **[reviews/ARCHITECTURE_REVIEW.md](reviews/ARCHITECTURE_REVIEW.md)** | ⚠️ **CRITICAL** | 2025-11-09 Comprehensive architecture assessment |
 | [reviews/UX_UI_AUDIT_REPORT.md](reviews/UX_UI_AUDIT_REPORT.md) | ✅ Reference | UX/UI improvement recommendations |
-| [architecture/WORKFLOW_EXECUTION_ARCHITECTURE.md](architecture/WORKFLOW_EXECUTION_ARCHITECTURE.md) | 📋 Analysis | Workflow execution deep-dive |
+| [architecture/workflow-execution-architecture.md](architecture/workflow-execution-architecture.md) | 📋 Analysis | Workflow execution deep-dive |
 | [architecture/WORKFLOW_EXECUTION_CRITICAL_GAPS.md](architecture/WORKFLOW_EXECUTION_CRITICAL_GAPS.md) | ⚠️ Gaps | Blocking implementation gaps |
 | [architecture/OAUTH_INTEGRATION_SOLUTION.md](architecture/OAUTH_INTEGRATION_SOLUTION.md) | ✅ Solution | OAuth integration via OrchestratorChat port |
 | [architecture/cli-oauth-integration-analysis.md](architecture/cli-oauth-integration-analysis.md) | 📋 Analysis | CLI/OAuth integration analysis |

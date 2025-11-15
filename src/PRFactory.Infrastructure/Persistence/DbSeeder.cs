@@ -51,6 +51,7 @@ public class DbSeeder
         await SeedRepositoriesAsync();
         await SeedTicketsAsync();
         await SeedAgentPromptTemplatesAsync();
+        await SeedAgentConfigurationsAsync();
 
         await _context.SaveChangesAsync();
 
@@ -359,6 +360,19 @@ public class DbSeeder
             await _context.AgentPromptTemplates.AddAsync(promptTemplate);
             _logger.LogInformation("Seeded prompt template: {TemplateName} ({Category})",
                 template.Name, template.Category);
+        }
+    }
+
+    private async Task SeedAgentConfigurationsAsync()
+    {
+        _logger.LogInformation("Seeding agent configurations...");
+
+        var configs = DemoAgentConfigData.GetDefaultConfigurations(DemoTenantData.DemoTenantId);
+
+        foreach (var config in configs)
+        {
+            await _context.AgentConfigurations.AddAsync(config);
+            _logger.LogInformation("Seeded agent configuration: {AgentName}", config.AgentName);
         }
     }
 

@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <!-- Override vulnerable transitive dependencies -->
+    <PackageReference Include="DiffPlex" Version="1.7.2" />
     <PackageReference Include="Mapster" Version="7.4.0" />
     <PackageReference Include="Mapster.DependencyInjection" Version="1.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
@@ -47,6 +48,9 @@
 
     <!-- Validation -->
     <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
+
+    <!-- Microsoft Agent Framework AG-UI Integration (Preview) -->
+    <PackageReference Include="Microsoft.Agents.AI.Hosting.AGUI.AspNetCore" Version="1.0.0-preview.251113.1" />
 
     <!-- Polly for Resilience -->
     <PackageReference Include="Polly" Version="8.2.0" />

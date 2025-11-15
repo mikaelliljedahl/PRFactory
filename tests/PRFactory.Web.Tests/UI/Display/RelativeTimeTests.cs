@@ -76,7 +76,7 @@ public class RelativeTimeTests : TestContext
             .Add(p => p.Timestamp, timestamp));
 
         // Assert
-        var expectedMonth = timestamp.ToString("MMM");
+        var expectedMonth = timestamp.ToString("MMM", System.Globalization.CultureInfo.InvariantCulture);
         Assert.Contains(expectedMonth, cut.Markup);
         Assert.Contains("at", cut.Markup);
     }

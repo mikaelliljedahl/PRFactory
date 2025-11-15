@@ -238,7 +238,7 @@ Essential reading for understanding the system:
   - State transitions and error handling
   - Example walkthrough with timelines
 
-- **[Database Schema](docs/database-schema.md)** - Database structure and entity relationships
+- **[Database Schema](docs/DATABASE_SCHEMA.md)** - Database structure and entity relationships
   - Entity Relationship Diagrams
   - Table definitions and indexes
   - JSON field structures

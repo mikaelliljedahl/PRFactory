@@ -2,11 +2,14 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using PRFactory.Web.Models
 @using PRFactory.Web.Components.Tickets
+@using PRFactory.Web.Components.Agents
+@using PRFactory.Web.Components.Code
 @using PRFactory.Web.UI.Alerts
 @using PRFactory.Web.UI.Cards
 @using PRFactory.Web.UI.Display
 @using PRFactory.Web.UI.Navigation
 @using PRFactory.Web.UI.Layout
+@using PRFactory.Web.UI.Buttons
 @using PRFactory.Domain.ValueObjects
 
 <PageTitle>@(ticket != null ? $"{ticket.TicketKey} - PRFactory" : "Loading...")</PageTitle>
@@ -78,6 +81,34 @@ else
                                      OnPlanApproved="HandlePlanApproved"
                                      OnPlanRejected="HandlePlanRejected" />
                 }
+                else if (ticket.State == WorkflowState.Implementing && diffContent != null)
+                {
+                    <GitDiffViewer DiffContent="@diffContent" />
+
+                    <Card Title="Review & Approve" Icon="check-circle" Variant="CardVariant.Info" class="mt-3">
+                        <InfoBox Type="InfoBoxType.Info">
+                            Review the code changes above. If approved, a pull request will be created automatically with plan artifacts.
+                        </InfoBox>
+
+                        <div class="d-flex gap-2 mt-3">
+                            <LoadingButton OnClick="HandleApprovePR"
+                                           IsLoading="@isCreatingPR"
+                                           Icon="git-pull-request"
+                                           Color="ButtonColor.Success"
+                                           Disabled="@isCreatingPR">
+                                Approve & Create Pull Request
+                            </LoadingButton>
+
+                            <LoadingButton OnClick="HandleRejectChanges"
+                                           IsLoading="@false"
+                                           Icon="x-circle"
+                                           Color="ButtonColor.Danger"
+                                           Disabled="@isCreatingPR">
+                                Reject & Request Revisions
+                            </LoadingButton>
+                        </div>
+                    </Card>
+                }
                 else if (ticket.State == WorkflowState.PRCreated || ticket.State == WorkflowState.InReview)
                 {
                     <Card Title="Pull Request Created" Icon="git" Variant="CardVariant.Success">
@@ -137,4 +168,8 @@ else
             <WorkflowTimeline Ticket="@ticket" Events="@events" />
         </GridColumn>
     </GridLayout>
+
+    <Section Title="Agent Assistant" Icon="robot">
+        <AgentChat TicketId="@ticket.Id" />
+    </Section>
 }

@@ -548,7 +548,7 @@ docker push myregistry.azurecr.io/prfactory-api:latest
 
 - Review the [Architecture Documentation](ARCHITECTURE.md)
 - Understand the [Workflow Details](WORKFLOW.md)
-- Explore the [Database Schema](database-schema.md)
+- Explore the [Database Schema](DATABASE_SCHEMA.md)
 - Check component-specific READMEs in src/ folders
 
 ## Getting Help

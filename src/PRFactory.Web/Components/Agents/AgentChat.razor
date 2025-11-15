@@ -1,0 +1,47 @@
+@using PRFactory.Web.Models
+@using PRFactory.Web.UI.Buttons
+@using PRFactory.Web.UI.Display
+
+<div class="agent-chat">
+    <div class="chat-header">
+        <h5>Agent Assistant</h5>
+        <StatusBadge State="@agentStatus" />
+    </div>
+
+    <div class="chat-messages" @ref="messagesContainer">
+        @foreach (var msg in messages)
+        {
+            <AgentMessage Message="@msg" />
+        }
+
+        @if (isStreaming)
+        {
+            <div class="streaming-indicator">
+                <LoadingSpinner IsLoading="true" />
+                <span>@currentAgentAction</span>
+            </div>
+        }
+    </div>
+
+    @if (requiresUserInput)
+    {
+        <AgentFollowUpQuestion
+            Question="@currentQuestion"
+            OnAnswer="HandleUserAnswer" />
+    }
+    else
+    {
+        <div class="chat-input">
+            <InputText @bind-Value="userInput"
+                       placeholder="Ask the agent..."
+                       @onkeypress="HandleKeyPress"
+                       disabled="@isStreaming"
+                       class="form-control" />
+            <LoadingButton OnClick="SendMessageAsync"
+                          IsLoading="@isStreaming"
+                          Icon="send">
+                Send
+            </LoadingButton>
+        </div>
+    }
+</div>

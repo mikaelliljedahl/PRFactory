@@ -2,7 +2,7 @@
 
 **Status:** ✅ Implemented
 **Framework:** bUnit + xUnit + Moq
-**Coverage:** 88 active components tested (98.3% pass rate for UI components)
+**Coverage:** 100+ active components tested with 793 total test methods
 
 ---
 
@@ -22,33 +22,47 @@ This guide explains how to write and run tests for Blazor components in PRFactor
 ### Project Structure
 
 ```
-/tests/PRFactory.Tests/
-├── Blazor/                        # Test infrastructure
-│   ├── TestContextBase.cs         # Base class for all Blazor tests
-│   ├── ComponentTestBase.cs       # Base for business component tests
-│   ├── PageTestBase.cs            # Base for page tests
-│   ├── BlazorMockHelpers.cs       # Common mock helpers
-│   └── TestDataBuilders/          # Test data builders
-│       ├── TicketDtoBuilder.cs
-│       ├── TicketUpdateDtoBuilder.cs
-│       ├── RepositoryDtoBuilder.cs
-│       ├── TenantDtoBuilder.cs
-│       ├── QuestionDtoBuilder.cs
-│       └── WorkflowEventDtoBuilder.cs
-├── Components/                     # Business component tests
-│   ├── Tickets/
+/tests/PRFactory.Web.Tests/                # Main Blazor component test project
+├── Components/                     # Business component tests (32 files)
+│   ├── Agents/
+│   ├── Code/
 │   ├── Repositories/
+│   ├── Settings/
 │   ├── Tenants/
-│   └── ...
-├── Pages/                          # Page component tests
-│   ├── Tickets/
-│   ├── Repositories/
-│   └── ...
-└── UI/                             # Pure UI component tests
-    ├── Alerts/
-    ├── Buttons/
-    ├── Forms/
-    └── ...
+│   └── Tickets/
+├── Pages/                          # Page component tests (2 files)
+│   └── Settings/
+│       └── LlmProviders/
+├── UI/                             # Pure UI component tests (38 files)
+│   ├── Alerts/
+│   ├── Buttons/
+│   ├── Cards/
+│   ├── Checklists/
+│   ├── Comments/
+│   ├── Dialogs/
+│   ├── Display/
+│   ├── Editors/
+│   ├── Forms/
+│   ├── Help/
+│   ├── Layout/
+│   ├── Navigation/
+│   └── Notifications/
+├── Services/                       # Service facade tests
+├── Controllers/                    # API controller tests
+└── Properties/                     # Test project properties
+
+Test Infrastructure (/tests/PRFactory.Tests/Blazor/):
+├── TestContextBase.cs             # Base class for all Blazor tests
+├── ComponentTestBase.cs           # Base for business component tests
+├── PageTestBase.cs                # Base for page tests
+└── BlazorMockHelpers.cs           # Common mock helpers
+
+Test Data Builders (/tests/PRFactory.Tests/Builders/):
+├── TicketBuilder.cs
+├── TicketUpdateBuilder.cs
+├── RepositoryBuilder.cs
+├── TenantBuilder.cs
+└── UserBuilder.cs
 ```
 
 ---
@@ -90,7 +104,7 @@ using PRFactory.Web.UI.Display;
 using PRFactory.Domain.ValueObjects;
 using Xunit;
 
-namespace PRFactory.Tests.UI.Display;
+namespace PRFactory.Web.Tests.UI.Display;
 
 public class StatusBadgeTests : ComponentTestBase
 {
@@ -134,11 +148,11 @@ public class StatusBadgeTests : ComponentTestBase
 using Bunit;
 using Moq;
 using PRFactory.Tests.Blazor;
-using PRFactory.Tests.Blazor.TestDataBuilders;
+using PRFactory.Tests.Builders;
 using PRFactory.Web.Components.Tickets;
 using Xunit;
 
-namespace PRFactory.Tests.Components.Tickets;
+namespace PRFactory.Web.Tests.Components.Tickets;
 
 public class TicketUpdatePreviewTests : ComponentTestBase
 {
@@ -147,7 +161,7 @@ public class TicketUpdatePreviewTests : ComponentTestBase
     {
         // Arrange
         var ticketId = Guid.NewGuid();
-        var expectedUpdate = new TicketUpdateDtoBuilder()
+        var expectedUpdate = new TicketUpdateBuilder()
             .WithTicketId(ticketId)
             .Build();
 
@@ -155,7 +169,7 @@ public class TicketUpdatePreviewTests : ComponentTestBase
             .Setup(x => x.GetLatestTicketUpdateAsync(ticketId))
             .ReturnsAsync(expectedUpdate);
 
-        var originalTicket = new TicketDtoBuilder()
+        var originalTicket = new TicketBuilder()
             .WithId(ticketId)
             .Build();
 
@@ -180,7 +194,7 @@ public class TicketUpdatePreviewTests : ComponentTestBase
         // Arrange
         var ticketId = Guid.NewGuid();
         var updateId = Guid.NewGuid();
-        var update = new TicketUpdateDtoBuilder()
+        var update = new TicketUpdateBuilder()
             .WithId(updateId)
             .WithTicketId(ticketId)
             .Build();
@@ -193,7 +207,7 @@ public class TicketUpdatePreviewTests : ComponentTestBase
             .Returns(Task.CompletedTask);
 
         var callbackInvoked = false;
-        var originalTicket = new TicketDtoBuilder().WithId(ticketId).Build();
+        var originalTicket = new TicketBuilder().WithId(ticketId).Build();
 
         var cut = RenderComponent<TicketUpdatePreview>(parameters => parameters
             .Add(p => p.TicketId, ticketId)
@@ -224,11 +238,11 @@ public class TicketUpdatePreviewTests : ComponentTestBase
 ```csharp
 using Bunit;
 using PRFactory.Tests.Blazor;
-using PRFactory.Tests.Blazor.TestDataBuilders;
+using PRFactory.Tests.Builders;
 using PRFactory.Web.Pages.Tickets;
 using Xunit;
 
-namespace PRFactory.Tests.Pages.Tickets;
+namespace PRFactory.Web.Tests.Pages.Tickets;
 
 public class CreateTests : PageTestBase
 {
@@ -303,40 +317,34 @@ BlazorMockHelpers.VerifySuccessToast(MockToastService);
 Use fluent builders for consistent test data:
 
 ```csharp
-// Ticket DTO
-var ticket = new TicketDtoBuilder()
+// Ticket
+var ticket = new TicketBuilder()
     .WithTitle("Test Ticket")
     .InPlanReviewState()
     .Build();
 
-// Ticket Update DTO
-var update = new TicketUpdateDtoBuilder()
+// Ticket Update
+var update = new TicketUpdateBuilder()
     .WithTicketId(ticketId)
     .WithSampleCriteria()
     .Build();
 
-// Repository DTO
-var repo = new RepositoryDtoBuilder()
+// Repository
+var repo = new RepositoryBuilder()
     .GitHub()
     .WithActivity()
     .Build();
 
-// Tenant DTO
-var tenant = new TenantDtoBuilder()
+// Tenant
+var tenant = new TenantBuilder()
     .FullyConfigured()
     .WithAutoImplementation()
     .Build();
 
-// Question DTO
-var question = new QuestionDtoBuilder()
-    .RequirementsQuestion()
-    .Answered()
-    .Build();
-
-// Workflow Event DTO
-var event = new WorkflowEventDtoBuilder()
-    .StateChanged()
-    .Success()
+// User
+var user = new UserBuilder()
+    .WithEmail("test@example.com")
+    .AsAdmin()
     .Build();
 ```
 
@@ -348,23 +356,23 @@ var event = new WorkflowEventDtoBuilder()
 
 ```bash
 source /tmp/dotnet-proxy-setup.sh && \
-  dotnet test --filter "FullyQualifiedName~PRFactory.Tests.UI|PRFactory.Tests.Components|PRFactory.Tests.Pages"
+  dotnet test PRFactory.Web.Tests
 ```
 
 ### Run Tests by Category
 
 ```bash
 # UI components only
-dotnet test --filter "FullyQualifiedName~PRFactory.Tests.UI"
+dotnet test --filter "FullyQualifiedName~PRFactory.Web.Tests.UI"
 
 # Business components only
-dotnet test --filter "FullyQualifiedName~PRFactory.Tests.Components"
+dotnet test --filter "FullyQualifiedName~PRFactory.Web.Tests.Components"
 
 # Pages only
-dotnet test --filter "FullyQualifiedName~PRFactory.Tests.Pages"
+dotnet test --filter "FullyQualifiedName~PRFactory.Web.Tests.Pages"
 
 # Specific component
-dotnet test --filter "FullyQualifiedName~PRFactory.Tests.Components.Tickets.TicketUpdatePreviewTests"
+dotnet test --filter "FullyQualifiedName~PRFactory.Web.Tests.Components.Tickets"
 ```
 
 ### Run with Coverage
@@ -511,21 +519,20 @@ cut.WaitForState(() => condition, TimeSpan.FromSeconds(5));
 
 ### Active Tests
 
-| Category | Components | Test Files | Tests | Pass Rate |
-|----------|------------|------------|-------|-----------|
-| **UI Components** | 26 | 26 | 418 | 98.3% |
-| **Business Components** | 34 | 23 | ~200 | ~85% |
-| **Pages** | 28 | 10 | ~150 | ~80% |
-| **Total** | **88** | **59** | **~768** | **~87%** |
+| Category | Test Files | Test Methods | Details |
+|----------|------------|--------------|---------|
+| **UI Components** | 38 | ~380 | Pure UI components in `/UI/*` |
+| **Business Components** | 32 | ~370 | Domain logic in `/Components/*` |
+| **Pages** | 2 | ~40 | Page navigation in `/Pages/*` |
+| **Services** | 1 | ~3 | Service facades |
+| **Controllers** | 1 | ~0 | API controllers |
+| **Total** | **74** | **793** | Comprehensive coverage |
 
-### Disabled Tests
+### Test Infrastructure
 
-16 test files temporarily disabled (marked `.cs.disabled`) due to architectural refactoring needs:
-- Complex entity vs DTO usage issues
-- Page parameter mismatches
-- Authentication state setup complexity
-
-These can be re-enabled once proper builders and patterns are established.
+- Test infrastructure classes (TestContextBase, ComponentTestBase, PageTestBase, BlazorMockHelpers) are located in `/tests/PRFactory.Tests/Blazor/`
+- Test data builders (TicketBuilder, TicketUpdateBuilder, etc.) are located in `/tests/PRFactory.Tests/Builders/`
+- All tests reference these shared components via using statements
 
 ---
 
@@ -537,7 +544,7 @@ These can be re-enabled once proper builders and patterns are established.
 # Run before committing
 source /tmp/dotnet-proxy-setup.sh && \
   dotnet build && \
-  dotnet test --filter "FullyQualifiedName~PRFactory.Tests" && \
+  dotnet test PRFactory.Web.Tests && \
   dotnet format --verify-no-changes
 ```
 
@@ -552,12 +559,17 @@ source /tmp/dotnet-proxy-setup.sh && \
 
 When adding new Blazor components:
 
-1. **Create corresponding test file** in appropriate directory
+1. **Create corresponding test file** in `PRFactory.Web.Tests/{UI|Components|Pages}/`
 2. **Inherit from correct base class** (ComponentTestBase or PageTestBase)
-3. **Use test data builders** for consistent test data
+3. **Use test data builders** from `PRFactory.Tests/Builders/` for consistent test data
 4. **Test all parameters** and event callbacks
 5. **Test error scenarios** (service errors, invalid input)
 6. **Run tests locally** before committing
+
+**Test infrastructure classes are shared:**
+- Base classes (TestContextBase, ComponentTestBase, PageTestBase) are in `PRFactory.Tests/Blazor/`
+- These are referenced as `using PRFactory.Tests.Blazor;`
+- Data builders are in `PRFactory.Tests/Builders/`
 
 ---
 

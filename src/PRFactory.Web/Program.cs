@@ -4,6 +4,7 @@ using PRFactory.Infrastructure;
 using PRFactory.Infrastructure.Agents;
 using PRFactory.Infrastructure.Persistence;
 using PRFactory.Web.BackgroundServices;
+using PRFactory.Web.Configuration;
 using PRFactory.Web.Hubs;
 using PRFactory.Web.Middleware;
 using PRFactory.Web.Services;
@@ -192,6 +193,13 @@ builder.Services.AddCors(options =>
 PRFactory.Web.Mapping.MappingConfiguration.Configure();
 builder.Services.AddSingleton(Mapster.TypeAdapterConfig.GlobalSettings);
 builder.Services.AddScoped<MapsterMapper.IMapper, MapsterMapper.Mapper>();
+
+// ============================================================
+// AG-UI PROTOCOL CONFIGURATION
+// ============================================================
+// PRFactory uses a custom SSE implementation that follows the AG-UI protocol.
+// See AGUIConfiguration.cs for detailed explanation of why we don't use MapAGUI().
+builder.Services.ConfigureAGUIProtocol();
 
 // ============================================================
 // WEB SERVICES (Facades for Blazor components)

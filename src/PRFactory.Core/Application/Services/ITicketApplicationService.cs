@@ -1,5 +1,6 @@
 using PRFactory.Domain.DTOs;
 using PRFactory.Domain.Entities;
+using PRFactory.Domain.Results;
 using PRFactory.Domain.ValueObjects;
 
 namespace PRFactory.Core.Application.Services;
@@ -89,4 +90,19 @@ public interface ITicketApplicationService
     /// <param name="cancellationToken">Cancellation token</param>
     /// <exception cref="InvalidOperationException">Thrown if ticket not found or answers cannot be submitted</exception>
     Task SubmitAnswersAsync(Guid ticketId, Dictionary<string, string> answers, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the diff content for a ticket if available.
+    /// </summary>
+    /// <param name="ticketId">The ticket ID</param>
+    /// <returns>Diff content, or null if not available</returns>
+    Task<string?> GetDiffContentAsync(Guid ticketId);
+
+    /// <summary>
+    /// Creates a pull request for a ticket with approved code changes.
+    /// </summary>
+    /// <param name="ticketId">The ticket ID</param>
+    /// <param name="approvedBy">User who approved the changes</param>
+    /// <returns>PR creation result with URL and number</returns>
+    Task<PullRequestCreationResult> CreatePullRequestAsync(Guid ticketId, string? approvedBy = null);
 }

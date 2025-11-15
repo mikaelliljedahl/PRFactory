@@ -1,0 +1,102 @@
+.diff-viewer {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.875rem;
+}
+
+.diff-controls {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+.file-stats-summary {
+    display: inline-flex;
+    gap: 0.5rem;
+}
+
+.diff-output {
+    max-height: 600px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    background-color: #ffffff;
+}
+
+/* Diff table styles */
+::deep .diff-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+}
+
+::deep .file-diff-section {
+    margin-bottom: 1.5rem;
+}
+
+::deep .file-header {
+    padding: 0.5rem 1rem;
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+::deep .file-header.file-added {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+::deep .file-header.file-deleted {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+::deep .file-header.file-modified {
+    background-color: #fff3cd;
+    border-color: #ffeaa7;
+}
+
+::deep .file-path {
+    font-family: 'Consolas', 'Monaco', monospace;
+}
+
+::deep .file-stats {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+::deep .diff-line-content {
+    padding: 2px 10px;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+::deep .diff-line-added {
+    background-color: #e6ffed;
+}
+
+::deep .diff-line-added .diff-line-content {
+    background-color: #acf2bd;
+}
+
+::deep .diff-line-deleted {
+    background-color: #ffeef0;
+}
+
+::deep .diff-line-deleted .diff-line-content {
+    background-color: #fdb8c0;
+}
+
+::deep .diff-line-hunk-header {
+    background-color: #f1f8ff;
+    color: #0366d6;
+    font-weight: 600;
+}
+
+::deep .diff-line-unchanged {
+    background-color: white;
+}

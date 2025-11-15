@@ -1,6 +1,6 @@
 # PRFactory Roadmap
 
-**Last Updated**: 2025-11-14
+**Last Updated**: 2025-11-15
 **Purpose**: Clear future vision separated from current implementation
 
 This document outlines planned enhancements beyond the current MVP implementation.
@@ -37,17 +37,30 @@ This document outlines planned enhancements beyond the current MVP implementatio
 - ✅ **Phase 4: Tenant Settings UI** (Nov 14, 2025) - Workflow, code review, and LLM provider assignment configuration
 - ✅ **Phase 5: User Management UI** (Nov 14, 2025) - Role-based access control with Owner/Admin/Member/Viewer roles
 - ✅ **Implementation Statistics**: 67 files created (46 production, 21 tests), 6,626 insertions, 130 unit tests, 100% test coverage
-- ✅ **Self-service configuration** for all admin functions with encrypted credential storage (PR #XX)
+- ✅ **Self-service configuration** for all admin functions with encrypted credential storage
 
-### Admin UI Services Foundation (Epic 06 Phase 1 - Nov 13, 2025)
-- ✅ **RepositoryService** - CRUD operations, connection testing, encrypted token handling
-- ✅ **TenantLlmProviderService** - OAuth and API key provider support, connection testing
-- ✅ **TenantConfigurationService** - Workflow and code review settings management
-- ✅ **UserManagementService** - Role management with RBAC enforcement
-- ✅ **TenantLlmProviderRepository** - EF Core repository implementation
-- ✅ **10 DTOs** - Complete data transfer objects for admin services
-- ✅ **Comprehensive Tests** - Unit and integration tests with full coverage
-- ⚠️ UI pages remain (Epic 06 Phases 2-5 planned)
+### Epic 05: Agent System Foundation ✅ (November 2025)
+**Status**: Complete and enabled by default for all users
+
+Autonomous AI agents with tool execution, multi-turn reasoning, and real-time streaming UI.
+
+**Delivered**:
+- 22 autonomous tools (file, Git, Jira, analysis, command)
+- AgentConfiguration entity and AgentFactory for runtime agent creation
+- AG-UI integration with SSE streaming and Blazor components
+- AFAnalyzerAgent with autonomous tool use
+- Middleware: TenantIsolation, TokenBudget, AuditLogging
+- 100+ tests, 2,079 total passing (100% pass rate)
+
+### Epic 07: Planning Phase UX & Collaboration Improvements (Nov 14, 2025)
+- ✅ **Enhanced Planning Prompts** - 5 domain-specific prompt templates (web_ui, rest_api, database, background_jobs, refactoring)
+- ✅ **ArchitectureContextService** - Intelligent prompt selection based on ticket analysis (268 lines)
+- ✅ **Rich Markdown Editor** - Professional split-view editor with live preview and formatting toolbar
+- ✅ **Inline Comment Anchoring** - Contextual discussions on specific plan lines with visual indicators
+- ✅ **Review Checklists** - Structured, domain-specific review guidance with 4 YAML templates
+- ✅ **Database Migrations** - 2 migrations for InlineCommentAnchors and ReviewChecklists
+- ✅ **Comprehensive Testing** - 2,404 lines of new test coverage (5 test files)
+- ✅ **76 files changed** - 13,050 insertions, 7 new UI components, Notion-like collaborative experience
 
 ### Comprehensive Blazor Testing Infrastructure (PR #61 - Nov 13, 2025)
 - ✅ **bUnit Test Suite** - 1,424 tests for 88 Blazor components with 100% pass rate
@@ -129,13 +142,13 @@ This document outlines planned enhancements beyond the current MVP implementatio
   - [x] Replace StubCurrentUserService with real implementation ✅
   - [ ] **OAuth client registration** (Google/Microsoft app credentials required)
 
-- [ ] **User Management UI** (Next sprint)
-  - [ ] User profile page
-  - [ ] Team member management
-  - [ ] User search and assignment
-  - [ ] User roles and permissions UI (RBAC implemented, UI pending)
+- [x] **User Management UI** ✅ **COMPLETED (Epic 06 Phase 5)**
+  - [x] User profile page (OAuth-provisioned profile)
+  - [x] Team member management (search, assign roles)
+  - [x] User search and assignment (for plan reviews)
+  - [x] User roles and permissions UI (RBAC with Owner/Admin/Member/Viewer)
 
-**Success Criteria**: ✅ Core complete - Users can sign in with Google/Microsoft, StubCurrentUserService removed. OAuth client registration and UI enhancements remain.
+**Success Criteria**: ✅ COMPLETE - Users can sign in with Google/Microsoft, full user management UI implemented with role-based access control. OAuth client registration pending (credentials required).
 
 ---
 
@@ -215,15 +228,15 @@ This document outlines planned enhancements beyond the current MVP implementatio
   - [ ] Dark mode support
   - [ ] Accessibility (WCAG 2.1 AA compliance)
 
-- [x] **Admin UIs** ✅ **COMPLETED (Epic 06 - Nov 13-14, 2025)**
-  - [x] Admin services foundation (RepositoryService, TenantLlmProviderService, etc.) ✅ **COMPLETED Phase 1**
-  - [x] Repository management UI (list, create, edit, connection testing) ✅ **COMPLETED Phase 2**
-  - [x] LLM provider configuration UI (OAuth and API key modes) ✅ **COMPLETED Phase 3**
-  - [x] Tenant settings UI (workflow, code review, provider assignments) ✅ **COMPLETED Phase 4**
-  - [x] User management UI (role assignment, activation/deactivation) ✅ **COMPLETED Phase 5**
-  - [ ] Agent prompt template editor (Future enhancement)
-  - [ ] Workflow event log viewer (Future enhancement)
-  - [ ] Error reporting and debugging UI (Future enhancement)
+- [x] **Admin UIs** ✅ **COMPLETED (Epic 06 Phases 1-5 - Nov 13-14, 2025)**
+  - [x] Admin services foundation (RepositoryService, TenantLlmProviderService, UserManagementService, TenantConfigurationService) ✅
+  - [x] Repository management UI (/admin/repositories) with multi-platform support and connection testing ✅
+  - [x] LLM provider configuration UI (/admin/settings/llm-providers) with OAuth and API key modes ✅
+  - [x] Tenant settings UI (/admin/settings/general) with workflow, code review, and provider assignments ✅
+  - [x] User management UI (/admin/settings/users) with role-based access control ✅
+  - [ ] Agent prompt template editor (Future enhancement - planned Q1 2026)
+  - [ ] Workflow event log viewer (Future enhancement - planned Q1 2026)
+  - [ ] Error reporting and debugging UI (Future enhancement - planned Q1 2026)
 
 - [ ] **Analytics & Dashboards**
   - [ ] Workflow success rate metrics
@@ -238,23 +251,31 @@ This document outlines planned enhancements beyond the current MVP implementatio
 
 ### 🔧 Infrastructure Improvements
 
+- [x] **Agent System Foundation** ✅ **COMPLETED (Epic 05 - Nov 15, 2025)**
+  - [x] 22 autonomous tools with execution capability
+  - [x] AgentConfiguration entity and AgentFactory
+  - [x] AG-UI integration with SSE streaming
+  - [x] Enabled by default for all users
+
 - [ ] **Agent Prompts System Completion**
-  - [ ] Database migration applied
+  - [x] Agent prompt templates defined in database (AgentPromptTemplate entity)
+  - [ ] Database migration applied and tested
   - [ ] Initial prompts loaded from `.claude/agents/`
   - [ ] Agents refactored to use `AgentPromptTemplate`
-  - [ ] UI for prompt customization
+  - [ ] UI for prompt customization (agent prompt template editor)
 
 - [ ] **Jira Integration Verification**
-  - [ ] Webhook endpoint tested
-  - [ ] Comment parsing verified
-  - [ ] @claude mention detection working
+  - [ ] Webhook endpoint tested end-to-end
+  - [ ] Comment parsing verified (@claude mentions)
+  - [ ] Ticket state transitions verified
   - [ ] Bidirectional sync working
 
 - [ ] **Performance Optimization**
-  - [ ] Database query optimization
+  - [x] Database query optimization (Epic 08 Phase 3 - 83% faster page loads)
+  - [x] Server-side pagination implemented
   - [ ] Caching strategy (repository context, tenant config)
   - [ ] Parallel execution performance tuning
-  - [ ] Token usage optimization
+  - [ ] Token usage optimization and tracking
 
 **Success Criteria**: All integrations verified, performance acceptable under load
 
@@ -266,12 +287,15 @@ This document outlines planned enhancements beyond the current MVP implementatio
 
 **Goal**: Support complex enterprise approval and quality processes
 
-- [x] **Code Review Graph** ✅ **COMPLETED (PR #59 - Epic 02)**
+- [x] **Code Review Graph** ✅ **COMPLETED (Epic 02 - PR #59 - Nov 12, 2025)**
   - [x] Automated code review agent with configurable LLM provider
+  - [x] AI-powered PR analysis and feedback
   - [x] Feedback posted to PR as comments
   - [x] Iterative improvement loop (Implementation → CodeReview → Fix, max 3 iterations)
-  - [ ] Code quality scoring with metrics
-  - [ ] Security vulnerability detection (OWASP, dependency scanning)
+  - [x] Cross-provider review (e.g., GPT-4 reviews Claude-generated code)
+  - [x] Automatic approval comments when code passes review
+  - [ ] Code quality scoring with metrics (Future enhancement)
+  - [ ] Security vulnerability detection (OWASP, dependency scanning - Future enhancement)
 
 - [ ] **Testing Graph**
   - [ ] Automated test generation
@@ -610,6 +634,6 @@ We follow [Semantic Versioning](https://semver.org/):
 ---
 
 **Maintained By**: PRFactory Product Team
-**Review Frequency**: Monthly
-**Last Reviewed**: 2025-11-08
-**Next Review**: 2025-12-08
+**Review Frequency**: Monthly (or after major epic completion)
+**Last Reviewed**: 2025-11-15
+**Next Review**: 2025-12-15

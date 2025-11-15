@@ -82,7 +82,7 @@ public class GridColumnTests : TestContext
 
         // Assert
         var div = cut.Find("div");
-        var classes = div.ClassName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var classes = div.ClassName?.Split(' ', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
         Assert.Single(classes);
         Assert.Equal("col-md-4", classes[0]);
     }

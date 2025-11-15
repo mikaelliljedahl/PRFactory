@@ -1,10 +1,13 @@
+using LibGit2Sharp;
 using Microsoft.Extensions.Logging;
 using PRFactory.Core.Application.Services;
 using PRFactory.Domain.DTOs;
 using PRFactory.Domain.Entities;
 using PRFactory.Domain.Interfaces;
+using PRFactory.Domain.Results;
 using PRFactory.Infrastructure.Agents.Graphs;
 using PRFactory.Infrastructure.Agents.Messages;
+using PRFactory.Infrastructure.Git;
 
 // Type alias to resolve ambiguity between domain and graph WorkflowState
 using WorkflowState = PRFactory.Domain.ValueObjects.WorkflowState;
@@ -20,7 +23,11 @@ public class TicketApplicationService(
     ITicketRepository ticketRepository,
     IRepositoryRepository repositoryRepository,
     IWorkflowOrchestrator workflowOrchestrator,
-    ITenantContext tenantContext) : ITicketApplicationService
+    ITenantContext tenantContext,
+    IWorkspaceService workspaceService,
+    ILocalGitService localGitService,
+    IGitPlatformProvider gitPlatformProvider,
+    ITicketUpdateRepository ticketUpdateRepository) : ITicketApplicationService
 {
 
     /// <inheritdoc/>
@@ -246,5 +253,221 @@ public class TicketApplicationService(
         await workflowOrchestrator.ResumeWorkflowAsync(ticket.Id, answersMessage, cancellationToken);
 
         logger.LogInformation("Answers submitted for ticket {TicketKey}", ticket.TicketKey);
+    }
+
+    /// <inheritdoc/>
+    public async Task<string?> GetDiffContentAsync(Guid ticketId)
+    {
+        logger.LogDebug("Getting diff content for ticket {TicketId}", ticketId);
+
+        try
+        {
+            var diffContent = await workspaceService.ReadDiffAsync(ticketId);
+
+            if (diffContent == null)
+            {
+                logger.LogInformation("No diff available for ticket {TicketId}", ticketId);
+                return null;
+            }
+
+            logger.LogInformation("Retrieved diff for ticket {TicketId}: {Size} bytes",
+                ticketId, diffContent.Length);
+
+            return diffContent;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error retrieving diff for ticket {TicketId}", ticketId);
+            throw;
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<PullRequestCreationResult> CreatePullRequestAsync(Guid ticketId, string? approvedBy = null)
+    {
+        logger.LogInformation("Creating pull request for ticket {TicketId}, approved by {ApprovedBy}",
+            ticketId, approvedBy ?? "unknown");
+
+        try
+        {
+            // Get ticket and validate state
+            var ticket = await ticketRepository.GetByIdAsync(ticketId);
+            if (ticket == null)
+            {
+                return PullRequestCreationResult.Failed($"Ticket {ticketId} not found");
+            }
+
+            if (ticket.State != WorkflowState.Implementing)
+            {
+                return PullRequestCreationResult.Failed($"Ticket is not in Implementing state (current: {ticket.State})");
+            }
+
+            // Get repository information
+            var repository = await repositoryRepository.GetByIdAsync(ticket.RepositoryId);
+            if (repository == null)
+            {
+                return PullRequestCreationResult.Failed($"Repository {ticket.RepositoryId} not found");
+            }
+
+            // Get repository path and branch name
+            var repoPath = workspaceService.GetRepositoryPath(ticketId);
+            var branchName = $"feature/{ticket.TicketKey}";
+
+            // Push branch to remote
+            await localGitService.PushAsync(repoPath, branchName, repository.AccessToken);
+
+            // Build PR description
+            var prDescription = await BuildPRDescriptionAsync(ticket);
+
+            // Create PR via platform provider
+            var createPrRequest = new CreatePullRequestRequest(
+                SourceBranch: branchName,
+                TargetBranch: repository.DefaultBranch ?? "main",
+                Title: $"{ticket.TicketKey}: {ticket.Title}",
+                Description: prDescription
+            );
+
+            var pr = await gitPlatformProvider.CreatePullRequestAsync(repository.Id, createPrRequest);
+
+            // Update ticket state to PRCreated
+            ticket.MarkPRCreated(pr.Number, pr.Url);
+            await ticketRepository.UpdateAsync(ticket);
+
+            // Clean up diff file (no longer needed)
+            await workspaceService.DeleteDiffAsync(ticketId);
+
+            logger.LogInformation("Pull request created for ticket {TicketId}: {PrUrl}", ticketId, pr.Url);
+
+            return PullRequestCreationResult.Successful(pr.Url, pr.Number);
+        }
+        catch (LibGit2SharpException ex)
+        {
+            logger.LogError(ex, "Git error creating pull request for ticket {TicketId}", ticketId);
+            return PullRequestCreationResult.Failed($"Git error: {ex.Message}");
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogError(ex, "HTTP error creating pull request for ticket {TicketId}", ticketId);
+            return PullRequestCreationResult.Failed($"Platform API error: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error creating pull request for ticket {TicketId}", ticketId);
+            return PullRequestCreationResult.Failed($"Error creating PR: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Builds the pull request description from ticket information.
+    /// Retrieves latest ticket update if available for enhanced description.
+    /// </summary>
+    /// <param name="ticket">The ticket</param>
+    /// <returns>PR description markdown</returns>
+    private async Task<string> BuildPRDescriptionAsync(Ticket ticket)
+    {
+        logger.LogDebug("Building PR description for ticket {TicketId}", ticket.Id);
+
+        // Retrieve latest approved ticket update (if available)
+        var ticketUpdate = await ticketUpdateRepository.GetLatestApprovedByTicketIdAsync(ticket.Id);
+
+        if (ticketUpdate == null)
+        {
+            logger.LogWarning("No ticket update found for ticket {TicketId}, using basic description", ticket.Id);
+            return BuildBasicPRDescription(ticket);
+        }
+
+        return BuildDetailedPRDescription(ticket, ticketUpdate);
+    }
+
+    /// <summary>
+    /// Builds a basic PR description when no ticket update is available.
+    /// </summary>
+    /// <param name="ticket">The ticket</param>
+    /// <returns>Basic PR description markdown</returns>
+    private string BuildBasicPRDescription(Ticket ticket)
+    {
+        return $@"## {ticket.TicketKey}: {ticket.Title}
+
+### Description
+
+{ticket.Description}
+
+---
+
+*Generated by PRFactory*
+";
+    }
+
+    /// <summary>
+    /// Builds a detailed PR description including ticket update artifacts.
+    /// </summary>
+    /// <param name="ticket">The ticket</param>
+    /// <param name="ticketUpdate">The approved ticket update with refined requirements</param>
+    /// <returns>Detailed PR description markdown</returns>
+    private string BuildDetailedPRDescription(Ticket ticket, TicketUpdate ticketUpdate)
+    {
+        var description = new System.Text.StringBuilder();
+
+        description.AppendLine($"## {ticket.TicketKey}: {ticketUpdate.UpdatedTitle}");
+        description.AppendLine();
+
+        // Ticket description (refined)
+        description.AppendLine("### Description");
+        description.AppendLine(ticketUpdate.UpdatedDescription);
+        description.AppendLine();
+
+        // Success criteria (if available)
+        if (ticketUpdate.SuccessCriteria.Count > 0)
+        {
+            description.AppendLine("### Success Criteria");
+            description.AppendLine();
+
+            var mustHave = ticketUpdate.GetMustHaveCriteria();
+            if (mustHave.Count > 0)
+            {
+                description.AppendLine("#### Must Have (Priority 0)");
+                foreach (var criterion in mustHave)
+                {
+                    description.AppendLine($"- {criterion.Description}");
+                }
+                description.AppendLine();
+            }
+
+            var shouldHave = ticketUpdate.GetShouldHaveCriteria();
+            if (shouldHave.Count > 0)
+            {
+                description.AppendLine("#### Should Have (Priority 1)");
+                foreach (var criterion in shouldHave)
+                {
+                    description.AppendLine($"- {criterion.Description}");
+                }
+                description.AppendLine();
+            }
+
+            var niceToHave = ticketUpdate.GetNiceToHaveCriteria();
+            if (niceToHave.Count > 0)
+            {
+                description.AppendLine("#### Nice to Have (Priority 2)");
+                foreach (var criterion in niceToHave)
+                {
+                    description.AppendLine($"- {criterion.Description}");
+                }
+                description.AppendLine();
+            }
+        }
+
+        // Acceptance criteria (if available)
+        if (!string.IsNullOrWhiteSpace(ticketUpdate.AcceptanceCriteria))
+        {
+            description.AppendLine("### Acceptance Criteria");
+            description.AppendLine(ticketUpdate.AcceptanceCriteria);
+            description.AppendLine();
+        }
+
+        // Footer with timestamp
+        description.AppendLine("---");
+        description.AppendLine($"*Generated by PRFactory on {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC*");
+
+        return description.ToString();
     }
 }

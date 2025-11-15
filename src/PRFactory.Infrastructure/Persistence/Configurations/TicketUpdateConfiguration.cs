@@ -37,7 +37,8 @@ public class TicketUpdateConfiguration : IEntityTypeConfiguration<TicketUpdate>
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
                 v => JsonSerializer.Deserialize<List<SuccessCriterion>>(v, (JsonSerializerOptions?)null) ?? new List<SuccessCriterion>()
             )
-            .HasColumnType("TEXT");
+            .HasColumnType("TEXT")
+            .Metadata.SetValueComparer(ValueComparerHelpers.CreateSuccessCriterionListComparer());
 
         builder.Property(tu => tu.AcceptanceCriteria)
             .IsRequired()
@@ -64,7 +65,7 @@ public class TicketUpdateConfiguration : IEntityTypeConfiguration<TicketUpdate>
 
         // Relationships
         builder.HasOne(tu => tu.Ticket)
-            .WithMany()
+            .WithMany(t => t.TicketUpdates)
             .HasForeignKey(tu => tu.TicketId)
             .OnDelete(DeleteBehavior.Cascade);
 

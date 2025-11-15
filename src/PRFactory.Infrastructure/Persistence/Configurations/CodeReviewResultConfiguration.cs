@@ -42,21 +42,24 @@ public class CodeReviewResultConfiguration : IEntityTypeConfiguration<CodeReview
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
                 v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>())
             .HasColumnType("jsonb")
-            .HasColumnName("CriticalIssues");
+            .HasColumnName("CriticalIssues")
+            .Metadata.SetValueComparer(ValueComparerHelpers.CreateStringListComparer());
 
         builder.Property(cr => cr.Suggestions)
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
                 v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>())
             .HasColumnType("jsonb")
-            .HasColumnName("Suggestions");
+            .HasColumnName("Suggestions")
+            .Metadata.SetValueComparer(ValueComparerHelpers.CreateStringListComparer());
 
         builder.Property(cr => cr.Praise)
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
                 v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>())
             .HasColumnType("jsonb")
-            .HasColumnName("Praise");
+            .HasColumnName("Praise")
+            .Metadata.SetValueComparer(ValueComparerHelpers.CreateStringListComparer());
 
         builder.Property(cr => cr.FullReviewContent)
             .IsRequired()

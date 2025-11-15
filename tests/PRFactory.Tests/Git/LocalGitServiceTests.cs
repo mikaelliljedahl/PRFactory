@@ -120,9 +120,11 @@ public class LocalGitServiceTests : IDisposable
         var service = CreateService();
         var invalidUrl = "/nonexistent/path/to/repo";
 
-        // Act & Assert - LibGit2Sharp throws exception for invalid/unsupported URLs
-        await Assert.ThrowsAsync<LibGit2SharpException>(
+        // Act & Assert - Invalid URL throws UriFormatException
+        var exception = await Assert.ThrowsAsync<UriFormatException>(
             () => service.CloneAsync(invalidUrl, "token", CancellationToken.None));
+
+        Assert.Contains("not a valid absolute URI", exception.Message);
     }
 
     [Fact]

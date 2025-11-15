@@ -86,6 +86,7 @@ public static class DependencyInjection
         services.AddScoped<IAgentPromptTemplateRepository, AgentPromptTemplateRepository>();
         services.AddScoped<IErrorRepository, ErrorRepository>();
         services.AddScoped<ICodeReviewResultRepository, CodeReviewResultRepository>();
+        services.AddScoped<IAgentConfigurationRepository, AgentConfigurationRepository>();
 
         // Team Review repositories
         services.AddScoped<IUserRepository, UserRepository>();
@@ -97,9 +98,8 @@ public static class DependencyInjection
         services.AddScoped<ITenantLlmProviderRepository, TenantLlmProviderRepository>();
 
         // Register checkpoint store adapters
-        // TODO: Implement checkpoint store adapters
-        // services.AddScoped<WorkflowCheckpointStore, GraphCheckpointStoreAdapter>();
-        // services.AddScoped<Agents.Base.ICheckpointStore, BaseCheckpointStoreAdapter>();
+        services.AddScoped<WorkflowCheckpointStore, Agents.CheckpointStoreAdapter>();
+        services.AddScoped<Agents.Base.ICheckpointStore, Agents.Base.CheckpointStoreAdapter>();
 
         // Register workflow state store
         services.AddScoped<Agents.Graphs.IWorkflowStateStore, WorkflowStateStore>();
@@ -150,6 +150,15 @@ public static class DependencyInjection
         // Register context builder for AI agents
         services.AddScoped<Claude.IContextBuilder, Claude.ContextBuilder>();
 
+        // Register agent factory (Epic 05 - Phase 1)
+        services.AddScoped<IAgentFactory, Agents.AgentFactory>();
+
+        // Register agent adapters (Epic 05 - Phase 2)
+        services.AddScoped<Agents.Adapters.AnalysisAgentAdapter>();
+        services.AddScoped<Agents.Adapters.PlanningAgentAdapter>();
+        services.AddScoped<Agents.Adapters.ImplementationAgentAdapter>();
+        services.AddScoped<Agents.Adapters.CodeReviewAgentAdapter>();
+
         // Register agents
         services.AddTransient<Agents.TriggerAgent>();
         services.AddTransient<Agents.RepositoryCloneAgent>();
@@ -177,13 +186,9 @@ public static class DependencyInjection
         services.Configure<ClaudeCodeCliOptions>(
             configuration.GetSection("ClaudeCodeCli"));
 
-        // TODO: Implement CLI adapters
-        // services.AddScoped<ClaudeCodeCliAdapter>();
-        // services.AddScoped<CodexCliAdapter>();
-
-        // Register default CLI agent (Claude Code)
-        // TODO: Implement ICliAgent registration
-        // services.AddScoped<ICliAgent>(sp => sp.GetRequiredService<ClaudeCodeCliAdapter>());
+        // Register CLI agent stub (Epic 05 development)
+        // TODO: Replace with actual CLI agent implementations when ready
+        services.AddScoped<ICliAgent, Agents.CliAgentStub>();
 
         // Register LLM providers (multi-provider support)
         services.Configure<PRFactory.Core.Configuration.LlmProvidersOptions>(

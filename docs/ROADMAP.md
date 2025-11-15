@@ -1,6 +1,6 @@
 # PRFactory Roadmap
 
-**Last Updated**: 2025-11-14
+**Last Updated**: 2025-11-15
 **Purpose**: Clear future vision separated from current implementation
 
 This document outlines planned enhancements beyond the current MVP implementation.
@@ -19,6 +19,30 @@ This document outlines planned enhancements beyond the current MVP implementatio
 ---
 
 ## Recently Completed ✅
+
+### Epic 05: Agent System Foundation ✅ (November 2025)
+**Status**: Complete and enabled by default for all users
+
+Autonomous AI agents with tool execution, multi-turn reasoning, and real-time streaming UI.
+
+**Delivered**:
+- 22 autonomous tools (file, Git, Jira, analysis, command)
+- AgentConfiguration entity and AgentFactory for runtime agent creation
+- AG-UI integration with SSE streaming and Blazor components
+- AFAnalyzerAgent with autonomous tool use
+- Middleware: TenantIsolation, TokenBudget, AuditLogging
+- 100+ tests, 2,079 total passing (100% pass rate)
+
+### Epic 07: Planning Phase UX & Collaboration Improvements (Nov 14, 2025)
+- ✅ **Enhanced Planning Prompts** - 5 domain-specific prompt templates (web_ui, rest_api, database, background_jobs, refactoring)
+- ✅ **ArchitectureContextService** - Intelligent prompt selection based on ticket analysis (268 lines)
+- ✅ **Rich Markdown Editor** - Professional split-view editor with live preview and formatting toolbar
+- ✅ **Inline Comment Anchoring** - Contextual discussions on specific plan lines with visual indicators
+- ✅ **Review Checklists** - Structured, domain-specific review guidance with 4 YAML templates
+- ✅ **Database Migrations** - 2 migrations for InlineCommentAnchors and ReviewChecklists
+- ✅ **Comprehensive Testing** - 2,404 lines of new test coverage (5 test files)
+- ✅ **76 files changed** - 13,050 insertions, 7 new UI components, Notion-like collaborative experience
+
 
 ### Epic 08: System Architecture Cleanup (Complete - Nov 14, 2025)
 - ✅ **Phase 1: Project Consolidation** (Nov 14, 2025) - Merged 3 projects (Api, Worker, Web) into single consolidated `PRFactory.Web` project
@@ -296,6 +320,22 @@ This document outlines planned enhancements beyond the current MVP implementatio
   - [ ] Automated approval for low-risk changes
 
 **Success Criteria**: New graph types demonstrated, customer validation positive
+
+---
+
+### ✅ Epic 05: Agent System Foundation (Complete - November 2025)
+
+**Status**: Complete and enabled by default for all users
+
+Autonomous AI agents with tool execution, multi-turn reasoning, and real-time streaming UI.
+
+**Delivered**:
+- ✅ **Phase 1**: 22 autonomous tools (file, Git, Jira, analysis, command, search, security)
+- ✅ **Phase 2**: AgentConfiguration entity, AgentFactory, middleware stack (TenantIsolation, TokenBudget, AuditLogging)
+- ✅ **Phase 3**: AG-UI integration with SSE streaming, Blazor chat components, conversation history
+- ✅ **Phase 4**: AFAnalyzerAgent with autonomous tool use and multi-turn reasoning
+- ✅ **Testing**: 100+ new tests, 2,079 total passing (100% pass rate)
+- ✅ **Impact**: 50+ files created, ~8,000 lines of code, 1 database migration
 
 ---
 

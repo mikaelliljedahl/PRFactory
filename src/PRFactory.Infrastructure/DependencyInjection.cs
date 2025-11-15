@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PRFactory.Core.Application.Services;
 using PRFactory.Domain.Interfaces;
-using PRFactory.Infrastructure.Agents.Adapters;
 using PRFactory.Infrastructure.Agents.Base;
 using PRFactory.Infrastructure.Agents.Configuration;
 using PRFactory.Infrastructure.Configuration;
@@ -87,6 +86,7 @@ public static class DependencyInjection
         services.AddScoped<IAgentPromptTemplateRepository, AgentPromptTemplateRepository>();
         services.AddScoped<IErrorRepository, ErrorRepository>();
         services.AddScoped<ICodeReviewResultRepository, CodeReviewResultRepository>();
+        services.AddScoped<IAgentConfigurationRepository, AgentConfigurationRepository>();
 
         // Team Review repositories
         services.AddScoped<IUserRepository, UserRepository>();
@@ -98,8 +98,8 @@ public static class DependencyInjection
         services.AddScoped<ITenantLlmProviderRepository, TenantLlmProviderRepository>();
 
         // Register checkpoint store adapters
-        services.AddScoped<WorkflowCheckpointStore, GraphCheckpointStoreAdapter>();
-        services.AddScoped<Agents.Base.ICheckpointStore, BaseCheckpointStoreAdapter>();
+        services.AddScoped<WorkflowCheckpointStore, Agents.CheckpointStoreAdapter>();
+        services.AddScoped<Agents.Base.ICheckpointStore, Agents.Base.CheckpointStoreAdapter>();
 
         // Register workflow state store
         services.AddScoped<Agents.Graphs.IWorkflowStateStore, WorkflowStateStore>();
@@ -137,6 +137,10 @@ public static class DependencyInjection
         // Multi-LLM provider services
         services.AddScoped<ITenantLlmProviderService, Application.TenantLlmProviderService>();
 
+        // AG-UI protocol services (Epic 05 - Agent streaming)
+        services.AddScoped<IAgentChatService, AgentUI.AgentChatService>();
+        services.AddScoped<IAIAgentService, AI.AIAgentService>();
+
         // Register IHttpContextAccessor for CurrentUserService
         services.AddHttpContextAccessor();
 
@@ -149,6 +153,15 @@ public static class DependencyInjection
 
         // Register context builder for AI agents
         services.AddScoped<Claude.IContextBuilder, Claude.ContextBuilder>();
+
+        // Register agent factory (Epic 05 - Phase 1)
+        services.AddScoped<IAgentFactory, Agents.AgentFactory>();
+
+        // Register agent adapters (Epic 05 - Phase 2)
+        services.AddScoped<Agents.Adapters.AnalysisAgentAdapter>();
+        services.AddScoped<Agents.Adapters.PlanningAgentAdapter>();
+        services.AddScoped<Agents.Adapters.ImplementationAgentAdapter>();
+        services.AddScoped<Agents.Adapters.CodeReviewAgentAdapter>();
 
         // Register agents
         services.AddTransient<Agents.TriggerAgent>();
@@ -167,6 +180,9 @@ public static class DependencyInjection
         services.AddTransient<Agents.ApprovalCheckAgent>();
         services.AddTransient<Agents.ErrorHandlingAgent>();
 
+        // Register AF-based agents (Epic 05)
+        services.AddTransient<Agents.AI.AFAnalyzerAgent>();
+
         // Register agent executor
         services.AddScoped<Agents.Graphs.IAgentExecutor, Agents.Graphs.AgentExecutor>();
 
@@ -177,19 +193,18 @@ public static class DependencyInjection
         services.Configure<ClaudeCodeCliOptions>(
             configuration.GetSection("ClaudeCodeCli"));
 
-        services.AddScoped<ClaudeCodeCliAdapter>();
-        services.AddScoped<CodexCliAdapter>();
-
-        // Register default CLI agent (Claude Code)
-        services.AddScoped<ICliAgent>(sp => sp.GetRequiredService<ClaudeCodeCliAdapter>());
+        // Register CLI agent stub (Epic 05 development)
+        // TODO: Replace with actual CLI agent implementations when ready
+        services.AddScoped<ICliAgent, Agents.CliAgentStub>();
 
         // Register LLM providers (multi-provider support)
         services.Configure<PRFactory.Core.Configuration.LlmProvidersOptions>(
             configuration.GetSection("LlmProviders"));
 
-        services.AddScoped<PRFactory.Infrastructure.Agents.Adapters.ClaudeCodeCliLlmProvider>();
-        services.AddScoped<PRFactory.Infrastructure.Agents.Adapters.GeminiCliAdapter>();
-        services.AddScoped<PRFactory.Infrastructure.Agents.Adapters.OpenAiCliAdapter>();
+        // TODO: Implement LLM adapter providers
+        // services.AddScoped<PRFactory.Infrastructure.Agents.Adapters.ClaudeCodeCliLlmProvider>();
+        // services.AddScoped<PRFactory.Infrastructure.Agents.Adapters.GeminiCliAdapter>();
+        // services.AddScoped<PRFactory.Infrastructure.Agents.Adapters.OpenAiCliAdapter>();
 
         // Register LLM provider factory and prompt loader
         services.AddScoped<PRFactory.Core.Application.LLM.ILlmProviderFactory, PRFactory.Infrastructure.Application.LlmProviderFactory>();

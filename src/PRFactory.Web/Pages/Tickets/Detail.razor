@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using PRFactory.Web.Models
 @using PRFactory.Web.Components.Tickets
+@using PRFactory.Web.Components.Agents
 @using PRFactory.Web.UI.Alerts
 @using PRFactory.Web.UI.Cards
 @using PRFactory.Web.UI.Display
@@ -137,4 +138,8 @@ else
             <WorkflowTimeline Ticket="@ticket" Events="@events" />
         </GridColumn>
     </GridLayout>
+
+    <Section Title="Agent Assistant" Icon="robot">
+        <AgentChat TicketId="@ticket.Id" />
+    </Section>
 }

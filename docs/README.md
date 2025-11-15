@@ -107,10 +107,11 @@ PRFactory/
 |----------|--------|-------------|
 | **[ROADMAP.md](ROADMAP.md)** | 📋 Planning | Future enhancements (3, 6, 12 month vision) |
 | [planning/EPIC_01_TEAM_REVIEW.md](planning/EPIC_01_TEAM_REVIEW.md) | ✅ Complete | Team collaboration feature (implemented) |
-| [planning/EPIC_02_MULTI_LLM.md](planning/EPIC_02_MULTI_LLM.md) | 📋 Planned | Multi-LLM provider support |
+| [planning/EPIC_02_MULTI_LLM.md](planning/EPIC_02_MULTI_LLM.md) | ✅ Complete | Multi-LLM provider support with code review |
 | [planning/EPIC_03_DEEP_PLANNING.md](planning/EPIC_03_DEEP_PLANNING.md) | 📋 Planned | Enhanced planning capabilities |
 | [planning/EPIC_04_DIFF_VIEWER.md](planning/EPIC_04_DIFF_VIEWER.md) | 📋 Planned | Code diff visualization |
-| [planning/EPIC_05_AGENT_FRAMEWORK.md](planning/EPIC_05_AGENT_FRAMEWORK.md) | 📋 Planned | Agent framework enhancements |
+| [planning/EPIC_05_AGENT_FRAMEWORK.md](planning/EPIC_05_AGENT_FRAMEWORK.md) | ⚠️ Partial | Agent framework - Phase 1 complete, Phases 2-5 pending |
+| [planning/EPIC_07_PLANNING_PHASE_UX.md](planning/EPIC_07_PLANNING_PHASE_UX.md) | ✅ Complete | Planning phase UX improvements (Nov 14, 2025) |
 | [planning/EPIC_BACKLOG.md](planning/EPIC_BACKLOG.md) | 📋 Backlog | Future epic ideas |
 
 ### Architecture Reviews & Analysis
@@ -322,7 +323,7 @@ When a document becomes outdated:
 
 ## 📊 Documentation Health
 
-**Last Major Update**: 2025-11-10
+**Last Major Update**: 2025-11-15
 
 ### Coverage Status
 

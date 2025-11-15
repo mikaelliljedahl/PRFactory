@@ -48,6 +48,9 @@
     <!-- Validation -->
     <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
 
+    <!-- Microsoft Agent Framework AG-UI Integration (Preview) -->
+    <PackageReference Include="Microsoft.Agents.AI.Hosting.AGUI.AspNetCore" Version="1.0.0-preview.251113.1" />
+
     <!-- Polly for Resilience -->
     <PackageReference Include="Polly" Version="8.2.0" />
 

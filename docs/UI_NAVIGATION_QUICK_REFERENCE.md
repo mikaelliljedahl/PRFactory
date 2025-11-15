@@ -17,6 +17,30 @@ Settings           →  /settings/general (SETTINGS)
 Admin              →  /admin (ADMIN)
 ```
 
+## Section Overview
+
+### Core Application Pages
+- **Dashboard** - System overview and statistics
+- **Tickets** - Ticket management and PR tracking
+- **Repositories** - Git repository configuration
+- **Workflows** - Workflow execution history and monitoring
+- **Event Log** - Detailed event tracking with advanced filtering
+- **Errors** - Error reporting and diagnostics
+
+### Admin Section (`/admin`)
+- **Agent Configuration** - Configure which LLM provider each agent type uses (Analysis, Planning, Implementation, Code Review) and code review automation settings
+
+### Settings Section (`/settings`)
+- **General** - Tenant information and workflow/code review configuration with tabs for General, Workflow, Code Review, and LLM Providers
+- **LLM Providers** - Manage LLM provider integrations (Anthropic, Z.ai, Minimax, OpenRouter, Together AI, Custom) with test connection capability
+- **Users** - User account management, role assignment (Owner/Admin/Member/Viewer), and account activation/deactivation
+
+### Tenant Management (`/tenants`)
+- Create and manage multi-tenant configurations with customizable settings
+
+### Agent Prompts (`/agent-prompts`)
+- Manage AI agent prompt templates with preview and validation
+
 ## Page Routes (Complete List)
 
 | # | Feature | Route | File |
@@ -163,7 +187,7 @@ No 404 errors or missing pages found during exploration!
 
 ---
 
-**Last Updated**: November 9, 2025
-**Total Pages**: 18 routable pages
+**Last Updated**: November 15, 2025
+**Total Pages**: 29 routable pages (Epic 06 Admin/Settings additions)
 **Total Components**: 50+ supporting components
-**Lines of Code**: ~2,422 in Pages directory alone
+**Lines of Code**: ~3,000+ in Pages directory

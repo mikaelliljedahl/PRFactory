@@ -158,7 +158,8 @@ public class AllowedRepositoriesEditorTests : TestContext
         var input = cut.Find("input[placeholder='repository-name']");
         input.Change("repo1");
 
-        var addButton = cut.Find("button");
+        // Find the Add button specifically (not the remove buttons)
+        var addButton = cut.FindAll("button").First(b => b.TextContent.Contains("Add"));
 
         // Act
         addButton.Click();

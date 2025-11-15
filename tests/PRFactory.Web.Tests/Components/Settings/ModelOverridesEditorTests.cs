@@ -156,15 +156,12 @@ public class ModelOverridesEditorTests : TestContext
         var textarea = cut.Find("textarea");
 
         // Act
-        textarea.Change("{ \"gpt-4\": \"gpt-4-turbo\" }");
+        textarea.Input("{ \"gpt-4\": \"gpt-4-turbo\" }");
 
         // Assert
-        var invalidFeedback = cut.FindAll(".invalid-feedback").FirstOrDefault();
-        // Valid JSON should not show error
-        if (invalidFeedback != null)
-        {
-            Assert.Empty(invalidFeedback.TextContent);
-        }
+        var invalidFeedback = cut.FindAll(".invalid-feedback");
+        // Valid JSON should not show error - element should not exist
+        Assert.Empty(invalidFeedback);
     }
 
     [Fact]
@@ -177,7 +174,7 @@ public class ModelOverridesEditorTests : TestContext
         var textarea = cut.Find("textarea");
 
         // Act
-        textarea.Change("{ invalid json }");
+        textarea.Input("{ invalid json }");
 
         // Assert
         var invalidFeedback = cut.FindAll(".invalid-feedback").FirstOrDefault();
@@ -203,7 +200,7 @@ public class ModelOverridesEditorTests : TestContext
         var textarea = cut.Find("textarea");
 
         // Act
-        textarea.Change("{ \"gpt-4\": \"gpt-4-turbo\" }");
+        textarea.Input("{ \"gpt-4\": \"gpt-4-turbo\" }");
 
         // Assert
         Assert.True(valueChangedInvoked);
@@ -229,7 +226,7 @@ public class ModelOverridesEditorTests : TestContext
         var textarea = cut.Find("textarea");
 
         // Act
-        textarea.Change(string.Empty);
+        textarea.Input(string.Empty);
 
         // Assert
         Assert.True(valueChangedInvoked);
@@ -254,7 +251,7 @@ public class ModelOverridesEditorTests : TestContext
         var textarea = cut.Find("textarea");
 
         // Act
-        textarea.Change("   \n\t  ");
+        textarea.Input("   \n\t  ");
 
         // Assert
         Assert.True(valueChangedInvoked);
@@ -284,7 +281,7 @@ public class ModelOverridesEditorTests : TestContext
   ""gpt-3.5"": ""gpt-3.5-turbo-0125"",
   ""claude-3"": ""claude-3-sonnet-20240229""
 }";
-        textarea.Change(json);
+        textarea.Input(json);
 
         // Assert
         Assert.True(valueChangedInvoked);
@@ -305,7 +302,7 @@ public class ModelOverridesEditorTests : TestContext
         var textarea = cut.Find("textarea");
 
         // Act
-        textarea.Change("{ \"gpt-4\": \"gpt-4-turbo\"");
+        textarea.Input("{ \"gpt-4\": \"gpt-4-turbo\"");
 
         // Assert
         var invalidFeedback = cut.FindAll(".invalid-feedback").FirstOrDefault();
@@ -323,7 +320,7 @@ public class ModelOverridesEditorTests : TestContext
         var textarea = cut.Find("textarea");
 
         // Act
-        textarea.Change("{ \"gpt-4\": }");
+        textarea.Input("{ \"gpt-4\": }");
 
         // Assert
         var invalidFeedback = cut.FindAll(".invalid-feedback").FirstOrDefault();
@@ -341,17 +338,16 @@ public class ModelOverridesEditorTests : TestContext
         var textarea = cut.Find("textarea");
 
         // Act - First invalid
-        textarea.Change("{ invalid }");
+        textarea.Input("{ invalid }");
         var feedback1 = cut.FindAll(".invalid-feedback").FirstOrDefault();
         Assert.NotNull(feedback1);
         Assert.Contains("Invalid JSON", feedback1.TextContent);
 
         // Act - Then valid
-        textarea.Change("{ \"gpt-4\": \"turbo\" }");
-        var feedback2 = cut.FindAll(".invalid-feedback").FirstOrDefault();
-        Assert.NotNull(feedback2);
-        // After valid JSON, error should be cleared (empty feedback)
-        Assert.Empty(feedback2.TextContent);
+        textarea.Input("{ \"gpt-4\": \"turbo\" }");
+        var feedback2 = cut.FindAll(".invalid-feedback");
+        // After valid JSON, error element should be removed completely
+        Assert.Empty(feedback2);
     }
 
     [Fact]
@@ -398,7 +394,7 @@ public class ModelOverridesEditorTests : TestContext
         var textarea = cut.Find("textarea");
 
         // Act
-        textarea.Change("{ \"model1\": \"provider-model-1\", \"model2\": \"provider-model-2\" }");
+        textarea.Input("{ \"model1\": \"provider-model-1\", \"model2\": \"provider-model-2\" }");
 
         // Assert
         Assert.True(valueChangedInvoked);
@@ -433,7 +429,7 @@ public class ModelOverridesEditorTests : TestContext
         var textarea = cut.Find("textarea");
 
         // Act
-        textarea.Change("{ \"gpt-4\": { \"name\": \"turbo\" } }");
+        textarea.Input("{ \"gpt-4\": { \"name\": \"turbo\" } }");
 
         // Assert
         var invalidFeedback = cut.FindAll(".invalid-feedback").FirstOrDefault();
@@ -460,7 +456,7 @@ public class ModelOverridesEditorTests : TestContext
         var textarea = cut.Find("textarea");
 
         // Act
-        textarea.Change("   { \"gpt-4\": \"turbo\" }   ");
+        textarea.Input("   { \"gpt-4\": \"turbo\" }   ");
 
         // Assert
         Assert.True(valueChangedInvoked);

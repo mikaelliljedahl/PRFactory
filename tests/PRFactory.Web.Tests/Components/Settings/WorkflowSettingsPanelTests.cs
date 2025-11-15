@@ -283,7 +283,8 @@ public class WorkflowSettingsPanelTests : TestContext
 
         // Assert
         var markup = cut.Markup;
-        Assert.Contains("AllowedRepositoriesEditor", markup);
+        // AllowedRepositoriesEditor component renders "Allowed Repositories" label
+        Assert.Contains("Allowed Repositories", markup);
     }
 
     [Fact]

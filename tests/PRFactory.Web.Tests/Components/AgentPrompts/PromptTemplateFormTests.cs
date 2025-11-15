@@ -250,9 +250,11 @@ public class PromptTemplateFormTests : TestContext
             .Add(p => p.Model, model));
 
         // Assert
-        // HelpText should be present for various fields
+        // HelpText should be present for various fields - check for actual help text content
         var markup = cut.Markup;
-        Assert.Contains("Help", markup.ToLower());
+        Assert.Contains("Unique identifier for this agent", markup);
+        Assert.Contains("POML markup", markup);
+        Assert.Contains("optional", markup.ToLower());
     }
 
     [Fact]

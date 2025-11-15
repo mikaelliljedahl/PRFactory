@@ -16,13 +16,15 @@ public class UserProfileDropdownTests : TestContext
 {
     private const string TestUserName = "testuser@example.com";
 
+    private TestAuthorizationContext _authContext;
+
     public UserProfileDropdownTests()
     {
         // Setup mock NavigationManager
         Services.AddSingleton<NavigationManager>(new MockNavigationManager());
 
-        // Add Authorization Services for AuthorizeView
-        Services.AddAuthorizationCore();
+        // Add bUnit test authorization (provides cascading AuthenticationState parameter)
+        _authContext = this.AddTestAuthorization();
 
         // Setup JSInterop for Radzen components
         JSInterop.Mode = JSRuntimeMode.Loose;
@@ -33,29 +35,17 @@ public class UserProfileDropdownTests : TestContext
 
     private void SetupAuthorizedUser(string userName = TestUserName)
     {
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()),
-            new(ClaimTypes.Name, userName),
-            new(ClaimTypes.Email, userName)
-        };
-
-        var identity = new ClaimsIdentity(claims, "TestAuthType");
-        var user = new ClaimsPrincipal(identity);
-
-        var authState = Task.FromResult(new AuthenticationState(user));
-        var authStateProvider = new TestAuthenticationStateProvider(authState);
-
-        Services.AddScoped<AuthenticationStateProvider>(_ => authStateProvider);
+        _authContext.SetAuthorized(userName);
+        _authContext.SetClaims(
+            new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()),
+            new Claim(ClaimTypes.Name, userName),
+            new Claim(ClaimTypes.Email, userName)
+        );
     }
 
     private void SetupUnauthorizedUser()
     {
-        var user = new ClaimsPrincipal(new ClaimsIdentity());
-        var authState = Task.FromResult(new AuthenticationState(user));
-        var authStateProvider = new TestAuthenticationStateProvider(authState);
-
-        Services.AddScoped<AuthenticationStateProvider>(_ => authStateProvider);
+        _authContext.SetNotAuthorized();
     }
 
     [Fact]
@@ -219,23 +209,5 @@ public class UserProfileDropdownTests : TestContext
         var icons = cut.FindAll("i");
         var logoutIcon = icons.FirstOrDefault(i => i.ClassList.Contains("bi-box-arrow-right"));
         Assert.NotNull(logoutIcon);
-    }
-}
-
-/// <summary>
-/// Test authentication state provider for testing AuthorizeView components.
-/// </summary>
-internal class TestAuthenticationStateProvider : AuthenticationStateProvider
-{
-    private readonly Task<AuthenticationState> _authState;
-
-    public TestAuthenticationStateProvider(Task<AuthenticationState> authState)
-    {
-        _authState = authState;
-    }
-
-    public override Task<AuthenticationState> GetAuthenticationStateAsync()
-    {
-        return _authState;
     }
 }

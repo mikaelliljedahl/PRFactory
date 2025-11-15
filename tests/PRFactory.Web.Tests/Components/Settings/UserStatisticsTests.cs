@@ -22,14 +22,15 @@ public class UserStatisticsTests : TestContext
     private UserStatisticsDto CreateTestStatistics(
         int totalPlanReviews = 25,
         int totalComments = 42,
-        DateTime? lastSeenAt = null)
+        DateTime? lastSeenAt = null,
+        bool useDefaultLastSeen = true)
     {
         return new UserStatisticsDto
         {
             UserId = Guid.NewGuid(),
             TotalPlanReviews = totalPlanReviews,
             TotalComments = totalComments,
-            LastSeenAt = lastSeenAt ?? DateTime.UtcNow.AddHours(-2)
+            LastSeenAt = useDefaultLastSeen ? (lastSeenAt ?? DateTime.UtcNow.AddHours(-2)) : lastSeenAt
         };
     }
 
@@ -161,15 +162,16 @@ public class UserStatisticsTests : TestContext
     public void Render_WithoutLastSeenAt_DoesNotShowLastActivity()
     {
         // Arrange
-        var stats = CreateTestStatistics(lastSeenAt: null);
+        var stats = CreateTestStatistics(lastSeenAt: null, useDefaultLastSeen: false);
 
         // Act
         var cut = RenderComponent<UserStatistics>(parameters => parameters
             .Add(p => p.Statistics, stats));
 
         // Assert
-        var hr = cut.FindAll("hr");
-        Assert.Empty(hr);
+        // When LastSeenAt is null, the "Last Activity" section should not be rendered
+        var markup = cut.Markup;
+        Assert.DoesNotContain("Last Activity", markup);
     }
 
     [Fact]

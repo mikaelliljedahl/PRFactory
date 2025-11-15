@@ -373,9 +373,9 @@ public class UserRoleEditorTests : TestContext
             .Add(p => p.CurrentUser, currentUser));
 
         // Assert
-        var helpText = cut.Find(".form-text.text-muted");
-        Assert.NotNull(helpText);
-        Assert.Contains("Inactive users cannot access", helpText.TextContent);
+        // There are multiple .form-text.text-muted elements, check the markup instead
+        var markup = cut.Markup;
+        Assert.Contains("Inactive users cannot access the system", markup);
     }
 
     [Fact]
@@ -441,9 +441,9 @@ public class UserRoleEditorTests : TestContext
             .Setup(s => s.GetUsersForTenantAsync(It.IsAny<System.Threading.CancellationToken>()))
             .ReturnsAsync(users);
 
-        // Act
+        // Act - Change the Owner to Admin (SelectedRole must be != Owner to trigger warning)
         var cut = RenderComponent<UserRoleEditor>(parameters => parameters
-            .Add(p => p.SelectedRole, UserRole.Owner)
+            .Add(p => p.SelectedRole, UserRole.Admin)
             .Add(p => p.IsActive, true)
             .Add(p => p.CurrentUser, currentUser));
 

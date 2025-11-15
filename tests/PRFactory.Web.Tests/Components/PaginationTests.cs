@@ -51,7 +51,10 @@ public class PaginationTests : TestContext
         // Assert
         var previousButton = cut.FindAll("button").First();
         Assert.True(previousButton.HasAttribute("disabled"));
-        Assert.Contains("disabled", previousButton.GetAttribute("class"));
+        // Check the parent li has the disabled class
+        var parentLi = previousButton.ParentElement;
+        Assert.NotNull(parentLi);
+        Assert.Contains("disabled", parentLi.GetAttribute("class"));
     }
 
     [Fact]
@@ -67,7 +70,10 @@ public class PaginationTests : TestContext
         var buttons = cut.FindAll("button");
         var nextButton = buttons.Last();
         Assert.True(nextButton.HasAttribute("disabled"));
-        Assert.Contains("disabled", nextButton.GetAttribute("class"));
+        // Check the parent li has the disabled class
+        var parentLi = nextButton.ParentElement;
+        Assert.NotNull(parentLi);
+        Assert.Contains("disabled", parentLi.GetAttribute("class"));
     }
 
     [Fact]

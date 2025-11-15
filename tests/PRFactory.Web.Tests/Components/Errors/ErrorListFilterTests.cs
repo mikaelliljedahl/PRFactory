@@ -163,8 +163,14 @@ public class ErrorListFilterTests : TestContext
     public void SetParameter_SelectedSeverity_BindsToSelect()
     {
         // Arrange & Act
-        var cut = RenderComponent<ErrorListFilter>(parameters => parameters
-            .Add(p => p.SelectedSeverity, ErrorSeverity.Critical.ToString()));
+        // Note: SelectedSeverity is internal state, not a parameter
+        // We verify the select element exists and can be changed
+        var cut = RenderComponent<ErrorListFilter>();
+        var selects = cut.FindAll("select");
+        var severitySelect = selects[0]; // First select is severity
+
+        // Act - change the severity
+        severitySelect.Change(ErrorSeverity.Critical.ToString());
 
         // Assert
         Assert.NotNull(cut);
@@ -174,8 +180,15 @@ public class ErrorListFilterTests : TestContext
     public void SetParameter_EntityType_BindsToInput()
     {
         // Arrange & Act
-        var cut = RenderComponent<ErrorListFilter>(parameters => parameters
-            .Add(p => p.EntityType, "Ticket"));
+        // Note: EntityType is internal state, not a parameter
+        // We verify the input element exists and can be changed
+        var cut = RenderComponent<ErrorListFilter>();
+        var inputs = cut.FindAll("input[type='text']");
+        var entityTypeInput = inputs.FirstOrDefault(i => i.GetAttribute("placeholder")?.Contains("e.g.") == true);
+
+        // Act - change the entity type
+        Assert.NotNull(entityTypeInput);
+        entityTypeInput.Input("Ticket");
 
         // Assert
         Assert.NotNull(cut);
@@ -185,8 +198,14 @@ public class ErrorListFilterTests : TestContext
     public void SetParameter_ResolvedStatus_BindsToSelect()
     {
         // Arrange & Act
-        var cut = RenderComponent<ErrorListFilter>(parameters => parameters
-            .Add(p => p.ResolvedStatus, "unresolved"));
+        // Note: ResolvedStatus is internal state, not a parameter
+        // We verify the select element exists and can be changed
+        var cut = RenderComponent<ErrorListFilter>();
+        var selects = cut.FindAll("select");
+        var statusSelect = selects[1]; // Second select is status
+
+        // Act - change the status
+        statusSelect.Change("unresolved");
 
         // Assert
         Assert.NotNull(cut);
@@ -195,12 +214,15 @@ public class ErrorListFilterTests : TestContext
     [Fact]
     public void SetParameter_FromDate_BindsToDateInput()
     {
-        // Arrange
-        var fromDate = new DateTime(2024, 11, 01);
+        // Arrange & Act
+        // Note: FromDate is internal state, not a parameter
+        // We verify the date input element exists and can be changed
+        var cut = RenderComponent<ErrorListFilter>();
+        var dateInputs = cut.FindAll("input[type='date']");
+        Assert.True(dateInputs.Count >= 1);
 
-        // Act
-        var cut = RenderComponent<ErrorListFilter>(parameters => parameters
-            .Add(p => p.FromDate, fromDate));
+        // Act - change the from date
+        dateInputs[0].Change("2024-11-01");
 
         // Assert
         Assert.NotNull(cut);
@@ -209,12 +231,15 @@ public class ErrorListFilterTests : TestContext
     [Fact]
     public void SetParameter_ToDate_BindsToDateInput()
     {
-        // Arrange
-        var toDate = new DateTime(2024, 11, 15);
+        // Arrange & Act
+        // Note: ToDate is internal state, not a parameter
+        // We verify the date input element exists and can be changed
+        var cut = RenderComponent<ErrorListFilter>();
+        var dateInputs = cut.FindAll("input[type='date']");
+        Assert.True(dateInputs.Count >= 2);
 
-        // Act
-        var cut = RenderComponent<ErrorListFilter>(parameters => parameters
-            .Add(p => p.ToDate, toDate));
+        // Act - change the to date
+        dateInputs[1].Change("2024-11-15");
 
         // Assert
         Assert.NotNull(cut);
@@ -224,8 +249,13 @@ public class ErrorListFilterTests : TestContext
     public void SetParameter_SearchTerm_BindsToInput()
     {
         // Arrange & Act
-        var cut = RenderComponent<ErrorListFilter>(parameters => parameters
-            .Add(p => p.SearchTerm, "database error"));
+        // Note: SearchTerm is internal state, not a parameter
+        // We verify the search input element exists and can be changed
+        var cut = RenderComponent<ErrorListFilter>();
+        var searchInput = cut.Find("input[placeholder*='Search in messages']");
+
+        // Act - change the search term
+        searchInput.Input("database error");
 
         // Assert
         Assert.NotNull(cut);
@@ -239,15 +269,33 @@ public class ErrorListFilterTests : TestContext
         var lastArgs = (ErrorListFilter.FilterChangedArgs?)null;
 
         var cut = RenderComponent<ErrorListFilter>(parameters => parameters
-            .Add(p => p.SelectedSeverity, ErrorSeverity.Critical.ToString())
-            .Add(p => p.EntityType, "Ticket")
-            .Add(p => p.ResolvedStatus, "unresolved")
-            .Add(p => p.SearchTerm, "error")
             .Add(p => p.OnFiltersChanged, EventCallback.Factory.Create<ErrorListFilter.FilterChangedArgs>(this, args =>
             {
                 filterChangedInvoked = true;
                 lastArgs = args;
             })));
+
+        // Set filter values through UI interaction
+        var selects = cut.FindAll("select");
+        selects[0].Change(ErrorSeverity.Critical.ToString()); // Severity
+
+        // Re-find selects after re-render
+        selects = cut.FindAll("select");
+        selects[1].Change("unresolved"); // Status
+
+        var inputs = cut.FindAll("input[type='text']");
+        var entityTypeInput = inputs.FirstOrDefault(i => i.GetAttribute("placeholder")?.Contains("e.g.") == true);
+        if (entityTypeInput != null)
+        {
+            entityTypeInput.Input("Ticket");
+        }
+
+        var searchInput = cut.Find("input[placeholder*='Search in messages']");
+        searchInput.Input("error");
+
+        // Reset for clear button test
+        filterChangedInvoked = false;
+        lastArgs = null;
 
         // Act
         var buttons = cut.FindAll("button");
@@ -306,7 +354,7 @@ public class ErrorListFilterTests : TestContext
         var entityTypeInput = inputs.FirstOrDefault(i => i.GetAttribute("placeholder")?.Contains("e.g.") == true);
         if (entityTypeInput != null)
         {
-            entityTypeInput.Change("Repository");
+            entityTypeInput.Input("Repository");
         }
 
         // Assert
@@ -394,7 +442,7 @@ public class ErrorListFilterTests : TestContext
 
         // Act
         var searchInput = cut.Find("input[placeholder*='Search in messages']");
-        searchInput.Change("test error");
+        searchInput.Input("test error");
 
         // Assert
         Assert.NotNull(cut);
@@ -408,17 +456,21 @@ public class ErrorListFilterTests : TestContext
         ErrorListFilter.FilterChangedArgs? passedArgs = null;
 
         var cut = RenderComponent<ErrorListFilter>(parameters => parameters
-            .Add(p => p.ResolvedStatus, "resolved")
             .Add(p => p.OnFiltersChanged, EventCallback.Factory.Create<ErrorListFilter.FilterChangedArgs>(this, args =>
             {
                 filterChangedInvoked = true;
                 passedArgs = args;
             })));
 
-        // Act
+        // Act - change status to resolved through UI
         var selects = cut.FindAll("select");
-        var statusSelect = selects.FirstOrDefault(s => s.GetAttribute("class")?.Contains("form-select") == true);
-        Assert.NotNull(statusSelect);
+        var statusSelect = selects[1]; // Second select is status
+        statusSelect.Change("resolved");
+
+        // Assert
+        Assert.True(filterChangedInvoked);
+        Assert.NotNull(passedArgs);
+        Assert.True(passedArgs.IsResolved);
     }
 
     [Fact]
@@ -429,15 +481,21 @@ public class ErrorListFilterTests : TestContext
         ErrorListFilter.FilterChangedArgs? passedArgs = null;
 
         var cut = RenderComponent<ErrorListFilter>(parameters => parameters
-            .Add(p => p.ResolvedStatus, "unresolved")
             .Add(p => p.OnFiltersChanged, EventCallback.Factory.Create<ErrorListFilter.FilterChangedArgs>(this, args =>
             {
                 filterChangedInvoked = true;
                 passedArgs = args;
             })));
 
-        // Act & Assert
-        Assert.NotNull(cut);
+        // Act - change status to unresolved through UI
+        var selects = cut.FindAll("select");
+        var statusSelect = selects[1]; // Second select is status
+        statusSelect.Change("unresolved");
+
+        // Assert
+        Assert.True(filterChangedInvoked);
+        Assert.NotNull(passedArgs);
+        Assert.False(passedArgs.IsResolved);
     }
 
     [Fact]
@@ -468,18 +526,37 @@ public class ErrorListFilterTests : TestContext
     [Fact]
     public void Render_MultipleFiltersCanBeCombined()
     {
-        // Arrange
-        var fromDate = new DateTime(2024, 11, 01);
-        var toDate = new DateTime(2024, 11, 15);
+        // Arrange & Act
+        // Note: Filter properties are internal state, not parameters
+        // We verify that multiple filters can be set through UI interaction
+        var cut = RenderComponent<ErrorListFilter>();
 
-        // Act
-        var cut = RenderComponent<ErrorListFilter>(parameters => parameters
-            .Add(p => p.SelectedSeverity, ErrorSeverity.High.ToString())
-            .Add(p => p.EntityType, "Ticket")
-            .Add(p => p.ResolvedStatus, "unresolved")
-            .Add(p => p.FromDate, fromDate)
-            .Add(p => p.ToDate, toDate)
-            .Add(p => p.SearchTerm, "database"));
+        // Set multiple filter values through UI interaction
+        var selects = cut.FindAll("select");
+        selects[0].Change(ErrorSeverity.High.ToString()); // Severity
+
+        // Re-find selects after re-render
+        selects = cut.FindAll("select");
+        selects[1].Change("unresolved"); // Status
+
+        var inputs = cut.FindAll("input[type='text']");
+        var entityTypeInput = inputs.FirstOrDefault(i => i.GetAttribute("placeholder")?.Contains("e.g.") == true);
+        if (entityTypeInput != null)
+        {
+            entityTypeInput.Input("Ticket");
+        }
+
+        var searchInput = cut.Find("input[placeholder*='Search in messages']");
+        searchInput.Input("database");
+
+        var dateInputs = cut.FindAll("input[type='date']");
+        if (dateInputs.Count >= 2)
+        {
+            dateInputs[0].Change("2024-11-01");
+            // Re-find date inputs after re-render
+            dateInputs = cut.FindAll("input[type='date']");
+            dateInputs[1].Change("2024-11-15");
+        }
 
         // Assert
         Assert.NotNull(cut);

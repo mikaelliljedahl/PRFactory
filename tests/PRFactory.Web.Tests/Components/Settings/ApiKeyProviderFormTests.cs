@@ -277,9 +277,11 @@ public class ApiKeyProviderFormTests : TestContext
             .Add(p => p.IsSaving, true));
 
         // Assert
-        var submitButton = cut.FindAll("button").FirstOrDefault(b => b.TextContent.Contains("Create Provider"));
+        // When IsSaving is true, button shows "Creating..." instead of "Create Provider"
+        var submitButton = cut.Find("button[type='submit']");
         Assert.NotNull(submitButton);
-        Assert.True(submitButton!.HasAttribute("disabled"));
+        Assert.True(submitButton.HasAttribute("disabled"));
+        Assert.Contains("Creating", submitButton.TextContent);
     }
 
     [Fact]
@@ -312,7 +314,7 @@ public class ApiKeyProviderFormTests : TestContext
     }
 
     [Fact]
-    public async Task TestConnectionButton_ShowsLoadingState()
+    public async Task TestConnectionButton_ShowsTestResult()
     {
         // Arrange
         var model = CreateTestModel();
@@ -325,9 +327,9 @@ public class ApiKeyProviderFormTests : TestContext
         // Act
         testButton!.Click();
 
-        // Assert - Button should show loading state temporarily
+        // Assert - After clicking, test result should be displayed
         var markup = cut.Markup;
-        Assert.Contains("Testing", markup);
+        Assert.Contains("Connection testing requires creating the provider first", markup);
     }
 
     [Fact]

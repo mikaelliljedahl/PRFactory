@@ -307,7 +307,8 @@ public class CodeReviewSettingsPanelTests : TestContext
 
         // Assert
         var markup = cut.Markup;
-        Assert.Contains("ContextualHelp", markup); // Component is used
+        // ContextualHelp component renders help text, not the component name
+        Assert.Contains("Automatically trigger code review after PR creation", markup);
     }
 
     [Fact]

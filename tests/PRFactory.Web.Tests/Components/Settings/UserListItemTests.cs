@@ -241,9 +241,9 @@ public class UserListItemTests : TestContext
             .Add(p => p.User, user));
 
         // Assert
-        var never = cut.Find(".text-muted");
-        Assert.NotNull(never);
-        Assert.Contains("Never", never.TextContent);
+        // There are multiple .text-muted elements (email, status, etc.), check markup instead
+        var markup = cut.Markup;
+        Assert.Contains("Never", markup);
     }
 
     [Fact]

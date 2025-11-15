@@ -72,7 +72,7 @@ public class LlmProviderListItemTests : TestContext
         var defaultBadge = cut.Find(".badge.bg-warning");
         Assert.NotNull(defaultBadge);
         Assert.Contains("Default", defaultBadge.TextContent);
-        Assert.Contains("⭐", defaultBadge.TextContent);
+        Assert.Contains("bi-star-fill", defaultBadge.InnerHtml);
     }
 
     [Fact]
@@ -229,7 +229,7 @@ public class LlmProviderListItemTests : TestContext
         // Assert
         var viewButton = cut.FindAll("button").FirstOrDefault(b => b.GetAttribute("title") == "View Details");
         Assert.NotNull(viewButton);
-        Assert.Contains("bi-eye", viewButton.ClassName);
+        Assert.Contains("bi-eye", viewButton.InnerHtml);
     }
 
     [Fact]
@@ -246,7 +246,7 @@ public class LlmProviderListItemTests : TestContext
         // Assert
         var editButton = cut.FindAll("button").FirstOrDefault(b => b.GetAttribute("title") == "Edit");
         Assert.NotNull(editButton);
-        Assert.Contains("bi-pencil", editButton.ClassName);
+        Assert.Contains("bi-pencil", editButton.InnerHtml);
     }
 
     [Fact]
@@ -279,7 +279,7 @@ public class LlmProviderListItemTests : TestContext
         // Assert
         var setDefaultButton = cut.FindAll("button").FirstOrDefault(b => b.GetAttribute("title") == "Set as Default");
         Assert.NotNull(setDefaultButton);
-        Assert.Contains("bi-star", setDefaultButton.ClassName);
+        Assert.Contains("bi-star", setDefaultButton.InnerHtml);
     }
 
     [Fact]
@@ -312,7 +312,7 @@ public class LlmProviderListItemTests : TestContext
         // Assert
         var testButton = cut.FindAll("button").FirstOrDefault(b => b.GetAttribute("title") == "Test Connection");
         Assert.NotNull(testButton);
-        Assert.Contains("bi-plug", testButton.ClassName);
+        Assert.Contains("bi-plug", testButton.InnerHtml);
     }
 
     [Fact]
@@ -329,7 +329,7 @@ public class LlmProviderListItemTests : TestContext
         // Assert
         var deleteButton = cut.FindAll("button").FirstOrDefault(b => b.GetAttribute("title") == "Deactivate");
         Assert.NotNull(deleteButton);
-        Assert.Contains("bi-trash", deleteButton.ClassName);
+        Assert.Contains("bi-trash", deleteButton.InnerHtml);
     }
 
     [Fact]

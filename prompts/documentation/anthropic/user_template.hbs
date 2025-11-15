@@ -1,0 +1,206 @@
+# Documentation Update Request
+
+## Project Context
+
+**Project Name**: {{project_name}}
+**Repository**: {{repository_path}}
+**Documentation Root**: {{docs_root_path}}
+
+## Recent Changes
+
+{{#if recent_epics}}
+### Completed Epics/Features
+{{#each recent_epics}}
+- **{{this.name}}** ({{this.completion_date}})
+  - Description: {{this.description}}
+  - Key Deliverables: {{this.deliverables}}
+  - Files Changed: {{this.files_changed_count}}
+{{/each}}
+{{/if}}
+
+{{#if recent_commits}}
+### Recent Commits (Last {{commit_lookback_days}} Days)
+{{#each recent_commits}}
+- {{this.hash}}: {{this.message}} ({{this.date}})
+{{/each}}
+{{/if}}
+
+## Documentation Files
+
+### Core Documentation
+{{#if core_docs}}
+{{#each core_docs}}
+- **{{this.file_name}}** ({{this.path}})
+  - Purpose: {{this.purpose}}
+  - Last Updated: {{this.last_updated}}
+  {{#if this.known_issues}}
+  - Known Issues: {{this.known_issues}}
+  {{/if}}
+{{/each}}
+{{/if}}
+
+### Technical Documentation
+{{#if technical_docs}}
+{{#each technical_docs}}
+- **{{this.file_name}}** ({{this.path}})
+  - Purpose: {{this.purpose}}
+  - Last Updated: {{this.last_updated}}
+{{/each}}
+{{/if}}
+
+### User Documentation
+{{#if user_docs}}
+{{#each user_docs}}
+- **{{this.file_name}}** ({{this.path}})
+  - Purpose: {{this.purpose}}
+  - Last Updated: {{this.last_updated}}
+{{/each}}
+{{/if}}
+
+## Known Documentation Issues
+
+{{#if known_issues}}
+{{#each known_issues}}
+### {{@index}}. {{this.title}}
+- **File**: {{this.file_path}}
+- **Issue Type**: {{this.issue_type}}
+- **Description**: {{this.description}}
+- **Priority**: {{this.priority}}
+{{#if this.suggested_fix}}
+- **Suggested Fix**: {{this.suggested_fix}}
+{{/if}}
+{{/each}}
+{{else}}
+No known issues reported. Please perform comprehensive gap analysis.
+{{/if}}
+
+## Naming Conventions
+
+{{#if naming_standards}}
+### Current Standards
+{{#each naming_standards}}
+- **{{this.category}}**: {{this.convention}}
+  - Example: {{this.example}}
+{{/each}}
+{{else}}
+### Default Standards
+- **Root-level strategic docs**: UPPERCASE.md (e.g., ARCHITECTURE.md, ROADMAP.md)
+- **Component/architecture docs**: kebab-case.md (e.g., workflow-execution.md)
+- **Folders**: lowercase-with-hyphens or lowercase_with_underscores (be consistent)
+{{/if}}
+
+## Areas of Focus
+
+{{#if focus_areas}}
+Please pay special attention to:
+{{#each focus_areas}}
+- {{this.name}}: {{this.description}}
+{{/each}}
+{{else}}
+Please perform comprehensive documentation review covering:
+- Implementation status and feature completion
+- Architecture documentation accuracy
+- Database schema completeness
+- Workflow and process documentation
+- User interface documentation
+- Testing guides
+- Naming convention consistency
+{{/if}}
+
+## Documentation Categories to Check
+
+### 1. Implementation Status
+- [ ] Recently completed features documented with completion dates
+- [ ] Feature status accurately reflects implementation
+- [ ] Test coverage statistics are current
+- [ ] Component inventories are complete
+- [ ] Production blockers are identified
+
+### 2. Architecture Documentation
+- [ ] System architecture reflects current structure
+- [ ] Component descriptions match implementation
+- [ ] Integration points are documented
+- [ ] Technology stack is current
+- [ ] Deployment architecture is accurate
+
+### 3. Database Schema
+- [ ] All entities documented with properties
+- [ ] Relationships and foreign keys mapped
+- [ ] Indexes and constraints documented
+- [ ] ERD diagrams up to date
+- [ ] Migration history is current
+
+### 4. Workflow Documentation
+- [ ] Process flows are accurate
+- [ ] State transitions are documented
+- [ ] User workflows are clear
+- [ ] Integration workflows explained
+- [ ] Error handling documented
+
+### 5. User Documentation
+- [ ] UI navigation is current
+- [ ] User guides reflect current UI
+- [ ] Getting started guide is accurate
+- [ ] Feature documentation is complete
+- [ ] Screenshots/examples are current
+
+### 6. Naming Consistency
+- [ ] File naming follows conventions
+- [ ] Cross-references are accurate
+- [ ] No broken links
+- [ ] Consistent capitalization
+- [ ] Folder structure is logical
+
+## Your Tasks
+
+1. **Exploration Phase** (use haiku subagents for efficiency):
+   - Explore {{repository_path}} to understand recent features and changes
+   - Review existing documentation in {{docs_root_path}}
+   - Identify specific gaps, inaccuracies, and inconsistencies
+
+2. **Gap Analysis Phase**:
+   - Create comprehensive list of documentation issues
+   - Categorize by priority: Critical / Important / Nice-to-Have
+   - Identify which files need updates
+   - Note any naming convention violations
+
+3. **Execution Phase** (use parallel subagents):
+   - Fix critical issues first (wrong paths, missing navigation, outdated architecture)
+   - Update important documentation (schemas, workflows, implementation status)
+   - Standardize naming conventions
+   - Update all cross-references
+
+4. **Verification Phase**:
+   - Ensure no broken links
+   - Verify naming consistency
+   - Check cross-document alignment
+   - Confirm accuracy against implementation
+
+## Expected Deliverables
+
+- [ ] Comprehensive gap analysis report
+- [ ] Updated documentation files (specify which ones)
+- [ ] Naming convention standardization
+- [ ] Cross-reference verification
+- [ ] Summary of changes made
+
+## Success Criteria
+
+Documentation updates are successful when:
+- ✅ All critical gaps are addressed
+- ✅ Documentation accurately reflects implementation
+- ✅ Naming conventions are consistent (100% compliance)
+- ✅ Cross-references are working
+- ✅ New features are documented
+- ✅ Completed work is properly marked in roadmaps
+- ✅ No broken links remain
+
+{{#if additional_instructions}}
+## Additional Instructions
+
+{{additional_instructions}}
+{{/if}}
+
+---
+
+**Please begin by exploring the codebase and documentation, then provide a comprehensive gap analysis before proceeding with updates.**

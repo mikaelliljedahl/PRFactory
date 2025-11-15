@@ -14,6 +14,7 @@ using PRFactory.Infrastructure.Git;
 using PRFactory.Infrastructure.Persistence;
 using PRFactory.Infrastructure.Persistence.Encryption;
 using PRFactory.Infrastructure.Persistence.Repositories;
+using PRFactory.Infrastructure.Workspace;
 using DomainCheckpointRepository = PRFactory.Domain.Interfaces.ICheckpointRepository;
 using WorkflowCheckpointStore = PRFactory.Infrastructure.Agents.ICheckpointStore;
 
@@ -109,6 +110,9 @@ public static class DependencyInjection
 
         // Register caching
         services.AddMemoryCache();
+
+        // Register workspace service
+        services.AddScoped<IWorkspaceService, WorkspaceService>();
 
         // Register configuration services
         services.AddScoped<PRFactory.Infrastructure.Configuration.ITenantConfigurationService, PRFactory.Infrastructure.Configuration.TenantConfigurationService>();

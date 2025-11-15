@@ -66,7 +66,8 @@ public class TenantLlmProviderConfiguration : IEntityTypeConfiguration<TenantLlm
             .HasConversion(
                 v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
                 v => v == null ? null : JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions?)null)
-            );
+            )
+            .Metadata.SetValueComparer(ValueComparerHelpers.CreateStringDictionaryComparer());
 
         builder.Property(p => p.IsActive)
             .IsRequired()
@@ -98,7 +99,7 @@ public class TenantLlmProviderConfiguration : IEntityTypeConfiguration<TenantLlm
 
         // Relationships
         builder.HasOne(p => p.Tenant)
-            .WithMany() // No navigation property on Tenant yet
+            .WithMany(t => t.LlmProviders)
             .HasForeignKey(p => p.TenantId)
             .OnDelete(DeleteBehavior.Cascade); // If tenant deleted, delete all provider configs
     }

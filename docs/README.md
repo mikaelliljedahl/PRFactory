@@ -20,7 +20,7 @@ Welcome to the PRFactory documentation! This guide will help you navigate all av
 
 - **[CLAUDE.md](../CLAUDE.md)** - Architecture vision for AI agents (essential for contributors)
 - **[ROADMAP.md](ROADMAP.md)** - Future enhancements and planned features
-- **[Database Schema](database-schema.md)** - Entity relationships and data model
+- **[Database Schema](DATABASE_SCHEMA.md)** - Entity relationships and data model
 
 ---
 
@@ -41,7 +41,7 @@ PRFactory/
 │   ├── SETUP.md                       # Installation and configuration guide
 │   ├── ARCHITECTURE.md                # System architecture and design patterns
 │   ├── WORKFLOW.md                    # Detailed workflow explanation
-│   ├── database-schema.md             # Database schema documentation
+│   ├── DATABASE_SCHEMA.md             # Database schema documentation
 │   │
 │   ├── architecture/                  # Component-specific architecture docs
 │   │   ├── core-engine.md             # Core workflow engine details
@@ -49,7 +49,7 @@ PRFactory/
 │   │   ├── git-integration.md         # Git integration details
 │   │   ├── cli-agent-integration.md   # LLM-agnostic CLI agent architecture ✨
 │   │   ├── cli-oauth-integration-analysis.md # CLI/OAuth integration analysis
-│   │   ├── WORKFLOW_EXECUTION_ARCHITECTURE.md # Workflow execution deep-dive
+│   │   ├── workflow-execution-architecture.md # Workflow execution deep-dive
 │   │   ├── WORKFLOW_EXECUTION_CRITICAL_GAPS.md # Blocking implementation gaps
 │   │   ├── WORKFLOW_EXECUTION_SUMMARY.md # Workflow execution summary
 │   │   └── OAUTH_INTEGRATION_SOLUTION.md # OAuth integration solution (OrchestratorChat port)
@@ -99,7 +99,7 @@ PRFactory/
 | [ARCHITECTURE.md](ARCHITECTURE.md) | ✅ Current | System architecture and design patterns |
 | [WORKFLOW.md](WORKFLOW.md) | ✅ Current | How workflows execute end-to-end |
 | [SETUP.md](SETUP.md) | ✅ Current | Installation and configuration |
-| [database-schema.md](database-schema.md) | ✅ Current | Database structure and entities |
+| [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) | ✅ Current | Database structure and entities |
 
 ### Future Vision & Planning
 
@@ -120,7 +120,7 @@ PRFactory/
 |----------|--------|-------------|
 | **[reviews/ARCHITECTURE_REVIEW.md](reviews/ARCHITECTURE_REVIEW.md)** | ⚠️ **CRITICAL** | 2025-11-09 Comprehensive architecture assessment |
 | [reviews/UX_UI_AUDIT_REPORT.md](reviews/UX_UI_AUDIT_REPORT.md) | ✅ Reference | UX/UI improvement recommendations |
-| [architecture/WORKFLOW_EXECUTION_ARCHITECTURE.md](architecture/WORKFLOW_EXECUTION_ARCHITECTURE.md) | 📋 Analysis | Workflow execution deep-dive |
+| [architecture/workflow-execution-architecture.md](architecture/workflow-execution-architecture.md) | 📋 Analysis | Workflow execution deep-dive |
 | [architecture/WORKFLOW_EXECUTION_CRITICAL_GAPS.md](architecture/WORKFLOW_EXECUTION_CRITICAL_GAPS.md) | ⚠️ Gaps | Blocking implementation gaps |
 | [architecture/OAUTH_INTEGRATION_SOLUTION.md](architecture/OAUTH_INTEGRATION_SOLUTION.md) | ✅ Solution | OAuth integration via OrchestratorChat port |
 | [architecture/cli-oauth-integration-analysis.md](architecture/cli-oauth-integration-analysis.md) | 📋 Analysis | CLI/OAuth integration analysis |
@@ -159,7 +159,7 @@ PRFactory/
 1. **[CLAUDE.md](../CLAUDE.md)** - Architecture vision (READ THIS FIRST!)
 2. **[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)** - What's built vs. planned
 3. **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design and patterns
-4. **[Database Schema](database-schema.md)** - Data model
+4. **[Database Schema](DATABASE_SCHEMA.md)** - Data model
 5. **[Component READMEs](../src/)** - Deep dive into specific components
 6. **[Architecture Details](architecture/)** - Component-specific docs
 
@@ -175,7 +175,7 @@ PRFactory/
 1. **[SETUP.md](SETUP.md)** - Installation options (Docker, local)
 2. **[ARCHITECTURE - Deployment](ARCHITECTURE.md#deployment-architecture)** - Deployment strategies
 3. **[SETUP - Troubleshooting](SETUP.md#troubleshooting)** - Common issues
-4. **[Database Schema](database-schema.md)** - Database setup
+4. **[Database Schema](DATABASE_SCHEMA.md)** - Database setup
 
 ### For Architects
 

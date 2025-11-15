@@ -621,4 +621,53 @@ public class TicketService(
             throw;
         }
     }
+
+    public async Task<DiffContentDto?> GetDiffContentAsync(Guid ticketId, CancellationToken ct = default)
+    {
+        try
+        {
+            var diffContent = await ticketApplicationService.GetDiffContentAsync(ticketId);
+
+            if (diffContent == null)
+                return null;
+
+            // Parse file count from diff (simple heuristic)
+            var filesChanged = diffContent.Split("diff --git").Length - 1;
+
+            return new DiffContentDto
+            {
+                TicketId = ticketId,
+                DiffContent = diffContent,
+                SizeBytes = diffContent.Length,
+                FilesChanged = filesChanged,
+                Available = true
+            };
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error fetching diff content for ticket {TicketId}", ticketId);
+            throw;
+        }
+    }
+
+    public async Task<CreatePRResponse> CreatePullRequestAsync(Guid ticketId, string? approvedBy = null, CancellationToken ct = default)
+    {
+        try
+        {
+            var result = await ticketApplicationService.CreatePullRequestAsync(ticketId, approvedBy);
+
+            return new CreatePRResponse
+            {
+                Success = result.Success,
+                PullRequestUrl = result.PullRequestUrl ?? string.Empty,
+                PullRequestNumber = result.PullRequestNumber ?? 0,
+                ErrorMessage = result.ErrorMessage
+            };
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error creating pull request for ticket {TicketId}", ticketId);
+            throw;
+        }
+    }
 }

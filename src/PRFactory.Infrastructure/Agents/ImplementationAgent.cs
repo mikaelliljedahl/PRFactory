@@ -3,6 +3,7 @@ using PRFactory.Core.Application.Services;
 using PRFactory.Domain.Interfaces;
 using PRFactory.Infrastructure.Agents.Base;
 using PRFactory.Infrastructure.Claude;
+using PRFactory.Infrastructure.Git;
 
 namespace PRFactory.Infrastructure.Agents;
 
@@ -15,6 +16,8 @@ public class ImplementationAgent : BaseAgent
     private readonly ICliAgent _cliAgent;
     private readonly IContextBuilder _contextBuilder;
     private readonly ITicketRepository _ticketRepository;
+    private readonly ILocalGitService _localGitService;
+    private readonly IWorkspaceService _workspaceService;
 
     public override string Name => "ImplementationAgent";
     public override string Description => "Generate code implementation using AI based on approved plan";
@@ -23,12 +26,16 @@ public class ImplementationAgent : BaseAgent
         ILogger<ImplementationAgent> logger,
         ICliAgent cliAgent,
         IContextBuilder contextBuilder,
-        ITicketRepository ticketRepository)
+        ITicketRepository ticketRepository,
+        ILocalGitService localGitService,
+        IWorkspaceService workspaceService)
         : base(logger)
     {
         _cliAgent = cliAgent ?? throw new ArgumentNullException(nameof(cliAgent));
         _contextBuilder = contextBuilder ?? throw new ArgumentNullException(nameof(contextBuilder));
         _ticketRepository = ticketRepository ?? throw new ArgumentNullException(nameof(ticketRepository));
+        _localGitService = localGitService ?? throw new ArgumentNullException(nameof(localGitService));
+        _workspaceService = workspaceService ?? throw new ArgumentNullException(nameof(workspaceService));
     }
 
     protected override async Task<AgentResult> ExecuteAsync(AgentContext context, CancellationToken cancellationToken)
@@ -137,6 +144,9 @@ Generate complete, production-ready code for all files mentioned in the plan.";
 
             Logger.LogInformation("Code implementation generated for ticket {JiraKey}", context.Ticket.TicketKey);
 
+            // Generate diff after code implementation
+            await GenerateDiffAsync(context.Ticket.Id, context.RepositoryPath!);
+
             return new AgentResult
             {
                 Status = AgentStatus.Completed,
@@ -180,5 +190,43 @@ Generate complete, production-ready code for all files mentioned in the plan.";
         }
 
         return response;
+    }
+
+    private async Task GenerateDiffAsync(Guid ticketId, string repoPath)
+    {
+        Logger.LogInformation("Generating diff for ticket {TicketId} from repository {RepoPath}",
+            ticketId, repoPath);
+
+        try
+        {
+            // Get diff from HEAD (includes uncommitted changes + last commit)
+            var diffContent = await _localGitService.GetDiffAsync(
+                repoPath: repoPath,
+                filePath: null,  // All files
+                baseBranch: "main",  // Compare against main branch
+                compareBranch: null  // HEAD (current branch)
+            );
+
+            if (string.IsNullOrEmpty(diffContent))
+            {
+                Logger.LogWarning("Generated diff is empty for ticket {TicketId}", ticketId);
+                // Continue anyway - might be no changes, or issue with diff generation
+            }
+            else
+            {
+                Logger.LogInformation("Generated diff for ticket {TicketId}: {Size} bytes",
+                    ticketId, diffContent.Length);
+
+                // Save diff to workspace
+                await _workspaceService.WriteDiffAsync(ticketId, diffContent);
+                Logger.LogInformation("Saved diff to workspace for ticket {TicketId}", ticketId);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error generating diff for ticket {TicketId}", ticketId);
+            // Don't fail the entire agent - diff generation is secondary to code generation
+            // Continue with workflow, user can still create PR without diff preview
+        }
     }
 }

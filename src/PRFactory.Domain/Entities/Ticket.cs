@@ -395,6 +395,31 @@ public class Ticket
     }
 
     /// <summary>
+    /// Marks the ticket as having a PR created.
+    /// Transitions state to PRCreated.
+    /// </summary>
+    /// <param name="prNumber">Pull request number</param>
+    /// <param name="prUrl">Pull request URL</param>
+    public void MarkPRCreated(int prNumber, string prUrl)
+    {
+        if (State != WorkflowState.Implementing)
+        {
+            throw new InvalidOperationException(
+                $"Cannot mark PR created when ticket is in {State} state. Expected Implementing.");
+        }
+
+        if (string.IsNullOrWhiteSpace(prUrl))
+            throw new ArgumentException("PR URL cannot be empty", nameof(prUrl));
+
+        PullRequestNumber = prNumber;
+        PullRequestUrl = prUrl;
+        State = WorkflowState.PRCreated;
+        UpdatedAt = DateTime.UtcNow;
+
+        AddEvent(new PullRequestCreated(Id, prUrl, prNumber));
+    }
+
+    /// <summary>
     /// Records an error that occurred during processing
     /// </summary>
     public void RecordError(string error)

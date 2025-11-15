@@ -76,7 +76,7 @@ public class TicketUpdate
     /// <summary>
     /// Navigation property to the parent ticket
     /// </summary>
-    public Ticket? Ticket { get; }
+    public Ticket? Ticket { get; private set; }
 
     private TicketUpdate() { }
 

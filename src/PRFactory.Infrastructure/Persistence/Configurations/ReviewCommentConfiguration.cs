@@ -34,7 +34,8 @@ public class ReviewCommentConfiguration : IEntityTypeConfiguration<ReviewComment
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
                 v => JsonSerializer.Deserialize<List<Guid>>(v, (JsonSerializerOptions?)null) ?? new List<Guid>())
             .HasColumnType("jsonb")
-            .HasColumnName("MentionedUserIds");
+            .HasColumnName("MentionedUserIds")
+            .Metadata.SetValueComparer(ValueComparerHelpers.CreateGuidListComparer());
 
         builder.Property(rc => rc.CreatedAt)
             .IsRequired();

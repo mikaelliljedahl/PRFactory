@@ -1,0 +1,216 @@
+# Documentation Update Request
+
+## Project Context
+
+**Project Name**: {{project_name}}
+**Repository Path**: {{repository_path}}
+**Documentation Root**: {{docs_root_path}}
+
+---
+
+## Recent Changes
+
+{{#if recent_epics}}
+### Completed Epics/Features
+{{#each recent_epics}}
+**{{this.name}}** (Completed: {{this.completion_date}})
+- Description: {{this.description}}
+- Deliverables: {{this.deliverables}}
+- Files Changed: {{this.files_changed_count}}
+
+{{/each}}
+{{/if}}
+
+{{#if recent_commits}}
+### Recent Commits
+{{#each recent_commits}}
+- `{{this.hash}}`: {{this.message}} ({{this.date}})
+{{/each}}
+{{/if}}
+
+---
+
+## Current Documentation
+
+### Core Documentation
+{{#if core_docs}}
+{{#each core_docs}}
+- **{{this.file_name}}**
+  - Path: `{{this.path}}`
+  - Purpose: {{this.purpose}}
+  - Last Updated: {{this.last_updated}}
+  {{#if this.known_issues}}
+  - Issues: {{this.known_issues}}
+  {{/if}}
+{{/each}}
+{{/if}}
+
+### Technical Documentation
+{{#if technical_docs}}
+{{#each technical_docs}}
+- **{{this.file_name}}**: {{this.purpose}}
+{{/each}}
+{{/if}}
+
+### User Documentation
+{{#if user_docs}}
+{{#each user_docs}}
+- **{{this.file_name}}**: {{this.purpose}}
+{{/each}}
+{{/if}}
+
+---
+
+## Known Documentation Issues
+
+{{#if known_issues}}
+{{#each known_issues}}
+### Issue {{@index}}: {{this.title}}
+- **File**: `{{this.file_path}}`
+- **Type**: {{this.issue_type}}
+- **Priority**: {{this.priority}}
+- **Description**: {{this.description}}
+{{#if this.suggested_fix}}
+- **Suggested Fix**: {{this.suggested_fix}}
+{{/if}}
+
+{{/each}}
+{{else}}
+No specific issues reported. Please perform comprehensive gap analysis.
+{{/if}}
+
+---
+
+## Naming Conventions
+
+{{#if naming_standards}}
+### Project Standards
+{{#each naming_standards}}
+- **{{this.category}}**: `{{this.convention}}`
+  - Example: {{this.example}}
+{{/each}}
+{{else}}
+### Default Standards
+- **Root-level strategic docs**: UPPERCASE.md (ARCHITECTURE.md, ROADMAP.md)
+- **Component/architecture docs**: kebab-case.md (workflow-execution.md)
+- **Folders**: lowercase-with-hyphens or lowercase_with_underscores
+{{/if}}
+
+---
+
+## Focus Areas
+
+{{#if focus_areas}}
+Please prioritize these areas:
+{{#each focus_areas}}
+- **{{this.name}}**: {{this.description}}
+{{/each}}
+{{else}}
+Perform comprehensive review of:
+- Implementation status and feature completion
+- Architecture documentation accuracy
+- Database schema completeness
+- Workflow and process documentation
+- User interface documentation
+- Naming convention consistency
+{{/if}}
+
+---
+
+## Documentation Review Checklist
+
+### Implementation Status
+- [ ] Recently completed features documented with dates
+- [ ] Feature status accurately reflects implementation
+- [ ] Test coverage statistics current
+- [ ] Component inventories complete
+
+### Architecture Documentation
+- [ ] System architecture reflects current structure
+- [ ] Component descriptions match implementation
+- [ ] Integration points documented
+- [ ] Technology stack current
+
+### Database Schema
+- [ ] All entities documented with properties
+- [ ] Relationships and foreign keys mapped
+- [ ] Indexes and constraints documented
+- [ ] ERD diagrams up to date
+
+### Workflow Documentation
+- [ ] Process flows accurate
+- [ ] State transitions documented
+- [ ] User workflows clear
+- [ ] Error handling documented
+
+### User Documentation
+- [ ] UI navigation current
+- [ ] User guides reflect current UI
+- [ ] Getting started guide accurate
+- [ ] Feature documentation complete
+
+### Naming Consistency
+- [ ] File naming follows conventions
+- [ ] Cross-references accurate
+- [ ] No broken links
+- [ ] Consistent capitalization
+
+---
+
+## Your Tasks
+
+### Phase 1: Exploration
+- Explore `{{repository_path}}` for recent features
+- Review documentation in `{{docs_root_path}}`
+- Identify gaps, inaccuracies, inconsistencies
+
+### Phase 2: Gap Analysis
+- Create prioritized list (Critical/Important/Nice-to-Have)
+- Identify which files need updates
+- Note naming convention violations
+
+### Phase 3: Execution
+- Fix critical issues first
+- Update important documentation
+- Standardize naming conventions
+- Update cross-references
+
+### Phase 4: Verification
+- Ensure no broken links
+- Verify naming consistency
+- Check cross-document alignment
+- Confirm accuracy
+
+---
+
+## Expected Deliverables
+
+- [ ] Comprehensive gap analysis report
+- [ ] Updated documentation files
+- [ ] Naming convention standardization
+- [ ] Cross-reference verification
+- [ ] Summary of changes
+
+---
+
+## Success Criteria
+
+✅ All critical gaps addressed
+✅ Documentation accurately reflects implementation
+✅ Naming conventions 100% consistent
+✅ Cross-references working
+✅ New features documented
+✅ Completed work marked in roadmaps
+✅ No broken links
+
+{{#if additional_instructions}}
+---
+
+## Additional Instructions
+
+{{additional_instructions}}
+{{/if}}
+
+---
+
+**Please begin by exploring the codebase and documentation, then provide a comprehensive gap analysis before proceeding with updates.**

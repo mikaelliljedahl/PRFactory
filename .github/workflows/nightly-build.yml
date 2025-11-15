@@ -36,10 +36,11 @@ jobs:
     - name: Build all projects
       run: |
         dotnet build src/PRFactory.Domain/PRFactory.Domain.csproj --configuration ${{ matrix.configuration }} --no-restore
+        dotnet build src/PRFactory.Core/PRFactory.Core.csproj --configuration ${{ matrix.configuration }} --no-restore
         dotnet build src/PRFactory.Infrastructure/PRFactory.Infrastructure.csproj --configuration ${{ matrix.configuration }} --no-restore
-        dotnet build src/PRFactory.Api/PRFactory.Api.csproj --configuration ${{ matrix.configuration }} --no-restore
-        dotnet build src/PRFactory.Worker/PRFactory.Worker.csproj --configuration ${{ matrix.configuration }} --no-restore
+        dotnet build src/PRFactory.Web/PRFactory.Web.csproj --configuration ${{ matrix.configuration }} --no-restore
         dotnet build tests/PRFactory.Tests/PRFactory.Tests.csproj --configuration ${{ matrix.configuration }} --no-restore
+        dotnet build tests/PRFactory.Web.Tests/PRFactory.Web.Tests.csproj --configuration ${{ matrix.configuration }} --no-restore
 
     - name: Run all tests
       run: dotnet test PRFactory.sln --configuration ${{ matrix.configuration }} --no-build --verbosity detailed
@@ -54,10 +55,11 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### Projects Built" >> $GITHUB_STEP_SUMMARY
         echo "- ✅ PRFactory.Domain" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ PRFactory.Core" >> $GITHUB_STEP_SUMMARY
         echo "- ✅ PRFactory.Infrastructure" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ PRFactory.Api" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ PRFactory.Worker" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ PRFactory.Web (consolidated UI + API + Worker)" >> $GITHUB_STEP_SUMMARY
         echo "- ✅ PRFactory.Tests" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ PRFactory.Web.Tests" >> $GITHUB_STEP_SUMMARY
 
   integration-test:
     name: Integration Tests

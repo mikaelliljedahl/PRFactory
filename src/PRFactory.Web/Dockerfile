@@ -26,20 +26,21 @@ WORKDIR /app
 # Install git (for LibGit2Sharp operations)
 RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
 
-# Create app user
-RUN groupadd -r app && useradd -r -g app -u 1654 app
+# Create app user (check if group exists first to avoid conflicts)
+RUN groupadd -r prfactory 2>/dev/null || true && \
+    useradd -r -g prfactory -u 1654 prfactory 2>/dev/null || true
 
 # Create directories for workspace and data
 RUN mkdir -p /var/prfactory/workspace/checkpoints \
              /var/prfactory/workspace/repositories \
              /var/prfactory/data \
-    && chown -R app:app /var/prfactory
+    && chown -R prfactory:prfactory /var/prfactory
 
 # Copy published application
 COPY --from=build /app/publish .
 
 # Switch to non-root user
-USER app
+USER prfactory
 
 # Expose ports
 EXPOSE 8080

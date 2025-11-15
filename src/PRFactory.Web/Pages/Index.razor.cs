@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using PRFactory.Domain.Entities;
 using PRFactory.Domain.ValueObjects;
+using PRFactory.Web.Models;
 using PRFactory.Web.Services;
 
 namespace PRFactory.Web.Pages;
@@ -10,8 +11,8 @@ public partial class Index
     [Inject] private ITicketService TicketService { get; set; } = null!;
     [Inject] private NavigationManager Navigation { get; set; } = null!;
 
-    private List<Ticket> tickets = new();
-    private List<Ticket> recentTickets = new();
+    private List<TicketDto> tickets = new();
+    private List<TicketDto> recentTickets = new();
     private bool isLoading = true;
     private string? errorMessage;
 

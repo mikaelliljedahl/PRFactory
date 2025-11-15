@@ -1,4 +1,7 @@
 using Bunit;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.JSInterop;
+using Moq;
 using PRFactory.Tests.Blazor;
 using PRFactory.Web.Components.AgentPrompts;
 using Xunit;
@@ -7,6 +10,15 @@ namespace PRFactory.Tests.Components.AgentPrompts;
 
 public class PromptVariableReferenceTests : ComponentTestBase
 {
+    protected override void ConfigureServices(IServiceCollection services)
+    {
+        base.ConfigureServices(services);
+
+        // Register IJSRuntime mock
+        var mockJSRuntime = new Mock<IJSRuntime>();
+        services.AddSingleton(mockJSRuntime.Object);
+    }
+
     [Fact]
     public void Render_DisplaysTicketVariables()
     {

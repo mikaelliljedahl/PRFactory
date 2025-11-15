@@ -3,11 +3,10 @@
 
     @* Provider Name *@
     <FormTextField Label="Provider Name"
-                  Value="@Model.Name"
+                  @bind-Value="Model.Name"
                   Placeholder="Production Anthropic Claude"
                   Required="true"
-                  HelpText="A friendly name for this provider"
-                  @onchange="@((ChangeEventArgs e) => Model.Name = e.Value?.ToString() ?? string.Empty)" />
+                  HelpText="A friendly name for this provider" />
 
     @* Default Model *@
     <div class="mb-3">

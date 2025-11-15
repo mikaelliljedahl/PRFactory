@@ -3,29 +3,26 @@
 
     @* Provider Name *@
     <FormTextField Label="Provider Name"
-                  Value="@Model.Name"
+                  @bind-Value="Model.Name"
                   Placeholder="Production Z.ai"
                   Required="true"
-                  HelpText="A friendly name for this provider"
-                  @onchange="@((ChangeEventArgs e) => Model.Name = e.Value?.ToString() ?? string.Empty)" />
+                  HelpText="A friendly name for this provider" />
 
     @* API Key *@
     <FormPasswordField Label="API Key"
-                      Value="@Model.ApiKey"
+                      @bind-Value="Model.ApiKey"
                       Placeholder="sk-xxxxxxxxxxxxxxxxxxxx"
                       Required="true"
-                      HelpText="Your API key from the provider"
-                      @onchange="@((ChangeEventArgs e) => Model.ApiKey = e.Value?.ToString() ?? string.Empty)" />
+                      HelpText="Your API key from the provider" />
 
     @* API Base URL *@
     @if (Model.ProviderType == "Custom")
     {
         <FormTextField Label="API Base URL"
-                      Value="@Model.ApiBaseUrl"
+                      @bind-Value="Model.ApiBaseUrl"
                       Placeholder="https://api.example.com/v1"
                       Required="true"
-                      HelpText="Base URL for the API endpoint"
-                      @onchange="@((ChangeEventArgs e) => Model.ApiBaseUrl = e.Value?.ToString() ?? string.Empty)" />
+                      HelpText="Base URL for the API endpoint" />
     }
     else
     {
@@ -38,11 +35,10 @@
 
     @* Default Model *@
     <FormTextField Label="Default Model"
-                  Value="@Model.DefaultModel"
+                  @bind-Value="Model.DefaultModel"
                   Placeholder="gpt-4o"
                   Required="true"
-                  HelpText="Default model to use for requests"
-                  @onchange="@((ChangeEventArgs e) => Model.DefaultModel = e.Value?.ToString() ?? string.Empty)" />
+                  HelpText="Default model to use for requests" />
 
     @* Timeout *@
     <div class="mb-3">

@@ -13,7 +13,7 @@ public interface ITicketService
     /// <summary>
     /// Get all tickets
     /// </summary>
-    Task<List<Ticket>> GetAllTicketsAsync(CancellationToken ct = default);
+    Task<List<TicketDto>> GetAllTicketsAsync(CancellationToken ct = default);
 
     /// <summary>
     /// Get a specific ticket by ID

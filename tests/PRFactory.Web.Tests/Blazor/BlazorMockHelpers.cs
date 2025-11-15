@@ -4,7 +4,7 @@ using PRFactory.Domain.ValueObjects;
 using PRFactory.Web.Models;
 using PRFactory.Web.Services;
 
-namespace PRFactory.Tests.Blazor;
+namespace PRFactory.Web.Tests.Blazor;
 
 /// <summary>
 /// Helper methods for common mock scenarios in Blazor component tests

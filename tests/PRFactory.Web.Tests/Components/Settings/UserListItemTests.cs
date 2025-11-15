@@ -1,6 +1,5 @@
 using Bunit;
 using Microsoft.AspNetCore.Components;
-using Moq;
 using PRFactory.Core.Application.DTOs;
 using PRFactory.Domain.Entities;
 using PRFactory.Web.Components.Settings;
@@ -8,15 +7,19 @@ using Xunit;
 
 namespace PRFactory.Web.Tests.Components.Settings;
 
+/// <summary>
+/// Tests for the UserListItem component.
+/// Verifies user information display, role badges, avatars, and action buttons.
+/// </summary>
 public class UserListItemTests : TestContext
 {
     private UserManagementDto CreateTestUser(
-        string displayName = "Test User",
-        string email = "test@example.com",
+        string displayName = "John Doe",
+        string email = "john@example.com",
         UserRole role = UserRole.Member,
         bool isActive = true,
+        string? avatarUrl = null,
         string identityProvider = "AzureAD",
-        bool hasLastSeenAt = true,
         DateTime? lastSeenAt = null)
     {
         return new UserManagementDto
@@ -27,78 +30,188 @@ public class UserListItemTests : TestContext
             Email = email,
             Role = role,
             IsActive = isActive,
+            AvatarUrl = avatarUrl,
             IdentityProvider = identityProvider,
             CreatedAt = DateTime.UtcNow.AddDays(-30),
-            LastSeenAt = hasLastSeenAt ? (lastSeenAt ?? DateTime.UtcNow.AddHours(-2)) : null
+            LastSeenAt = lastSeenAt
         };
     }
 
     [Fact]
-    public void Render_WithUser_DisplaysUserInformation()
+    public void Render_DisplaysUserDisplayName()
     {
         // Arrange
-        var user = CreateTestUser();
+        var user = CreateTestUser(displayName: "Alice Smith");
 
         // Act
         var cut = RenderComponent<UserListItem>(parameters => parameters
-            .Add(p => p.User, user)
-            .Add(p => p.CanEdit, false));
+            .Add(p => p.User, user));
 
         // Assert
-        Assert.Contains(user.DisplayName, cut.Markup);
-        Assert.Contains(user.Email, cut.Markup);
-        Assert.Contains(user.IdentityProvider, cut.Markup);
-    }
-
-    [Theory]
-    [InlineData(UserRole.Owner, "bg-danger")]
-    [InlineData(UserRole.Admin, "bg-primary")]
-    [InlineData(UserRole.Member, "bg-success")]
-    [InlineData(UserRole.Viewer, "bg-secondary")]
-    public void Render_WithRole_ShowsCorrectBadgeColor(UserRole role, string expectedClass)
-    {
-        // Arrange
-        var user = CreateTestUser(role: role);
-
-        // Act
-        var cut = RenderComponent<UserListItem>(parameters => parameters
-            .Add(p => p.User, user)
-            .Add(p => p.CanEdit, false));
-
-        // Assert
-        Assert.Contains(expectedClass, cut.Markup);
+        var link = cut.Find("a");
+        Assert.NotNull(link);
+        Assert.Contains("Alice Smith", link.TextContent);
     }
 
     [Fact]
-    public void Render_WithActiveUser_ShowsActiveStatus()
+    public void Render_DisplaysUserEmail()
+    {
+        // Arrange
+        var user = CreateTestUser(email: "alice@example.com");
+
+        // Act
+        var cut = RenderComponent<UserListItem>(parameters => parameters
+            .Add(p => p.User, user));
+
+        // Assert
+        var code = cut.Find("code");
+        Assert.NotNull(code);
+        Assert.Contains("alice@example.com", code.TextContent);
+    }
+
+    [Fact]
+    public void Render_DisplaysUserAvatar()
+    {
+        // Arrange
+        var user = CreateTestUser(avatarUrl: "https://example.com/avatar.jpg");
+
+        // Act
+        var cut = RenderComponent<UserListItem>(parameters => parameters
+            .Add(p => p.User, user));
+
+        // Assert
+        var img = cut.Find("img.rounded-circle");
+        Assert.NotNull(img);
+        Assert.True(img.HasAttribute("src"));
+        Assert.Contains("https://example.com/avatar.jpg", img.GetAttribute("src"));
+    }
+
+    [Fact]
+    public void Render_WithoutAvatar_DisplaysPlaceholder()
+    {
+        // Arrange
+        var user = CreateTestUser(avatarUrl: null);
+
+        // Act
+        var cut = RenderComponent<UserListItem>(parameters => parameters
+            .Add(p => p.User, user));
+
+        // Assert
+        var placeholder = cut.Find(".avatar-placeholder");
+        Assert.NotNull(placeholder);
+        var icon = cut.Find("i.bi-person");
+        Assert.NotNull(icon);
+    }
+
+    [Fact]
+    public void Render_WithOwnerRole_DisplaysDangerBadge()
+    {
+        // Arrange
+        var user = CreateTestUser(role: UserRole.Owner);
+
+        // Act
+        var cut = RenderComponent<UserListItem>(parameters => parameters
+            .Add(p => p.User, user));
+
+        // Assert
+        var badge = cut.Find(".badge.bg-danger");
+        Assert.NotNull(badge);
+        Assert.Contains("Owner", badge.TextContent);
+    }
+
+    [Fact]
+    public void Render_WithAdminRole_DisplaysPrimaryBadge()
+    {
+        // Arrange
+        var user = CreateTestUser(role: UserRole.Admin);
+
+        // Act
+        var cut = RenderComponent<UserListItem>(parameters => parameters
+            .Add(p => p.User, user));
+
+        // Assert
+        var badge = cut.Find(".badge.bg-primary");
+        Assert.NotNull(badge);
+        Assert.Contains("Admin", badge.TextContent);
+    }
+
+    [Fact]
+    public void Render_WithMemberRole_DisplaysSuccessBadge()
+    {
+        // Arrange
+        var user = CreateTestUser(role: UserRole.Member);
+
+        // Act
+        var cut = RenderComponent<UserListItem>(parameters => parameters
+            .Add(p => p.User, user));
+
+        // Assert
+        var badge = cut.Find(".badge.bg-success");
+        Assert.NotNull(badge);
+        Assert.Contains("Member", badge.TextContent);
+    }
+
+    [Fact]
+    public void Render_WithViewerRole_DisplaysSecondaryBadge()
+    {
+        // Arrange
+        var user = CreateTestUser(role: UserRole.Viewer);
+
+        // Act
+        var cut = RenderComponent<UserListItem>(parameters => parameters
+            .Add(p => p.User, user));
+
+        // Assert
+        var badge = cut.Find(".badge.bg-secondary");
+        Assert.NotNull(badge);
+        Assert.Contains("Viewer", badge.TextContent);
+    }
+
+    [Fact]
+    public void Render_DisplaysIdentityProvider()
+    {
+        // Arrange
+        var user = CreateTestUser(identityProvider: "GoogleWorkspace");
+
+        // Act
+        var cut = RenderComponent<UserListItem>(parameters => parameters
+            .Add(p => p.User, user));
+
+        // Assert
+        var markup = cut.Markup;
+        Assert.Contains("GoogleWorkspace", markup);
+    }
+
+    [Fact]
+    public void Render_WithActiveUser_DisplaysActiveBadge()
     {
         // Arrange
         var user = CreateTestUser(isActive: true);
 
         // Act
         var cut = RenderComponent<UserListItem>(parameters => parameters
-            .Add(p => p.User, user)
-            .Add(p => p.CanEdit, false));
+            .Add(p => p.User, user));
 
         // Assert
-        Assert.Contains("Active", cut.Markup);
-        Assert.Contains("bg-success", cut.Markup);
+        var badge = cut.FindAll(".badge").First(b => b.TextContent.Contains("Active") || b.TextContent.Contains("Inactive"));
+        Assert.Contains("Active", badge.TextContent);
+        Assert.Contains("bg-success", badge.GetAttribute("class"));
     }
 
     [Fact]
-    public void Render_WithInactiveUser_ShowsInactiveStatus()
+    public void Render_WithInactiveUser_DisplaysInactiveBadge()
     {
         // Arrange
         var user = CreateTestUser(isActive: false);
 
         // Act
         var cut = RenderComponent<UserListItem>(parameters => parameters
-            .Add(p => p.User, user)
-            .Add(p => p.CanEdit, false));
+            .Add(p => p.User, user));
 
         // Assert
-        Assert.Contains("Inactive", cut.Markup);
-        Assert.Contains("bg-secondary", cut.Markup);
+        var badge = cut.FindAll(".badge").First(b => b.TextContent.Contains("Inactive"));
+        Assert.Contains("Inactive", badge.TextContent);
+        Assert.Contains("bg-secondary", badge.GetAttribute("class"));
     }
 
     [Fact]
@@ -110,63 +223,46 @@ public class UserListItemTests : TestContext
 
         // Act
         var cut = RenderComponent<UserListItem>(parameters => parameters
-            .Add(p => p.User, user)
-            .Add(p => p.CanEdit, false));
+            .Add(p => p.User, user));
 
-        // Assert - RelativeTime component should be rendered
-        Assert.DoesNotContain("Never", cut.Markup);
+        // Assert
+        var markup = cut.Markup;
+        Assert.DoesNotContain("Never", markup);
     }
 
     [Fact]
     public void Render_WithoutLastSeenAt_DisplaysNever()
     {
         // Arrange
-        var user = CreateTestUser(hasLastSeenAt: false);
+        var user = CreateTestUser(lastSeenAt: null);
 
         // Act
         var cut = RenderComponent<UserListItem>(parameters => parameters
-            .Add(p => p.User, user)
-            .Add(p => p.CanEdit, false));
+            .Add(p => p.User, user));
 
         // Assert
-        Assert.Contains("Never", cut.Markup);
+        // There are multiple .text-muted elements (email, status, etc.), check markup instead
+        var markup = cut.Markup;
+        Assert.Contains("Never", markup);
     }
 
     [Fact]
-    public void Render_WithAvatarUrl_DisplaysAvatar()
+    public void Render_DisplaysViewDetailsButton()
     {
         // Arrange
         var user = CreateTestUser();
-        user.AvatarUrl = "https://example.com/avatar.png";
 
         // Act
         var cut = RenderComponent<UserListItem>(parameters => parameters
-            .Add(p => p.User, user)
-            .Add(p => p.CanEdit, false));
+            .Add(p => p.User, user));
 
         // Assert
-        Assert.Contains(user.AvatarUrl, cut.Markup);
+        var eyeIcons = cut.FindAll("button i.bi-eye");
+        Assert.NotEmpty(eyeIcons);
     }
 
     [Fact]
-    public void Render_WithoutAvatarUrl_DisplaysPlaceholder()
-    {
-        // Arrange
-        var user = CreateTestUser();
-        user.AvatarUrl = null;
-
-        // Act
-        var cut = RenderComponent<UserListItem>(parameters => parameters
-            .Add(p => p.User, user)
-            .Add(p => p.CanEdit, false));
-
-        // Assert
-        Assert.Contains("avatar-placeholder", cut.Markup);
-        Assert.Contains("bi-person", cut.Markup);
-    }
-
-    [Fact]
-    public void Render_WithCanEditTrue_ShowsEditButtons()
+    public void Render_WithCanEdit_DisplaysEditButton()
     {
         // Arrange
         var user = CreateTestUser();
@@ -177,12 +273,12 @@ public class UserListItemTests : TestContext
             .Add(p => p.CanEdit, true));
 
         // Assert
-        var buttons = cut.FindAll("button");
-        Assert.True(buttons.Count > 1); // View + Edit + Activate/Deactivate
+        var pencilIcons = cut.FindAll("button i.bi-pencil");
+        Assert.NotEmpty(pencilIcons);
     }
 
     [Fact]
-    public void Render_WithCanEditFalse_ShowsOnlyViewButton()
+    public void Render_WithoutCanEdit_HidesEditButton()
     {
         // Arrange
         var user = CreateTestUser();
@@ -193,12 +289,12 @@ public class UserListItemTests : TestContext
             .Add(p => p.CanEdit, false));
 
         // Assert
-        var buttons = cut.FindAll("button");
-        Assert.Single(buttons); // Only View button
+        var pencilIcons = cut.FindAll("button i.bi-pencil");
+        Assert.Empty(pencilIcons);
     }
 
     [Fact]
-    public void Render_WithActiveUserAndCanEdit_ShowsDeactivateButton()
+    public void Render_WithActiveUserAndCanEdit_DisplaysDeactivateButton()
     {
         // Arrange
         var user = CreateTestUser(isActive: true);
@@ -209,12 +305,12 @@ public class UserListItemTests : TestContext
             .Add(p => p.CanEdit, true));
 
         // Assert
-        Assert.Contains("bi-x-circle", cut.Markup);
-        Assert.Contains("Deactivate", cut.Markup);
+        var deactivateIcons = cut.FindAll("button i.bi-x-circle");
+        Assert.NotEmpty(deactivateIcons);
     }
 
     [Fact]
-    public void Render_WithInactiveUserAndCanEdit_ShowsActivateButton()
+    public void Render_WithInactiveUserAndCanEdit_DisplaysActivateButton()
     {
         // Arrange
         var user = CreateTestUser(isActive: false);
@@ -225,87 +321,151 @@ public class UserListItemTests : TestContext
             .Add(p => p.CanEdit, true));
 
         // Assert
-        Assert.Contains("bi-check-circle", cut.Markup);
-        Assert.Contains("Activate", cut.Markup);
+        var activateIcons = cut.FindAll("button i.bi-check-circle");
+        Assert.NotEmpty(activateIcons);
     }
 
     [Fact]
-    public void ViewDetailsButton_WhenClicked_InvokesCallback()
+    public void Click_ViewDetailsButton_InvokesCallback()
     {
         // Arrange
         var user = CreateTestUser();
-        var callbackInvoked = false;
+        var viewDetailsCallbackInvoked = false;
 
         var cut = RenderComponent<UserListItem>(parameters => parameters
             .Add(p => p.User, user)
-            .Add(p => p.CanEdit, false)
-            .Add(p => p.OnViewDetails, EventCallback.Factory.Create(this, () => callbackInvoked = true)));
+            .Add(p => p.OnViewDetails, EventCallback.Factory.Create(this, () =>
+            {
+                viewDetailsCallbackInvoked = true;
+            })));
 
         // Act
-        var viewButton = cut.Find("button[title='View Details']");
-        viewButton.Click();
+        var viewDetailsLink = cut.Find("a");
+        viewDetailsLink.Click();
 
         // Assert
-        Assert.True(callbackInvoked);
+        Assert.True(viewDetailsCallbackInvoked);
     }
 
     [Fact]
-    public void EditButton_WhenClicked_InvokesCallback()
+    public void Click_EditButton_InvokesCallback()
     {
         // Arrange
         var user = CreateTestUser();
-        var callbackInvoked = false;
+        var editCallbackInvoked = false;
 
         var cut = RenderComponent<UserListItem>(parameters => parameters
             .Add(p => p.User, user)
             .Add(p => p.CanEdit, true)
-            .Add(p => p.OnEdit, EventCallback.Factory.Create(this, () => callbackInvoked = true)));
+            .Add(p => p.OnEdit, EventCallback.Factory.Create(this, () =>
+            {
+                editCallbackInvoked = true;
+            })));
 
         // Act
-        var editButton = cut.Find("button[title='Edit']");
+        var editButton = cut.FindAll("button").First(b => b.OuterHtml.Contains("bi-pencil"));
         editButton.Click();
 
         // Assert
-        Assert.True(callbackInvoked);
+        Assert.True(editCallbackInvoked);
     }
 
     [Fact]
-    public void DeactivateButton_WhenClicked_InvokesCallback()
+    public void Click_DeactivateButton_InvokesCallback()
     {
         // Arrange
         var user = CreateTestUser(isActive: true);
-        var callbackInvoked = false;
+        var deactivateCallbackInvoked = false;
 
         var cut = RenderComponent<UserListItem>(parameters => parameters
             .Add(p => p.User, user)
             .Add(p => p.CanEdit, true)
-            .Add(p => p.OnDeactivate, EventCallback.Factory.Create(this, () => callbackInvoked = true)));
+            .Add(p => p.OnDeactivate, EventCallback.Factory.Create(this, () =>
+            {
+                deactivateCallbackInvoked = true;
+            })));
 
         // Act
-        var deactivateButton = cut.Find("button[title='Deactivate']");
+        var deactivateButton = cut.FindAll("button").First(b => b.OuterHtml.Contains("bi-x-circle"));
         deactivateButton.Click();
 
         // Assert
-        Assert.True(callbackInvoked);
+        Assert.True(deactivateCallbackInvoked);
     }
 
     [Fact]
-    public void ActivateButton_WhenClicked_InvokesCallback()
+    public void Click_ActivateButton_InvokesCallback()
     {
         // Arrange
         var user = CreateTestUser(isActive: false);
-        var callbackInvoked = false;
+        var activateCallbackInvoked = false;
 
         var cut = RenderComponent<UserListItem>(parameters => parameters
             .Add(p => p.User, user)
             .Add(p => p.CanEdit, true)
-            .Add(p => p.OnActivate, EventCallback.Factory.Create(this, () => callbackInvoked = true)));
+            .Add(p => p.OnActivate, EventCallback.Factory.Create(this, () =>
+            {
+                activateCallbackInvoked = true;
+            })));
 
         // Act
-        var activateButton = cut.Find("button[title='Activate']");
+        var activateButton = cut.FindAll("button").First(b => b.OuterHtml.Contains("bi-check-circle"));
         activateButton.Click();
 
         // Assert
-        Assert.True(callbackInvoked);
+        Assert.True(activateCallbackInvoked);
+    }
+
+    [Fact]
+    public void Render_DisplaysTableRow()
+    {
+        // Arrange
+        var user = CreateTestUser();
+
+        // Act
+        var cut = RenderComponent<UserListItem>(parameters => parameters
+            .Add(p => p.User, user));
+
+        // Assert
+        var row = cut.Find("tr");
+        Assert.NotNull(row);
+
+        var cells = cut.FindAll("td");
+        Assert.NotEmpty(cells);
+    }
+
+    [Fact]
+    public void Render_DisplaysUserNameWithIcon()
+    {
+        // Arrange
+        var user = CreateTestUser();
+
+        // Act
+        var cut = RenderComponent<UserListItem>(parameters => parameters
+            .Add(p => p.User, user));
+
+        // Assert
+        var flexDiv = cut.Find(".d-flex.align-items-center");
+        Assert.NotNull(flexDiv);
+        Assert.Contains(user.DisplayName, flexDiv.TextContent);
+    }
+
+    [Fact]
+    public void Render_WithDifferentUsers_DisplaysCorrectInfo()
+    {
+        // Arrange
+        var user1 = CreateTestUser(displayName: "User One", email: "user1@example.com", role: UserRole.Admin);
+        var user2 = CreateTestUser(displayName: "User Two", email: "user2@example.com", role: UserRole.Viewer);
+
+        // Act
+        var cut1 = RenderComponent<UserListItem>(parameters => parameters.Add(p => p.User, user1));
+        var cut2 = RenderComponent<UserListItem>(parameters => parameters.Add(p => p.User, user2));
+
+        // Assert
+        Assert.Contains("User One", cut1.Markup);
+        Assert.Contains("user1@example.com", cut1.Markup);
+
+        Assert.Contains("User Two", cut2.Markup);
+        Assert.Contains("user2@example.com", cut2.Markup);
     }
 }

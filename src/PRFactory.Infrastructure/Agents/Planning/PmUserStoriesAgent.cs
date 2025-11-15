@@ -82,7 +82,11 @@ public class PmUserStoriesAgent : BaseAgent
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to generate user stories for ticket {TicketKey}", context.Ticket.TicketKey);
-            throw;
+            return new AgentResult
+            {
+                Status = AgentStatus.Failed,
+                Error = $"Failed to generate user stories: {ex.Message}"
+            };
         }
     }
 

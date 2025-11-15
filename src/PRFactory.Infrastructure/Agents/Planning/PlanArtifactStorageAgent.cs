@@ -120,7 +120,11 @@ public class PlanArtifactStorageAgent : BaseAgent
                 ex,
                 "Failed to store plan artifacts for ticket {TicketKey}",
                 context.Ticket.TicketKey);
-            throw;
+            return new AgentResult
+            {
+                Status = AgentStatus.Failed,
+                Error = $"Failed to store plan artifacts: {ex.Message}"
+            };
         }
     }
 

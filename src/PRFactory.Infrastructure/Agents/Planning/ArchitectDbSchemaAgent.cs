@@ -54,7 +54,7 @@ public class ArchitectDbSchemaAgent : BaseAgent
             var existingSchema = BuildDatabaseSchemaContext(architecturePatterns, techStack, codeStyle, codeSnippets);
 
             // Build prompt
-            var prompt = BuildDatabaseSchemaPrompt(context, userStories, existingSchema);
+            var prompt = BuildDatabaseSchemaPrompt(userStories, existingSchema);
 
             // Call LLM
             var cliResponse = await _cliAgent.ExecuteWithProjectContextAsync(
@@ -97,7 +97,11 @@ public class ArchitectDbSchemaAgent : BaseAgent
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to generate database schema for ticket {TicketKey}", context.Ticket.TicketKey);
-            throw;
+            return new AgentResult
+            {
+                Status = AgentStatus.Failed,
+                Error = $"Failed to generate database schema: {ex.Message}"
+            };
         }
     }
 
@@ -144,7 +148,7 @@ public class ArchitectDbSchemaAgent : BaseAgent
 ";
     }
 
-    private string BuildDatabaseSchemaPrompt(AgentContext context, string userStories, string existingSchema)
+    private string BuildDatabaseSchemaPrompt(string userStories, string existingSchema)
     {
         var promptBuilder = new StringBuilder();
 

@@ -39,7 +39,7 @@ public class QaTestCasesAgent : BaseAgent
         try
         {
             // Build prompt
-            var prompt = BuildTestCasesPrompt(context, userStories, apiDesign, dbSchema);
+            var prompt = BuildTestCasesPrompt(userStories, apiDesign, dbSchema);
 
             // Call LLM
             var cliResponse = await _cliAgent.ExecuteWithProjectContextAsync(
@@ -82,7 +82,11 @@ public class QaTestCasesAgent : BaseAgent
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to generate test cases for ticket {TicketKey}", context.Ticket.TicketKey);
-            throw;
+            return new AgentResult
+            {
+                Status = AgentStatus.Failed,
+                Error = $"Failed to generate test cases: {ex.Message}"
+            };
         }
     }
 
@@ -101,7 +105,7 @@ public class QaTestCasesAgent : BaseAgent
         return typedValue;
     }
 
-    private string BuildTestCasesPrompt(AgentContext context, string userStories, string apiDesign, string dbSchema)
+    private string BuildTestCasesPrompt(string userStories, string apiDesign, string dbSchema)
     {
         var promptBuilder = new StringBuilder();
 

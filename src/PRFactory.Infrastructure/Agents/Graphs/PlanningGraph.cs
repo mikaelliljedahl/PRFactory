@@ -160,9 +160,8 @@ public class PlanningGraph(
             context.State["waiting_for"] = "plan_approval";
             await SaveCheckpointAsync(context, "awaiting_approval", "HumanWaitAgent");
 
-            // Return with appropriate output message (fallback if both jira and storage failed)
-            var outputMessage = jiraMessage ?? storageMessage ??
-                new MessagePostedMessage(context.TicketId, "plan_generated", DateTime.UtcNow);
+            // Return with appropriate output message (storageMessage guaranteed non-null at this point)
+            var outputMessage = jiraMessage ?? storageMessage;
 
             return GraphExecutionResult.Suspended("awaiting_approval", outputMessage);
         }

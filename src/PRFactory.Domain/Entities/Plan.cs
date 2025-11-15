@@ -171,15 +171,17 @@ public class Plan
     /// </summary>
     public PlanVersion CreateVersion(string? createdBy = null, string? revisionReason = null)
     {
-        return new PlanVersion(
-            planId: Id,
-            version: Version,
-            userStories: UserStories,
-            apiDesign: ApiDesign,
-            databaseSchema: DatabaseSchema,
-            testCases: TestCases,
-            implementationSteps: ImplementationSteps,
-            createdBy: createdBy,
-            revisionReason: revisionReason);
+        return new PlanVersion(new PlanVersionParameters
+        {
+            PlanId = Id,
+            Version = Version,
+            UserStories = UserStories,
+            ApiDesign = ApiDesign,
+            DatabaseSchema = DatabaseSchema,
+            TestCases = TestCases,
+            ImplementationSteps = ImplementationSteps,
+            CreatedBy = createdBy,
+            RevisionReason = revisionReason
+        });
     }
 }

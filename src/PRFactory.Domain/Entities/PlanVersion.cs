@@ -1,6 +1,22 @@
 namespace PRFactory.Domain.Entities;
 
 /// <summary>
+/// Parameters for creating a PlanVersion
+/// </summary>
+public class PlanVersionParameters
+{
+    public required Guid PlanId { get; init; }
+    public required int Version { get; init; }
+    public string? UserStories { get; init; }
+    public string? ApiDesign { get; init; }
+    public string? DatabaseSchema { get; init; }
+    public string? TestCases { get; init; }
+    public string? ImplementationSteps { get; init; }
+    public string? CreatedBy { get; init; }
+    public string? RevisionReason { get; init; }
+}
+
+/// <summary>
 /// Represents a historical version of a plan's artifacts.
 /// Created whenever a plan is revised.
 /// </summary>
@@ -71,27 +87,18 @@ public class PlanVersion
     /// <summary>
     /// Creates a new plan version
     /// </summary>
-    internal PlanVersion(
-        Guid planId,
-        int version,
-        string? userStories,
-        string? apiDesign,
-        string? databaseSchema,
-        string? testCases,
-        string? implementationSteps,
-        string? createdBy,
-        string? revisionReason)
+    internal PlanVersion(PlanVersionParameters parameters)
     {
         Id = Guid.NewGuid();
-        PlanId = planId;
-        Version = version;
-        UserStories = userStories;
-        ApiDesign = apiDesign;
-        DatabaseSchema = databaseSchema;
-        TestCases = testCases;
-        ImplementationSteps = implementationSteps;
+        PlanId = parameters.PlanId;
+        Version = parameters.Version;
+        UserStories = parameters.UserStories;
+        ApiDesign = parameters.ApiDesign;
+        DatabaseSchema = parameters.DatabaseSchema;
+        TestCases = parameters.TestCases;
+        ImplementationSteps = parameters.ImplementationSteps;
         CreatedAt = DateTime.UtcNow;
-        CreatedBy = createdBy;
-        RevisionReason = revisionReason;
+        CreatedBy = parameters.CreatedBy;
+        RevisionReason = parameters.RevisionReason;
     }
 }

@@ -55,7 +55,7 @@ public class ArchitectApiDesignAgent : BaseAgent
             var codebaseContext = BuildApiDesignContext(architecturePatterns, techStack, codeStyle, codeSnippets);
 
             // Build prompt
-            var prompt = BuildApiDesignPrompt(context, userStories, codebaseContext);
+            var prompt = BuildApiDesignPrompt(userStories, codebaseContext);
 
             // Call LLM
             var cliResponse = await _cliAgent.ExecuteWithProjectContextAsync(
@@ -98,7 +98,11 @@ public class ArchitectApiDesignAgent : BaseAgent
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to generate API design for ticket {TicketKey}", context.Ticket.TicketKey);
-            throw;
+            return new AgentResult
+            {
+                Status = AgentStatus.Failed,
+                Error = $"Failed to generate API design: {ex.Message}"
+            };
         }
     }
 
@@ -145,7 +149,7 @@ public class ArchitectApiDesignAgent : BaseAgent
 ";
     }
 
-    private string BuildApiDesignPrompt(AgentContext context, string userStories, string codebaseContext)
+    private string BuildApiDesignPrompt(string userStories, string codebaseContext)
     {
         var promptBuilder = new StringBuilder();
 

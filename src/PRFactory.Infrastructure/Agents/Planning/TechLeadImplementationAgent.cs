@@ -58,7 +58,7 @@ public class TechLeadImplementationAgent : BaseAgent
 
             // Build prompt
             var prompt = BuildImplementationStepsPrompt(
-                context, userStories, apiDesign, dbSchema, testCases, codebaseContext);
+                userStories, apiDesign, dbSchema, testCases, codebaseContext);
 
             // Call LLM
             var cliResponse = await _cliAgent.ExecuteWithProjectContextAsync(
@@ -102,7 +102,11 @@ public class TechLeadImplementationAgent : BaseAgent
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to generate implementation steps for ticket {TicketKey}", context.Ticket.TicketKey);
-            throw;
+            return new AgentResult
+            {
+                Status = AgentStatus.Failed,
+                Error = $"Failed to generate implementation steps: {ex.Message}"
+            };
         }
     }
 
@@ -150,7 +154,6 @@ public class TechLeadImplementationAgent : BaseAgent
     }
 
     private string BuildImplementationStepsPrompt(
-        AgentContext context,
         string userStories,
         string apiDesign,
         string dbSchema,

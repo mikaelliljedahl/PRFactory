@@ -1,24 +1,50 @@
 # Epic 4: Web-based Git Diff Visualization
 
-**Status:** 🔴 Not Started
+**Status:** 🟡 Planning Complete - Ready for Implementation
 **Priority:** P2 (Important)
-**Effort:** 1-2 weeks
-**Dependencies:** Epic 1 (Team Review), Epic 05 Phase 4 (AG-UI - COMPLETE ✅)
+**Effort:** 28-38 hours (3.5-4.75 days development + testing)
+**Dependencies:** Epic 05 Phase 4 (AG-UI - COMPLETE ✅), Epic 08 (Consolidation - COMPLETE ✅)
 **Architecture:** Blazor Server (NO custom JavaScript)
 **Last Updated:** 2025-11-15
 
-## ⚠️ IMPORTANT: Architecture Compliance
+## ⚠️ IMPORTANT: Architecture Decisions (Updated)
 
-This epic has been **redesigned** to comply with PRFactory's Blazor Server architecture:
+This epic has been **fully planned** with corrected architecture assumptions:
 
-- ❌ **NO custom JavaScript files** (`wwwroot/js/diff-viewer.js` - REMOVED from original plan)
-- ❌ **NO diff2html library** (requires JavaScript - incompatible with Blazor Server)
+### Key Architecture Decisions
+
+1. **Workflow State**: Use existing `WorkflowState.Implementing` (NOT new `CodeGenerated` state)
+   - Simpler implementation, no enum changes needed
+   - Semantically correct: code IS implementing during this state
+
+2. **Code Generation**: Leverage `ICliAgent` interface from Epic 05
+   - Configurable: Claude Code CLI, builtin agents, external CLIs
+   - `ImplementationAgent` generates code, then calls `ILocalGitService.GetDiffAsync()`
+   - No new CLI project needed
+
+3. **Workspace Management**: Create new `IWorkspaceService` abstraction
+   - Centralizes workspace path logic (currently scattered)
+   - Methods: `GetWorkspaceDirectory()`, `GetRepositoryPath()`, `GetDiffPath()`, `ReadDiffAsync()`, `WriteDiffAsync()`
+
+4. **Service Layer**: Direct DI injection (NO HTTP calls per CLAUDE.md)
+   - Blazor components: `@inject ITicketService` → Application Service → Repository
+   - API controllers: Only for external clients (webhooks, mobile apps)
+
+5. **Project Structure**: Post-Epic 08 consolidation
+   - All code in `PRFactory.Web` project (no separate `PRFactory.Api`)
+   - Controllers in `/src/PRFactory.Web/Controllers/`
+
+### Blazor Server Compliance
+
+- ✅ **NO custom JavaScript files** (Blazor Server only)
 - ✅ **USE DiffPlex** (C# library for server-side diff rendering)
-- ✅ **Component renamed** to `GitDiffViewer.razor` (avoid confusion with existing `TicketDiffViewer.razor`)
-- ✅ **Server-side HTML generation** (no client-side JavaScript rendering)
+- ✅ **Component: GitDiffViewer.razor** with code-behind pattern
+- ✅ **Server-side HTML generation** (no client-side JavaScript)
+- ✅ **Direct service injection** (NO HTTP calls within Blazor Server)
 
 **Rationale**: Per `CLAUDE.md`:
 > "CRITICAL: This is a Blazor Server application. NEVER add custom JavaScript files."
+> "NEVER Use HTTP Calls Within Blazor Server"
 
 ## 🤝 Epic 05 Phase 4 Coordination
 
@@ -28,8 +54,8 @@ This epic has been **redesigned** to comply with PRFactory's Blazor Server archi
 - ✅ No collision with Epic 04 (different sections of Detail.razor, different API endpoints)
 
 **Epic 04 will modify:**
-- 🟡 `Detail.razor` (add diff viewer in `CodeGenerated` state section - lines 63-134)
-- ✅ Different API namespace (`/api/code-diff/*` vs `/api/agent/chat/*`)
+- 🟡 `Detail.razor` (add diff viewer in `Implementing` state section - lines 63-134)
+- ✅ NO API endpoints needed (Blazor uses direct service injection per CLAUDE.md)
 - ✅ Easy merge (Epic 05 added bottom section, Epic 04 adds state-specific section)
 
 ---
@@ -60,299 +86,145 @@ Create a standalone web experience. Users never leave the PRFactory UI to review
 
 ---
 
-## Implementation Plan
+## 📋 Detailed Implementation Plans
 
-### 1. CLI `code` - Generate Diff Artifact
+**IMPORTANT**: This epic has comprehensive phase-by-phase implementation plans in:
 
-**Current:** `cli code` commits and pushes to remote
-
-**New:** `cli code` also generates `diff.patch` file for Web UI
-
-```bash
-# Execute implementation
-cli code --plan workspace/PROJ-123/plan/
-
-# After implementation, before final push:
-# 1. Run: git diff HEAD > workspace/PROJ-123/diff.patch
-# 2. Commit changes locally
-# 3. Wait for user approval in Web UI
-# 4. If approved, push to remote
+```
+/docs/planning/epic_04_diff_viewer/
+├── README.md                          (Overview & architecture decisions)
+├── 001_workspace_diff_generation.md   (Phase 1: Backend - 4-6 hours)
+├── 002_service_layer_dtos.md          (Phase 2: Services - 3-4 hours)
+├── 003_diffplex_integration.md        (Phase 3: Diff rendering - 6-8 hours)
+├── 004_blazor_ui_components.md        (Phase 4: UI - 6-8 hours)
+├── 005_pr_creation_workflow.md        (Phase 5: PR workflow - 5-6 hours)
+└── 006_testing_integration.md         (Phase 6: Testing - 4-6 hours)
 ```
 
-**Implementation:**
+**Total Estimated Effort**: 28-38 hours (3.5-4.75 days)
 
-```csharp
-public class CodeCommand
-{
-    public async Task<int> ExecuteAsync()
-    {
-        // ... implementation logic ...
+### Implementation Phases Summary
 
-        // Generate diff before committing
-        var diffPath = Path.Combine(WorkspaceDir, "diff.patch");
-        await GenerateDiffAsync(diffPath);
+1. **Phase 1**: Workspace & Diff Generation
+   - Create `IWorkspaceService` abstraction
+   - Enhance `ImplementationAgent` to generate diffs
+   - Dependencies: None
 
-        // Commit locally (don't push yet)
-        await _gitService.CommitAsync(repositoryPath, "Implement ticket XYZ");
+2. **Phase 2**: Service Layer & DTOs
+   - Application service methods for diff retrieval
+   - DTOs: `DiffContentDto`, `CreatePRResponse`
+   - Dependencies: Phase 1
 
-        Console.WriteLine($"Code implemented. Diff saved to: {diffPath}");
-        Console.WriteLine("Review in Web UI, then approve to create pull request.");
+3. **Phase 3**: DiffPlex Integration (parallel with Phase 1-2)
+   - Install DiffPlex NuGet package
+   - Create `IDiffRenderService` with git patch parsing
+   - Dependencies: None
 
-        return 0;
-    }
+4. **Phase 4**: Blazor UI Components
+   - `GitDiffViewer.razor` with code-behind
+   - Update `Detail.razor` for `Implementing` state
+   - Dependencies: Phase 2, Phase 3
 
-    private async Task GenerateDiffAsync(string outputPath)
-    {
-        // Run: git diff HEAD > output.patch
-        var result = await _processExecutor.ExecuteAsync(
-            "git",
-            new[] { "diff", "HEAD" },
-            workingDirectory: RepositoryPath);
+5. **Phase 5**: PR Creation Workflow
+   - Build PR description with plan artifacts
+   - Multi-platform PR creation
+   - Dependencies: Phase 4
 
-        File.WriteAllText(outputPath, result.StandardOutput);
-    }
-}
-```
+6. **Phase 6**: Testing & Integration
+   - Unit tests (80% coverage minimum)
+   - Integration tests
+   - End-to-end validation
+   - Dependencies: All phases
 
 ---
 
-### 2. Backend API - Diff Endpoint
+## Implementation Plan (High-Level Overview)
 
-**Create:** `GET /api/tickets/{ticketId}/diff`
+**NOTE**: This section provides a high-level overview. For detailed implementation specifications, see `/docs/planning/epic_04_diff_viewer/` folder.
 
-```csharp
-[ApiController]
-[Route("api/tickets")]
-public class TicketsController : ControllerBase
-{
-    [HttpGet("{ticketId}/diff")]
-    public async Task<IActionResult> GetDiff(Guid ticketId)
-    {
-        var ticket = await _ticketRepo.GetByIdAsync(ticketId);
-        if (ticket == null)
-            return NotFound();
+### 1. Diff Generation (Updated Approach)
 
-        var workspaceDir = _workspaceService.GetWorkspaceDirectory(ticketId);
-        var diffPath = Path.Combine(workspaceDir, "diff.patch");
+**Approach**: Use existing `ImplementationAgent` + `ICliAgent` interface (from Epic 05)
 
-        if (!System.IO.File.Exists(diffPath))
-            return NotFound(new { message = "Diff not yet generated. Run 'cli code' first." });
+**Flow:**
+1. `ImplementationAgent` executes configured CLI agent (Claude Code, builtin, or external)
+2. After code generation, agent calls `ILocalGitService.GetDiffAsync(repoPath)`
+3. Diff saved via `IWorkspaceService.WriteDiffAsync(ticketId, diffContent)`
+4. Ticket remains in `Implementing` state (diff ready for review)
 
-        var diffContent = await System.IO.File.ReadAllTextAsync(diffPath);
+**Key Components:**
+- `IWorkspaceService`: New abstraction for workspace file management
+- `ILocalGitService.GetDiffAsync()`: Already exists (LibGit2Sharp wrapper)
+- `ImplementationAgent`: Enhanced to generate diffs after code generation
 
-        return Ok(new { diff = diffContent });
-    }
-}
+**Details**: See `/docs/planning/epic_04_diff_viewer/001_workspace_diff_generation.md`
+
+### 2. Service Layer & DTOs
+
+**Approach**: Blazor components inject services directly (NO HTTP endpoints per CLAUDE.md)
+
+**Architecture:**
 ```
+Blazor Component (@inject ITicketService)
+  → Web Facade (TicketService.cs)
+    → Application Service (TicketApplicationService.cs)
+      → WorkspaceService + Repositories
+```
+
+**Key Services:**
+- `ITicketService.GetDiffContentAsync()`: Returns `DiffContentDto`
+- `ITicketService.CreatePullRequestAsync()`: Returns `CreatePRResponse`
+- `ITicketApplicationService`: Business logic layer (shared by Blazor & API controllers)
+
+**Details**: See `/docs/planning/epic_04_diff_viewer/002_service_layer_dtos.md`
 
 ---
 
-### 3. Web UI - Git Diff Viewer Component (Blazor Server)
+### 3. DiffPlex Integration
 
-**Install DiffPlex NuGet Package:**
+**Library**: DiffPlex v1.7.2 (C# library for server-side diff rendering)
 
-```bash
-dotnet add package DiffPlex --version 1.7.2
-```
+**Key Components:**
+- `IDiffRenderService`: Interface for diff rendering
+- `DiffRenderService`: Implementation with git patch parsing
+- Parses git patch format into HTML (unified and side-by-side views)
+- HTML-encodes output (XSS protection)
 
-**Create Service:** `/PRFactory.Infrastructure/CodeDiff/DiffRenderService.cs`
+**Features:**
+- Unified view mode (MVP)
+- Side-by-side view mode (simplified MVP, full alignment in future)
+- File change stats (files changed, lines +/-)
+- File type icons (added/deleted/modified/renamed)
 
-```csharp
-using DiffPlex;
-using DiffPlex.DiffBuilder;
-using DiffPlex.DiffBuilder.Model;
+**Details**: See `/docs/planning/epic_04_diff_viewer/003_diffplex_integration.md`
 
-public interface IDiffRenderService
-{
-    string RenderDiffAsHtml(string diffPatch, DiffViewMode viewMode = DiffViewMode.SideBySide);
-}
+---
 
-public class DiffRenderService : IDiffRenderService
-{
-    public string RenderDiffAsHtml(string diffPatch, DiffViewMode viewMode = DiffViewMode.SideBySide)
-    {
-        var diffBuilder = new InlineDiffBuilder(new Differ());
-        var diff = diffBuilder.BuildDiffModel(oldText: "", newText: diffPatch);
+### 4. Blazor UI Components
 
-        return viewMode == DiffViewMode.SideBySide
-            ? RenderSideBySide(diff)
-            : RenderUnified(diff);
-    }
+**Component Structure:**
+- `/src/PRFactory.Web/Components/Code/GitDiffViewer.razor` - Markup
+- `/src/PRFactory.Web/Components/Code/GitDiffViewer.razor.cs` - Code-behind (REQUIRED per CLAUDE.md)
+- `/src/PRFactory.Web/Components/Code/GitDiffViewer.razor.css` - CSS isolation
 
-    private string RenderSideBySide(DiffPaneModel diff)
-    {
-        var html = new StringBuilder();
-        html.Append("<table class='diff-table'>");
+**Features:**
+- View mode toggle (Unified / Side-by-Side)
+- File stats display (files changed, lines +/-)
+- Inject `IDiffRenderService` for rendering
+- Used in `Detail.razor` when `ticket.State == WorkflowState.Implementing`
 
-        foreach (var line in diff.Lines)
-        {
-            var cssClass = line.Type switch
-            {
-                ChangeType.Inserted => "diff-line-inserted",
-                ChangeType.Deleted => "diff-line-deleted",
-                ChangeType.Modified => "diff-line-modified",
-                _ => "diff-line-unchanged"
-            };
-
-            html.AppendFormat(
-                "<tr class='{0}'><td class='diff-line-number'>{1}</td><td class='diff-line-content'>{2}</td></tr>",
-                cssClass,
-                line.Position,
-                System.Web.HttpUtility.HtmlEncode(line.Text)
-            );
-        }
-
-        html.Append("</table>");
-        return html.ToString();
-    }
-}
-
-public enum DiffViewMode { SideBySide, Unified }
-```
-
-**Create:** `/PRFactory.Web/Components/Code/GitDiffViewer.razor`
-
+**Integration in Detail.razor:**
 ```razor
-@inject IDiffRenderService DiffRenderer
-
-<Card Title="Code Changes" Icon="file-diff">
-    <div class="diff-viewer-controls mb-3">
-        <ButtonGroup>
-            <button class="btn btn-sm btn-outline-primary @(viewMode == DiffViewMode.SideBySide ? "active" : "")"
-                    @onclick="() => SetViewMode(DiffViewMode.SideBySide)">
-                <i class="bi bi-layout-split"></i> Side by Side
-            </button>
-            <button class="btn btn-sm btn-outline-primary @(viewMode == DiffViewMode.Unified ? "active" : "")"
-                    @onclick="() => SetViewMode(DiffViewMode.Unified)">
-                <i class="bi bi-list-ul"></i> Unified
-            </button>
-        </ButtonGroup>
-    </div>
-
-    <div class="diff-output border rounded">
-        @((MarkupString)renderedDiff)
-    </div>
-</Card>
-```
-
-**Create:** `/PRFactory.Web/Components/Code/GitDiffViewer.razor.cs`
-
-```csharp
-using Microsoft.AspNetCore.Components;
-
-namespace PRFactory.Web.Components.Code;
-
-public partial class GitDiffViewer
-{
-    [Parameter, EditorRequired]
-    public string DiffContent { get; set; } = string.Empty;
-
-    [Inject]
-    private IDiffRenderService DiffRenderer { get; set; } = null!;
-
-    private DiffViewMode viewMode = DiffViewMode.SideBySide;
-    private string renderedDiff = string.Empty;
-
-    protected override void OnParametersSet()
-    {
-        RenderDiff();
-    }
-
-    private void RenderDiff()
-    {
-        if (string.IsNullOrWhiteSpace(DiffContent))
-        {
-            renderedDiff = "<p class='text-muted'>No changes to display.</p>";
-            return;
-        }
-
-        renderedDiff = DiffRenderer.RenderDiffAsHtml(DiffContent, viewMode);
-    }
-
-    private void SetViewMode(DiffViewMode mode)
-    {
-        viewMode = mode;
-        RenderDiff();
-        StateHasChanged();
-    }
-}
-```
-
-**Create CSS:** `/PRFactory.Web/Components/Code/GitDiffViewer.razor.css`
-
-```css
-.diff-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: 'Consolas', 'Monaco', monospace;
-    font-size: 0.875rem;
-}
-
-.diff-line-number {
-    width: 50px;
-    padding: 2px 10px;
-    text-align: right;
-    background-color: #f6f8fa;
-    border-right: 1px solid #e1e4e8;
-    color: #6a737d;
-    user-select: none;
-}
-
-.diff-line-content {
-    padding: 2px 10px;
-    white-space: pre-wrap;
-    word-break: break-all;
-}
-
-.diff-line-inserted {
-    background-color: #e6ffed;
-}
-
-.diff-line-inserted .diff-line-content {
-    background-color: #acf2bd;
-}
-
-.diff-line-deleted {
-    background-color: #ffeef0;
-}
-
-.diff-line-deleted .diff-line-content {
-    background-color: #fdb8c0;
-}
-
-.diff-line-modified {
-    background-color: #fff5b1;
-}
-
-.diff-line-unchanged {
-    background-color: white;
-}
-```
-
-**Usage in** `/PRFactory.Web/Pages/Tickets/Detail.razor`:
-
-```razor
-@* Add after existing workflow state sections, before AgentChat section *@
-@if (ticket.State == WorkflowState.CodeGenerated && diffContent != null)
+@if (Ticket?.State == WorkflowState.Implementing && diffContent != null)
 {
     <GitDiffViewer DiffContent="@diffContent" />
-}
-
-@code {
-    private string? diffContent;
-
-    protected override async Task OnInitializedAsync()
-    {
-        // ... existing code ...
-
-        // Fetch diff if code is generated
-        if (ticket.State == WorkflowState.CodeGenerated)
-        {
-            diffContent = await TicketService.GetDiffContentAsync(ticket.Id);
-        }
-    }
+    <Card Title="Review & Approve">
+        <LoadingButton OnClick="HandleApprovePR">Approve & Create PR</LoadingButton>
+    </Card>
 }
 ```
+
+**Details**: See `/docs/planning/epic_04_diff_viewer/004_blazor_ui_components.md`
 
 ---
 
@@ -530,27 +402,30 @@ Generated by PRFactory
 
 ---
 
-## Migration Path
+## Implementation Roadmap
 
-### Week 1: Diff Generation & Backend (No Collision Risk)
-- Update `cli code` to generate diff.patch
-- Create `GET /api/code-diff/{id}` endpoint (use `/api/code-diff/*` namespace to avoid collision)
-- Install DiffPlex NuGet package
-- Create `DiffRenderService` with server-side HTML generation
-- Test diff generation end-to-end
-- ✅ **Zero collision with Epic 05 Phase 4** (different API namespace)
+### Phase 1-2: Backend Foundation (7-10 hours)
+- Workspace service + diff generation
+- Service layer + DTOs
+- Can run in parallel with Phase 3
+- ✅ **Zero collision risk** (new code only)
 
-### Week 2: Blazor UI & PR Creation (Low Collision Risk)
-- Build `GitDiffViewer.razor` component (renamed from `DiffViewer` to avoid confusion)
-- Create `.razor.cs` code-behind file
-- Create `.razor.css` isolation file
-- Update `Detail.razor` to show diff viewer in `CodeGenerated` state section
-  - ⚠️ **Coordinate with Epic 05 Phase 4**: AgentChat added at bottom (lines 142-144)
-  - ✅ **Easy merge**: Epic 04 adds to state-specific section (lines 63-134)
-- Create `POST /api/code-diff/{id}/approve` endpoint
-- Build approval UI workflow
-- Test full end-to-end flow
-- ✅ **Architecture compliance verified** (no JavaScript, Blazor Server only)
+### Phase 3: DiffPlex Integration (6-8 hours, parallel)
+- Install package + implement rendering service
+- Can develop independently
+- ✅ **Zero collision risk** (new code only)
+
+### Phase 4-5: UI & PR Creation (11-14 hours)
+- Blazor components + PR workflow
+- Update `Detail.razor` in `Implementing` state section
+  - ⚠️ **Coordinate with Epic 05 Phase 4**: AgentChat at bottom (lines 142-144)
+  - ✅ **Easy merge**: Different sections, low collision risk
+- ✅ **Architecture compliant** (Blazor Server, no HTTP calls)
+
+### Phase 6: Testing & Integration (4-6 hours)
+- Unit tests (80%+ coverage required)
+- Integration tests + E2E validation
+- Documentation updates
 
 ---
 
@@ -562,35 +437,40 @@ Generated by PRFactory
 ---
 
 **Next Steps:**
-1. ✅ Architecture redesign complete (Nov 15, 2025) - JavaScript removed, DiffPlex adopted
-2. ✅ Epic 05 Phase 4 coordination verified - Low collision risk
-3. Create tickets for Week 1 (Backend) and Week 2 (Blazor UI)
-4. Start with diff generation in CLI
+1. ✅ Planning complete (2025-11-15) - Architecture gaps resolved
+2. ✅ Detailed implementation plans created (6 phases)
+3. Review and approve architecture decisions
+4. Create feature branch: `feature/epic-04-diff-viewer`
+5. Begin Phase 1 (can parallelize with Phase 3)
+6. Update IMPLEMENTATION_STATUS.md after merge
 
 ---
 
 ## Architecture Compliance Summary
 
-### ✅ COMPLIANT with Blazor Server Architecture
+### ✅ COMPLIANT with Blazor Server Architecture & CLAUDE.md
 
 | Requirement | Status | Implementation |
 |-------------|--------|----------------|
-| No custom JavaScript | ✅ COMPLIANT | DiffPlex (C# library) used instead of diff2html |
+| No custom JavaScript | ✅ COMPLIANT | DiffPlex (C# library), NO diff2html |
 | Server-side rendering | ✅ COMPLIANT | HTML generated in `DiffRenderService` |
-| Code-behind pattern | ✅ COMPLIANT | `GitDiffViewer.razor.cs` file specified |
-| CSS isolation | ✅ COMPLIANT | `GitDiffViewer.razor.css` file specified |
+| Code-behind pattern | ✅ COMPLIANT | `GitDiffViewer.razor.cs` mandatory |
+| CSS isolation | ✅ COMPLIANT | `GitDiffViewer.razor.css` mandatory |
+| Direct service injection | ✅ COMPLIANT | NO HTTP calls (use `@inject ITicketService`) |
 | Component naming | ✅ COMPLIANT | `GitDiffViewer` (avoids confusion with `TicketDiffViewer`) |
-| API namespace | ✅ COMPLIANT | `/api/code-diff/*` (avoids collision with `/api/agent/chat/*`) |
+| Post-Epic 08 structure | ✅ COMPLIANT | All code in `PRFactory.Web` project |
+| Workflow state | ✅ COMPLIANT | Uses existing `Implementing` state |
+| Agent integration | ✅ COMPLIANT | Leverages `ICliAgent` from Epic 05 |
 
 ### 🤝 Epic 05 Phase 4 Coordination
 
 | Aspect | Epic 05 Phase 4 | Epic 04 | Collision Risk |
 |--------|-----------------|---------|----------------|
-| **Detail.razor** | Added AgentChat at bottom (lines 142-144) | Adds diff viewer in state section (lines 63-134) | 🟡 LOW (different sections) |
-| **API Endpoints** | `/api/agent/chat/*` | `/api/code-diff/*` | ✅ NONE (different namespaces) |
+| **Detail.razor** | Added AgentChat at bottom | Adds diff viewer in `Implementing` state section | 🟡 LOW (different sections) |
 | **Blazor Components** | `Components/Agents/AgentChat.razor` | `Components/Code/GitDiffViewer.razor` | ✅ NONE (different namespaces) |
+| **Service Layer** | `IAgentChatService` | `ITicketService` extensions | ✅ NONE (different services) |
 | **JavaScript** | None (Blazor Server) | None (DiffPlex C#) | ✅ NONE (both compliant) |
 
-**Merge Complexity**: LOW - Estimated 15-30 minutes to resolve Detail.razor changes
+**Merge Complexity**: LOW - Estimated 15-30 minutes to resolve Detail.razor changes (if any)
 
-**Ready for Implementation**: ✅ YES - Safe to deploy agents after Epic 05 Phase 4 completion
+**Ready for Implementation**: ✅ YES - Planning complete, architecture validated

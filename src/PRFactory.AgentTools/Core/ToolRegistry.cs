@@ -1,40 +1,15 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using CoreToolRegistry = PRFactory.Core.Application.Services.IToolRegistry;
 
 namespace PRFactory.AgentTools.Core;
 
 /// <summary>
-/// Interface for tool registry
-/// </summary>
-public interface IToolRegistry
-{
-    /// <summary>
-    /// Get all registered tools
-    /// </summary>
-    /// <returns>All tools</returns>
-    IEnumerable<ITool> GetAllTools();
-
-    /// <summary>
-    /// Get tools filtered by tenant permissions and enabled tool names
-    /// </summary>
-    /// <param name="tenantId">Tenant ID</param>
-    /// <param name="enabledToolNames">Tool names enabled for this tenant/agent</param>
-    /// <returns>Filtered tools</returns>
-    IEnumerable<ITool> GetTools(Guid tenantId, string[] enabledToolNames);
-
-    /// <summary>
-    /// Get a specific tool by name
-    /// </summary>
-    /// <param name="toolName">Tool name</param>
-    /// <returns>Tool instance or null if not found</returns>
-    ITool? GetTool(string toolName);
-}
-
-/// <summary>
 /// Tool registry for auto-discovery and dependency injection.
 /// Discovers all ITool implementations from the service provider.
+/// Implements both the local and Core IToolRegistry interfaces.
 /// </summary>
-public class ToolRegistry : IToolRegistry
+public class ToolRegistry : CoreToolRegistry
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<ToolRegistry> _logger;
@@ -84,10 +59,40 @@ public class ToolRegistry : IToolRegistry
     }
 
     /// <summary>
-    /// Get all registered tools
+    /// Get all registered tools (Core interface implementation)
+    /// </summary>
+    /// <returns>All tools as objects</returns>
+    IEnumerable<object> CoreToolRegistry.GetAllTools()
+    {
+        return GetAllToolsTyped().Cast<object>();
+    }
+
+    /// <summary>
+    /// Get tools filtered by tenant permissions and enabled tool names (Core interface implementation)
+    /// </summary>
+    /// <param name="tenantId">Tenant ID</param>
+    /// <param name="enabledToolNames">Tool names enabled for this tenant/agent</param>
+    /// <returns>Filtered tools as objects</returns>
+    IEnumerable<object> CoreToolRegistry.GetTools(Guid tenantId, string[] enabledToolNames)
+    {
+        return GetToolsTyped(tenantId, enabledToolNames).Cast<object>();
+    }
+
+    /// <summary>
+    /// Get a specific tool by name (Core interface implementation)
+    /// </summary>
+    /// <param name="toolName">Tool name</param>
+    /// <returns>Tool instance as object or null if not found</returns>
+    object? CoreToolRegistry.GetTool(string toolName)
+    {
+        return GetToolTyped(toolName);
+    }
+
+    /// <summary>
+    /// Get all registered tools (typed version)
     /// </summary>
     /// <returns>All tools</returns>
-    public IEnumerable<ITool> GetAllTools()
+    public IEnumerable<ITool> GetAllToolsTyped()
     {
         var tools = new List<ITool>();
         foreach (var toolType in _toolTypes.Values)
@@ -100,17 +105,17 @@ public class ToolRegistry : IToolRegistry
     }
 
     /// <summary>
-    /// Get tools filtered by tenant permissions and enabled tool names
+    /// Get tools filtered by tenant permissions and enabled tool names (typed version)
     /// </summary>
     /// <param name="tenantId">Tenant ID</param>
     /// <param name="enabledToolNames">Tool names enabled for this tenant/agent</param>
     /// <returns>Filtered tools</returns>
-    public IEnumerable<ITool> GetTools(Guid tenantId, string[] enabledToolNames)
+    public IEnumerable<ITool> GetToolsTyped(Guid tenantId, string[] enabledToolNames)
     {
         // Filter by enabled tool names
         var enabledSet = new HashSet<string>(enabledToolNames, StringComparer.OrdinalIgnoreCase);
 
-        var tools = GetAllTools()
+        var tools = GetAllToolsTyped()
             .Where(t => enabledSet.Contains(t.Name))
             .ToList();
 
@@ -122,11 +127,11 @@ public class ToolRegistry : IToolRegistry
     }
 
     /// <summary>
-    /// Get a specific tool by name
+    /// Get a specific tool by name (typed version)
     /// </summary>
     /// <param name="toolName">Tool name</param>
     /// <returns>Tool instance or null if not found</returns>
-    public ITool? GetTool(string toolName)
+    public ITool? GetToolTyped(string toolName)
     {
         if (!_toolTypes.TryGetValue(toolName, out var toolType))
         {

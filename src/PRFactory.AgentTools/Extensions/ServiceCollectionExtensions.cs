@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using PRFactory.AgentTools.Core;
+using CoreToolRegistry = PRFactory.Core.Application.Services.IToolRegistry;
 
 namespace PRFactory.AgentTools.Extensions;
 
@@ -16,8 +17,9 @@ public static class ServiceCollectionExtensions
     /// <returns>Service collection for chaining</returns>
     public static IServiceCollection AddAgentTools(this IServiceCollection services)
     {
-        // Register ToolRegistry as singleton
-        services.AddSingleton<IToolRegistry, ToolRegistry>();
+        // Register ToolRegistry as singleton for both interfaces
+        services.AddSingleton<ToolRegistry>();
+        services.AddSingleton<CoreToolRegistry>(sp => sp.GetRequiredService<ToolRegistry>());
 
         // Auto-discover all ITool implementations and register them as transient
         var toolTypes = typeof(ITool).Assembly.GetTypes()

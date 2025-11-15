@@ -1,0 +1,55 @@
+.agent-chat {
+    display: flex;
+    flex-direction: column;
+    height: 600px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background-color: #ffffff;
+}
+
+.chat-header {
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+}
+
+.chat-header h5 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    background-color: #f8f9fa;
+}
+
+.streaming-indicator {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.5rem;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    font-style: italic;
+    color: #6c757d;
+}
+
+.chat-input {
+    padding: 1rem;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    gap: 0.5rem;
+    background-color: #ffffff;
+    border-radius: 0 0 8px 8px;
+}
+
+.chat-input .form-control {
+    flex: 1;
+}

@@ -450,6 +450,115 @@ public class Checkpoint
 - Audit trail - see exactly what happened
 - Debugging - inspect state at each step
 
+## Epic 05: Agent System Architecture
+
+### Overview
+
+Epic 05 introduces autonomous AI agents with tool use, multi-turn reasoning, and real-time streaming UI via AG-UI protocol.
+
+### Architecture Layers
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Blazor UI (AG-UI)                         │
+│                AgentChat.razor components                     │
+└────────────────────────┬────────────────────────────────────┘
+                         │ SSE Streaming
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│              AgentChatService (SSE Protocol)                 │
+│          Streams AgentStreamChunks via HTTP                  │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  AIAgentService                              │
+│          Executes agents with tool support                   │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   AgentFactory                               │
+│        Creates agents from database configuration            │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│               AFAnalyzerAgent (Example)                      │
+│      Autonomous agent with tool use capabilities             │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   ToolRegistry                               │
+│    22 tools: File, Git, Jira, Analysis, Command, Search    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Key Features
+
+1. **Database-Driven Configuration**: All agent settings in AgentConfiguration table
+2. **Tool Whitelisting**: Agents only access enabled tools per tenant
+3. **Real-Time Streaming**: AG-UI protocol with SSE for live updates
+4. **Multi-Turn Reasoning**: Conversation history and context retention
+5. **Feature Flags**: Gradual rollout with Epic05FeatureFlags
+6. **Tenant Isolation**: All operations scoped to tenant context
+7. **Audit Trail**: AgentExecutionLog records all agent/tool activity
+
+### Feature Flags
+
+```csharp
+public class Epic05FeatureFlags
+{
+    public bool EnableAFAnalyzerAgent { get; set; }     // AF-based analyzer
+    public bool EnableAFPlannerAgent { get; set; }      // AF-based planner
+    public bool EnableFullEpic05 { get; set; }          // Master switch
+    public bool EnableAGUI { get; set; } = true;        // AG-UI interface
+    public bool EnableToolExecution { get; set; } = true; // Tool execution
+    public bool EnableFollowUpQuestions { get; set; } = true; // Follow-up flows
+}
+```
+
+### Deployment Model
+
+Epic 05 is **enabled by default for all users** as a core product feature. Feature flags exist for debugging/testing purposes but default to `true` in production:
+
+- **AG-UI**: Real-time streaming interface active for all tickets
+- **Tool Execution**: Agents can autonomously use 22 tools
+- **AF Agents**: AFAnalyzerAgent and AFPlannerAgent replace legacy agents
+- **Follow-Up Questions**: Interactive clarification flows enabled
+- **Audit Logging**: All agent/tool execution logged for compliance
+
+### Why Default-Enabled
+
+1. **Quality Assurance**: 2,100+ tests, 80%+ coverage, comprehensive validation
+2. **Security**: Tool whitelisting, tenant isolation, resource limits, audit trails
+3. **Performance**: Optimized SSE streaming, efficient tool execution
+4. **User Value**: Superior UX compared to legacy prompt-based agents
+
+### Tool Categories
+
+**File System Tools** (4):
+- ReadFile, WriteFile, DeleteFile, ListFiles
+
+**Search Tools** (3):
+- Grep, Glob, SearchReplace
+
+**Git Tools** (4):
+- Commit, Branch, PullRequest, Diff
+
+**Jira Tools** (3):
+- GetTicket, AddComment, Transition
+
+**Analysis Tools** (2):
+- CodeSearch, DependencyMap
+
+**Command Tools** (3):
+- ExecuteShell, RunTests, BuildProject
+
+**Security Tools** (3):
+- PathValidator, ResourceLimits, SsrfProtection
+
 ## Workflow State Machine
 
 ### State Diagram

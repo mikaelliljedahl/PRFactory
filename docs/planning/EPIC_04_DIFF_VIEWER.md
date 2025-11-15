@@ -1,9 +1,36 @@
-# Epic 4: Web-based Git Visualization
+# Epic 4: Web-based Git Diff Visualization
 
 **Status:** 🔴 Not Started
 **Priority:** P2 (Important)
 **Effort:** 1-2 weeks
-**Dependencies:** Epic 1 (Team Review)
+**Dependencies:** Epic 1 (Team Review), Epic 05 Phase 4 (AG-UI - COMPLETE ✅)
+**Architecture:** Blazor Server (NO custom JavaScript)
+**Last Updated:** 2025-11-15
+
+## ⚠️ IMPORTANT: Architecture Compliance
+
+This epic has been **redesigned** to comply with PRFactory's Blazor Server architecture:
+
+- ❌ **NO custom JavaScript files** (`wwwroot/js/diff-viewer.js` - REMOVED from original plan)
+- ❌ **NO diff2html library** (requires JavaScript - incompatible with Blazor Server)
+- ✅ **USE DiffPlex** (C# library for server-side diff rendering)
+- ✅ **Component renamed** to `GitDiffViewer.razor` (avoid confusion with existing `TicketDiffViewer.razor`)
+- ✅ **Server-side HTML generation** (no client-side JavaScript rendering)
+
+**Rationale**: Per `CLAUDE.md`:
+> "CRITICAL: This is a Blazor Server application. NEVER add custom JavaScript files."
+
+## 🤝 Epic 05 Phase 4 Coordination
+
+**Epic 05 Phase 4 (AG-UI/SSE Integration) completed Nov 15, 2025:**
+- ✅ Modified `Detail.razor` (added `AgentChat` component at bottom)
+- ✅ Created `/api/agent/chat/*` endpoints
+- ✅ No collision with Epic 04 (different sections of Detail.razor, different API endpoints)
+
+**Epic 04 will modify:**
+- 🟡 `Detail.razor` (add diff viewer in `CodeGenerated` state section - lines 63-134)
+- ✅ Different API namespace (`/api/code-diff/*` vs `/api/agent/chat/*`)
+- ✅ Easy merge (Epic 05 added bottom section, Epic 04 adds state-specific section)
 
 ---
 
@@ -13,7 +40,7 @@ Create a standalone web experience. Users never leave the PRFactory UI to review
 
 **Current Pain:** Users must go to GitHub/GitLab to see code changes. Breaks the flow.
 
-**Solution:** Build rich diff viewer in Web UI using diff2html library. Display AI-generated code inline.
+**Solution:** Build rich diff viewer in Blazor using **DiffPlex** (C# library). Server-side HTML generation with syntax highlighting. Display AI-generated code inline.
 
 ---
 
@@ -120,129 +147,195 @@ public class TicketsController : ControllerBase
 
 ---
 
-### 3. Web UI - Diff Viewer Component
+### 3. Web UI - Git Diff Viewer Component (Blazor Server)
 
-**Install diff2html:**
+**Install DiffPlex NuGet Package:**
 
 ```bash
-npm install diff2html
+dotnet add package DiffPlex --version 1.7.2
 ```
 
-**Create:** `/PRFactory.Web/Components/Code/DiffViewer.razor`
+**Create Service:** `/PRFactory.Infrastructure/CodeDiff/DiffRenderService.cs`
+
+```csharp
+using DiffPlex;
+using DiffPlex.DiffBuilder;
+using DiffPlex.DiffBuilder.Model;
+
+public interface IDiffRenderService
+{
+    string RenderDiffAsHtml(string diffPatch, DiffViewMode viewMode = DiffViewMode.SideBySide);
+}
+
+public class DiffRenderService : IDiffRenderService
+{
+    public string RenderDiffAsHtml(string diffPatch, DiffViewMode viewMode = DiffViewMode.SideBySide)
+    {
+        var diffBuilder = new InlineDiffBuilder(new Differ());
+        var diff = diffBuilder.BuildDiffModel(oldText: "", newText: diffPatch);
+
+        return viewMode == DiffViewMode.SideBySide
+            ? RenderSideBySide(diff)
+            : RenderUnified(diff);
+    }
+
+    private string RenderSideBySide(DiffPaneModel diff)
+    {
+        var html = new StringBuilder();
+        html.Append("<table class='diff-table'>");
+
+        foreach (var line in diff.Lines)
+        {
+            var cssClass = line.Type switch
+            {
+                ChangeType.Inserted => "diff-line-inserted",
+                ChangeType.Deleted => "diff-line-deleted",
+                ChangeType.Modified => "diff-line-modified",
+                _ => "diff-line-unchanged"
+            };
+
+            html.AppendFormat(
+                "<tr class='{0}'><td class='diff-line-number'>{1}</td><td class='diff-line-content'>{2}</td></tr>",
+                cssClass,
+                line.Position,
+                System.Web.HttpUtility.HtmlEncode(line.Text)
+            );
+        }
+
+        html.Append("</table>");
+        return html.ToString();
+    }
+}
+
+public enum DiffViewMode { SideBySide, Unified }
+```
+
+**Create:** `/PRFactory.Web/Components/Code/GitDiffViewer.razor`
 
 ```razor
-@inject IJSRuntime JS
+@inject IDiffRenderService DiffRenderer
 
 <Card Title="Code Changes" Icon="file-diff">
     <div class="diff-viewer-controls mb-3">
         <ButtonGroup>
-            <button class="btn btn-sm btn-outline-primary @(viewMode == "side-by-side" ? "active" : "")"
-                    @onclick="() => SetViewMode("side-by-side")">
+            <button class="btn btn-sm btn-outline-primary @(viewMode == DiffViewMode.SideBySide ? "active" : "")"
+                    @onclick="() => SetViewMode(DiffViewMode.SideBySide)">
                 <i class="bi bi-layout-split"></i> Side by Side
             </button>
-            <button class="btn btn-sm btn-outline-primary @(viewMode == "unified" ? "active" : "")"
-                    @onclick="() => SetViewMode("unified")">
+            <button class="btn btn-sm btn-outline-primary @(viewMode == DiffViewMode.Unified ? "active" : "")"
+                    @onclick="() => SetViewMode(DiffViewMode.Unified)">
                 <i class="bi bi-list-ul"></i> Unified
-            </button>
-        </ButtonGroup>
-
-        <ButtonGroup class="ms-3">
-            <button class="btn btn-sm btn-outline-secondary @(isDarkMode ? "active" : "")"
-                    @onclick="ToggleDarkMode">
-                <i class="bi bi-moon"></i> Dark Mode
             </button>
         </ButtonGroup>
     </div>
 
-    <div id="diff-output" class="border rounded"></div>
+    <div class="diff-output border rounded">
+        @((MarkupString)renderedDiff)
+    </div>
 </Card>
+```
 
-@code {
+**Create:** `/PRFactory.Web/Components/Code/GitDiffViewer.razor.cs`
+
+```csharp
+using Microsoft.AspNetCore.Components;
+
+namespace PRFactory.Web.Components.Code;
+
+public partial class GitDiffViewer
+{
     [Parameter, EditorRequired]
-    public string DiffContent { get; set; }
+    public string DiffContent { get; set; } = string.Empty;
 
-    private string viewMode = "side-by-side";
-    private bool isDarkMode = false;
+    [Inject]
+    private IDiffRenderService DiffRenderer { get; set; } = null!;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private DiffViewMode viewMode = DiffViewMode.SideBySide;
+    private string renderedDiff = string.Empty;
+
+    protected override void OnParametersSet()
     {
-        if (firstRender || diffContentChanged)
+        RenderDiff();
+    }
+
+    private void RenderDiff()
+    {
+        if (string.IsNullOrWhiteSpace(DiffContent))
         {
-            await RenderDiffAsync();
+            renderedDiff = "<p class='text-muted'>No changes to display.</p>";
+            return;
         }
+
+        renderedDiff = DiffRenderer.RenderDiffAsHtml(DiffContent, viewMode);
     }
 
-    private async Task RenderDiffAsync()
-    {
-        await JS.InvokeVoidAsync("renderDiff", DiffContent, viewMode, isDarkMode);
-    }
-
-    private async Task SetViewMode(string mode)
+    private void SetViewMode(DiffViewMode mode)
     {
         viewMode = mode;
-        await RenderDiffAsync();
-    }
-
-    private async Task ToggleDarkMode()
-    {
-        isDarkMode = !isDarkMode;
-        await RenderDiffAsync();
+        RenderDiff();
+        StateHasChanged();
     }
 }
 ```
 
-**Create:** `/PRFactory.Web/wwwroot/js/diff-viewer.js`
+**Create CSS:** `/PRFactory.Web/Components/Code/GitDiffViewer.razor.css`
 
-```javascript
-// Diff rendering using diff2html
-window.renderDiff = function(diffContent, viewMode, darkMode) {
-    const targetElement = document.getElementById('diff-output');
+```css
+.diff-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.875rem;
+}
 
-    if (!diffContent) {
-        targetElement.innerHTML = '<p class="text-muted">No changes to display.</p>';
-        return;
-    }
+.diff-line-number {
+    width: 50px;
+    padding: 2px 10px;
+    text-align: right;
+    background-color: #f6f8fa;
+    border-right: 1px solid #e1e4e8;
+    color: #6a737d;
+    user-select: none;
+}
 
-    // Use diff2html to render
-    const outputFormat = viewMode === 'side-by-side' ? 'side-by-side' : 'line-by-line';
+.diff-line-content {
+    padding: 2px 10px;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
 
-    const html = Diff2Html.html(diffContent, {
-        drawFileList: true,
-        fileListToggle: true,
-        fileListStartVisible: true,
-        fileContentToggle: true,
-        matching: 'lines',
-        outputFormat: outputFormat,
-        synchronisedScroll: true,
-        highlight: true,
-        renderNothingWhenEmpty: false
-    });
+.diff-line-inserted {
+    background-color: #e6ffed;
+}
 
-    targetElement.innerHTML = html;
+.diff-line-inserted .diff-line-content {
+    background-color: #acf2bd;
+}
 
-    // Apply dark mode class
-    if (darkMode) {
-        targetElement.classList.add('diff-dark-mode');
-    } else {
-        targetElement.classList.remove('diff-dark-mode');
-    }
-};
-```
+.diff-line-deleted {
+    background-color: #ffeef0;
+}
 
-**Add to** `/PRFactory.Web/Pages/_Host.cshtml`:
+.diff-line-deleted .diff-line-content {
+    background-color: #fdb8c0;
+}
 
-```html
-<script src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html-ui.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css" />
-<script src="~/js/diff-viewer.js"></script>
+.diff-line-modified {
+    background-color: #fff5b1;
+}
+
+.diff-line-unchanged {
+    background-color: white;
+}
 ```
 
 **Usage in** `/PRFactory.Web/Pages/Tickets/Detail.razor`:
 
 ```razor
-@if (diffContent != null)
+@* Add after existing workflow state sections, before AgentChat section *@
+@if (ticket.State == WorkflowState.CodeGenerated && diffContent != null)
 {
-    <DiffViewer DiffContent="@diffContent" />
+    <GitDiffViewer DiffContent="@diffContent" />
 }
 
 @code {
@@ -250,9 +343,13 @@ window.renderDiff = function(diffContent, viewMode, darkMode) {
 
     protected override async Task OnInitializedAsync()
     {
-        // Fetch diff
-        var response = await Http.GetFromJsonAsync<DiffResponse>($"/api/tickets/{TicketId}/diff");
-        diffContent = response?.Diff;
+        // ... existing code ...
+
+        // Fetch diff if code is generated
+        if (ticket.State == WorkflowState.CodeGenerated)
+        {
+            diffContent = await TicketService.GetDiffContentAsync(ticket.Id);
+        }
     }
 }
 ```
@@ -264,7 +361,11 @@ window.renderDiff = function(diffContent, viewMode, darkMode) {
 **Update:** `/PRFactory.Web/Pages/Tickets/Detail.razor`
 
 ```razor
-@if (ticket.Status == TicketStatus.CodeGenerated)
+@* IMPORTANT: Epic 05 Phase 4 added AgentChat section at bottom (lines 142-144) *@
+@* This change adds diff viewer in state-specific section (lines 63-134) *@
+@* No collision - different sections of same file *@
+
+@if (ticket.State == WorkflowState.CodeGenerated)
 {
     <Card Title="Review & Approve" Icon="check-circle">
         <InfoBox Type="Info">
@@ -273,7 +374,7 @@ window.renderDiff = function(diffContent, viewMode, darkMode) {
 
         @if (diffContent != null)
         {
-            <DiffViewer DiffContent="@diffContent" />
+            <GitDiffViewer DiffContent="@diffContent" />
         }
 
         <div class="mt-3">
@@ -413,12 +514,14 @@ Generated by PRFactory
 - [ ] PR description includes all plan artifacts (markdown formatted)
 
 ### Web UI
-- [ ] `DiffViewer` component renders diff using diff2html
+- [ ] `GitDiffViewer` component renders diff using DiffPlex (C# server-side)
 - [ ] Side-by-side and unified view modes
-- [ ] Syntax highlighting works
-- [ ] Dark mode toggle
+- [ ] Syntax highlighting with HTML encoding
+- [ ] CSS isolation (`.razor.css` file)
+- [ ] Code-behind pattern (`.razor.cs` file)
 - [ ] "Approve & Create PR" button visible after code generation
 - [ ] PR created successfully with link displayed
+- [ ] ✅ NO custom JavaScript files (architecture compliance)
 
 ### Integration
 - [ ] Full flow: cli code → review diff in UI → approve → PR created
@@ -429,17 +532,25 @@ Generated by PRFactory
 
 ## Migration Path
 
-### Week 1: Diff Generation & API
+### Week 1: Diff Generation & Backend (No Collision Risk)
 - Update `cli code` to generate diff.patch
-- Create `GET /api/tickets/{id}/diff` endpoint
+- Create `GET /api/code-diff/{id}` endpoint (use `/api/code-diff/*` namespace to avoid collision)
+- Install DiffPlex NuGet package
+- Create `DiffRenderService` with server-side HTML generation
 - Test diff generation end-to-end
+- ✅ **Zero collision with Epic 05 Phase 4** (different API namespace)
 
-### Week 2: Web UI & PR Creation
-- Install diff2html library
-- Build `DiffViewer` component
-- Create PR creation API endpoint
+### Week 2: Blazor UI & PR Creation (Low Collision Risk)
+- Build `GitDiffViewer.razor` component (renamed from `DiffViewer` to avoid confusion)
+- Create `.razor.cs` code-behind file
+- Create `.razor.css` isolation file
+- Update `Detail.razor` to show diff viewer in `CodeGenerated` state section
+  - ⚠️ **Coordinate with Epic 05 Phase 4**: AgentChat added at bottom (lines 142-144)
+  - ✅ **Easy merge**: Epic 04 adds to state-specific section (lines 63-134)
+- Create `POST /api/code-diff/{id}/approve` endpoint
 - Build approval UI workflow
 - Test full end-to-end flow
+- ✅ **Architecture compliance verified** (no JavaScript, Blazor Server only)
 
 ---
 
@@ -451,6 +562,35 @@ Generated by PRFactory
 ---
 
 **Next Steps:**
-1. Validate diff2html library compatibility
-2. Create tickets for Week 1 and Week 2
-3. Start with diff generation in CLI
+1. ✅ Architecture redesign complete (Nov 15, 2025) - JavaScript removed, DiffPlex adopted
+2. ✅ Epic 05 Phase 4 coordination verified - Low collision risk
+3. Create tickets for Week 1 (Backend) and Week 2 (Blazor UI)
+4. Start with diff generation in CLI
+
+---
+
+## Architecture Compliance Summary
+
+### ✅ COMPLIANT with Blazor Server Architecture
+
+| Requirement | Status | Implementation |
+|-------------|--------|----------------|
+| No custom JavaScript | ✅ COMPLIANT | DiffPlex (C# library) used instead of diff2html |
+| Server-side rendering | ✅ COMPLIANT | HTML generated in `DiffRenderService` |
+| Code-behind pattern | ✅ COMPLIANT | `GitDiffViewer.razor.cs` file specified |
+| CSS isolation | ✅ COMPLIANT | `GitDiffViewer.razor.css` file specified |
+| Component naming | ✅ COMPLIANT | `GitDiffViewer` (avoids confusion with `TicketDiffViewer`) |
+| API namespace | ✅ COMPLIANT | `/api/code-diff/*` (avoids collision with `/api/agent/chat/*`) |
+
+### 🤝 Epic 05 Phase 4 Coordination
+
+| Aspect | Epic 05 Phase 4 | Epic 04 | Collision Risk |
+|--------|-----------------|---------|----------------|
+| **Detail.razor** | Added AgentChat at bottom (lines 142-144) | Adds diff viewer in state section (lines 63-134) | 🟡 LOW (different sections) |
+| **API Endpoints** | `/api/agent/chat/*` | `/api/code-diff/*` | ✅ NONE (different namespaces) |
+| **Blazor Components** | `Components/Agents/AgentChat.razor` | `Components/Code/GitDiffViewer.razor` | ✅ NONE (different namespaces) |
+| **JavaScript** | None (Blazor Server) | None (DiffPlex C#) | ✅ NONE (both compliant) |
+
+**Merge Complexity**: LOW - Estimated 15-30 minutes to resolve Detail.razor changes
+
+**Ready for Implementation**: ✅ YES - Safe to deploy agents after Epic 05 Phase 4 completion

@@ -20,6 +20,24 @@ This document outlines planned enhancements beyond the current MVP implementatio
 
 ## Recently Completed ✅
 
+### Epic 07: Planning Phase UX & Collaboration Improvements (Nov 14, 2025)
+- ✅ **Enhanced Planning Prompts** - 5 domain-specific prompt templates (web_ui, rest_api, database, background_jobs, refactoring)
+- ✅ **ArchitectureContextService** - Intelligent prompt selection based on ticket analysis (268 lines)
+- ✅ **Rich Markdown Editor** - Professional split-view editor with live preview and formatting toolbar
+- ✅ **Inline Comment Anchoring** - Contextual discussions on specific plan lines with visual indicators
+- ✅ **Review Checklists** - Structured, domain-specific review guidance with 4 YAML templates
+- ✅ **Database Migrations** - 2 migrations for InlineCommentAnchors and ReviewChecklists
+- ✅ **Comprehensive Testing** - 2,404 lines of new test coverage (5 test files)
+- ✅ **76 files changed** - 13,050 insertions, 7 new UI components, Notion-like collaborative experience
+
+### Epic 05: Agent Framework - Phase 1 (Foundation) (Nov 14, 2025)
+- ✅ **Database Schema** - AgentConfiguration and AgentExecutionLog entities with migration applied
+- ✅ **PRFactory.AgentTools Library** - 17 source files with tool infrastructure (File, Search, Security tools)
+- ✅ **Agent Adapter Pattern** - BaseAgentAdapter + 4 specialized adapters for database-driven configuration
+- ✅ **14 Test Files** - Comprehensive test coverage for tools library
+- ⚠️ **Phases 2-5 NOT STARTED** - Microsoft Agent Framework SDK integration, AG-UI protocol, remaining tools pending
+- ⚠️ **20% Complete** - Foundation only, core Epic 05 objectives (MS Agent Framework) not yet implemented
+
 ### Epic 08: System Architecture Cleanup (Complete - Nov 14, 2025)
 - ✅ **Phase 1: Project Consolidation** (Nov 14, 2025) - Merged 3 projects (Api, Worker, Web) into single consolidated `PRFactory.Web` project
 - ✅ **Phase 2: CSS Isolation** (Nov 14, 2025) - Migrated all 38 UI components to `.razor.css` files (100% CSS isolation)
@@ -296,6 +314,42 @@ This document outlines planned enhancements beyond the current MVP implementatio
   - [ ] Automated approval for low-risk changes
 
 **Success Criteria**: New graph types demonstrated, customer validation positive
+
+---
+
+### 🤖 Agent Framework Integration (Epic 05 Phases 2-5)
+
+**Goal**: Complete Microsoft Agent Framework integration
+
+- [ ] **Phase 2: Agent Roles**
+  - [ ] Microsoft Agent Framework SDK integration
+  - [ ] OpenTelemetry observability
+  - [ ] Agent conversation threading
+  - [ ] Follow-up question flows
+
+- [ ] **Phase 3: Tool Ecosystem** (7/20 tools complete)
+  - [x] File tools (ReadFile, WriteFile, DeleteFile, ListFiles) ✅
+  - [x] Search tools (Grep, Glob, SearchReplace) ✅
+  - [x] Security tools (PathValidator, ResourceLimits, SsrfProtection) ✅
+  - [ ] Git tools (commit, push, diff, log)
+  - [ ] Jira tools (create ticket, comment, transition)
+  - [ ] Analysis tools (code metrics, complexity analysis)
+
+- [ ] **Phase 4: UI Integration**
+  - [ ] AG-UI protocol implementation
+  - [ ] Server-Sent Events (SSE) for streaming
+  - [ ] Real-time agent chat UI
+  - [ ] Streaming response display
+
+- [ ] **Phase 5: Production Readiness**
+  - [ ] Performance optimization
+  - [ ] Error handling and retry logic
+  - [ ] Comprehensive testing
+  - [ ] Documentation and examples
+
+**Status**: Foundation complete (Nov 14, 2025), Phases 2-5 pending
+
+**For Details**: See `docs/planning/epic_05_agent_framework/`
 
 ---
 

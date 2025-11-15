@@ -1,6 +1,46 @@
-# Archive: 2025-11-14 - Epic 06 Admin UI Planning Documents
+# Archive: 2025-11-14 - Completed Epics Planning Documents
 
-This folder contains planning documents for Epic 06 Admin UI, which was **fully implemented** on November 14, 2025.
+This folder contains planning documents for epics that were **fully implemented** on November 14, 2025.
+
+---
+
+## Epic 07: Planning Phase UX & Collaboration Improvements
+
+**Status**: ✅ **COMPLETE** (November 14, 2025)
+
+### What Was Implemented
+
+All 4 phases of Epic 07:
+- **Phase 1**: Enhanced Planning Prompts - Domain-specific templates
+- **Phase 2**: Rich Markdown Editor - Professional split-view editor
+- **Phase 3**: Inline Comment Anchoring - Contextual discussions
+- **Phase 4**: Review Checklists - Structured review guidance
+
+### Files Archived
+
+- `epic_07_planning_phase_ux/` folder with all planning docs
+  - `README.md` - Implementation overview
+  - `01_enhanced_prompts.md` - Prompt template design
+  - `02_rich_markdown_editor.md` - Editor specification
+  - `03_inline_comment_anchoring.md` - Comment system design
+  - `04_review_checklists.md` - Checklist template system
+
+### Implementation Details
+
+**PR**: #75 (Commit: d909878)
+**Implementation Statistics**:
+- **Files Changed**: 76 files
+- **Lines of Code**: 13,050 insertions
+- **Tests Added**: 2,404 lines of test coverage
+- **New UI Components**: 7 components (MarkdownEditor, ReviewChecklistPanel, InlineCommentPanel, etc.)
+- **Domain Prompts**: 5 specialized templates
+- **Checklist Templates**: 4 YAML templates
+
+---
+
+## Epic 06: Admin UI
+
+**Status**: ✅ **COMPLETE** (November 13-14, 2025)
 
 ## What Was Implemented
 

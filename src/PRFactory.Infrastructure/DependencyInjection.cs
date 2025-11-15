@@ -137,6 +137,10 @@ public static class DependencyInjection
         // Multi-LLM provider services
         services.AddScoped<ITenantLlmProviderService, Application.TenantLlmProviderService>();
 
+        // AG-UI protocol services (Epic 05 - Agent streaming)
+        services.AddScoped<IAgentChatService, AgentUI.AgentChatService>();
+        services.AddScoped<IAIAgentService, AI.AIAgentService>();
+
         // Register IHttpContextAccessor for CurrentUserService
         services.AddHttpContextAccessor();
 
@@ -175,6 +179,9 @@ public static class DependencyInjection
         services.AddTransient<Agents.CompletionAgent>();
         services.AddTransient<Agents.ApprovalCheckAgent>();
         services.AddTransient<Agents.ErrorHandlingAgent>();
+
+        // Register AF-based agents (Epic 05)
+        services.AddTransient<Agents.AI.AFAnalyzerAgent>();
 
         // Register agent executor
         services.AddScoped<Agents.Graphs.IAgentExecutor, Agents.Graphs.AgentExecutor>();

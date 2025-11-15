@@ -37,7 +37,7 @@ public class ToolRegistryTests
 
         // Act
         var registry = new ToolRegistry(_serviceProvider, logger);
-        var allTools = registry.GetAllTools().ToList();
+        var allTools = registry.GetAllToolsTyped().ToList();
 
         // Assert
         Assert.NotEmpty(allTools);
@@ -51,7 +51,7 @@ public class ToolRegistryTests
         var registry = new ToolRegistry(_serviceProvider, logger);
 
         // Act
-        var tools = registry.GetAllTools().ToList();
+        var tools = registry.GetAllToolsTyped().ToList();
 
         // Assert
         Assert.Equal(2, tools.Count);
@@ -67,7 +67,7 @@ public class ToolRegistryTests
         var registry = new ToolRegistry(_serviceProvider, logger);
 
         // Act
-        var tool = registry.GetTool("TestToolA");
+        var tool = registry.GetToolTyped("TestToolA");
 
         // Assert
         Assert.NotNull(tool);
@@ -82,7 +82,7 @@ public class ToolRegistryTests
         var registry = new ToolRegistry(_serviceProvider, logger);
 
         // Act
-        var tool = registry.GetTool("NonExistentTool");
+        var tool = registry.GetToolTyped("NonExistentTool");
 
         // Assert
         Assert.Null(tool);
@@ -96,9 +96,9 @@ public class ToolRegistryTests
         var registry = new ToolRegistry(_serviceProvider, logger);
 
         // Act
-        var tool1 = registry.GetTool("TestToolA");
-        var tool2 = registry.GetTool("testtoola");
-        var tool3 = registry.GetTool("TESTTOOLA");
+        var tool1 = registry.GetToolTyped("TestToolA");
+        var tool2 = registry.GetToolTyped("testtoola");
+        var tool3 = registry.GetToolTyped("TESTTOOLA");
 
         // Assert
         Assert.NotNull(tool1);
@@ -118,7 +118,7 @@ public class ToolRegistryTests
         var enabledTools = new[] { "TestToolA" };
 
         // Act
-        var tools = registry.GetTools(tenantId, enabledTools).ToList();
+        var tools = registry.GetToolsTyped(tenantId, enabledTools).ToList();
 
         // Assert
         Assert.Single(tools);
@@ -135,7 +135,7 @@ public class ToolRegistryTests
         var enabledTools = new[] { "TestToolA", "TestToolB" };
 
         // Act
-        var tools = registry.GetTools(tenantId, enabledTools).ToList();
+        var tools = registry.GetToolsTyped(tenantId, enabledTools).ToList();
 
         // Assert
         Assert.Equal(2, tools.Count);
@@ -151,7 +151,7 @@ public class ToolRegistryTests
         var enabledTools = Array.Empty<string>();
 
         // Act
-        var tools = registry.GetTools(tenantId, enabledTools).ToList();
+        var tools = registry.GetToolsTyped(tenantId, enabledTools).ToList();
 
         // Assert
         Assert.Empty(tools);
@@ -167,7 +167,7 @@ public class ToolRegistryTests
         var enabledTools = new[] { "NonExistent1", "NonExistent2" };
 
         // Act
-        var tools = registry.GetTools(tenantId, enabledTools).ToList();
+        var tools = registry.GetToolsTyped(tenantId, enabledTools).ToList();
 
         // Assert
         Assert.Empty(tools);
@@ -183,7 +183,7 @@ public class ToolRegistryTests
         var enabledTools = new[] { "testtoola", "TESTTOOLB" };
 
         // Act
-        var tools = registry.GetTools(tenantId, enabledTools).ToList();
+        var tools = registry.GetToolsTyped(tenantId, enabledTools).ToList();
 
         // Assert
         Assert.Equal(2, tools.Count);

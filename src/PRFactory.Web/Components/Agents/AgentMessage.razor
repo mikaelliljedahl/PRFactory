@@ -1,0 +1,35 @@
+@using PRFactory.Web.Models
+
+<div class="agent-message @MessageClass">
+    @switch (Message.Type)
+    {
+        case MessageType.UserMessage:
+            <div class="message-user">
+                <i class="bi bi-person"></i>
+                <span>@Message.Content</span>
+            </div>
+            break;
+
+        case MessageType.AssistantMessage:
+            <div class="message-assistant">
+                <i class="bi bi-robot"></i>
+                <div>@((MarkupString)RenderMarkdown(Message.Content))</div>
+            </div>
+            break;
+
+        case MessageType.ToolInvocation:
+            <div class="message-tool">
+                <i class="bi bi-gear"></i>
+                <span>Using tool: @Message.Content</span>
+            </div>
+            break;
+
+        case MessageType.Reasoning:
+            <div class="message-reasoning">
+                <i class="bi bi-lightbulb"></i>
+                <span>@Message.Content</span>
+            </div>
+            break;
+    }
+    <span class="message-time">@Message.Timestamp.ToString("HH:mm")</span>
+</div>

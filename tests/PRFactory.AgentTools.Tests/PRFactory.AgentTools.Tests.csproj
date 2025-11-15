@@ -32,6 +32,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\PRFactory.AgentTools\PRFactory.AgentTools.csproj" />
+    <ProjectReference Include="..\..\src\PRFactory.Core\PRFactory.Core.csproj" />
+    <ProjectReference Include="..\..\src\PRFactory.Infrastructure\PRFactory.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

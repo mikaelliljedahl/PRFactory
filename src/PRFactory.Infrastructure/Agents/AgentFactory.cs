@@ -51,7 +51,11 @@ public class AgentFactory : IAgentFactory
             ["TicketUpdateGenerationAgent"] = typeof(TicketUpdateGenerationAgent),
             ["TicketUpdatePostAgent"] = typeof(TicketUpdatePostAgent),
             ["PostReviewCommentsAgent"] = typeof(Specialized.PostReviewCommentsAgent),
-            ["PostApprovalCommentAgent"] = typeof(Specialized.PostApprovalCommentAgent)
+            ["PostApprovalCommentAgent"] = typeof(Specialized.PostApprovalCommentAgent),
+
+            // AF-based agents (Epic 05)
+            ["AFAnalyzerAgent"] = typeof(AI.AFAnalyzerAgent),
+            // Future: ["AFPlannerAgent"] = typeof(AI.AFPlannerAgent),
         };
     }
 

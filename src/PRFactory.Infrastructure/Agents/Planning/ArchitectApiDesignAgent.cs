@@ -3,7 +3,6 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using PRFactory.Core.Application.Services;
 using PRFactory.Infrastructure.Agents.Base;
-using PRFactory.Infrastructure.Claude;
 using YamlDotNet.Serialization;
 
 namespace PRFactory.Infrastructure.Agents.Planning;
@@ -15,7 +14,7 @@ namespace PRFactory.Infrastructure.Agents.Planning;
 public class ArchitectApiDesignAgent : BaseAgent
 {
     private readonly ICliAgent _cliAgent;
-    private readonly IContextBuilder _contextBuilder;
+    private readonly IArchitectureContextService _architectureContextService;
 
     public override string Name => "Architect API Design Agent";
     public override string Description => "Generates OpenAPI specification using Software Architect persona";
@@ -23,11 +22,11 @@ public class ArchitectApiDesignAgent : BaseAgent
     public ArchitectApiDesignAgent(
         ILogger<ArchitectApiDesignAgent> logger,
         ICliAgent cliAgent,
-        IContextBuilder contextBuilder)
+        IArchitectureContextService architectureContextService)
         : base(logger)
     {
         _cliAgent = cliAgent ?? throw new ArgumentNullException(nameof(cliAgent));
-        _contextBuilder = contextBuilder ?? throw new ArgumentNullException(nameof(contextBuilder));
+        _architectureContextService = architectureContextService ?? throw new ArgumentNullException(nameof(architectureContextService));
     }
 
     protected override async Task<AgentResult> ExecuteAsync(
@@ -41,11 +40,19 @@ public class ArchitectApiDesignAgent : BaseAgent
 
         try
         {
-            // Build codebase context (existing API patterns)
-            var codebaseContext = await _contextBuilder.BuildApiDesignContextAsync(
-                context.Repository,
+            // Build codebase context using Epic 07 service
+            var architecturePatterns = await _architectureContextService.GetArchitecturePatternsAsync(
                 context.RepositoryPath!,
                 cancellationToken);
+            var techStack = _architectureContextService.GetTechnologyStack();
+            var codeStyle = _architectureContextService.GetCodeStyleGuidelines();
+            var codeSnippets = await _architectureContextService.GetRelevantCodeSnippetsAsync(
+                context.RepositoryPath!,
+                context.Ticket.Description,
+                maxSnippets: 3,
+                cancellationToken);
+
+            var codebaseContext = BuildApiDesignContext(architecturePatterns, techStack, codeStyle, codeSnippets);
 
             // Build prompt
             var prompt = BuildApiDesignPrompt(context, userStories, codebaseContext);
@@ -108,6 +115,34 @@ public class ArchitectApiDesignAgent : BaseAgent
         }
 
         return typedValue;
+    }
+
+    private string BuildApiDesignContext(
+        string architecturePatterns,
+        string techStack,
+        string codeStyle,
+        List<CodeSnippet> codeSnippets)
+    {
+        var snippetText = string.Join("\n\n", codeSnippets.Select(s =>
+            $"File: {s.FilePath}\n```{s.Language}\n{s.Code}\n```\n{s.Description}"));
+
+        return $@"
+<architecture_patterns>
+{architecturePatterns}
+</architecture_patterns>
+
+<technology_stack>
+{techStack}
+</technology_stack>
+
+<code_style_guidelines>
+{codeStyle}
+</code_style_guidelines>
+
+<existing_api_examples>
+{snippetText}
+</existing_api_examples>
+";
     }
 
     private string BuildApiDesignPrompt(AgentContext context, string userStories, string codebaseContext)

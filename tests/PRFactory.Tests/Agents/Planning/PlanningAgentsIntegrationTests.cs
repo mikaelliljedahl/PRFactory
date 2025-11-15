@@ -5,7 +5,6 @@ using PRFactory.Domain.Entities;
 using PRFactory.Domain.ValueObjects;
 using PRFactory.Infrastructure.Agents.Base;
 using PRFactory.Infrastructure.Agents.Planning;
-using PRFactory.Infrastructure.Claude;
 using Xunit;
 
 namespace PRFactory.Tests.Agents.Planning;
@@ -17,7 +16,7 @@ namespace PRFactory.Tests.Agents.Planning;
 public class PlanningAgentsIntegrationTests
 {
     private readonly Mock<ICliAgent> _mockCliAgent;
-    private readonly Mock<IContextBuilder> _mockContextBuilder;
+    private readonly Mock<IArchitectureContextService> _mockArchContextService;
     private readonly PmUserStoriesAgent _pmAgent;
     private readonly ArchitectApiDesignAgent _apiAgent;
     private readonly ArchitectDbSchemaAgent _dbAgent;
@@ -27,7 +26,25 @@ public class PlanningAgentsIntegrationTests
     public PlanningAgentsIntegrationTests()
     {
         _mockCliAgent = new Mock<ICliAgent>();
-        _mockContextBuilder = new Mock<IContextBuilder>();
+        _mockArchContextService = new Mock<IArchitectureContextService>();
+
+        // Setup Epic 07 service mocks
+        _mockArchContextService.Setup(x => x.GetArchitecturePatternsAsync(
+                It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("Clean Architecture patterns...");
+
+        _mockArchContextService.Setup(x => x.GetTechnologyStack())
+            .Returns(".NET 10, Blazor Server...");
+
+        _mockArchContextService.Setup(x => x.GetCodeStyleGuidelines())
+            .Returns("UTF-8 without BOM, file-scoped namespaces...");
+
+        _mockArchContextService.Setup(x => x.GetRelevantCodeSnippetsAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<CodeSnippet>
+            {
+                new() { FilePath = "src/Example.cs", Language = "csharp", Code = "public class Example {}" }
+            });
 
         _pmAgent = new PmUserStoriesAgent(
             Mock.Of<ILogger<PmUserStoriesAgent>>(),
@@ -36,12 +53,12 @@ public class PlanningAgentsIntegrationTests
         _apiAgent = new ArchitectApiDesignAgent(
             Mock.Of<ILogger<ArchitectApiDesignAgent>>(),
             _mockCliAgent.Object,
-            _mockContextBuilder.Object);
+            _mockArchContextService.Object);
 
         _dbAgent = new ArchitectDbSchemaAgent(
             Mock.Of<ILogger<ArchitectDbSchemaAgent>>(),
             _mockCliAgent.Object,
-            _mockContextBuilder.Object);
+            _mockArchContextService.Object);
 
         _qaAgent = new QaTestCasesAgent(
             Mock.Of<ILogger<QaTestCasesAgent>>(),
@@ -50,7 +67,7 @@ public class PlanningAgentsIntegrationTests
         _techLeadAgent = new TechLeadImplementationAgent(
             Mock.Of<ILogger<TechLeadImplementationAgent>>(),
             _mockCliAgent.Object,
-            _mockContextBuilder.Object);
+            _mockArchContextService.Object);
     }
 
     [Fact]
@@ -182,26 +199,6 @@ public class PlanningAgentsIntegrationTests
                 return CreateMockUserStoriesResponse();
             });
 
-        _mockContextBuilder
-            .Setup(x => x.BuildApiDesignContextAsync(
-                It.IsAny<object>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync("## Existing API Patterns");
-
-        _mockContextBuilder
-            .Setup(x => x.BuildDatabaseSchemaContextAsync(
-                It.IsAny<object>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync("## Existing Database Schema");
-
-        _mockContextBuilder
-            .Setup(x => x.BuildImplementationContextAsync(
-                It.IsAny<object>(),
-                It.IsAny<string>()))
-            .ReturnsAsync("## Current Codebase");
-
         // Act
         await _pmAgent.ExecuteWithMiddlewareAsync(context, CancellationToken.None);
         await _apiAgent.ExecuteWithMiddlewareAsync(context, CancellationToken.None);
@@ -272,26 +269,6 @@ public class PlanningAgentsIntegrationTests
             .ReturnsAsync(CreateMockDatabaseSchemaResponse())
             .ReturnsAsync(CreateMockTestCasesResponse())
             .ReturnsAsync(CreateMockImplementationStepsResponse());
-
-        _mockContextBuilder
-            .Setup(x => x.BuildApiDesignContextAsync(
-                It.IsAny<object>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync("## Existing API Patterns");
-
-        _mockContextBuilder
-            .Setup(x => x.BuildDatabaseSchemaContextAsync(
-                It.IsAny<object>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync("## Existing Database Schema");
-
-        _mockContextBuilder
-            .Setup(x => x.BuildImplementationContextAsync(
-                It.IsAny<object>(),
-                It.IsAny<string>()))
-            .ReturnsAsync("## Current Codebase");
     }
 
     private AgentContext CreateIntegrationTestContext()

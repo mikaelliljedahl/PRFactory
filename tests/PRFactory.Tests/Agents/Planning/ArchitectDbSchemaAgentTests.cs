@@ -5,7 +5,6 @@ using PRFactory.Domain.Entities;
 using PRFactory.Domain.ValueObjects;
 using PRFactory.Infrastructure.Agents.Base;
 using PRFactory.Infrastructure.Agents.Planning;
-using PRFactory.Infrastructure.Claude;
 using Xunit;
 
 namespace PRFactory.Tests.Agents.Planning;
@@ -13,16 +12,35 @@ namespace PRFactory.Tests.Agents.Planning;
 public class ArchitectDbSchemaAgentTests
 {
     private readonly Mock<ICliAgent> _mockCliAgent;
-    private readonly Mock<IContextBuilder> _mockContextBuilder;
+    private readonly Mock<IArchitectureContextService> _mockArchContextService;
     private readonly Mock<ILogger<ArchitectDbSchemaAgent>> _mockLogger;
     private readonly ArchitectDbSchemaAgent _agent;
 
     public ArchitectDbSchemaAgentTests()
     {
         _mockCliAgent = new Mock<ICliAgent>();
-        _mockContextBuilder = new Mock<IContextBuilder>();
+        _mockArchContextService = new Mock<IArchitectureContextService>();
         _mockLogger = new Mock<ILogger<ArchitectDbSchemaAgent>>();
-        _agent = new ArchitectDbSchemaAgent(_mockLogger.Object, _mockCliAgent.Object, _mockContextBuilder.Object);
+
+        // Setup Epic 07 service mocks
+        _mockArchContextService.Setup(x => x.GetArchitecturePatternsAsync(
+                It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("Clean Architecture patterns...");
+
+        _mockArchContextService.Setup(x => x.GetTechnologyStack())
+            .Returns(".NET 10, Blazor Server...");
+
+        _mockArchContextService.Setup(x => x.GetCodeStyleGuidelines())
+            .Returns("UTF-8 without BOM, file-scoped namespaces...");
+
+        _mockArchContextService.Setup(x => x.GetRelevantCodeSnippetsAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<CodeSnippet>
+            {
+                new() { FilePath = "src/Example.cs", Language = "csharp", Code = "public class Example {}" }
+            });
+
+        _agent = new ArchitectDbSchemaAgent(_mockLogger.Object, _mockCliAgent.Object, _mockArchContextService.Object);
     }
 
     [Fact]
@@ -31,13 +49,6 @@ public class ArchitectDbSchemaAgentTests
         // Arrange
         var context = CreateValidContext();
         context.State["UserStories"] = "# User Stories\n## Story 1";
-
-        _mockContextBuilder
-            .Setup(x => x.BuildDatabaseSchemaContextAsync(
-                It.IsAny<object>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync("## Existing Database Schema\nFound 5 entities");
 
         var mockResponse = CreateMockDatabaseSchemaResponse();
 
@@ -79,13 +90,6 @@ public class ArchitectDbSchemaAgentTests
         var context = CreateValidContext();
         context.State["UserStories"] = "# User Stories";
 
-        _mockContextBuilder
-            .Setup(x => x.BuildDatabaseSchemaContextAsync(
-                It.IsAny<object>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync("Existing schema");
-
         var failedResponse = new CliAgentResponse
         {
             Success = false,
@@ -114,13 +118,6 @@ public class ArchitectDbSchemaAgentTests
         var context = CreateValidContext();
         context.State["UserStories"] = "# User Stories";
 
-        _mockContextBuilder
-            .Setup(x => x.BuildDatabaseSchemaContextAsync(
-                It.IsAny<object>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync("Schema");
-
         var dangerousResponse = new CliAgentResponse
         {
             Success = true,
@@ -148,13 +145,6 @@ public class ArchitectDbSchemaAgentTests
         var context = CreateValidContext();
         context.State["UserStories"] = "# User Stories";
 
-        _mockContextBuilder
-            .Setup(x => x.BuildDatabaseSchemaContextAsync(
-                It.IsAny<object>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync("Schema");
-
         var invalidResponse = new CliAgentResponse
         {
             Success = true,
@@ -181,13 +171,6 @@ public class ArchitectDbSchemaAgentTests
         // Arrange
         var context = CreateValidContext();
         context.State["UserStories"] = "# User Stories";
-
-        _mockContextBuilder
-            .Setup(x => x.BuildDatabaseSchemaContextAsync(
-                It.IsAny<object>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync("Schema");
 
         var responseWithCodeBlock = new CliAgentResponse
         {
@@ -227,13 +210,6 @@ CREATE TABLE Users (
         // Arrange
         var context = CreateValidContext();
         context.State["UserStories"] = "# User Stories";
-
-        _mockContextBuilder
-            .Setup(x => x.BuildDatabaseSchemaContextAsync(
-                It.IsAny<object>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync("Schema");
 
         var mockResponse = CreateMockDatabaseSchemaResponse();
 

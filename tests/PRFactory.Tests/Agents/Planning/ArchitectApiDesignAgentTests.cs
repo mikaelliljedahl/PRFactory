@@ -5,7 +5,6 @@ using PRFactory.Domain.Entities;
 using PRFactory.Domain.ValueObjects;
 using PRFactory.Infrastructure.Agents.Base;
 using PRFactory.Infrastructure.Agents.Planning;
-using PRFactory.Infrastructure.Claude;
 using Xunit;
 
 namespace PRFactory.Tests.Agents.Planning;
@@ -13,16 +12,35 @@ namespace PRFactory.Tests.Agents.Planning;
 public class ArchitectApiDesignAgentTests
 {
     private readonly Mock<ICliAgent> _mockCliAgent;
-    private readonly Mock<IContextBuilder> _mockContextBuilder;
+    private readonly Mock<IArchitectureContextService> _mockArchContextService;
     private readonly Mock<ILogger<ArchitectApiDesignAgent>> _mockLogger;
     private readonly ArchitectApiDesignAgent _agent;
 
     public ArchitectApiDesignAgentTests()
     {
         _mockCliAgent = new Mock<ICliAgent>();
-        _mockContextBuilder = new Mock<IContextBuilder>();
+        _mockArchContextService = new Mock<IArchitectureContextService>();
         _mockLogger = new Mock<ILogger<ArchitectApiDesignAgent>>();
-        _agent = new ArchitectApiDesignAgent(_mockLogger.Object, _mockCliAgent.Object, _mockContextBuilder.Object);
+
+        // Setup Epic 07 service mocks
+        _mockArchContextService.Setup(x => x.GetArchitecturePatternsAsync(
+                It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("Clean Architecture patterns...");
+
+        _mockArchContextService.Setup(x => x.GetTechnologyStack())
+            .Returns(".NET 10, Blazor Server...");
+
+        _mockArchContextService.Setup(x => x.GetCodeStyleGuidelines())
+            .Returns("UTF-8 without BOM, file-scoped namespaces...");
+
+        _mockArchContextService.Setup(x => x.GetRelevantCodeSnippetsAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<CodeSnippet>
+            {
+                new() { FilePath = "src/Example.cs", Language = "csharp", Code = "public class Example {}" }
+            });
+
+        _agent = new ArchitectApiDesignAgent(_mockLogger.Object, _mockCliAgent.Object, _mockArchContextService.Object);
     }
 
     [Fact]
@@ -31,13 +49,6 @@ public class ArchitectApiDesignAgentTests
         // Arrange
         var context = CreateValidContext();
         context.State["UserStories"] = "# User Stories\n## Story 1\n**As a** user...";
-
-        _mockContextBuilder
-            .Setup(x => x.BuildApiDesignContextAsync(
-                It.IsAny<object>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync("## Existing API Patterns\nFound 3 controllers");
 
         var mockResponse = CreateMockApiDesignResponse();
 
@@ -80,13 +91,6 @@ public class ArchitectApiDesignAgentTests
         var context = CreateValidContext();
         context.State["UserStories"] = "# User Stories\n## Story 1";
 
-        _mockContextBuilder
-            .Setup(x => x.BuildApiDesignContextAsync(
-                It.IsAny<object>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync("Existing patterns");
-
         var failedResponse = new CliAgentResponse
         {
             Success = false,
@@ -115,13 +119,6 @@ public class ArchitectApiDesignAgentTests
         var context = CreateValidContext();
         context.State["UserStories"] = "# User Stories";
 
-        _mockContextBuilder
-            .Setup(x => x.BuildApiDesignContextAsync(
-                It.IsAny<object>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync("Patterns");
-
         var invalidResponse = new CliAgentResponse
         {
             Success = true,
@@ -148,13 +145,6 @@ public class ArchitectApiDesignAgentTests
         // Arrange
         var context = CreateValidContext();
         context.State["UserStories"] = "# User Stories";
-
-        _mockContextBuilder
-            .Setup(x => x.BuildApiDesignContextAsync(
-                It.IsAny<object>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync("Patterns");
 
         var invalidResponse = new CliAgentResponse
         {
@@ -186,13 +176,6 @@ paths:
         // Arrange
         var context = CreateValidContext();
         context.State["UserStories"] = "# User Stories";
-
-        _mockContextBuilder
-            .Setup(x => x.BuildApiDesignContextAsync(
-                It.IsAny<object>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync("Patterns");
 
         var responseWithCodeBlock = new CliAgentResponse
         {
@@ -236,13 +219,6 @@ paths:
         var context = CreateValidContext();
         context.State["UserStories"] = "# User Stories";
 
-        _mockContextBuilder
-            .Setup(x => x.BuildApiDesignContextAsync(
-                It.IsAny<object>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync("Patterns");
-
         var mockResponse = CreateMockApiDesignResponse();
 
         _mockCliAgent
@@ -267,13 +243,6 @@ paths:
         var context = CreateValidContext();
         var userStories = "# User Stories\n## Story 1: User Login";
         context.State["UserStories"] = userStories;
-
-        _mockContextBuilder
-            .Setup(x => x.BuildApiDesignContextAsync(
-                It.IsAny<object>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync("Patterns");
 
         var mockResponse = CreateMockApiDesignResponse();
 

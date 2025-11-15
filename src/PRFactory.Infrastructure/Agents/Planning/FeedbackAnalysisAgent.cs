@@ -1,187 +1,259 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
-using Microsoft.Extensions.Logging;
-using PRFactory.Core.Application.Services;
 using PRFactory.Infrastructure.Agents.Base;
+using PRFactory.Infrastructure.Agents.Messages;
+using PRFactory.Core.Application.Services;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace PRFactory.Infrastructure.Agents.Planning;
 
 /// <summary>
-/// Analyzes user feedback to determine which plan artifacts need regeneration.
-/// Uses LLM to understand intent and map to specific artifacts.
+/// Analyzes user feedback on rejected plans to determine which artifacts need regeneration.
+/// Uses LLM to understand intent rather than simple keyword matching.
 /// </summary>
 public class FeedbackAnalysisAgent : BaseAgent
 {
     private readonly ICliAgent _cliAgent;
 
     public override string Name => "Feedback Analysis Agent";
-    public override string Description => "Analyzes revision feedback to determine affected artifacts";
+    public override string Description => "Analyzes revision feedback to determine which artifacts need updating";
 
     public FeedbackAnalysisAgent(
-        ILogger<FeedbackAnalysisAgent> logger,
-        ICliAgent cliAgent)
+        ICliAgent cliAgent,
+        ILogger<FeedbackAnalysisAgent> logger)
         : base(logger)
     {
-        _cliAgent = cliAgent ?? throw new ArgumentNullException(nameof(cliAgent));
+        ArgumentNullException.ThrowIfNull(cliAgent);
+        _cliAgent = cliAgent;
     }
 
     protected override async Task<AgentResult> ExecuteAsync(
         AgentContext context,
         CancellationToken cancellationToken)
     {
-        var feedback = GetRequiredStateValue<string>(context, "RevisionFeedback");
+        // Get the rejection message from context
+        var rejectionMessage = context.State.GetValueOrDefault("RejectionMessage") as PlanRejectedMessage
+            ?? throw new InvalidOperationException("RejectionMessage not found in context");
 
-        Logger.LogInformation(
-            "Analyzing feedback for ticket {TicketKey}: {Feedback}",
-            context.Ticket.TicketKey,
-            feedback);
-
-        // Build prompt for LLM to analyze feedback
-        var prompt = BuildFeedbackAnalysisPrompt(feedback);
-
-        var cliResponse = await _cliAgent.ExecutePromptAsync(prompt, cancellationToken);
-
-        if (!cliResponse.Success)
+        if (string.IsNullOrWhiteSpace(rejectionMessage.Reason))
         {
             return new AgentResult
             {
                 Status = AgentStatus.Failed,
-                Error = $"Feedback analysis failed: {cliResponse.ErrorMessage}"
+                Error = "Feedback is empty or whitespace"
             };
         }
 
-        // Parse JSON response
-        var analysisJson = ExtractJsonFromResponse(cliResponse.Content);
-        FeedbackAnalysisDto? analysis;
+        Logger.LogInformation(
+            "Analyzing feedback for ticket {TicketKey}: {FeedbackLength} chars",
+            context.Ticket.TicketKey,
+            rejectionMessage.Reason.Length);
 
         try
         {
-            analysis = JsonSerializer.Deserialize<FeedbackAnalysisDto>(analysisJson);
+            // Build analysis prompt
+            var prompt = BuildAnalysisPrompt(rejectionMessage.Reason);
+
+            // Call LLM to analyze feedback
+            var cliResponse = await _cliAgent.ExecuteWithProjectContextAsync(
+                prompt,
+                context.RepositoryPath!,
+                cancellationToken);
+
+            if (!cliResponse.Success)
+            {
+                Logger.LogWarning(
+                    "Feedback analysis failed: {Error}",
+                    cliResponse.ErrorMessage);
+
+                // Fallback: regenerate all artifacts on analysis failure
+                return new AgentResult
+                {
+                    Status = AgentStatus.Completed,
+                    Output = new Dictionary<string, object>
+                    {
+                        ["AffectedArtifacts"] = GetAllArtifactTypes(),
+                        ["AnalysisSummary"] = "Analysis failed - regenerating all artifacts as precaution",
+                        ["FallbackMode"] = true
+                    }
+                };
+            }
+
+            // Parse JSON response from LLM
+            var analysis = ParseAnalysisResponse(cliResponse.Content);
+
+            if (analysis == null || !analysis.AffectedArtifacts.Any())
+            {
+                Logger.LogWarning(
+                    "No artifacts identified in feedback analysis. Defaulting to all artifacts.");
+
+                analysis = new FeedbackAnalysisDto
+                {
+                    AffectedArtifacts = GetAllArtifactTypes(),
+                    AnalysisSummary = "Could not determine specific artifacts - regenerating all"
+                };
+            }
+
+            // Validate identified artifacts
+            ValidateArtifactNames(analysis.AffectedArtifacts);
+
+            Logger.LogInformation(
+                "Feedback analysis complete. Affected artifacts: {Artifacts}",
+                string.Join(", ", analysis.AffectedArtifacts));
+
+            return new AgentResult
+            {
+                Status = AgentStatus.Completed,
+                Output = new Dictionary<string, object>
+                {
+                    ["AffectedArtifacts"] = analysis.AffectedArtifacts,
+                    ["AnalysisSummary"] = analysis.AnalysisSummary,
+                    ["ConfidenceScore"] = analysis.ConfidenceScore
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Unexpected error during feedback analysis");
+
+            // Fallback: regenerate all artifacts on error
+            return new AgentResult
+            {
+                Status = AgentStatus.Completed,
+                Output = new Dictionary<string, object>
+                {
+                    ["AffectedArtifacts"] = GetAllArtifactTypes(),
+                    ["AnalysisSummary"] = $"Analysis error: {ex.Message} - regenerating all artifacts",
+                    ["FallbackMode"] = true
+                }
+            };
+        }
+    }
+
+    private string BuildAnalysisPrompt(string feedback)
+    {
+        return $@"You are an AI assistant analyzing user feedback on a software implementation plan.
+
+The user has provided feedback on a generated plan that includes these artifact types:
+1. UserStories - User stories with acceptance criteria
+2. ApiDesign - OpenAPI specification for REST endpoints
+3. DatabaseSchema - SQL database schema and migrations
+4. TestCases - Comprehensive test scenarios
+5. ImplementationSteps - Detailed step-by-step implementation guide
+
+<user_feedback>
+{feedback}
+</user_feedback>
+
+Analyze the feedback and determine which artifact(s) the feedback applies to.
+
+Output ONLY valid JSON (no preamble) in this exact format:
+{{
+  ""affected_artifacts"": [""ArtifactType1"", ""ArtifactType2""],
+  ""analysis_summary"": ""Brief explanation of which artifacts are affected and why"",
+  ""confidence_score"": 0.85
+}}
+
+Rules:
+- If feedback is about requirements, user needs, or features → include ""UserStories""
+- If feedback is about API endpoints, request/response format, HTTP methods → include ""ApiDesign""
+- If feedback is about tables, columns, database structure, data model → include ""DatabaseSchema""
+- If feedback is about test coverage, test scenarios, edge cases → include ""TestCases""
+- If feedback is about implementation approach, code structure, deployment → include ""ImplementationSteps""
+- If uncertain about specific artifacts, it's better to include them than exclude them
+- confidence_score: 0.0-1.0, where 1.0 means very confident about artifact selection
+
+If feedback mentions multiple concerns, include all relevant artifacts.
+If feedback is vague or unclear, err on the side of including more artifacts.";
+    }
+
+    private FeedbackAnalysisDto? ParseAnalysisResponse(string response)
+    {
+        try
+        {
+            // Try to extract JSON from response (may include markdown blocks)
+            var jsonContent = ExtractJsonFromResponse(response);
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+            var analysis = JsonSerializer.Deserialize<FeedbackAnalysisDto>(jsonContent, options);
+            return analysis;
         }
         catch (JsonException ex)
         {
-            Logger.LogWarning(ex, "Failed to parse JSON response. Defaulting to regenerate all artifacts.");
-            analysis = null;
+            Logger.LogWarning(ex, "Failed to parse feedback analysis JSON response");
+            return null;
         }
-
-        if (analysis == null || !analysis.AffectedArtifacts.Any())
-        {
-            Logger.LogWarning("No affected artifacts identified. Defaulting to regenerate all.");
-            analysis = new FeedbackAnalysisDto
-            {
-                AffectedArtifacts = new List<string>
-                {
-                    "UserStories", "ApiDesign", "DatabaseSchema", "TestCases", "ImplementationSteps"
-                },
-                Summary = "Unable to determine specific artifacts, regenerating all."
-            };
-        }
-
-        // Store analysis result in context
-        context.State["AffectedArtifacts"] = analysis.AffectedArtifacts;
-        context.State["AnalysisSummary"] = analysis.Summary;
-
-        Logger.LogInformation(
-            "Analysis complete. Affected artifacts: {Artifacts}",
-            string.Join(", ", analysis.AffectedArtifacts));
-
-        return new AgentResult
-        {
-            Status = AgentStatus.Completed,
-            Output = new Dictionary<string, object>
-            {
-                ["AffectedArtifacts"] = analysis.AffectedArtifacts,
-                ["Summary"] = analysis.Summary
-            }
-        };
-    }
-
-    private string BuildFeedbackAnalysisPrompt(string feedback)
-    {
-        return $@"You are analyzing user feedback on an implementation plan to determine which artifacts need regeneration.
-
-<feedback>
-{feedback}
-</feedback>
-
-<artifacts>
-The plan consists of 5 artifacts:
-1. UserStories - User stories with acceptance criteria
-2. ApiDesign - OpenAPI specification (YAML)
-3. DatabaseSchema - SQL DDL statements
-4. TestCases - Test scenarios and cases
-5. ImplementationSteps - Step-by-step implementation guide
-</artifacts>
-
-<task>
-Analyze the feedback and determine which artifacts are affected and need regeneration.
-
-Keywords to look for:
-- ""user stor"", ""acceptance criteria"" → UserStories
-- ""api"", ""endpoint"", ""request"", ""response"" → ApiDesign
-- ""database"", ""schema"", ""table"", ""column"", ""index"" → DatabaseSchema
-- ""test"", ""qa"", ""scenario"" → TestCases
-- ""implementation"", ""step"", ""code"" → ImplementationSteps
-
-Output a JSON object with:
-{{
-  ""affectedArtifacts"": [""ArtifactName1"", ""ArtifactName2""],
-  ""summary"": ""Brief explanation of what needs to change""
-}}
-
-Important:
-- If feedback is unclear or mentions multiple areas, include all related artifacts
-- If feedback mentions ""plan"" or ""everything"", include all artifacts
-- Output ONLY valid JSON (no preamble or explanation)
-</task>";
     }
 
     private string ExtractJsonFromResponse(string response)
     {
-        // Try to extract JSON from markdown code blocks
-        var jsonPattern = @"```json\s*(.*?)\s*```";
-        var match = Regex.Match(response, jsonPattern, RegexOptions.Singleline | RegexOptions.IgnoreCase);
-
-        if (match.Success)
+        // Check if response is wrapped in markdown code block
+        if (response.Contains("```json"))
         {
-            return match.Groups[1].Value.Trim();
+            var start = response.IndexOf("```json", StringComparison.OrdinalIgnoreCase) + 7;
+            var end = response.IndexOf("```", start, StringComparison.Ordinal);
+            if (end > start)
+            {
+                return response.Substring(start, end - start).Trim();
+            }
         }
 
-        // Try to find JSON object directly
-        var jsonObjectPattern = @"\{[\s\S]*\}";
-        match = Regex.Match(response, jsonObjectPattern);
-
-        if (match.Success)
+        // Check for plain ``` blocks
+        if (response.Contains("```"))
         {
-            return match.Value.Trim();
+            var start = response.IndexOf("```", StringComparison.Ordinal) + 3;
+            var end = response.IndexOf("```", start, StringComparison.Ordinal);
+            if (end > start)
+            {
+                return response.Substring(start, end - start).Trim();
+            }
         }
 
-        // Fallback: assume entire response is JSON
-        return response.Trim();
+        // Try to extract JSON object directly (find first { and last })
+        var jsonStart = response.IndexOf('{');
+        var jsonEnd = response.LastIndexOf('}');
+
+        if (jsonStart >= 0 && jsonEnd > jsonStart)
+        {
+            return response.Substring(jsonStart, jsonEnd - jsonStart + 1);
+        }
+
+        return response;
     }
 
-    private T GetRequiredStateValue<T>(AgentContext context, string key)
+    private void ValidateArtifactNames(List<string> artifacts)
     {
-        if (!context.State.TryGetValue(key, out var value))
-        {
-            throw new InvalidOperationException($"{key} not found in context");
-        }
+        var validArtifacts = GetAllArtifactTypes();
 
-        if (value is not T typedValue)
+        foreach (var artifact in artifacts)
         {
-            throw new InvalidOperationException($"{key} is not of expected type {typeof(T).Name}");
+            if (!validArtifacts.Contains(artifact))
+            {
+                Logger.LogWarning(
+                    "Invalid artifact name identified: {InvalidArtifact}. Valid artifacts: {ValidArtifacts}",
+                    artifact,
+                    string.Join(", ", validArtifacts));
+            }
         }
-
-        return typedValue;
     }
 
-    private class FeedbackAnalysisDto
+    private List<string> GetAllArtifactTypes()
     {
-        [JsonPropertyName("affectedArtifacts")]
-        public List<string> AffectedArtifacts { get; set; } = new();
-
-        [JsonPropertyName("summary")]
-        public string Summary { get; set; } = string.Empty;
+        return new List<string>
+        {
+            "UserStories",
+            "ApiDesign",
+            "DatabaseSchema",
+            "TestCases",
+            "ImplementationSteps"
+        };
     }
 }

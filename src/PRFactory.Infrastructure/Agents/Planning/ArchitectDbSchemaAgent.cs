@@ -3,7 +3,6 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using PRFactory.Core.Application.Services;
 using PRFactory.Infrastructure.Agents.Base;
-using PRFactory.Infrastructure.Claude;
 
 namespace PRFactory.Infrastructure.Agents.Planning;
 
@@ -14,7 +13,7 @@ namespace PRFactory.Infrastructure.Agents.Planning;
 public class ArchitectDbSchemaAgent : BaseAgent
 {
     private readonly ICliAgent _cliAgent;
-    private readonly IContextBuilder _contextBuilder;
+    private readonly IArchitectureContextService _architectureContextService;
 
     public override string Name => "Architect DB Schema Agent";
     public override string Description => "Generates SQL DDL statements using Database Architect persona";
@@ -22,11 +21,11 @@ public class ArchitectDbSchemaAgent : BaseAgent
     public ArchitectDbSchemaAgent(
         ILogger<ArchitectDbSchemaAgent> logger,
         ICliAgent cliAgent,
-        IContextBuilder contextBuilder)
+        IArchitectureContextService architectureContextService)
         : base(logger)
     {
         _cliAgent = cliAgent ?? throw new ArgumentNullException(nameof(cliAgent));
-        _contextBuilder = contextBuilder ?? throw new ArgumentNullException(nameof(contextBuilder));
+        _architectureContextService = architectureContextService ?? throw new ArgumentNullException(nameof(architectureContextService));
     }
 
     protected override async Task<AgentResult> ExecuteAsync(
@@ -40,11 +39,19 @@ public class ArchitectDbSchemaAgent : BaseAgent
 
         try
         {
-            // Build existing schema context
-            var existingSchema = await _contextBuilder.BuildDatabaseSchemaContextAsync(
-                context.Repository,
+            // Build existing schema context using Epic 07 service
+            var architecturePatterns = await _architectureContextService.GetArchitecturePatternsAsync(
                 context.RepositoryPath!,
                 cancellationToken);
+            var techStack = _architectureContextService.GetTechnologyStack();
+            var codeStyle = _architectureContextService.GetCodeStyleGuidelines();
+            var codeSnippets = await _architectureContextService.GetRelevantCodeSnippetsAsync(
+                context.RepositoryPath!,
+                context.Ticket.Description,
+                maxSnippets: 3,
+                cancellationToken);
+
+            var existingSchema = BuildDatabaseSchemaContext(architecturePatterns, techStack, codeStyle, codeSnippets);
 
             // Build prompt
             var prompt = BuildDatabaseSchemaPrompt(context, userStories, existingSchema);
@@ -107,6 +114,34 @@ public class ArchitectDbSchemaAgent : BaseAgent
         }
 
         return typedValue;
+    }
+
+    private string BuildDatabaseSchemaContext(
+        string architecturePatterns,
+        string techStack,
+        string codeStyle,
+        List<CodeSnippet> codeSnippets)
+    {
+        var snippetText = string.Join("\n\n", codeSnippets.Select(s =>
+            $"File: {s.FilePath}\n```{s.Language}\n{s.Code}\n```\n{s.Description}"));
+
+        return $@"
+<architecture_patterns>
+{architecturePatterns}
+</architecture_patterns>
+
+<technology_stack>
+{techStack}
+</technology_stack>
+
+<code_style_guidelines>
+{codeStyle}
+</code_style_guidelines>
+
+<existing_schema_examples>
+{snippetText}
+</existing_schema_examples>
+";
     }
 
     private string BuildDatabaseSchemaPrompt(AgentContext context, string userStories, string existingSchema)

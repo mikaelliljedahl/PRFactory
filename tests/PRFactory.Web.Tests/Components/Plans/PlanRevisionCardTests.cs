@@ -1,7 +1,10 @@
 using Bunit;
 using Xunit;
+using Moq;
 using PRFactory.Web.Components.Plans;
-using Microsoft.AspNetCore.Components;
+using PRFactory.Web.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace PRFactory.Web.Tests.Components.Plans;
 
@@ -10,6 +13,17 @@ namespace PRFactory.Web.Tests.Components.Plans;
 /// </summary>
 public class PlanRevisionCardTests : TestContext
 {
+    private readonly Mock<ITicketService> _mockTicketService;
+    private readonly Mock<ILogger<PlanRevisionCard>> _mockLogger;
+
+    public PlanRevisionCardTests()
+    {
+        _mockTicketService = new Mock<ITicketService>();
+        _mockLogger = new Mock<ILogger<PlanRevisionCard>>();
+
+        Services.AddSingleton(_mockTicketService.Object);
+        Services.AddSingleton(_mockLogger.Object);
+    }
     [Fact]
     public void PlanRevisionCard_Renders_WithTicketId()
     {
@@ -62,11 +76,15 @@ public class PlanRevisionCardTests : TestContext
     }
 
     [Fact]
-    public async Task PlanRevisionCard_ApproveButton_InvokesCallback()
+    public async Task PlanRevisionCard_ApproveButton_CallsServiceAndInvokesCallback()
     {
         // Arrange
         var ticketId = Guid.NewGuid();
         var approvedCalled = false;
+
+        _mockTicketService
+            .Setup(x => x.ApprovePlanAsync(ticketId, null, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
         // Act
         var cut = RenderComponent<PlanRevisionCard>(parameters => parameters
@@ -84,6 +102,7 @@ public class PlanRevisionCardTests : TestContext
         await approveButton.ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
         // Assert
+        _mockTicketService.Verify(x => x.ApprovePlanAsync(ticketId, null, It.IsAny<CancellationToken>()), Times.Once);
         Assert.True(approvedCalled);
     }
 
@@ -92,6 +111,10 @@ public class PlanRevisionCardTests : TestContext
     {
         // Arrange
         var ticketId = Guid.NewGuid();
+
+        _mockTicketService
+            .Setup(x => x.ApprovePlanAsync(ticketId, null, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
         // Act
         var cut = RenderComponent<PlanRevisionCard>(parameters => parameters
@@ -129,11 +152,16 @@ public class PlanRevisionCardTests : TestContext
     }
 
     [Fact]
-    public async Task PlanRevisionCard_ReviseButton_InvokesCallback()
+    public async Task PlanRevisionCard_ReviseButton_CallsServiceAndInvokesCallback()
     {
         // Arrange
         var ticketId = Guid.NewGuid();
         var revisionStartedCalled = false;
+        var feedback = "Add caching strategy";
+
+        _mockTicketService
+            .Setup(x => x.RefinePlanAsync(ticketId, feedback, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
         // Act
         var cut = RenderComponent<PlanRevisionCard>(parameters => parameters
@@ -145,7 +173,7 @@ public class PlanRevisionCardTests : TestContext
             }));
 
         var textarea = cut.Find("textarea");
-        textarea.Input("Add caching strategy");
+        textarea.Input(feedback);
 
         var buttons = cut.FindAll("button");
         var reviseButton = buttons.FirstOrDefault(b => b.TextContent.Contains("Revise Plan"));
@@ -154,6 +182,7 @@ public class PlanRevisionCardTests : TestContext
         await reviseButton.ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 
         // Assert
+        _mockTicketService.Verify(x => x.RefinePlanAsync(ticketId, feedback, It.IsAny<CancellationToken>()), Times.Once);
         Assert.True(revisionStartedCalled);
     }
 
@@ -162,6 +191,11 @@ public class PlanRevisionCardTests : TestContext
     {
         // Arrange
         var ticketId = Guid.NewGuid();
+        var feedback = "Add caching strategy";
+
+        _mockTicketService
+            .Setup(x => x.RefinePlanAsync(ticketId, feedback, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
         // Act
         var cut = RenderComponent<PlanRevisionCard>(parameters => parameters
@@ -169,7 +203,7 @@ public class PlanRevisionCardTests : TestContext
             .Add(p => p.OnRevisionStarted, () => Task.CompletedTask));
 
         var textarea = cut.Find("textarea");
-        textarea.Input("Add caching strategy");
+        textarea.Input(feedback);
 
         var buttons = cut.FindAll("button");
         var reviseButton = buttons.FirstOrDefault(b => b.TextContent.Contains("Revise Plan"));
@@ -186,6 +220,11 @@ public class PlanRevisionCardTests : TestContext
     {
         // Arrange
         var ticketId = Guid.NewGuid();
+        var feedback = "Add caching strategy";
+
+        _mockTicketService
+            .Setup(x => x.RefinePlanAsync(ticketId, feedback, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
         // Act
         var cut = RenderComponent<PlanRevisionCard>(parameters => parameters
@@ -193,7 +232,7 @@ public class PlanRevisionCardTests : TestContext
             .Add(p => p.OnRevisionStarted, () => Task.CompletedTask));
 
         var textarea = cut.Find("textarea");
-        textarea.Input("Add caching strategy");
+        textarea.Input(feedback);
 
         var buttons = cut.FindAll("button");
         var reviseButton = buttons.FirstOrDefault(b => b.TextContent.Contains("Revise Plan"));
@@ -207,18 +246,23 @@ public class PlanRevisionCardTests : TestContext
     }
 
     [Fact]
-    public async Task PlanRevisionCard_ReviseButton_ShowsErrorWhenCallbackThrows()
+    public async Task PlanRevisionCard_ReviseButton_ShowsErrorWhenServiceThrows()
     {
         // Arrange
         var ticketId = Guid.NewGuid();
+        var feedback = "Add caching strategy";
+
+        _mockTicketService
+            .Setup(x => x.RefinePlanAsync(ticketId, feedback, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Service error"));
 
         // Act
         var cut = RenderComponent<PlanRevisionCard>(parameters => parameters
             .Add(p => p.TicketId, ticketId)
-            .Add(p => p.OnRevisionStarted, () => throw new Exception("Test error")));
+            .Add(p => p.OnRevisionStarted, () => Task.CompletedTask));
 
         var textarea = cut.Find("textarea");
-        textarea.Input("Add caching strategy");
+        textarea.Input(feedback);
 
         var buttons = cut.FindAll("button");
         var reviseButton = buttons.FirstOrDefault(b => b.TextContent.Contains("Revise Plan"));
@@ -228,19 +272,23 @@ public class PlanRevisionCardTests : TestContext
 
         // Assert
         Assert.Contains("Failed to start revision", cut.Markup);
-        Assert.Contains("Test error", cut.Markup);
+        Assert.Contains("Service error", cut.Markup);
     }
 
     [Fact]
-    public async Task PlanRevisionCard_ApproveButton_ShowsErrorWhenCallbackThrows()
+    public async Task PlanRevisionCard_ApproveButton_ShowsErrorWhenServiceThrows()
     {
         // Arrange
         var ticketId = Guid.NewGuid();
 
+        _mockTicketService
+            .Setup(x => x.ApprovePlanAsync(ticketId, null, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Approval service error"));
+
         // Act
         var cut = RenderComponent<PlanRevisionCard>(parameters => parameters
             .Add(p => p.TicketId, ticketId)
-            .Add(p => p.OnApproved, () => throw new Exception("Approval failed")));
+            .Add(p => p.OnApproved, () => Task.CompletedTask));
 
         var buttons = cut.FindAll("button");
         var approveButton = buttons.FirstOrDefault(b => b.TextContent.Contains("Approve Plan"));
@@ -250,6 +298,30 @@ public class PlanRevisionCardTests : TestContext
 
         // Assert
         Assert.Contains("Failed to approve plan", cut.Markup);
-        Assert.Contains("Approval failed", cut.Markup);
+        Assert.Contains("Approval service error", cut.Markup);
+    }
+
+    [Fact]
+    public async Task PlanRevisionCard_ReviseButton_ValidatesFeedbackNotEmpty()
+    {
+        // Arrange
+        var ticketId = Guid.NewGuid();
+
+        // Act
+        var cut = RenderComponent<PlanRevisionCard>(parameters => parameters
+            .Add(p => p.TicketId, ticketId)
+            .Add(p => p.OnRevisionStarted, () => Task.CompletedTask));
+
+        var buttons = cut.FindAll("button");
+        var reviseButton = buttons.FirstOrDefault(b => b.TextContent.Contains("Revise Plan"));
+        Assert.NotNull(reviseButton);
+
+        // Try clicking without entering feedback
+        await reviseButton.ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+        // Assert - Service should NOT be called
+        _mockTicketService.Verify(
+            x => x.RefinePlanAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 }

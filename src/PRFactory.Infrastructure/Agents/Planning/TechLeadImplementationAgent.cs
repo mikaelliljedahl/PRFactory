@@ -3,7 +3,6 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using PRFactory.Core.Application.Services;
 using PRFactory.Infrastructure.Agents.Base;
-using PRFactory.Infrastructure.Claude;
 
 namespace PRFactory.Infrastructure.Agents.Planning;
 
@@ -14,7 +13,7 @@ namespace PRFactory.Infrastructure.Agents.Planning;
 public class TechLeadImplementationAgent : BaseAgent
 {
     private readonly ICliAgent _cliAgent;
-    private readonly IContextBuilder _contextBuilder;
+    private readonly IArchitectureContextService _architectureContextService;
 
     public override string Name => "Tech Lead Implementation Agent";
     public override string Description => "Generates detailed implementation steps using Tech Lead persona";
@@ -22,11 +21,11 @@ public class TechLeadImplementationAgent : BaseAgent
     public TechLeadImplementationAgent(
         ILogger<TechLeadImplementationAgent> logger,
         ICliAgent cliAgent,
-        IContextBuilder contextBuilder)
+        IArchitectureContextService architectureContextService)
         : base(logger)
     {
         _cliAgent = cliAgent ?? throw new ArgumentNullException(nameof(cliAgent));
-        _contextBuilder = contextBuilder ?? throw new ArgumentNullException(nameof(contextBuilder));
+        _architectureContextService = architectureContextService ?? throw new ArgumentNullException(nameof(architectureContextService));
     }
 
     protected override async Task<AgentResult> ExecuteAsync(
@@ -43,10 +42,19 @@ public class TechLeadImplementationAgent : BaseAgent
 
         try
         {
-            // Build comprehensive codebase context
-            var codebaseContext = await _contextBuilder.BuildImplementationContextAsync(
-                context.Ticket,
-                context.RepositoryPath!);
+            // Build comprehensive codebase context using Epic 07 service
+            var architecturePatterns = await _architectureContextService.GetArchitecturePatternsAsync(
+                context.RepositoryPath!,
+                cancellationToken);
+            var techStack = _architectureContextService.GetTechnologyStack();
+            var codeStyle = _architectureContextService.GetCodeStyleGuidelines();
+            var codeSnippets = await _architectureContextService.GetRelevantCodeSnippetsAsync(
+                context.RepositoryPath!,
+                context.Ticket.Description,
+                maxSnippets: 5,
+                cancellationToken);
+
+            var codebaseContext = BuildImplementationContext(architecturePatterns, techStack, codeStyle, codeSnippets);
 
             // Build prompt
             var prompt = BuildImplementationStepsPrompt(
@@ -111,6 +119,34 @@ public class TechLeadImplementationAgent : BaseAgent
         }
 
         return typedValue;
+    }
+
+    private string BuildImplementationContext(
+        string architecturePatterns,
+        string techStack,
+        string codeStyle,
+        List<CodeSnippet> codeSnippets)
+    {
+        var snippetText = string.Join("\n\n", codeSnippets.Select(s =>
+            $"File: {s.FilePath}\n```{s.Language}\n{s.Code}\n```\n{s.Description}"));
+
+        return $@"
+<architecture_patterns>
+{architecturePatterns}
+</architecture_patterns>
+
+<technology_stack>
+{techStack}
+</technology_stack>
+
+<code_style_guidelines>
+{codeStyle}
+</code_style_guidelines>
+
+<relevant_code_examples>
+{snippetText}
+</relevant_code_examples>
+";
     }
 
     private string BuildImplementationStepsPrompt(

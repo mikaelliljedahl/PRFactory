@@ -5,7 +5,6 @@ using PRFactory.Domain.Entities;
 using PRFactory.Domain.ValueObjects;
 using PRFactory.Infrastructure.Agents.Base;
 using PRFactory.Infrastructure.Agents.Planning;
-using PRFactory.Infrastructure.Claude;
 using Xunit;
 
 namespace PRFactory.Tests.Agents.Planning;
@@ -13,16 +12,35 @@ namespace PRFactory.Tests.Agents.Planning;
 public class TechLeadImplementationAgentTests
 {
     private readonly Mock<ICliAgent> _mockCliAgent;
-    private readonly Mock<IContextBuilder> _mockContextBuilder;
+    private readonly Mock<IArchitectureContextService> _mockArchContextService;
     private readonly Mock<ILogger<TechLeadImplementationAgent>> _mockLogger;
     private readonly TechLeadImplementationAgent _agent;
 
     public TechLeadImplementationAgentTests()
     {
         _mockCliAgent = new Mock<ICliAgent>();
-        _mockContextBuilder = new Mock<IContextBuilder>();
+        _mockArchContextService = new Mock<IArchitectureContextService>();
         _mockLogger = new Mock<ILogger<TechLeadImplementationAgent>>();
-        _agent = new TechLeadImplementationAgent(_mockLogger.Object, _mockCliAgent.Object, _mockContextBuilder.Object);
+
+        // Setup Epic 07 service mocks
+        _mockArchContextService.Setup(x => x.GetArchitecturePatternsAsync(
+                It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("Clean Architecture patterns...");
+
+        _mockArchContextService.Setup(x => x.GetTechnologyStack())
+            .Returns(".NET 10, Blazor Server...");
+
+        _mockArchContextService.Setup(x => x.GetCodeStyleGuidelines())
+            .Returns("UTF-8 without BOM, file-scoped namespaces...");
+
+        _mockArchContextService.Setup(x => x.GetRelevantCodeSnippetsAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<CodeSnippet>
+            {
+                new() { FilePath = "src/Example.cs", Language = "csharp", Code = "public class Example {}" }
+            });
+
+        _agent = new TechLeadImplementationAgent(_mockLogger.Object, _mockCliAgent.Object, _mockArchContextService.Object);
     }
 
     [Fact]
@@ -34,12 +52,6 @@ public class TechLeadImplementationAgentTests
         context.State["ApiDesign"] = "openapi: 3.0.0";
         context.State["DatabaseSchema"] = "CREATE TABLE Users";
         context.State["TestCases"] = "# Test Cases";
-
-        _mockContextBuilder
-            .Setup(x => x.BuildImplementationContextAsync(
-                It.IsAny<object>(),
-                It.IsAny<string>()))
-            .ReturnsAsync("## Current Codebase\nProject structure");
 
         var mockResponse = CreateMockImplementationStepsResponse();
 
@@ -129,12 +141,6 @@ public class TechLeadImplementationAgentTests
         context.State["DatabaseSchema"] = "CREATE TABLE Users";
         context.State["TestCases"] = "# Test Cases";
 
-        _mockContextBuilder
-            .Setup(x => x.BuildImplementationContextAsync(
-                It.IsAny<object>(),
-                It.IsAny<string>()))
-            .ReturnsAsync("Context");
-
         var failedResponse = new CliAgentResponse
         {
             Success = false,
@@ -166,12 +172,6 @@ public class TechLeadImplementationAgentTests
         context.State["DatabaseSchema"] = "CREATE TABLE Users";
         context.State["TestCases"] = "# Test Cases";
 
-        _mockContextBuilder
-            .Setup(x => x.BuildImplementationContextAsync(
-                It.IsAny<object>(),
-                It.IsAny<string>()))
-            .ReturnsAsync("Context");
-
         var invalidResponse = new CliAgentResponse
         {
             Success = true,
@@ -201,12 +201,6 @@ public class TechLeadImplementationAgentTests
         context.State["ApiDesign"] = "openapi: 3.0.0";
         context.State["DatabaseSchema"] = "CREATE TABLE Users";
         context.State["TestCases"] = "# Test Cases";
-
-        _mockContextBuilder
-            .Setup(x => x.BuildImplementationContextAsync(
-                It.IsAny<object>(),
-                It.IsAny<string>()))
-            .ReturnsAsync("Context");
 
         var responseWithCodeBlock = new CliAgentResponse
         {
@@ -248,12 +242,6 @@ Create migration for Users table
         context.State["ApiDesign"] = "openapi: 3.0.0";
         context.State["DatabaseSchema"] = "CREATE TABLE Users";
         context.State["TestCases"] = "# Test Cases";
-
-        _mockContextBuilder
-            .Setup(x => x.BuildImplementationContextAsync(
-                It.IsAny<object>(),
-                It.IsAny<string>()))
-            .ReturnsAsync("Context");
 
         var mockResponse = CreateMockImplementationStepsResponse();
 

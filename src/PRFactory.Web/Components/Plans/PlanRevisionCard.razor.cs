@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using PRFactory.Web.Services;
 
 namespace PRFactory.Web.Components.Plans;
 
@@ -18,6 +19,12 @@ public partial class PlanRevisionCard
 
     [Parameter]
     public EventCallback OnApproved { get; set; }
+
+    [Inject]
+    private ITicketService TicketService { get; set; } = null!;
+
+    [Inject]
+    private ILogger<PlanRevisionCard> Logger { get; set; } = null!;
 
     private string? RevisionFeedback { get; set; }
     private bool IsRevising { get; set; }
@@ -40,12 +47,20 @@ public partial class PlanRevisionCard
 
         try
         {
-            await OnRevisionStarted.InvokeAsync();
+            Logger.LogInformation("Requesting plan revision for ticket {TicketId}", TicketId);
+
+            // Call service to refine plan with user feedback
+            await TicketService.RefinePlanAsync(TicketId, RevisionFeedback);
+
             SuccessMessage = "Plan revision started. Please wait for agents to regenerate artifacts.";
             RevisionFeedback = null;
+
+            // Notify parent component
+            await OnRevisionStarted.InvokeAsync();
         }
         catch (Exception ex)
         {
+            Logger.LogError(ex, "Failed to start plan revision for ticket {TicketId}", TicketId);
             ErrorMessage = $"Failed to start revision: {ex.Message}";
         }
         finally
@@ -62,11 +77,19 @@ public partial class PlanRevisionCard
 
         try
         {
-            await OnApproved.InvokeAsync();
+            Logger.LogInformation("Approving plan for ticket {TicketId}", TicketId);
+
+            // Call service to approve plan
+            await TicketService.ApprovePlanAsync(TicketId);
+
             SuccessMessage = "Plan approved. Proceeding to next phase.";
+
+            // Notify parent component
+            await OnApproved.InvokeAsync();
         }
         catch (Exception ex)
         {
+            Logger.LogError(ex, "Failed to approve plan for ticket {TicketId}", TicketId);
             ErrorMessage = $"Failed to approve plan: {ex.Message}";
         }
         finally

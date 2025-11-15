@@ -38,6 +38,11 @@ public interface ILocalGitService
     /// Get the default branch name
     /// </summary>
     string GetDefaultBranch(string repoPath);
+
+    /// <summary>
+    /// Get diff for a file between two branches or commits
+    /// </summary>
+    Task<string> GetDiffAsync(string repoPath, string? filePath = null, string? baseBranch = null, string? compareBranch = null);
 }
 
 /// <summary>
@@ -191,6 +196,71 @@ public class LocalGitService : ILocalGitService
     {
         using var repo = new Repository(repoPath);
         return repo.Head.FriendlyName;
+    }
+
+    public async Task<string> GetDiffAsync(string repoPath, string? filePath = null, string? baseBranch = null, string? compareBranch = null)
+    {
+        return await Task.Run(() =>
+        {
+            using var repo = new Repository(repoPath);
+
+            // Default to HEAD for compare branch
+            var compareCommit = repo.Head.Tip;
+            if (!string.IsNullOrEmpty(compareBranch))
+            {
+                var compareBranchObj = repo.Branches[compareBranch] ?? repo.Branches[$"origin/{compareBranch}"];
+                if (compareBranchObj == null)
+                {
+                    throw new InvalidOperationException($"Compare branch '{compareBranch}' not found");
+                }
+                compareCommit = compareBranchObj.Tip;
+            }
+
+            // Default to parent commit or empty tree for base
+            Tree? baseTree = null;
+            if (!string.IsNullOrEmpty(baseBranch))
+            {
+                var baseBranchObj = repo.Branches[baseBranch] ?? repo.Branches[$"origin/{baseBranch}"];
+                if (baseBranchObj == null)
+                {
+                    throw new InvalidOperationException($"Base branch '{baseBranch}' not found");
+                }
+                baseTree = baseBranchObj.Tip.Tree;
+            }
+            else if (compareCommit.Parents.Any())
+            {
+                baseTree = compareCommit.Parents.First().Tree;
+            }
+
+            var compareTree = compareCommit.Tree;
+
+            // Get diff
+            var diff = baseTree != null
+                ? repo.Diff.Compare<TreeChanges>(baseTree, compareTree)
+                : repo.Diff.Compare<TreeChanges>(null, compareTree);
+
+            // Filter by file path if specified
+            IEnumerable<TreeEntryChanges> changes = diff;
+            if (!string.IsNullOrEmpty(filePath))
+            {
+                changes = changes.Where(c => c.Path == filePath || c.OldPath == filePath);
+            }
+
+            // Generate patch
+            var patch = repo.Diff.Compare<Patch>(baseTree, compareTree);
+            var result = new System.Text.StringBuilder();
+
+            foreach (var change in changes)
+            {
+                var patchEntry = patch[change.Path];
+                if (patchEntry != null)
+                {
+                    result.AppendLine(patchEntry.Patch);
+                }
+            }
+
+            return result.ToString();
+        });
     }
 
     private string ExtractRepoName(string repoUrl)

@@ -33,7 +33,7 @@ public class ReviewChecklistConfiguration : IEntityTypeConfiguration<ReviewCheck
 
         // Relationships
         builder.HasOne(rc => rc.PlanReview)
-            .WithOne()
+            .WithOne(pr => pr.Checklist)
             .HasForeignKey<ReviewChecklist>(rc => rc.PlanReviewId)
             .OnDelete(DeleteBehavior.Cascade); // Delete checklist when review is deleted
 

@@ -357,4 +357,100 @@ public class TicketTests
         Assert.NotNull(ticket.LastSyncedAt);
         Assert.True(Math.Abs((ticket.LastSyncedAt.Value - DateTime.UtcNow).TotalSeconds) < 1);
     }
+
+    [Fact]
+    public void MarkPRCreated_SetsPropertiesCorrectly()
+    {
+        // Arrange
+        var ticket = Ticket.Create(ValidTicketKey, _tenantId, _repositoryId);
+        ticket.TransitionTo(WorkflowState.Analyzing);
+        ticket.TransitionTo(WorkflowState.TicketUpdateGenerated);
+        ticket.TransitionTo(WorkflowState.TicketUpdateUnderReview);
+        ticket.TransitionTo(WorkflowState.TicketUpdateApproved);
+        ticket.TransitionTo(WorkflowState.TicketUpdatePosted);
+        ticket.TransitionTo(WorkflowState.Planning);
+        ticket.TransitionTo(WorkflowState.PlanPosted);
+        ticket.TransitionTo(WorkflowState.PlanUnderReview);
+        ticket.TransitionTo(WorkflowState.PlanApproved);
+        ticket.TransitionTo(WorkflowState.Implementing);
+
+        const int prNumber = 123;
+        const string prUrl = "https://github.com/org/repo/pull/123";
+
+        // Act
+        ticket.MarkPRCreated(prNumber, prUrl);
+
+        // Assert
+        Assert.Equal(prNumber, ticket.PullRequestNumber);
+        Assert.Equal(prUrl, ticket.PullRequestUrl);
+    }
+
+    [Fact]
+    public void MarkPRCreated_TransitionsToPRCreatedState()
+    {
+        // Arrange
+        var ticket = Ticket.Create(ValidTicketKey, _tenantId, _repositoryId);
+        ticket.TransitionTo(WorkflowState.Analyzing);
+        ticket.TransitionTo(WorkflowState.TicketUpdateGenerated);
+        ticket.TransitionTo(WorkflowState.TicketUpdateUnderReview);
+        ticket.TransitionTo(WorkflowState.TicketUpdateApproved);
+        ticket.TransitionTo(WorkflowState.TicketUpdatePosted);
+        ticket.TransitionTo(WorkflowState.Planning);
+        ticket.TransitionTo(WorkflowState.PlanPosted);
+        ticket.TransitionTo(WorkflowState.PlanUnderReview);
+        ticket.TransitionTo(WorkflowState.PlanApproved);
+        ticket.TransitionTo(WorkflowState.Implementing);
+
+        const int prNumber = 456;
+        const string prUrl = "https://github.com/org/repo/pull/456";
+
+        // Act
+        ticket.MarkPRCreated(prNumber, prUrl);
+
+        // Assert
+        Assert.Equal(WorkflowState.PRCreated, ticket.State);
+    }
+
+    [Fact]
+    public void MarkPRCreated_ThrowsException_WhenNotInImplementingState()
+    {
+        // Arrange
+        var ticket = Ticket.Create(ValidTicketKey, _tenantId, _repositoryId);
+        ticket.TransitionTo(WorkflowState.Analyzing);
+
+        const int prNumber = 789;
+        const string prUrl = "https://github.com/org/repo/pull/789";
+
+        // Act & Assert
+        var ex = Assert.Throws<InvalidOperationException>(() => ticket.MarkPRCreated(prNumber, prUrl));
+        Assert.Contains("Cannot mark PR created when ticket is in", ex.Message);
+        Assert.Contains("Analyzing", ex.Message);
+        Assert.Contains("Expected Implementing", ex.Message);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData(null)]
+    public void MarkPRCreated_ThrowsException_WhenPrUrlEmpty(string? invalidUrl)
+    {
+        // Arrange
+        var ticket = Ticket.Create(ValidTicketKey, _tenantId, _repositoryId);
+        ticket.TransitionTo(WorkflowState.Analyzing);
+        ticket.TransitionTo(WorkflowState.TicketUpdateGenerated);
+        ticket.TransitionTo(WorkflowState.TicketUpdateUnderReview);
+        ticket.TransitionTo(WorkflowState.TicketUpdateApproved);
+        ticket.TransitionTo(WorkflowState.TicketUpdatePosted);
+        ticket.TransitionTo(WorkflowState.Planning);
+        ticket.TransitionTo(WorkflowState.PlanPosted);
+        ticket.TransitionTo(WorkflowState.PlanUnderReview);
+        ticket.TransitionTo(WorkflowState.PlanApproved);
+        ticket.TransitionTo(WorkflowState.Implementing);
+
+        const int prNumber = 999;
+
+        // Act & Assert
+        var ex = Assert.Throws<ArgumentException>(() => ticket.MarkPRCreated(prNumber, invalidUrl!));
+        Assert.Contains("PR URL cannot be empty", ex.Message);
+    }
 }

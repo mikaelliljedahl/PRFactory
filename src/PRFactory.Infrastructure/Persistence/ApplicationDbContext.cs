@@ -25,6 +25,8 @@ using CodeReviewResultConfig = PRFactory.Infrastructure.Persistence.Configuratio
 using InlineCommentAnchorConfig = PRFactory.Infrastructure.Persistence.Configurations.InlineCommentAnchorConfiguration;
 using ReviewChecklistConfig = PRFactory.Infrastructure.Persistence.Configurations.ReviewChecklistConfiguration;
 using ChecklistItemConfig = PRFactory.Infrastructure.Persistence.Configurations.ChecklistItemConfiguration;
+using AgentConfigurationConfig = PRFactory.Infrastructure.Persistence.Configurations.AgentConfigurationConfiguration;
+using AgentExecutionLogConfig = PRFactory.Infrastructure.Persistence.Configurations.AgentExecutionLogConfiguration;
 
 namespace PRFactory.Infrastructure.Persistence;
 
@@ -78,6 +80,10 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
     // Code Review DbSets
     public DbSet<CodeReviewResult> CodeReviewResults => Set<CodeReviewResult>();
 
+    // Agent Framework DbSets
+    public DbSet<AgentConfiguration> AgentConfigurations => Set<AgentConfiguration>();
+    public DbSet<AgentExecutionLog> AgentExecutionLogs => Set<AgentExecutionLog>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         // IMPORTANT: Call base first to configure Identity tables
@@ -110,6 +116,10 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
 
         // Code Review configuration
         builder.ApplyConfiguration(new CodeReviewResultConfig());
+
+        // Agent Framework configurations
+        builder.ApplyConfiguration(new AgentConfigurationConfig());
+        builder.ApplyConfiguration(new AgentExecutionLogConfig());
 
         // Add indexes for common queries
         AddIndexes(builder);

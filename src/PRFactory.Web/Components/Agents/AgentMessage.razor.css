@@ -1,0 +1,71 @@
+.agent-message {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.agent-message.user {
+    background-color: #007bff;
+    color: white;
+    margin-left: 20%;
+    align-self: flex-end;
+}
+
+.agent-message.assistant {
+    background-color: #e9ecef;
+    margin-right: 20%;
+    align-self: flex-start;
+}
+
+.agent-message.tool {
+    background-color: #fff3cd;
+    font-style: italic;
+    border-left: 3px solid #ffc107;
+}
+
+.agent-message.reasoning {
+    background-color: #d1ecf1;
+    font-style: italic;
+    border-left: 3px solid #17a2b8;
+}
+
+.message-user,
+.message-assistant,
+.message-tool,
+.message-reasoning {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+}
+
+.message-user i,
+.message-assistant i,
+.message-tool i,
+.message-reasoning i {
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+}
+
+.message-user span,
+.message-tool span,
+.message-reasoning span {
+    flex: 1;
+}
+
+.message-assistant div {
+    flex: 1;
+}
+
+.message-time {
+    font-size: 0.75rem;
+    opacity: 0.7;
+    margin-left: auto;
+    align-self: flex-end;
+}
+
+.agent-message.user .message-time {
+    color: rgba(255, 255, 255, 0.8);
+}

@@ -57,6 +57,15 @@ public static class ServiceCollectionExtensions
                 agentConfig.Retry.ToRetryOptions()));
         }
 
+        // Register specialized middleware (Phase 3 - Epic 05)
+        services.AddSingleton<TenantIsolationMiddleware>();
+        services.AddSingleton<TokenBudgetMiddleware>();
+        services.AddSingleton<AuditLoggingMiddleware>();
+
+        // Register stub implementations for specialized middleware services
+        services.AddScoped<ITokenBudgetService, TokenBudgetServiceStub>();
+        services.AddScoped<IAgentExecutionAuditService, AgentExecutionAuditServiceStub>();
+
         // Register checkpoint repository (placeholder - implement based on storage choice)
         services.AddSingleton<ICheckpointRepository, InMemoryCheckpointRepository>();
 
@@ -115,6 +124,15 @@ public static class ServiceCollectionExtensions
                 sp.GetRequiredService<ILogger<RetryMiddleware>>(),
                 config.Retry.ToRetryOptions()));
         }
+
+        // Register specialized middleware (Phase 3 - Epic 05)
+        services.AddSingleton<TenantIsolationMiddleware>();
+        services.AddSingleton<TokenBudgetMiddleware>();
+        services.AddSingleton<AuditLoggingMiddleware>();
+
+        // Register stub implementations for specialized middleware services
+        services.AddScoped<ITokenBudgetService, TokenBudgetServiceStub>();
+        services.AddScoped<IAgentExecutionAuditService, AgentExecutionAuditServiceStub>();
 
         // Register checkpoint repository
         services.AddSingleton<ICheckpointRepository, InMemoryCheckpointRepository>();

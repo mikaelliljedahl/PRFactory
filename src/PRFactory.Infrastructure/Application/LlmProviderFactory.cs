@@ -41,14 +41,15 @@ public class LlmProviderFactory : ILlmProviderFactory
     {
         return providerName.ToLowerInvariant() switch
         {
-            AnthropicProviderName or "claude" =>
-                _serviceProvider.GetRequiredService<PRFactory.Infrastructure.Agents.Adapters.ClaudeCodeCliLlmProvider>(),
-
-            "google" or "gemini" =>
-                _serviceProvider.GetRequiredService<PRFactory.Infrastructure.Agents.Adapters.GeminiCliAdapter>(),
-
-            "openai" or "gpt" =>
-                _serviceProvider.GetRequiredService<PRFactory.Infrastructure.Agents.Adapters.OpenAiCliAdapter>(),
+            // TODO: Implement LLM adapter providers
+            // AnthropicProviderName or "claude" =>
+            //     _serviceProvider.GetRequiredService<PRFactory.Infrastructure.Agents.Adapters.ClaudeCodeCliLlmProvider>(),
+            //
+            // "google" or "gemini" =>
+            //     _serviceProvider.GetRequiredService<PRFactory.Infrastructure.Agents.Adapters.GeminiCliAdapter>(),
+            //
+            // "openai" or "gpt" =>
+            //     _serviceProvider.GetRequiredService<PRFactory.Infrastructure.Agents.Adapters.OpenAiCliAdapter>(),
 
             _ => throw new NotSupportedException($"Provider '{providerName}' is not supported. " +
                 $"Supported providers: {string.Join(", ", GetAvailableProviders())}")

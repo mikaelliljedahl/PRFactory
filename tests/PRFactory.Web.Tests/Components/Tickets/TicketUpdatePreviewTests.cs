@@ -76,7 +76,7 @@ public class TicketUpdatePreviewTests : TestContext
             CreatedAt = DateTime.UtcNow
         };
 
-        var tcs = new TaskCompletionSource<TicketUpdateDto>();
+        var tcs = new TaskCompletionSource<TicketUpdateDto?>();
         _mockTicketService
             .Setup(x => x.GetLatestTicketUpdateAsync(ticketId, It.IsAny<CancellationToken>()))
             .Returns(tcs.Task);

@@ -97,7 +97,7 @@ public class TenantLlmProvider
     /// <summary>
     /// Navigation property to tenant
     /// </summary>
-    public Tenant? Tenant { get; }
+    public Tenant? Tenant { get; private set; }
 
     private TenantLlmProvider() { }
 

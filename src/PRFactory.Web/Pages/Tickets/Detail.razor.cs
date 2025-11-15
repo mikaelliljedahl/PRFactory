@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR.Client;
+using PRFactory.Domain.ValueObjects;
 using PRFactory.Web.Models;
 using PRFactory.Web.Services;
 using PRFactory.Web.UI.Navigation;
@@ -24,6 +26,9 @@ public partial class Detail : IAsyncDisposable
     [Inject]
     private ILogger<Detail> Logger { get; set; } = null!;
 
+    [Inject]
+    private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
+
     private TicketDto? ticket;
     private List<QuestionDto>? questions;
     private List<WorkflowEventDto>? events;
@@ -32,6 +37,8 @@ public partial class Detail : IAsyncDisposable
     private string? errorMessage;
     private HubConnectionState connectionState = HubConnectionState.Disconnected;
     private List<BreadcrumbItem> breadcrumbItems = new();
+    private string? diffContent;
+    private bool isCreatingPR;
 
     protected override async Task OnInitializedAsync()
     {
@@ -41,6 +48,13 @@ public partial class Detail : IAsyncDisposable
         {
             await LoadQuestions();
             await LoadEvents();
+
+            // Load diff if in Implementing state
+            if (ticket.State == WorkflowState.Implementing)
+            {
+                await LoadDiffContent();
+            }
+
             await InitializeSignalR();
         }
     }
@@ -119,6 +133,24 @@ public partial class Detail : IAsyncDisposable
             // Log but don't fail the page load
             Logger.LogWarning(ex, "Failed to load events for ticket {TicketId}", Id);
             events = new List<WorkflowEventDto>();
+        }
+    }
+
+    private async Task LoadDiffContent()
+    {
+        try
+        {
+            if (Guid.TryParse(Id, out var ticketId))
+            {
+                var diffDto = await TicketService.GetDiffContentAsync(ticketId);
+                diffContent = diffDto?.DiffContent;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log but don't fail the page load
+            Logger.LogWarning(ex, "Failed to load diff content for ticket {TicketId}", Id);
+            diffContent = null;
         }
     }
 
@@ -296,6 +328,47 @@ public partial class Detail : IAsyncDisposable
                 Icon = "file-text"
             }
         };
+    }
+
+    private async Task HandleApprovePR()
+    {
+        if (ticket == null)
+            return;
+
+        isCreatingPR = true;
+
+        try
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var userName = authState.User?.Identity?.Name;
+
+            var result = await TicketService.CreatePullRequestAsync(ticket.Id, userName);
+
+            if (result.Success)
+            {
+                ToastService.ShowSuccess($"Pull request #{result.PullRequestNumber} created successfully!");
+                await LoadTicket();
+            }
+            else
+            {
+                ToastService.ShowError($"Failed to create PR: {result.ErrorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"Error creating pull request: {ex.Message}");
+        }
+        finally
+        {
+            isCreatingPR = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleRejectChanges()
+    {
+        ToastService.ShowWarning("Rejection workflow not yet implemented");
+        await Task.CompletedTask;
     }
 
     public async ValueTask DisposeAsync()

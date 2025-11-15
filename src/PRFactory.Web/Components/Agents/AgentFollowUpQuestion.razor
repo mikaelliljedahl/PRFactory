@@ -1,0 +1,36 @@
+@using PRFactory.Web.UI.Buttons
+
+<div class="follow-up-question">
+    <div class="question-header">
+        <i class="bi bi-question-circle"></i>
+        <strong>Agent needs clarification:</strong>
+    </div>
+    <p>@Question</p>
+
+    <div class="answer-input">
+        <InputText @bind-Value="answer"
+                   placeholder="Your answer..."
+                   class="form-control" />
+        <LoadingButton OnClick="SubmitAnswerAsync" Icon="check">
+            Submit
+        </LoadingButton>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Question { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> OnAnswer { get; set; }
+
+    private string answer = string.Empty;
+
+    private async Task SubmitAnswerAsync()
+    {
+        if (string.IsNullOrWhiteSpace(answer)) return;
+        var submittedAnswer = answer;
+        answer = string.Empty;
+        await OnAnswer.InvokeAsync(submittedAnswer);
+    }
+}

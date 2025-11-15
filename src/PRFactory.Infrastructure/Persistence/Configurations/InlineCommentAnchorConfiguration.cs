@@ -43,7 +43,7 @@ public class InlineCommentAnchorConfiguration : IEntityTypeConfiguration<InlineC
 
         // Relationships
         builder.HasOne(a => a.ReviewComment)
-            .WithOne()
+            .WithOne(rc => rc.InlineCommentAnchor)
             .HasForeignKey<InlineCommentAnchor>(a => a.ReviewCommentId)
             .OnDelete(DeleteBehavior.Cascade); // Delete anchor when comment is deleted
     }

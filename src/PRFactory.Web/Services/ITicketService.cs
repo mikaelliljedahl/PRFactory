@@ -139,4 +139,14 @@ public interface ITicketService
     /// Check if a ticket has sufficient approvals to proceed
     /// </summary>
     Task<bool> HasSufficientApprovalsAsync(Guid ticketId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Gets diff content for a ticket.
+    /// </summary>
+    Task<DiffContentDto?> GetDiffContentAsync(Guid ticketId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Creates a pull request for an approved ticket.
+    /// </summary>
+    Task<CreatePRResponse> CreatePullRequestAsync(Guid ticketId, string? approvedBy = null, CancellationToken ct = default);
 }

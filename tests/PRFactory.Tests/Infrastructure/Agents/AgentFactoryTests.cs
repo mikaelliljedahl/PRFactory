@@ -75,6 +75,7 @@ public class AgentFactoryTests
         services.AddSingleton(Mock.Of<PRFactory.Core.Application.LLM.ILlmProviderFactory>());
         services.AddSingleton(Mock.Of<PRFactory.Core.Application.LLM.IPromptLoaderService>());
         services.AddSingleton(Mock.Of<PRFactory.Domain.Interfaces.ICodeReviewResultRepository>());
+        services.AddSingleton(Mock.Of<PRFactory.Core.Application.Services.IWorkspaceService>());
 
         _serviceProvider = services.BuildServiceProvider();
         _agentFactory = new AgentFactory(_mockConfigRepo.Object, _serviceProvider, _mockLogger.Object);

@@ -13,6 +13,8 @@ Errors             →  /errors (with dynamic error count badge)
 ─────────────────────
 Tenants            →  /tenants (ADMIN)
 Agent Prompts      →  /agent-prompts (ADMIN)
+Settings           →  /settings/general (SETTINGS)
+Admin              →  /admin (ADMIN)
 ```
 
 ## Page Routes (Complete List)
@@ -39,11 +41,20 @@ Agent Prompts      →  /agent-prompts (ADMIN)
 | 18 | Create Prompt | `/agent-prompts/create` | `Pages/AgentPrompts/Create.razor` |
 | 19 | Edit Prompt | `/agent-prompts/edit/{id}` | `Pages/AgentPrompts/Edit.razor` |
 | 20 | Preview Prompt | `/agent-prompts/preview/{id}` | `Pages/AgentPrompts/Preview.razor` |
+| 21 | Tenant Settings | `/settings/general` | `Pages/Settings/General.razor` |
+| 22 | LLM Providers List | `/settings/llm-providers` | `Pages/Settings/LlmProviders/Index.razor` |
+| 23 | Create LLM Provider | `/settings/llm-providers/create` | `Pages/Settings/LlmProviders/Create.razor` |
+| 24 | LLM Provider Detail | `/settings/llm-providers/{id}` | `Pages/Settings/LlmProviders/Detail.razor` |
+| 25 | Edit LLM Provider | `/settings/llm-providers/{id}/edit` | `Pages/Settings/LlmProviders/Edit.razor` |
+| 26 | User Management | `/settings/users` | `Pages/Settings/Users/Index.razor` |
+| 27 | User Detail | `/settings/users/{id}` | `Pages/Settings/Users/Detail.razor` |
+| 28 | Edit User | `/settings/users/{id}/edit` | `Pages/Settings/Users/Edit.razor` |
+| 29 | Agent Configuration | `/admin/agent-configuration` | `Pages/Admin/AgentConfiguration.razor` |
 
 ## Implementation Status Summary
 
 ### ✅ Fully Implemented (UI Complete)
-- Navigation & Routing (all 18 pages)
+- Navigation & Routing (all 29 pages)
 - Dashboard with stats
 - Repository Management (CRUD)
 - Workflow Monitoring
@@ -51,6 +62,10 @@ Agent Prompts      →  /agent-prompts (ADMIN)
 - Error Management
 - Tenant Management
 - Agent Prompt Management
+- Tenant Settings & Configuration (General, Workflow, Code Review, LLM Providers)
+- LLM Provider Management (CRUD with test connection)
+- User Management with role-based access
+- Agent Configuration (provider assignment for different agent types, code review settings)
 - All UI components
 
 ### ⚠️ Partially Implemented (UI Ready, API TODO)

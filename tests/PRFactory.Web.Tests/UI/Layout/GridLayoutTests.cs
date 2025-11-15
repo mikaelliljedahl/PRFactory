@@ -62,7 +62,7 @@ public class GridLayoutTests : TestContext
 
         // Assert
         var div = cut.Find("div");
-        var classes = div.ClassName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var classes = (div.ClassName ?? string.Empty).Split(' ', StringSplitOptions.RemoveEmptyEntries);
         Assert.Single(classes);
         Assert.Equal("row", classes[0]);
     }

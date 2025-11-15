@@ -233,7 +233,7 @@
                                             </div>
                                             <h6 class="mb-1">@ticket.Title</h6>
                                             <p class="mb-1 text-muted small">
-                                                <i class="bi bi-folder me-1"></i> @ticket.Repository?.Name
+                                                <i class="bi bi-folder me-1"></i> @(ticket.RepositoryName ?? "No repository")
                                             </p>
                                         </div>
                                         <div class="text-end">

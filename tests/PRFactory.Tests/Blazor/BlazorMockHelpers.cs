@@ -32,7 +32,7 @@ public static class BlazorMockHelpers
     /// <summary>
     /// Configures ITicketService mock to return a list of tickets
     /// </summary>
-    public static void SetupGetAllTickets(Mock<ITicketService> mockService, List<Ticket> tickets)
+    public static void SetupGetAllTickets(Mock<ITicketService> mockService, List<TicketDto> tickets)
     {
         mockService.Setup(m => m.GetAllTicketsAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(tickets);

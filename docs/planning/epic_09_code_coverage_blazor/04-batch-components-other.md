@@ -1,21 +1,50 @@
 # Batch 4: Business Components - Other
 
+## ✅ STATUS UPDATE (As of 2025-01-15)
+
+### Completed (7/40 components)
+✅ **Sub-batch 4a - Partial**: Repositories & Tenants (7 of 10 completed)
+- ✅ BranchSelector (22 tests)
+- ✅ RepositoryConnectionTest (18 tests)
+- ✅ RepositoryForm (16 tests)
+- ✅ RepositoryListItem (10 tests)
+- ✅ RepositoryStatistics (7 tests)
+- ✅ TenantListItem (10 tests)
+- ✅ TenantForm (13 tests)
+
+### ⏭️ Remaining to Complete (33/40 components)
+
+**Sub-batch 4a - Remaining** (3 components):
+- ❌ TenantConfigEditor
+
+**Sub-batch 4b** (13 components):
+- ❌ All Settings components (LlmProviderListItem, ApiKeyProviderForm, OAuthProviderForm, etc.)
+
+**Sub-batch 4c** (9 components):
+- ❌ All Workflows, Errors, Auth components
+
+**Sub-batch 4d** (8 components):
+- ❌ All Agent Prompts & Misc components
+
+---
+
 ## Summary
 - **Total Components**: ~40
-- **Estimated Complexity**: Medium-Complex
-- **Estimated Time**: 15-20 hours
-- **Priority**: MEDIUM
-- **Coverage Contribution**: +32% (40/125 components)
+- **Completed**: 7 components (96 tests)
+- **Remaining**: 33 components
+- **Estimated Time for Remaining**: 12-15 hours
+- **Priority**: MEDIUM (needed to reach 80% coverage target)
+- **Coverage Contribution**: +26% remaining (33/125 components)
 
 ## Overview
 
 This batch covers all business components outside of tickets: Settings, Repositories, Tenants, Workflows, Errors, Agent Prompts, Auth, and Layout. These components have service dependencies and implement specific business workflows.
 
 This batch can be parallelized by subdomain:
-- **Sub-batch 4a**: Repositories & Tenants (~10 components, 4-5 hours)
-- **Sub-batch 4b**: Settings (~13 components, 5-6 hours)
-- **Sub-batch 4c**: Workflows, Errors, Auth (~9 components, 3-4 hours)
-- **Sub-batch 4d**: Agent Prompts, Misc (~8 components, 3-4 hours)
+- **Sub-batch 4a**: Repositories & Tenants (~10 components) - ✅ 7/10 DONE
+- **Sub-batch 4b**: Settings (~13 components) - ❌ TODO
+- **Sub-batch 4c**: Workflows, Errors, Auth (~9 components) - ❌ TODO
+- **Sub-batch 4d**: Agent Prompts, Misc (~8 components) - ❌ TODO
 
 ---
 

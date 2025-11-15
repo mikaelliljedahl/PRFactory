@@ -4,6 +4,7 @@
 @using PRFactory.Web.UI.Cards
 @using PRFactory.Web.UI.Alerts
 @using PRFactory.Web.UI.Display
+@using PRFactory.Web.UI.Layout
 
 <PageTitle>Edit Agent Prompt Template</PageTitle>
 
@@ -61,10 +62,10 @@
             </div>
         }
 
-        <div class="row">
-            <div class="col-lg-8">
-                <div class="row">
-                    <div class="col-md-6">
+        <GridLayout>
+            <GridColumn Width="8" AdditionalClass="col-lg-8">
+                <GridLayout>
+                    <GridColumn Width="6">
                         <Card Title="Template Information" Icon="info-circle">
                             <dl class="row">
                                 <dt class="col-sm-4">Name:</dt>
@@ -96,12 +97,12 @@
                                 }
                             </dl>
                         </Card>
-                    </div>
+                    </GridColumn>
 
-                    <div class="col-md-6">
+                    <GridColumn Width="6">
                         <PromptVariableReference OnVariableSelected="@HandleVariableSelected" />
-                    </div>
-                </div>
+                    </GridColumn>
+                </GridLayout>
 
                 @if (!Template.IsSystemTemplate)
                 {
@@ -115,13 +116,13 @@
                             IsNewTemplate="false" />
                     </Card>
                 }
-            </div>
+            </GridColumn>
 
-            <div class="col-lg-4">
+            <GridColumn Width="4" AdditionalClass="col-lg-4">
                 <Card Title="Preview" Icon="eye">
                     <PromptPreview Template="@Template" />
                 </Card>
-            </div>
-        </div>
+            </GridColumn>
+        </GridLayout>
     }
 </div>

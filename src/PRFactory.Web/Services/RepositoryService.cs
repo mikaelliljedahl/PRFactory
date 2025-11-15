@@ -1,3 +1,5 @@
+using Mapster;
+using MapsterMapper;
 using PRFactory.Core.Application.Services;
 using PRFactory.Domain.Entities;
 using PRFactory.Domain.Interfaces;
@@ -16,7 +18,8 @@ public class RepositoryService(
     IRepositoryApplicationService repositoryApplicationService,
     ITenantRepository tenantRepository,
     ITicketRepository ticketRepository,
-    IEncryptionService encryptionService) : IRepositoryService
+    IEncryptionService encryptionService,
+    IMapper mapper) : IRepositoryService
 {
 
     public async Task<List<RepositoryDto>> GetAllRepositoriesAsync(CancellationToken ct = default)
@@ -31,7 +34,10 @@ public class RepositoryService(
                 var ticketCount = (await ticketRepository.GetByRepositoryIdAsync(repo.Id, ct)).Count;
                 var tenant = await tenantRepository.GetByIdAsync(repo.TenantId, ct);
 
-                dtos.Add(MapToDto(repo, tenant?.Name ?? "Unknown", ticketCount));
+                var dto = mapper.Map<RepositoryDto>(repo);
+                dto.TenantName = tenant?.Name ?? "Unknown";
+                dto.TicketCount = ticketCount;
+                dtos.Add(dto);
             }
 
             return dtos;
@@ -56,7 +62,10 @@ public class RepositoryService(
             var ticketCount = (await ticketRepository.GetByRepositoryIdAsync(repositoryId, ct)).Count;
             var tenant = await tenantRepository.GetByIdAsync(repository.TenantId, ct);
 
-            return MapToDto(repository, tenant?.Name ?? "Unknown", ticketCount);
+            var dto = mapper.Map<RepositoryDto>(repository);
+            dto.TenantName = tenant?.Name ?? "Unknown";
+            dto.TicketCount = ticketCount;
+            return dto;
         }
         catch (Exception ex)
         {
@@ -85,7 +94,10 @@ public class RepositoryService(
 
             logger.LogInformation("Created repository {RepositoryName}", request.Name);
 
-            return MapToDto(created, tenant?.Name ?? "Unknown", 0);
+            var dto = mapper.Map<RepositoryDto>(created);
+            dto.TenantName = tenant?.Name ?? "Unknown";
+            dto.TicketCount = 0;
+            return dto;
         }
         catch (Exception ex)
         {
@@ -201,13 +213,7 @@ public class RepositoryService(
         {
             var tenants = await tenantRepository.GetAllAsync(ct);
 
-            return tenants.Select(t => new TenantDto
-            {
-                Id = t.Id,
-                Name = t.Name,
-                IsActive = t.IsActive,
-                CreatedAt = t.CreatedAt
-            }).ToList();
+            return mapper.Map<List<TenantDto>>(tenants);
         }
         catch (Exception ex)
         {
@@ -216,22 +222,4 @@ public class RepositoryService(
         }
     }
 
-    private RepositoryDto MapToDto(Repository repository, string tenantName, int ticketCount)
-    {
-        return new RepositoryDto
-        {
-            Id = repository.Id,
-            TenantId = repository.TenantId,
-            TenantName = tenantName,
-            Name = repository.Name,
-            GitPlatform = repository.GitPlatform,
-            CloneUrl = repository.CloneUrl,
-            DefaultBranch = repository.DefaultBranch,
-            IsActive = repository.IsActive,
-            CreatedAt = repository.CreatedAt,
-            UpdatedAt = repository.UpdatedAt,
-            LastAccessedAt = repository.LastAccessedAt,
-            TicketCount = ticketCount
-        };
-    }
 }

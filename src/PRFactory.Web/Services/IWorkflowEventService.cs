@@ -1,3 +1,4 @@
+using PRFactory.Domain.DTOs;
 using PRFactory.Web.Models;
 
 namespace PRFactory.Web.Services;

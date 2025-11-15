@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using PRFactory.Core.Application.Services;
+using PRFactory.Domain.DTOs;
 using PRFactory.Domain.Entities;
 using PRFactory.Domain.Interfaces;
 using PRFactory.Infrastructure.Agents.Graphs;
@@ -59,6 +60,18 @@ public class TicketApplicationService(
         }
 
         return await ticketRepository.GetByRepositoryIdAsync(repositoryId, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<PagedResult<Ticket>> GetTicketsPagedAsync(
+        PaginationParams paginationParams,
+        WorkflowState? stateFilter = null,
+        CancellationToken cancellationToken = default)
+    {
+        logger.LogDebug("Getting paged tickets: Page {Page}, PageSize {PageSize}, SearchQuery {SearchQuery}, StateFilter {StateFilter}",
+            paginationParams.Page, paginationParams.PageSize, paginationParams.SearchQuery ?? "None", stateFilter?.ToString() ?? "None");
+
+        return await ticketRepository.GetTicketsPagedAsync(paginationParams, stateFilter, cancellationToken);
     }
 
     /// <inheritdoc/>

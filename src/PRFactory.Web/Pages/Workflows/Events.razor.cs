@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using PRFactory.Domain.DTOs;
 using PRFactory.Web.Models;
 using PRFactory.Web.Services;
 using System.Timers;

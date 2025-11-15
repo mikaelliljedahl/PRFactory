@@ -25,6 +25,11 @@ public class WebServiceRegistrationTests : DIValidationTestBase
         services.AddScoped<PRFactory.Infrastructure.Events.IEventBroadcaster,
             PRFactory.Web.Services.SignalREventBroadcaster>();
 
+        // Add Mapster for DTO mapping (matching Program.cs)
+        PRFactory.Web.Mapping.MappingConfiguration.Configure();
+        services.AddSingleton(Mapster.TypeAdapterConfig.GlobalSettings);
+        services.AddScoped<MapsterMapper.IMapper, MapsterMapper.Mapper>();
+
         // Register web layer facade services (from Program.cs)
         services.AddScoped<ITicketService, TicketService>();
         services.AddScoped<IRepositoryService, RepositoryService>();

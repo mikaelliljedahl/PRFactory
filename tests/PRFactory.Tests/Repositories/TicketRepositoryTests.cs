@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
+using PRFactory.Domain.DTOs;
 using PRFactory.Domain.Entities;
 using PRFactory.Domain.ValueObjects;
 using PRFactory.Infrastructure.Persistence;
@@ -632,4 +633,384 @@ public class TicketRepositoryTests : TestBase
         // Assert
         Assert.False(result);
     }
+
+    #region Pagination Tests
+
+    [Fact]
+    public async Task GetTicketsPagedAsync_WithDefaultParams_ReturnsFirstPage()
+    {
+        // Arrange
+        var tenant = new TenantBuilder().Build();
+        var repository = new RepositoryBuilder().ForTenant(tenant.Id).Build();
+
+        // Create 25 tickets
+        var tickets = new List<Ticket>();
+        for (int i = 1; i <= 25; i++)
+        {
+            tickets.Add(new TicketBuilder()
+                .WithTenantId(tenant.Id)
+                .WithRepositoryId(repository.Id)
+                .WithTicketKey($"TICKET-{i:D3}")
+                .WithTitle($"Ticket {i}")
+                .Build());
+        }
+
+        DbContext.Tenants.Add(tenant);
+        DbContext.Repositories.Add(repository);
+        DbContext.Tickets.AddRange(tickets);
+        await DbContext.SaveChangesAsync();
+
+        var paginationParams = new PaginationParams
+        {
+            Page = 1,
+            PageSize = 10,
+            SortBy = "created",
+            Descending = true
+        };
+
+        // Act
+        var result = await _repository.GetTicketsPagedAsync(paginationParams);
+
+        // Assert
+        Assert.Equal(10, result.Items.Count);
+        Assert.Equal(25, result.TotalCount);
+        Assert.Equal(1, result.Page);
+        Assert.Equal(10, result.PageSize);
+        Assert.Equal(3, result.TotalPages);
+        Assert.False(result.HasPreviousPage);
+        Assert.True(result.HasNextPage);
+    }
+
+    [Fact]
+    public async Task GetTicketsPagedAsync_WithPageTwo_ReturnsSecondPage()
+    {
+        // Arrange
+        var tenant = new TenantBuilder().Build();
+        var repository = new RepositoryBuilder().ForTenant(tenant.Id).Build();
+
+        // Create 25 tickets
+        for (int i = 1; i <= 25; i++)
+        {
+            DbContext.Tickets.Add(new TicketBuilder()
+                .WithTenantId(tenant.Id)
+                .WithRepositoryId(repository.Id)
+                .WithTicketKey($"TICKET-{i:D3}")
+                .Build());
+        }
+
+        DbContext.Tenants.Add(tenant);
+        DbContext.Repositories.Add(repository);
+        await DbContext.SaveChangesAsync();
+
+        var paginationParams = new PaginationParams
+        {
+            Page = 2,
+            PageSize = 10
+        };
+
+        // Act
+        var result = await _repository.GetTicketsPagedAsync(paginationParams);
+
+        // Assert
+        Assert.Equal(10, result.Items.Count);
+        Assert.Equal(2, result.Page);
+        Assert.True(result.HasPreviousPage);
+        Assert.True(result.HasNextPage);
+    }
+
+    [Fact]
+    public async Task GetTicketsPagedAsync_WithLastPage_ReturnsRemainingItems()
+    {
+        // Arrange
+        var tenant = new TenantBuilder().Build();
+        var repository = new RepositoryBuilder().ForTenant(tenant.Id).Build();
+
+        // Create 25 tickets
+        for (int i = 1; i <= 25; i++)
+        {
+            DbContext.Tickets.Add(new TicketBuilder()
+                .WithTenantId(tenant.Id)
+                .WithRepositoryId(repository.Id)
+                .WithTicketKey($"TICKET-{i:D3}")
+                .Build());
+        }
+
+        DbContext.Tenants.Add(tenant);
+        DbContext.Repositories.Add(repository);
+        await DbContext.SaveChangesAsync();
+
+        var paginationParams = new PaginationParams
+        {
+            Page = 3,
+            PageSize = 10
+        };
+
+        // Act
+        var result = await _repository.GetTicketsPagedAsync(paginationParams);
+
+        // Assert
+        Assert.Equal(5, result.Items.Count); // Only 5 items on last page
+        Assert.Equal(3, result.Page);
+        Assert.True(result.HasPreviousPage);
+        Assert.False(result.HasNextPage);
+    }
+
+    [Fact]
+    public async Task GetTicketsPagedAsync_WithSearchQuery_FiltersResults()
+    {
+        // Arrange
+        var tenant = new TenantBuilder().Build();
+        var repository = new RepositoryBuilder().ForTenant(tenant.Id).Build();
+
+        DbContext.Tickets.Add(new TicketBuilder()
+            .WithTenantId(tenant.Id)
+            .WithRepositoryId(repository.Id)
+            .WithTicketKey("SEARCH-001")
+            .WithTitle("Important feature")
+            .Build());
+        DbContext.Tickets.Add(new TicketBuilder()
+            .WithTenantId(tenant.Id)
+            .WithRepositoryId(repository.Id)
+            .WithTicketKey("SEARCH-002")
+            .WithTitle("Another task")
+            .Build());
+        DbContext.Tickets.Add(new TicketBuilder()
+            .WithTenantId(tenant.Id)
+            .WithRepositoryId(repository.Id)
+            .WithTicketKey("SEARCH-003")
+            .WithTitle("Important bug fix")
+            .Build());
+
+        DbContext.Tenants.Add(tenant);
+        DbContext.Repositories.Add(repository);
+        await DbContext.SaveChangesAsync();
+
+        var paginationParams = new PaginationParams
+        {
+            Page = 1,
+            PageSize = 10,
+            SearchQuery = "important"
+        };
+
+        // Act
+        var result = await _repository.GetTicketsPagedAsync(paginationParams);
+
+        // Assert
+        Assert.Equal(2, result.Items.Count);
+        Assert.Equal(2, result.TotalCount);
+        Assert.All(result.Items, t => Assert.Contains("important", t.Title, StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task GetTicketsPagedAsync_WithStateFilter_FiltersResults()
+    {
+        // Arrange
+        var tenant = new TenantBuilder().Build();
+        var repository = new RepositoryBuilder().ForTenant(tenant.Id).Build();
+
+        DbContext.Tickets.Add(new TicketBuilder()
+            .WithTenantId(tenant.Id)
+            .WithRepositoryId(repository.Id)
+            .WithTicketKey("STATE-001")
+            .WithState(WorkflowState.Triggered)
+            .Build());
+        DbContext.Tickets.Add(new TicketBuilder()
+            .WithTenantId(tenant.Id)
+            .WithRepositoryId(repository.Id)
+            .WithTicketKey("STATE-002")
+            .WithState(WorkflowState.Planning)
+            .Build());
+        DbContext.Tickets.Add(new TicketBuilder()
+            .WithTenantId(tenant.Id)
+            .WithRepositoryId(repository.Id)
+            .WithTicketKey("STATE-003")
+            .WithState(WorkflowState.Triggered)
+            .Build());
+
+        DbContext.Tenants.Add(tenant);
+        DbContext.Repositories.Add(repository);
+        await DbContext.SaveChangesAsync();
+
+        var paginationParams = new PaginationParams
+        {
+            Page = 1,
+            PageSize = 10
+        };
+
+        // Act
+        var result = await _repository.GetTicketsPagedAsync(paginationParams, WorkflowState.Triggered);
+
+        // Assert
+        Assert.Equal(2, result.Items.Count);
+        Assert.Equal(2, result.TotalCount);
+        Assert.All(result.Items, t => Assert.Equal(WorkflowState.Triggered, t.State));
+    }
+
+    [Fact]
+    public async Task GetTicketsPagedAsync_SortByTitle_ReturnsSortedResults()
+    {
+        // Arrange
+        var tenant = new TenantBuilder().Build();
+        var repository = new RepositoryBuilder().ForTenant(tenant.Id).Build();
+
+        DbContext.Tickets.Add(new TicketBuilder()
+            .WithTenantId(tenant.Id)
+            .WithRepositoryId(repository.Id)
+            .WithTicketKey("SORT-001")
+            .WithTitle("Zebra")
+            .Build());
+        DbContext.Tickets.Add(new TicketBuilder()
+            .WithTenantId(tenant.Id)
+            .WithRepositoryId(repository.Id)
+            .WithTicketKey("SORT-002")
+            .WithTitle("Apple")
+            .Build());
+        DbContext.Tickets.Add(new TicketBuilder()
+            .WithTenantId(tenant.Id)
+            .WithRepositoryId(repository.Id)
+            .WithTicketKey("SORT-003")
+            .WithTitle("Mango")
+            .Build());
+
+        DbContext.Tenants.Add(tenant);
+        DbContext.Repositories.Add(repository);
+        await DbContext.SaveChangesAsync();
+
+        var paginationParams = new PaginationParams
+        {
+            Page = 1,
+            PageSize = 10,
+            SortBy = "title",
+            Descending = false
+        };
+
+        // Act
+        var result = await _repository.GetTicketsPagedAsync(paginationParams);
+
+        // Assert
+        Assert.Equal(3, result.Items.Count);
+        Assert.Equal("Apple", result.Items[0].Title);
+        Assert.Equal("Mango", result.Items[1].Title);
+        Assert.Equal("Zebra", result.Items[2].Title);
+    }
+
+    [Fact]
+    public async Task GetTicketsPagedAsync_SortByTitleDescending_ReturnsSortedResults()
+    {
+        // Arrange
+        var tenant = new TenantBuilder().Build();
+        var repository = new RepositoryBuilder().ForTenant(tenant.Id).Build();
+
+        DbContext.Tickets.Add(new TicketBuilder()
+            .WithTenantId(tenant.Id)
+            .WithRepositoryId(repository.Id)
+            .WithTicketKey("SORT-001")
+            .WithTitle("Zebra")
+            .Build());
+        DbContext.Tickets.Add(new TicketBuilder()
+            .WithTenantId(tenant.Id)
+            .WithRepositoryId(repository.Id)
+            .WithTicketKey("SORT-002")
+            .WithTitle("Apple")
+            .Build());
+        DbContext.Tickets.Add(new TicketBuilder()
+            .WithTenantId(tenant.Id)
+            .WithRepositoryId(repository.Id)
+            .WithTicketKey("SORT-003")
+            .WithTitle("Mango")
+            .Build());
+
+        DbContext.Tenants.Add(tenant);
+        DbContext.Repositories.Add(repository);
+        await DbContext.SaveChangesAsync();
+
+        var paginationParams = new PaginationParams
+        {
+            Page = 1,
+            PageSize = 10,
+            SortBy = "title",
+            Descending = true
+        };
+
+        // Act
+        var result = await _repository.GetTicketsPagedAsync(paginationParams);
+
+        // Assert
+        Assert.Equal(3, result.Items.Count);
+        Assert.Equal("Zebra", result.Items[0].Title);
+        Assert.Equal("Mango", result.Items[1].Title);
+        Assert.Equal("Apple", result.Items[2].Title);
+    }
+
+    [Fact]
+    public async Task GetTicketsPagedAsync_WithEmptyResults_ReturnsEmptyPage()
+    {
+        // Arrange
+        var paginationParams = new PaginationParams
+        {
+            Page = 1,
+            PageSize = 10
+        };
+
+        // Act
+        var result = await _repository.GetTicketsPagedAsync(paginationParams);
+
+        // Assert
+        Assert.Empty(result.Items);
+        Assert.Equal(0, result.TotalCount);
+        Assert.Equal(0, result.TotalPages);
+        Assert.False(result.HasPreviousPage);
+        Assert.False(result.HasNextPage);
+    }
+
+    [Fact]
+    public async Task GetTicketsPagedAsync_WithSearchAndFilter_CombinesFilters()
+    {
+        // Arrange
+        var tenant = new TenantBuilder().Build();
+        var repository = new RepositoryBuilder().ForTenant(tenant.Id).Build();
+
+        DbContext.Tickets.Add(new TicketBuilder()
+            .WithTenantId(tenant.Id)
+            .WithRepositoryId(repository.Id)
+            .WithTicketKey("COMBO-001")
+            .WithTitle("Important feature")
+            .WithState(WorkflowState.Planning)
+            .Build());
+        DbContext.Tickets.Add(new TicketBuilder()
+            .WithTenantId(tenant.Id)
+            .WithRepositoryId(repository.Id)
+            .WithTicketKey("COMBO-002")
+            .WithTitle("Important bug")
+            .WithState(WorkflowState.Triggered)
+            .Build());
+        DbContext.Tickets.Add(new TicketBuilder()
+            .WithTenantId(tenant.Id)
+            .WithRepositoryId(repository.Id)
+            .WithTicketKey("COMBO-003")
+            .WithTitle("Other task")
+            .WithState(WorkflowState.Planning)
+            .Build());
+
+        DbContext.Tenants.Add(tenant);
+        DbContext.Repositories.Add(repository);
+        await DbContext.SaveChangesAsync();
+
+        var paginationParams = new PaginationParams
+        {
+            Page = 1,
+            PageSize = 10,
+            SearchQuery = "important"
+        };
+
+        // Act
+        var result = await _repository.GetTicketsPagedAsync(paginationParams, WorkflowState.Planning);
+
+        // Assert
+        Assert.Single(result.Items);
+        Assert.Equal(1, result.TotalCount);
+        Assert.Equal("COMBO-001", result.Items[0].TicketKey);
+    }
+
+    #endregion
 }

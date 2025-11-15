@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
+using PRFactory.Domain.DTOs;
 using PRFactory.Domain.ValueObjects;
 using PRFactory.Web.Components;
 using PRFactory.Web.Models;
@@ -16,21 +17,31 @@ namespace PRFactory.Web.Pages.Tickets;
 
 public partial class Index : IAsyncDisposable
 {
-    private List<TicketDto>? tickets;
+    private PagedResult<TicketDto>? pagedTickets;
     private List<RepositoryInfo>? repositories;
     private HubConnection? hubConnection;
 
-    private int currentPage = 1;
-    private int totalPages = 1;
-    private int? totalItems;
-    private int pageSize = 12;
+    private PaginationParams paginationParams = new()
+    {
+        Page = 1,
+        PageSize = 12,
+        SortBy = "created",
+        Descending = true
+    };
 
-    private string? filterState;
+    private WorkflowState? stateFilter;
     private string? filterSource;
     private string? filterRepositoryId;
 
     private bool isLoading = true;
     private string? errorMessage;
+
+    // Helper property for UI binding (converts WorkflowState? to string?)
+    private string? filterState
+    {
+        get => stateFilter?.ToString();
+        set => stateFilter = string.IsNullOrWhiteSpace(value) ? null : Enum.Parse<WorkflowState>(value);
+    }
 
     private List<BreadcrumbItem> breadcrumbItems = new()
     {
@@ -83,51 +94,25 @@ public partial class Index : IAsyncDisposable
             errorMessage = null;
             StateHasChanged();
 
-            // TODO: Replace with actual API call that supports filtering and pagination
-            // For now, load all tickets and filter/paginate in memory
-            var allTickets = await TicketService.GetAllTicketsAsync();
+            // Server-side pagination with filtering and sorting
+            pagedTickets = await TicketService.GetTicketsPagedAsync(
+                paginationParams,
+                stateFilter);
 
-            // Map to DTOs
-            var ticketDtos = allTickets.Select(t => new TicketDto
-            {
-                Id = t.Id,
-                TicketKey = t.TicketKey,
-                Title = t.Title,
-                Description = t.Description,
-                State = t.State,
-                Source = t.Source,
-                RepositoryId = t.RepositoryId,
-                RepositoryName = t.Repository?.Name,
-                CreatedAt = t.CreatedAt,
-                UpdatedAt = t.UpdatedAt,
-                CompletedAt = t.CompletedAt,
-                PullRequestUrl = t.PullRequestUrl,
-                PullRequestNumber = t.PullRequestNumber,
-                LastError = t.LastError
-            }).ToList();
-
-            // Apply filters
-            var filteredTickets = ApplyFilters(ticketDtos);
-
-            // Calculate pagination
-            totalItems = filteredTickets.Count;
-            totalPages = (int)Math.Ceiling((double)totalItems.Value / pageSize);
-            currentPage = Math.Max(1, Math.Min(currentPage, totalPages));
-
-            // Apply pagination
-            tickets = filteredTickets
-                .Skip((currentPage - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
-
-            Logger.LogInformation("Loaded {Count} tickets (page {Page} of {Total})",
-                tickets.Count, currentPage, totalPages);
+            Logger.LogInformation("Loaded page {Page} of {TotalPages} (Showing {Count} of {TotalCount} tickets)",
+                pagedTickets.Page, pagedTickets.TotalPages, pagedTickets.Items.Count, pagedTickets.TotalCount);
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error loading tickets");
             errorMessage = "Failed to load tickets. Please try again.";
-            tickets = new List<TicketDto>();
+            pagedTickets = new PagedResult<TicketDto>
+            {
+                Items = new List<TicketDto>(),
+                TotalCount = 0,
+                Page = 1,
+                PageSize = paginationParams.PageSize
+            };
         }
         finally
         {
@@ -136,55 +121,30 @@ public partial class Index : IAsyncDisposable
         }
     }
 
-    private List<TicketDto> ApplyFilters(List<TicketDto> allTickets)
-    {
-        var filtered = allTickets.AsEnumerable();
-
-        // Filter by state
-        if (!string.IsNullOrWhiteSpace(filterState) && Enum.TryParse<WorkflowState>(filterState, out var state))
-        {
-            filtered = filtered.Where(t => t.State == state);
-        }
-
-        // Filter by source
-        if (!string.IsNullOrWhiteSpace(filterSource) && Enum.TryParse<TicketSource>(filterSource, out var source))
-        {
-            filtered = filtered.Where(t => t.Source == source);
-        }
-
-        // Filter by repository
-        if (!string.IsNullOrWhiteSpace(filterRepositoryId) && Guid.TryParse(filterRepositoryId, out var repoId))
-        {
-            filtered = filtered.Where(t => t.RepositoryId == repoId);
-        }
-
-        return filtered.OrderByDescending(t => t.CreatedAt).ToList();
-    }
-
     private async Task OnPageChangedAsync(int page)
     {
-        currentPage = page;
+        paginationParams.Page = page;
         await LoadTicketsAsync();
     }
 
     private async Task OnStateFilterChanged(string? value)
     {
-        filterState = value;
-        currentPage = 1; // Reset to first page when filter changes
+        filterState = value; // The property setter handles the conversion
+        paginationParams.Page = 1; // Reset to first page when filter changes
         await LoadTicketsAsync();
     }
 
     private async Task OnSourceFilterChanged(string? value)
     {
         filterSource = value;
-        currentPage = 1;
+        paginationParams.Page = 1;
         await LoadTicketsAsync();
     }
 
     private async Task OnRepositoryFilterChanged(string? value)
     {
         filterRepositoryId = value;
-        currentPage = 1;
+        paginationParams.Page = 1;
         await LoadTicketsAsync();
     }
 

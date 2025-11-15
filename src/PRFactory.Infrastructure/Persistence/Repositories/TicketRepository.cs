@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using PRFactory.Domain.DTOs;
 using PRFactory.Domain.Entities;
 using PRFactory.Domain.Interfaces;
 using PRFactory.Domain.ValueObjects;
@@ -187,5 +188,72 @@ public class TicketRepository : ITicketRepository
     {
         return await _context.Tickets
             .AnyAsync(t => t.TicketKey == ticketKey, cancellationToken);
+    }
+
+    public async Task<PagedResult<Ticket>> GetTicketsPagedAsync(
+        PaginationParams paginationParams,
+        WorkflowState? stateFilter = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.Tickets
+            .Include(t => t.Repository)
+            .Include(t => t.Tenant)
+            .AsQueryable();
+
+        // Apply state filter
+        if (stateFilter.HasValue)
+        {
+            query = query.Where(t => t.State == stateFilter.Value);
+        }
+
+        // Apply search filter (case-insensitive)
+        if (!string.IsNullOrEmpty(paginationParams.SearchQuery))
+        {
+            var searchLower = paginationParams.SearchQuery.ToLower();
+            query = query.Where(t =>
+                t.Title.ToLower().Contains(searchLower) ||
+                t.Description.ToLower().Contains(searchLower) ||
+                t.TicketKey.ToLower().Contains(searchLower));
+        }
+
+        // Get total count BEFORE pagination
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        // Apply sorting
+        query = paginationParams.SortBy?.ToLower() switch
+        {
+            "title" => paginationParams.Descending
+                ? query.OrderByDescending(t => t.Title)
+                : query.OrderBy(t => t.Title),
+            "state" => paginationParams.Descending
+                ? query.OrderByDescending(t => t.State)
+                : query.OrderBy(t => t.State),
+            "ticketkey" => paginationParams.Descending
+                ? query.OrderByDescending(t => t.TicketKey)
+                : query.OrderBy(t => t.TicketKey),
+            "updated" => paginationParams.Descending
+                ? query.OrderByDescending(t => t.UpdatedAt ?? t.CreatedAt)
+                : query.OrderBy(t => t.UpdatedAt ?? t.CreatedAt),
+            "created" or _ => paginationParams.Descending
+                ? query.OrderByDescending(t => t.CreatedAt)
+                : query.OrderBy(t => t.CreatedAt)
+        };
+
+        // Apply pagination
+        var items = await query
+            .Skip((paginationParams.Page - 1) * paginationParams.PageSize)
+            .Take(paginationParams.PageSize)
+            .ToListAsync(cancellationToken);
+
+        _logger.LogDebug("Retrieved page {Page} of tickets (PageSize: {PageSize}, TotalCount: {TotalCount})",
+            paginationParams.Page, paginationParams.PageSize, totalCount);
+
+        return new PagedResult<Ticket>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = paginationParams.Page,
+            PageSize = paginationParams.PageSize
+        };
     }
 }

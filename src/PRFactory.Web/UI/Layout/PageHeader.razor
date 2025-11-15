@@ -1,0 +1,19 @@
+<div class="page-header">
+    <div class="page-header-title">
+        @if (!string.IsNullOrEmpty(Icon))
+        {
+            <i class="bi bi-@Icon me-2"></i>
+        }
+        <h1>@Title</h1>
+    </div>
+    @if (Actions != null)
+    {
+        <div class="page-header-actions">
+            @Actions
+        </div>
+    }
+</div>
+@if (!string.IsNullOrEmpty(Subtitle))
+{
+    <p class="page-header-subtitle text-muted">@Subtitle</p>
+}

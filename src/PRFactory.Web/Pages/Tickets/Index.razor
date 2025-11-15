@@ -5,6 +5,7 @@
 @using PRFactory.Web.UI.Alerts
 @using PRFactory.Web.UI.Buttons
 @using PRFactory.Web.UI.Display
+@using PRFactory.Web.UI.Layout
 @using PRFactory.Web.UI.Navigation
 @using PRFactory.Domain.ValueObjects
 @using static PRFactory.Web.Components.TicketFilters
@@ -15,19 +16,13 @@
 <Breadcrumbs Items="@breadcrumbItems" AdditionalClass="mb-3" />
 
 <div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col">
-            <h1 class="display-6">
-                <i class="bi bi-ticket-perforated"></i> Tickets
-            </h1>
-            <p class="text-muted">Manage and track your PRFactory tickets</p>
-        </div>
-        <div class="col-auto align-self-center">
+    <PageHeader Title="Tickets" Icon="ticket-perforated" Subtitle="Manage and track your PRFactory tickets">
+        <Actions>
             <a href="/tickets/create" class="btn btn-primary">
                 <i class="bi bi-plus-circle"></i> Create New Ticket
             </a>
-        </div>
-    </div>
+        </Actions>
+    </PageHeader>
 
     <!-- Filters -->
     <TicketFilters
@@ -52,7 +47,7 @@
             <IconButton Icon="arrow-clockwise" Text="Retry" Variant="ButtonVariant.OutlineDanger" Size="ButtonSize.Small" AdditionalClass="ms-3" OnClick="@(async _ => await LoadTicketsAsync())" />
         </AlertMessage>
     }
-    else if (tickets == null || !tickets.Any())
+    else if (pagedTickets == null || !pagedTickets.Items.Any())
     {
         <!-- Empty State -->
         <EmptyState Icon="inbox"
@@ -65,20 +60,20 @@
     else
     {
         <!-- Tickets Grid -->
-        <div class="row mb-4">
-            @foreach (var ticket in tickets)
+        <GridLayout AdditionalClass="mb-4">
+            @foreach (var ticket in pagedTickets.Items)
             {
-                <div class="col-md-6 col-lg-4 mb-4">
+                <GridColumn Width="6" AdditionalClass="col-lg-4 mb-4">
                     <TicketListItem Ticket="@ticket" />
-                </div>
+                </GridColumn>
             }
-        </div>
+        </GridLayout>
 
         <!-- Pagination -->
         <Pagination
-            CurrentPage="@currentPage"
-            TotalPages="@totalPages"
-            TotalItems="@totalItems"
+            CurrentPage="@pagedTickets.Page"
+            TotalPages="@pagedTickets.TotalPages"
+            TotalItems="@pagedTickets.TotalCount"
             OnPageChanged="OnPageChangedAsync" />
     }
 

@@ -1,0 +1,15 @@
+.question-header {
+    font-size: 1.1rem;
+    color: #495057;
+}
+
+.question-text {
+    padding: 0.75rem;
+    background-color: #f8f9fa;
+    border-left: 4px solid #ffc107;
+    margin-bottom: 1rem;
+}
+
+.answer-input {
+    padding-left: 1rem;
+}

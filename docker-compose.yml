@@ -1,43 +1,34 @@
 version: '3.8'
 
 services:
-  api:
-    image: prfactory-api:latest
+  prfactory:
+    image: prfactory:latest
     build:
       context: .
-      dockerfile: src/PRFactory.Api/Dockerfile
-    container_name: prfactory-api
+      dockerfile: src/PRFactory.Web/Dockerfile
+    container_name: prfactory
     ports:
-      - "5000:8080"
-      - "5001:8081"
+      - "5000:8080"   # API endpoint
+      - "5003:8080"   # Blazor UI (same port, different external mapping)
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Data Source=/data/prfactory.db
+      - ConnectionStrings__Database=Data Source=/data/prfactory.db
       - Logging__LogLevel__Default=Information
-      - Logging__LogLevel__Microsoft.AspNetCore=Warning
+      - Logging__LogLevel__Microsoft__AspNetCore=Warning
     volumes:
-      - ./data:/data
+      - ./data:/var/prfactory/data
+      - ./logs:/var/prfactory/logs
+      - ./workspace:/var/prfactory/workspace
     networks:
       - prfactory-network
     restart: unless-stopped
-
-  worker:
-    image: prfactory-worker:latest
-    build:
-      context: .
-      dockerfile: src/PRFactory.Worker/Dockerfile
-    container_name: prfactory-worker
-    environment:
-      - DOTNET_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Data Source=/data/prfactory.db
-      - Logging__LogLevel__Default=Information
-      - Logging__LogLevel__Microsoft=Warning
-    volumes:
-      - ./data:/data
-    networks:
-      - prfactory-network
-    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
 
 networks:
   prfactory-network:
@@ -45,4 +36,8 @@ networks:
 
 volumes:
   data:
+    driver: local
+  logs:
+    driver: local
+  workspace:
     driver: local

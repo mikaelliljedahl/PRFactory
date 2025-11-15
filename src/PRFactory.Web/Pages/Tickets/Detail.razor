@@ -6,6 +6,7 @@
 @using PRFactory.Web.UI.Cards
 @using PRFactory.Web.UI.Display
 @using PRFactory.Web.UI.Navigation
+@using PRFactory.Web.UI.Layout
 @using PRFactory.Domain.ValueObjects
 
 <PageTitle>@(ticket != null ? $"{ticket.TicketKey} - PRFactory" : "Loading...")</PageTitle>
@@ -13,6 +14,16 @@
 @if (ticket != null)
 {
     <Breadcrumbs Items="@breadcrumbItems" AdditionalClass="mb-3" />
+
+    <PageHeader Title="@ticket.TicketKey"
+                Subtitle="@ticket.Title"
+                Icon="ticket">
+        <Actions>
+            <button class="btn btn-outline-secondary" @onclick="@(() => NavigationManager.NavigateTo("/"))">
+                <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+            </button>
+        </Actions>
+    </PageHeader>
 }
 
 @if (isLoading)
@@ -35,33 +46,17 @@ else if (ticket == null)
 }
 else
 {
-    <div class="container-fluid">
-        <div class="row mb-3">
-            <div class="col">
-                <button class="btn btn-outline-secondary" @onclick="@(() => NavigationManager.NavigateTo("/"))">
-                    <i class="bi bi-arrow-left"></i> Back to Dashboard
-                </button>
-            </div>
-        </div>
+    @if (connectionState != HubConnectionState.Connected)
+    {
+        <AlertMessage Type="@GetConnectionAlertType()"
+                      Icon="@GetConnectionIcon()"
+                      Title="@GetConnectionStatusText()"
+                      Message="@(connectionState == HubConnectionState.Disconnected ? "Real-time updates unavailable. Please refresh to see latest changes." : "")"
+                      Dismissible="false" />
+    }
 
-        @if (connectionState != HubConnectionState.Connected)
-        {
-            <div class="row mb-3">
-                <div class="col">
-                    <div class="alert @GetConnectionAlertClass()" role="alert">
-                        <i class="bi @GetConnectionIcon() me-2"></i>
-                        <strong>@GetConnectionStatusText()</strong>
-                        @if (connectionState == HubConnectionState.Disconnected)
-                        {
-                            <span> - Real-time updates unavailable. Please refresh to see latest changes.</span>
-                        }
-                    </div>
-                </div>
-            </div>
-        }
-
-        <div class="row">
-            <div class="col-md-8">
+    <GridLayout Columns="8,4">
+        <GridColumn>
                 <TicketHeader Ticket="@ticket" />
 
                 @if (ticket.State == WorkflowState.TicketUpdateUnderReview || ticket.State == WorkflowState.TicketUpdateGenerated)
@@ -136,11 +131,10 @@ else
                         <p class="text-muted">Current state: <strong>@ticket.StateDisplay</strong></p>
                     </Card>
                 }
-            </div>
+        </GridColumn>
 
-            <div class="col-md-4">
-                <WorkflowTimeline Ticket="@ticket" Events="@events" />
-            </div>
-        </div>
-    </div>
+        <GridColumn>
+            <WorkflowTimeline Ticket="@ticket" Events="@events" />
+        </GridColumn>
+    </GridLayout>
 }
